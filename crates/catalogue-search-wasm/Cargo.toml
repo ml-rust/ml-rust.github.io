@@ -1,0 +1,21 @@
+[package]
+name = "catalogue-search-wasm"
+version.workspace = true
+description = "The browser search module of the ml-rust catalogue site: the oxidoc-search wasm exports"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+# Only the wasm32 build links the engine. A native build of this crate is
+# empty, so workspace builds never compile the browser bindings and the
+# native `oxidoc-search` keeps only the `builder` feature.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# The lexical search engine and its wasm-bindgen exports, without the
+# semantic half. Not on crates.io yet: `.cargo/config.toml.example` patches
+# it to a local checkout.
+oxidoc-search = { version = "0.1", default-features = false, features = ["wasm"] }

@@ -1,6 +1,8 @@
 # cargo-deny config.
 #
 # Run locally: `cargo deny --exclude-dev check`
+# Search module, on its only target:
+#   `cargo deny --exclude-dev --manifest-path crates/catalogue-search-wasm/Cargo.toml --target wasm32-unknown-unknown check`
 # CI gate:     .github/workflows/test.yml :: audit job
 #
 # Dev-dependencies are excluded in CI. They link tests only, and a

@@ -16,7 +16,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.
 - `data/thresholds.toml` holds every tier number. NEVER put a tier threshold in code.
 - Discovery output is a list of leads. A lead becomes an entry only through a merged PR.
-- Search engine changes belong in oxidoc's `oxidoc-search`. NEVER fork the engine into this repo.
+- Search engine changes belong in oxidoc's `oxidoc-search`. NEVER fork the engine into this repo. `crates/catalogue-search-wasm` only re-exports its wasm exports as the browser runtime.
 
 ## Invariants
 
@@ -44,9 +44,11 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `cargo clippy --workspace --all-targets --locked -- -D warnings`
 - `cargo nextest run --workspace --locked --no-fail-fast`
 - `cargo fmt --all --check`
-- `cargo deny --exclude-dev check`
+- `cargo deny --exclude-dev check`, then `cargo deny --exclude-dev --manifest-path crates/catalogue-search-wasm/Cargo.toml --target wasm32-unknown-unknown check`
+- `scripts/ci/build_search_wasm.sh OUT_DIR`: needs the wasm-bindgen CLI at the version `Cargo.lock` pins.
 - `shellcheck scripts/ci/*.sh`
 - `cargo run -p catalogue -- validate --data data`
+- Until `oxidoc-search` is on crates.io, `--locked` fails. Copy `.cargo/config.toml.example` to `.cargo/config.toml` for the local patch. NEVER commit the `Cargo.lock` change that patch causes.
 
 ## CI
 

@@ -154,7 +154,9 @@ jobs:
         run: cargo check --workspace --all-targets --locked
 
   # ─────────────────────────────────────────────────────────────────────────
-  # `--exclude-dev`: dev-dependencies link tests only.
+  # `--exclude-dev`: dev-dependencies link tests only. The second run audits
+  # the browser search module on wasm32, the only target it ships for. The
+  # `deny.toml` targets are native, so the first run never sees its graph.
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -173,6 +175,9 @@ jobs:
 
       - name: Run cargo-deny
         run: cargo deny --exclude-dev check
+
+      - name: Run cargo-deny on the search module
+        run: cargo deny --exclude-dev --manifest-path crates/catalogue-search-wasm/Cargo.toml --target wasm32-unknown-unknown check
 
   # ─────────────────────────────────────────────────────────────────────────
   # The catalogue data is the site's content. A data file that fails the
