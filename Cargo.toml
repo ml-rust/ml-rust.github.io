@@ -1,5 +1,10 @@
 [workspace]
-members = ["crates/catalogue-core", "crates/catalogue-signals", "crates/catalogue"]
+members = [
+    "crates/catalogue-core",
+    "crates/catalogue-signals",
+    "crates/catalogue-bot",
+    "crates/catalogue",
+]
 resolver = "3"
 
 [workspace.package]
@@ -41,3 +46,5 @@ tempfile = "3"
 catalogue-core = { path = "crates/catalogue-core" }
 # Raw signals from the crates.io database dump, used by the dump commands.
 catalogue-signals = { path = "crates/catalogue-signals" }
+# Issue form parsing and check reports, used by the bot commands.
+catalogue-bot = { path = "crates/catalogue-bot" }

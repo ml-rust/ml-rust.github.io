@@ -1,0 +1,16 @@
+[package]
+name = "catalogue-bot"
+version.workspace = true
+description = "Parses ml-rust catalogue issue forms into data records and check reports"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+catalogue-core.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+url.workspace = true

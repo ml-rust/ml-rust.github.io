@@ -3,6 +3,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+use crate::bot::{BotCommand, run_bot};
 use crate::calibrate::{CalibrateCommand, run_calibrate};
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::distribution::{DistributionCommand, run_distribution};
@@ -88,6 +89,12 @@ pub enum Command {
     /// `topics.toml`. A reviewer merges crate families and checks every draft.
     /// Without `--write` the command prints the drafts and the skipped crates.
     Seed(SeedArgs),
+    /// Check issue forms for the catalogue bot.
+    Bot {
+        /// The bot action to run.
+        #[command(subcommand)]
+        command: BotCommand,
+    },
 }
 
 /// Runs the parsed command and returns the process exit code.
@@ -105,6 +112,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Calibrate { command } => run_calibrate(command),
         Command::Tiers(args) => run_tiers(args),
         Command::Seed(args) => run_seed(args),
+        Command::Bot { command } => run_bot(command),
     }
 }
 

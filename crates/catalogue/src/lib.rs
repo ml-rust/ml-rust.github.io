@@ -1,6 +1,7 @@
 //! Command line front end for the ml-rust catalogue data files.
 
 mod batch;
+pub mod bot;
 pub mod cache_dir;
 pub mod calibrate;
 pub mod cli;
@@ -19,6 +20,7 @@ mod token;
 pub mod usage;
 pub mod validate;
 
+pub use bot::{BotCommand, BotError, CheckArgs, bot_check, run_bot};
 pub use cache_dir::{CacheDirError, default_cache_dir, resolve_cache_dir};
 pub use calibrate::{CalibrateCommand, CalibrateError, build_crates_report, run_calibrate};
 pub use cli::{Cli, Command, run};

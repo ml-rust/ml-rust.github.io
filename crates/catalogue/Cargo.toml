@@ -9,6 +9,7 @@ repository.workspace = true
 publish = false
 
 [dependencies]
+catalogue-bot.workspace = true
 catalogue-core.workspace = true
 catalogue-signals.workspace = true
 clap.workspace = true
