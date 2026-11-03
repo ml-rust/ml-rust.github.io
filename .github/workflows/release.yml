@@ -1,0 +1,213 @@
+# Manual distribution workflow. Push a v* tag first; `Release Prepare` validates
+# the tag and runs the full suite. Then run this workflow with that tag.
+#
+# Nothing goes to crates.io. A release ships the `catalogue` binary, which runs
+# the catalogue bot on a VM.
+#
+# Stages:
+#   build           -> catalogue-<version>-<target>.tar.gz and .sha256 for
+#                      each target, with build provenance attested
+#   github_release  -> GitHub Release, with the changelog section as the body
+#                      and the build output attached
+#
+# Each stage is independently selectable and re-runnable: the release is
+# overwritten in place, and its assets are replaced by name. A failed build or
+# a bad release body is fixed by re-dispatching with only the stage that
+# failed enabled.
+
+name: Release
+run-name: Release ${{ inputs.tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build, e.g. v0.1.0"
+        required: true
+        type: string
+      build:
+        description: "Build and attest the catalogue binaries"
+        type: boolean
+        default: true
+      github_release:
+        description: "Create the GitHub Release"
+        type: boolean
+        default: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Always runs. Cheap, and it guarantees the dispatched tag still means what
+  # the prepare run assumed it meant.
+  validate-version:
+    uses: ./.github/workflows/release-validate.yml
+    with:
+      ref: ${{ inputs.tag }}
+
+  # ── Build ───────────────────────────────────────────────────────────────────
+  # One native runner per target, so no cross toolchain is involved. musl
+  # targets give a static binary that runs on any Linux VM.
+  #
+  # There is no rust-cache here. A release build restores no cache: a cache
+  # written by an earlier run could carry poisoned build output into a binary
+  # that users run.
+  build:
+    name: Build ${{ matrix.target }}
+    needs: validate-version
+    if: inputs.build
+    runs-on: ${{ matrix.runner }}
+    # Widened for this job only: the attestation needs an OIDC token and the
+    # right to write to the attestation store.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            runner: ubuntu-latest
+          - target: aarch64-unknown-linux-musl
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Install musl tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends musl-tools
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Set version from tag
+        env:
+          VERSION: ${{ needs.validate-version.outputs.version }}
+        run: bash scripts/ci/stamp_version.sh "$VERSION"
+
+      - name: Build catalogue
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo build --release --locked -p catalogue --target "$TARGET"
+
+      # The tarball holds one directory with the binary, the licence, and the
+      # README when the repository has one. The .sha256 file sits beside it and
+      # names the tarball relative to its own directory, so `sha256sum -c`
+      # works after download.
+      - name: Package
+        env:
+          VERSION: ${{ needs.validate-version.outputs.version }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          NAME="catalogue-${VERSION}-${TARGET}"
+          DIST="${RUNNER_TEMP}/dist"
+          STAGE="${RUNNER_TEMP}/stage/${NAME}"
+
+          mkdir -p "$DIST" "$STAGE"
+          cp "target/${TARGET}/release/catalogue" "$STAGE/"
+          cp LICENSE "$STAGE/"
+          if [[ -f README.md ]]; then
+            cp README.md "$STAGE/"
+          fi
+
+          tar -czf "${DIST}/${NAME}.tar.gz" -C "${RUNNER_TEMP}/stage" "$NAME"
+          (cd "$DIST" && sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256")
+          ls -l "$DIST"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/dist/catalogue-${{ needs.validate-version.outputs.version }}-${{ matrix.target }}.tar.gz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: catalogue-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/dist/catalogue-${{ needs.validate-version.outputs.version }}-${{ matrix.target }}.tar.gz
+            ${{ runner.temp }}/dist/catalogue-${{ needs.validate-version.outputs.version }}-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+
+  # ── GitHub Release ──────────────────────────────────────────────────────────
+  # Runs after the build when the build stage is enabled. With the build stage
+  # off, it runs alone: the notes are rewritten and the assets from the earlier
+  # release stay in place.
+  github-release:
+    name: Create GitHub Release
+    needs: [validate-version, build]
+    if: >-
+      ${{ !cancelled()
+      && inputs.github_release
+      && needs.validate-version.result == 'success'
+      && contains(fromJSON('["success", "skipped"]'), needs.build.result) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download build artifacts
+        if: needs.build.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: catalogue-*
+          path: ${{ runner.temp }}/dist
+          merge-multiple: true
+
+      # The changelog is the release notes. Auto-generated notes list commit
+      # subjects, which describe what was done to the code; the changelog
+      # describes what changed for the person upgrading. `validate-version` has
+      # already proved this section exists and is non-empty.
+      - name: Build release notes from the changelog
+        env:
+          TAG: ${{ inputs.tag }}
+          BASE: ${{ needs.validate-version.outputs.base_version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # `-l` is required: `git tag` with a pattern but no list flag is the
+          # create form, which errors out and leaves the notes silently
+          # missing their compare link.
+          PREVIOUS_TAG=$(git tag -l --sort=-v:refname 'v*' | grep -v "^${TAG}$" | head -n 1 || true)
+
+          bash scripts/ci/changelog_section.sh "$BASE" "${RUNNER_TEMP}/changelog-section.md"
+
+          {
+            cat "${RUNNER_TEMP}/changelog-section.md"
+            echo
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "**Full diff:** https://github.com/${REPO}/compare/${PREVIOUS_TAG}...${TAG}"
+            else
+              echo "**Tree:** https://github.com/${REPO}/tree/${TAG}"
+            fi
+          } > "${RUNNER_TEMP}/release-notes.md"
+
+      # An existing release is updated and same-named assets are replaced, so
+      # re-running this stage is safe. With the build stage off, no files match
+      # and the existing assets stay.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: catalogue ${{ needs.validate-version.outputs.version }}
+          body_path: ${{ runner.temp }}/release-notes.md
+          files: ${{ runner.temp }}/dist/*
+          draft: false
+          prerelease: ${{ needs.validate-version.outputs.is_full_release != 'true' }}
