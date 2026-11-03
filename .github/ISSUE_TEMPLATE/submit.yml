@@ -1,0 +1,123 @@
+name: Submit a project
+description: Propose a new library or app for the catalogue.
+title: "[submit] "
+labels: ["submit"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to propose a project. The bot opens a data pull request after approval.
+
+        Read the [rules](/rules) first. A maintainer listed in `data/maintainers.toml` must approve this issue before it takes effect. Every judgment is public: the issue, your login, the evidence, and the approver appear on the entry page.
+  - type: input
+    id: name
+    attributes:
+      label: Project name
+      description: The display name.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      description: A library is a crate that other projects depend on. An app is a program people run.
+      options:
+        - library
+        - app
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository URL
+      description: The source repository. Must use https.
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+  - type: textarea
+    id: crates
+    attributes:
+      label: Crates
+      description: One crates.io crate name per line. Required for a library. An app can leave this empty.
+      placeholder: example-crate
+    validations:
+      required: false
+  - type: textarea
+    id: topics
+    attributes:
+      label: Topics
+      description: One topic slug per line. Use at least one slug from `data/topics.toml`.
+      placeholder: tensors
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: One to 300 characters. Plain words, no marketing language.
+    validations:
+      required: true
+  - type: dropdown
+    id: description_source
+    attributes:
+      label: Description source
+      description: Choose readme if you copied the text from the project README. Choose human if you wrote it.
+      options:
+        - readme
+        - human
+    validations:
+      required: true
+  - type: input
+    id: description_source_url
+    attributes:
+      label: Description source URL
+      description: The page the text comes from. Required when the source is readme.
+      placeholder: https://github.com/owner/repo#readme
+    validations:
+      required: false
+  - type: input
+    id: homepage
+    attributes:
+      label: Homepage
+      description: The project home page. Optional.
+    validations:
+      required: false
+  - type: input
+    id: homebrew
+    attributes:
+      label: Homebrew formula
+      description: The formula name. Apps only. Optional.
+    validations:
+      required: false
+  - type: textarea
+    id: docker
+    attributes:
+      label: Docker images
+      description: One `namespace/repo` per line. Apps only. Optional.
+      placeholder: namespace/repo
+    validations:
+      required: false
+  - type: input
+    id: repology
+    attributes:
+      label: Repology project
+      description: The Repology project name. Apps only. Optional.
+    validations:
+      required: false
+  - type: textarea
+    id: evidence_of_use
+    attributes:
+      label: Evidence of use
+      description: One URL per line. Link projects, posts, or packages that use this project. Optional. The tier comes from measured signals, so this only helps the reviewer.
+    validations:
+      required: false
+  - type: dropdown
+    id: affiliation
+    attributes:
+      label: Affiliation
+      description: The reviewer sees your answer in the data PR. It does not block the submission.
+      options:
+        - I am not affiliated with this project.
+        - I maintain or work on this project.
+    validations:
+      required: true

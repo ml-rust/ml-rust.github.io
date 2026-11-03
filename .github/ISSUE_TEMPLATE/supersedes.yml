@@ -1,0 +1,34 @@
+name: Supersedes or fork
+description: Report that one entry replaces another.
+title: "[supersedes] "
+labels: ["judgment:supersedes"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when a newer entry replaces an older one, such as a fork or a successor.
+
+        Read the [rules](/rules) first. A maintainer listed in `data/maintainers.toml` must approve this issue before it takes effect. Every judgment is public: the issue, your login, the evidence, and the approver appear on the entry page.
+  - type: input
+    id: entry
+    attributes:
+      label: Entry slug
+      description: The file name of the entry under `data/entries/`, without `.toml`.
+      placeholder: example-crate
+    validations:
+      required: true
+  - type: input
+    id: by
+    attributes:
+      label: Superseded by
+      description: The slug of the entry that replaces the one above.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence links
+      description: One URL per line. Link public sources only.
+      placeholder: https://example.com/proof
+    validations:
+      required: true

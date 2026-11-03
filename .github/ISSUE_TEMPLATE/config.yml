@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions about the catalogue
+    url: https://github.com/ml-rust/ml-rust.github.io#readme
+    about: Read the README first. It explains how the catalogue works.

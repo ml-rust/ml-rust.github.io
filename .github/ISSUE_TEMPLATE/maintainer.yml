@@ -1,0 +1,36 @@
+name: Maintainer statement
+description: State whether a project is maintained or finished.
+title: "[maintainer] "
+labels: ["judgment:maintainer"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to state whether a project is maintained or finished. The bot checks that the issue author owns the crate on crates.io or the repo on GitHub.
+
+        Read the [rules](/rules) first. A maintainer listed in `data/maintainers.toml` must approve this issue before it takes effect. Every judgment is public: the issue, your login, the evidence, and the approver appear on the entry page.
+  - type: input
+    id: entry
+    attributes:
+      label: Entry slug
+      description: The file name of the entry under `data/entries/`, without `.toml`.
+      placeholder: example-crate
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      description: Maintained blocks the dead verdict. Finished means the project is complete and not expected to change.
+      options:
+        - maintained
+        - finished
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence links
+      description: One URL per line. Optional for a maintainer statement.
+    validations:
+      required: false
