@@ -1,0 +1,210 @@
+# Reusable test workflow.
+#
+# Called by:
+#   - ci.yml (PR checks + manual dispatch)
+#
+# Not triggered directly — `workflow_call` only.
+#
+# Every third-party action is pinned to a commit SHA, with its release in a
+# trailing comment. A tag can move. A SHA cannot, so a retagged action cannot
+# enter a run. Dependabot keeps the pins current (.github/dependabot.yml).
+#
+# Jobs:
+#   lint      — rustfmt, rustdoc with warnings denied
+#   clippy    — `-D warnings` on every target in the workspace
+#   test      — the workspace test suites, run with cargo-nextest
+#   msrv      — the MSRV from `[workspace.package]` in Cargo.toml
+#   audit     — cargo-deny: advisories, licences, sources, banned crates
+#   data      — `catalogue validate` over the committed `data` directory
+#   workflows — zizmor static analysis of the workflow files
+#
+# The workspace has no features, so no job uses a feature matrix.
+#
+# Every job that builds runs with `--locked`. This repository has no local
+# path patches, so the committed Cargo.lock resolves on a clean runner and a
+# build that needs to change it is an error.
+
+name: Test
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Format & Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: rustfmt
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: lint
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      # Warnings are denied: a link to a private item renders as plain text
+      # rather than an error, so the docs lose it with no report.
+      - name: Build docs
+        run: cargo doc --workspace --no-deps --locked
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # `--all-targets` also checks the tests and examples.
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: clippy
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  # ─────────────────────────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: test
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-nextest
+
+      - name: Run tests
+        run: cargo nextest run --workspace --locked --no-fail-fast
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # The MSRV comes from `workspace.package.rust-version`, so the published
+  # contract and this job cannot drift apart. Both crates inherit it. It is
+  # read with grep: the toolchain `cargo metadata` would run on is the one
+  # this job is choosing.
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read MSRV from the workspace manifest
+        id: msrv
+        run: |
+          set -euo pipefail
+          MSRV=$(grep -m1 '^rust-version = ' Cargo.toml | sed 's/.*"\(.*\)"/\1/')
+          if [[ -z "$MSRV" ]]; then
+            echo "::error::rust-version is missing from [workspace.package] in Cargo.toml"
+            exit 1
+          fi
+          echo "Declared MSRV: $MSRV"
+          echo "version=$MSRV" >> "$GITHUB_OUTPUT"
+
+      - name: Install Rust ${{ steps.msrv.outputs.version }}
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: msrv-${{ steps.msrv.outputs.version }}
+
+      - name: Check MSRV
+        run: cargo check --workspace --all-targets --locked
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # `--exclude-dev`: dev-dependencies link tests only.
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-deny
+
+      - name: Run cargo-deny
+        run: cargo deny --exclude-dev check
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # The catalogue data is the site's content. A data file that fails the
+  # validator never reaches a build.
+  data:
+    name: Validate data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: data
+
+      - name: Validate catalogue data
+        run: cargo run --locked -p catalogue -- validate --data data
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # zizmor reads the workflow files and dependabot.yml. `advanced-security:
+  # false` runs it as a plain check that fails the job on a finding. The
+  # default uploads SARIF to the Security tab and needs `security-events:
+  # write`, which this workflow does not grant. With the default off, the
+  # workflow-level `contents: read` is all the action needs.
+  workflows:
+    name: Workflow lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          advanced-security: false
