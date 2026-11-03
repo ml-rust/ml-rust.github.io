@@ -1,3 +1,5 @@
+//! Response headers with case-insensitive lookup.
+
 /// Response headers, matched without regard to case.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Headers(Vec<(String, String)>);

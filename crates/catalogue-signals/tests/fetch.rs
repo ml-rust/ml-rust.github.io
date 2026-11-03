@@ -2,6 +2,10 @@
 mod cache;
 #[path = "common/dump_responses.rs"]
 mod dump_responses;
+#[path = "common/request_headers.rs"]
+mod request_headers;
+#[path = "common/response_status.rs"]
+mod response_status;
 #[path = "common/transport.rs"]
 mod transport;
 

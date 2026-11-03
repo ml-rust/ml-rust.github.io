@@ -1,11 +1,12 @@
-//! Request pacing for the search API.
+//! Request pacing for the GitHub API.
 
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::http::Headers;
 
-/// The shortest gap between two requests. The search API allows 30 a minute.
+/// The shortest gap between two requests. The search API, the strictest one
+/// the catalogue calls, allows 30 a minute.
 const MIN_INTERVAL: Duration = Duration::from_secs(2);
 
 /// The longest single wait. It equals the length of a rate-limit window.

@@ -13,17 +13,6 @@ pub struct FakeResponse {
     pub(crate) body: Vec<u8>,
 }
 
-impl FakeResponse {
-    /// A response with only a status.
-    pub fn status(status: u16) -> Self {
-        Self {
-            status,
-            headers: Vec::new(),
-            body: Vec::new(),
-        }
-    }
-}
-
 /// The URL and extra headers of one request.
 pub(crate) type Call = (String, Vec<(String, String)>);
 
@@ -31,6 +20,7 @@ pub(crate) type Call = (String, Vec<(String, String)>);
 pub struct FakeTransport {
     responses: RefCell<VecDeque<FakeResponse>>,
     pub(crate) calls: RefCell<Vec<Call>>,
+    pub(crate) posted: RefCell<Vec<Vec<u8>>>,
 }
 
 impl FakeTransport {
@@ -38,21 +28,11 @@ impl FakeTransport {
         Self {
             responses: RefCell::new(responses.into_iter().collect()),
             calls: RefCell::new(Vec::new()),
+            posted: RefCell::new(Vec::new()),
         }
     }
 
-    /// The extra headers of each request, in order.
-    pub fn requests(&self) -> Vec<Vec<(String, String)>> {
-        self.calls
-            .borrow()
-            .iter()
-            .map(|(_, headers)| headers.clone())
-            .collect()
-    }
-}
-
-impl Transport for FakeTransport {
-    fn get(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError> {
+    fn reply(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError> {
         self.calls.borrow_mut().push((
             url.to_owned(),
             headers
@@ -70,5 +50,21 @@ impl Transport for FakeTransport {
             headers: Headers::new(fake.headers),
             body: Box::new(Cursor::new(fake.body)),
         })
+    }
+}
+
+impl Transport for FakeTransport {
+    fn get(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError> {
+        self.reply(url, headers)
+    }
+
+    fn post(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.posted.borrow_mut().push(body.to_vec());
+        self.reply(url, headers)
     }
 }

@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use reqwest::blocking::Client;
+use reqwest::blocking::{Client, RequestBuilder};
 use reqwest::header::{AUTHORIZATION, HeaderValue};
 
 use super::error::HttpError;
@@ -42,11 +42,14 @@ impl ReqwestTransport {
             })?;
         Ok(Self { client })
     }
-}
 
-impl Transport for ReqwestTransport {
-    fn get(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError> {
-        let mut request = self.client.get(url);
+    /// Adds `headers` to `request`, sends it and wraps the response.
+    fn send(
+        &self,
+        mut request: RequestBuilder,
+        url: &str,
+        headers: &[(&str, String)],
+    ) -> Result<Response, HttpError> {
         for (name, value) in headers {
             request = request.header(*name, header_value(name, value)?);
         }
@@ -66,6 +69,21 @@ impl Transport for ReqwestTransport {
             headers,
             body: Box::new(response),
         })
+    }
+}
+
+impl Transport for ReqwestTransport {
+    fn get(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError> {
+        self.send(self.client.get(url), url, headers)
+    }
+
+    fn post(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.send(self.client.post(url).body(body.to_vec()), url, headers)
     }
 }
 

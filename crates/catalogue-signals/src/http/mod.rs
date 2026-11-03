@@ -1,6 +1,6 @@
 //! The HTTP seam shared by every fetcher.
 //!
-//! [`Transport`] sends one GET request. [`ReqwestTransport`] is the real
+//! [`Transport`] sends one GET or POST request. [`ReqwestTransport`] is the real
 //! implementation and sends the crate `User-Agent`. It adds only the headers
 //! the caller passes and reads no environment variable.
 

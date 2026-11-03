@@ -1,3 +1,5 @@
+//! The [`Transport`] trait and the [`Response`] it returns.
+
 use std::io::Read;
 
 use super::error::HttpError;
@@ -13,7 +15,7 @@ pub struct Response {
     pub body: Box<dyn Read>,
 }
 
-/// Sends GET requests. Redirects are followed inside the implementation.
+/// Sends GET and POST requests. Redirects are followed inside the implementation.
 pub trait Transport {
     /// Fetches `url` with the extra request `headers` as name and value pairs.
     ///
@@ -21,4 +23,16 @@ pub trait Transport {
     ///
     /// Returns [`HttpError::Request`] when no response arrives.
     fn get(&self, url: &str, headers: &[(&str, String)]) -> Result<Response, HttpError>;
+
+    /// Posts `body` to `url` with the extra request `headers` as name and value pairs.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`HttpError::Request`] when no response arrives.
+    fn post(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError>;
 }

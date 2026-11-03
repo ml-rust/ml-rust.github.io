@@ -1,3 +1,9 @@
+#[path = "common/request_headers.rs"]
+mod request_headers;
+#[path = "common/request_urls.rs"]
+mod request_urls;
+#[path = "common/response_status.rs"]
+mod response_status;
 #[path = "common/search_responses.rs"]
 mod search_responses;
 #[path = "common/transport.rs"]

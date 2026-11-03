@@ -1,7 +1,6 @@
 //! The topic search with date-range splitting.
 
 use std::collections::BTreeMap;
-use std::io::Read;
 
 use jiff::civil::{self, Date};
 use jiff::tz::TimeZone;
@@ -9,19 +8,16 @@ use jiff::{Span, Timestamp};
 use serde::Deserialize;
 
 use super::error::GithubError;
+use super::paced::{Paced, parse_json};
 use super::pacer::Pacer;
 use super::query::{PER_PAGE, search_url};
 use super::repo::{FoundRepo, GithubFound, GithubRules, Repo};
-use crate::http::{Headers, Transport};
+use crate::http::Transport;
 
 /// The most repos one query serves.
 const MAX_RESULTS: u64 = 1000;
 /// The pages that hold [`MAX_RESULTS`] repos.
 const MAX_PAGES: u32 = 10;
-/// The retries after a rate-limit answer.
-const MAX_RETRIES: u32 = 3;
-/// The longest response body read, in bytes.
-const MAX_BODY: u64 = 32 << 20;
 /// The day before which GitHub holds no repos.
 const FIRST_DAY: Date = civil::date(2008, 1, 1);
 
@@ -60,10 +56,8 @@ pub fn search_repos_on(
     let mut run = Run {
         transport,
         authorization: format!("Bearer {token}"),
-        pacer: pacing,
+        paced: Paced::new(pacing),
         min_stars: rules.min_stars,
-        requests: 0,
-        previous: None,
         found: BTreeMap::new(),
         warnings: Vec::new(),
     };
@@ -77,7 +71,7 @@ pub fn search_repos_on(
     Ok(GithubFound {
         repos: run.found.into_values().collect(),
         warnings: run.warnings,
-        requests: run.requests,
+        requests: run.paced.requests(),
     })
 }
 
@@ -92,11 +86,8 @@ struct Page {
 struct Run<'a> {
     transport: &'a dyn Transport,
     authorization: String,
-    pacer: &'a mut dyn Pacer,
+    paced: Paced<'a>,
     min_stars: u32,
-    requests: u32,
-    /// The headers of the last response, until the pacer has seen them.
-    previous: Option<Headers>,
     found: BTreeMap<String, FoundRepo>,
     warnings: Vec<String>,
 }
@@ -153,60 +144,15 @@ impl Run<'_> {
 
     /// Fetches and parses one page, retrying rate-limit answers.
     fn page(&mut self, url: &str) -> Result<Page, GithubError> {
-        let mut retries = 0;
-        loop {
-            if let Some(headers) = self.previous.take() {
-                self.pacer.wait(&headers);
-            }
-            self.requests += 1;
-            let sent = [
-                ("Accept", "application/vnd.github+json".to_owned()),
-                ("X-GitHub-Api-Version", "2022-11-28".to_owned()),
-                ("Authorization", self.authorization.clone()),
-            ];
-            let response = self.transport.get(url, &sent)?;
-            let headers = response.headers;
-            if response.status == 200 {
-                self.previous = Some(headers);
-                return parse(url, response.body);
-            }
-            if !is_rate_limited(response.status, &headers) {
-                return Err(GithubError::status(url, response.status));
-            }
-            if retries == MAX_RETRIES {
-                return Err(GithubError::RetriesExhausted {
-                    url: url.to_owned(),
-                    retries,
-                });
-            }
-            retries += 1;
-            self.previous = Some(headers);
-        }
+        let transport = self.transport;
+        let headers = [
+            ("Accept", "application/vnd.github+json".to_owned()),
+            ("X-GitHub-Api-Version", "2022-11-28".to_owned()),
+            ("Authorization", self.authorization.clone()),
+        ];
+        let bytes = self.paced.fetch(url, || transport.get(url, &headers))?;
+        parse_json(url, &bytes)
     }
-}
-
-/// Whether a 403 or 429 answer asks the caller to wait and retry.
-fn is_rate_limited(status: u16, headers: &Headers) -> bool {
-    matches!(status, 403 | 429)
-        && (headers.get("retry-after").is_some()
-            || headers
-                .get("x-ratelimit-remaining")
-                .is_some_and(|value| value.trim() == "0"))
-}
-
-/// Reads and parses a response body.
-fn parse(url: &str, body: Box<dyn Read>) -> Result<Page, GithubError> {
-    let mut bytes = Vec::new();
-    body.take(MAX_BODY)
-        .read_to_end(&mut bytes)
-        .map_err(|source| GithubError::Body {
-            url: url.to_owned(),
-            source,
-        })?;
-    serde_json::from_slice(&bytes).map_err(|source| GithubError::Json {
-        url: url.to_owned(),
-        source,
-    })
 }
 
 /// Halves `from..=to` into the end of the left half and the start of the right.
@@ -242,14 +188,5 @@ mod tests {
         assert_eq!((left, right), (date(2008, 1, 1), date(2008, 1, 2)));
         let (left, right) = split(date(2008, 1, 1), date(2008, 1, 6)).expect("splits");
         assert_eq!((left, right), (date(2008, 1, 3), date(2008, 1, 4)));
-    }
-
-    #[test]
-    fn rate_limit_answers_need_a_wait_hint() {
-        let hint = Headers::new([("Retry-After", "3")]);
-        let empty = Headers::default();
-        let spent = Headers::new([("x-ratelimit-remaining", "0")]);
-        assert!(is_rate_limited(403, &hint) && is_rate_limited(429, &spent));
-        assert!(!is_rate_limited(403, &empty) && !is_rate_limited(500, &hint));
     }
 }

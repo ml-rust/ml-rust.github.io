@@ -1,10 +1,10 @@
-//! Errors from the GitHub search.
+//! Errors from the GitHub search and the repo facts.
 
 use thiserror::Error;
 
 use crate::http::HttpError;
 
-/// A search the fetcher cannot finish.
+/// A search or facts query the fetcher cannot finish.
 #[derive(Debug, Error)]
 pub enum GithubError {
     /// The HTTP layer fails before the server answers.
@@ -46,6 +46,16 @@ pub enum GithubError {
         /// The retries made after the first request.
         retries: u32,
     },
+    /// The GraphQL API answers a query with an error.
+    #[error(
+        "GitHub rejected the query for {repo}: {message}. Check the token and the repo name, then rerun"
+    )]
+    Graphql {
+        /// The requested `owner/name`.
+        repo: String,
+        /// The messages of the API errors, joined with `; `.
+        message: String,
+    },
     /// A date range cannot be split.
     #[error("cannot split the created range {from}..{to}: {reason}")]
     DateRange {
@@ -64,7 +74,7 @@ impl GithubError {
         let action = match status {
             401 => "set GITHUB_TOKEN to a valid token",
             403 | 429 => {
-                "check that the token can use the search API, wait for the rate limit to reset, then rerun"
+                "check that the token can read public repos, wait for the rate limit to reset, then rerun"
             }
             422 => "check github_topics in discovery.toml, then rerun",
             _ => "rerun later",
