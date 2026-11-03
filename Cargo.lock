@@ -118,6 +118,7 @@ dependencies = [
  "catalogue-core",
  "catalogue-signals",
  "clap",
+ "jiff",
  "thiserror",
 ]
 

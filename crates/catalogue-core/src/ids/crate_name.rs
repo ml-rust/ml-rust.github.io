@@ -26,6 +26,29 @@ impl CrateName {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// The form crates.io compares: ASCII lowercase with `_` read as `-`.
+    pub fn normalized(&self) -> String {
+        canonical_crate_name(&self.0)
+    }
+}
+
+/// The form crates.io compares: ASCII lowercase with `_` read as `-`.
+pub fn canonical_crate_name(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    push_canonical_crate_name(&mut out, name);
+    out
+}
+
+/// Appends the [`canonical_crate_name`] form of `name` to `out`.
+pub fn push_canonical_crate_name(out: &mut String, name: &str) {
+    out.extend(name.chars().map(|c| {
+        if c == '_' {
+            '-'
+        } else {
+            c.to_ascii_lowercase()
+        }
+    }));
 }
 
 fn check(value: &str) -> Result<(), IdError> {
@@ -80,6 +103,12 @@ mod tests {
         ] {
             assert!(CrateName::new(ok).is_ok(), "{ok}");
         }
+    }
+
+    #[test]
+    fn normalized_folds_case_and_underscores() {
+        let name = CrateName::new("Candle_Core-x").expect("name");
+        assert_eq!(name.normalized(), "candle-core-x");
     }
 
     #[test]

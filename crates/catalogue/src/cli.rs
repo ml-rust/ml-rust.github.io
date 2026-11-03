@@ -3,13 +3,10 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+use crate::discover::{DiscoverCommand, run_discover};
 use crate::dump::{DumpCommand, run_dump};
+use crate::exit::{INVALID, IO};
 use crate::validate::{Outcome, validate};
-
-/// Exit code when the data has errors.
-const EXIT_INVALID: u8 = 1;
-/// Exit code when the data directory cannot be read.
-const EXIT_IO: u8 = 2;
 
 /// Checks the ml-rust catalogue data files.
 #[derive(Debug, Parser)]
@@ -35,6 +32,12 @@ pub enum Command {
         #[command(subcommand)]
         command: DumpCommand,
     },
+    /// Find candidate crates for the catalogue in the crates.io database dump.
+    Discover {
+        /// The discover action to run.
+        #[command(subcommand)]
+        command: DiscoverCommand,
+    },
 }
 
 /// Runs the parsed command and returns the process exit code.
@@ -44,6 +47,7 @@ pub fn run(cli: Cli) -> ExitCode {
     match cli.command {
         Command::Validate { data } => run_validate(&data),
         Command::Dump { command } => run_dump(command),
+        Command::Discover { command } => run_discover(command),
     }
 }
 
@@ -57,11 +61,11 @@ fn run_validate(data: &Path) -> ExitCode {
             for diagnostic in &diagnostics {
                 eprintln!("{diagnostic}");
             }
-            ExitCode::from(EXIT_INVALID)
+            ExitCode::from(INVALID)
         }
         Err(error) => {
             eprintln!("error: {error}");
-            ExitCode::from(EXIT_IO)
+            ExitCode::from(IO)
         }
     }
 }
@@ -149,6 +153,53 @@ mod tests {
         assert_eq!(names, ["numr", "blazr"]);
         assert_eq!((cache_dir, window_days), (None, 90));
         assert!(Cli::try_parse_from(["catalogue", "dump", "usage"]).is_err());
+    }
+
+    #[test]
+    fn discover_crates_has_defaults_and_takes_options() {
+        let cli = Cli::try_parse_from(["catalogue", "discover", "crates"]).expect("parses");
+        let Command::Discover {
+            command:
+                DiscoverCommand::Crates {
+                    data,
+                    cache_dir,
+                    window_days,
+                },
+        } = cli.command
+        else {
+            panic!("expected discover crates");
+        };
+        assert_eq!(
+            (data, cache_dir, window_days),
+            (PathBuf::from("data"), None, 90)
+        );
+        let cli = Cli::try_parse_from([
+            "catalogue",
+            "discover",
+            "crates",
+            "--data",
+            "d",
+            "--cache-dir",
+            "c",
+            "--window-days",
+            "30",
+        ])
+        .expect("parses");
+        let Command::Discover {
+            command:
+                DiscoverCommand::Crates {
+                    data,
+                    cache_dir,
+                    window_days,
+                },
+        } = cli.command
+        else {
+            panic!("expected discover crates");
+        };
+        assert_eq!(
+            (data, cache_dir, window_days),
+            (PathBuf::from("d"), Some(PathBuf::from("c")), 30)
+        );
     }
 
     #[test]

@@ -1,6 +1,7 @@
 //! Parsing and validation of a whole data set.
 
 mod diagnostics;
+mod discovery;
 mod entries;
 mod graph;
 mod judgments;

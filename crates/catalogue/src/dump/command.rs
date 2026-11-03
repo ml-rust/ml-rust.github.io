@@ -110,8 +110,8 @@ pub(crate) fn read_cached(path: &Path, window_days: u16) -> Result<DumpSnapshot,
 
 #[cfg(test)]
 mod tests {
-    use super::super::error::EXIT_IO;
     use super::*;
+    use crate::exit::IO;
 
     #[test]
     fn missing_dump_names_the_path_and_the_fetch_command() {
@@ -119,6 +119,6 @@ mod tests {
         let message = error.to_string();
         assert!(message.contains("/nonexistent/db-dump.tar.gz"), "{message}");
         assert!(message.contains("catalogue dump fetch"), "{message}");
-        assert_eq!(error.exit_code(), EXIT_IO);
+        assert_eq!(error.exit_code(), IO);
     }
 }

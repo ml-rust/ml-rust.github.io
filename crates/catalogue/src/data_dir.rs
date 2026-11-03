@@ -41,7 +41,7 @@ pub struct DataDir {
 }
 
 /// Reads `entries/*.toml`, `judgments/*.toml`, `maintainers.toml`,
-/// `topics.toml` and `synonyms.toml` from `root`.
+/// `topics.toml`, `synonyms.toml` and `discovery.toml` from `root`.
 ///
 /// A missing `entries/` or `judgments/` directory reads as empty. A missing
 /// optional file reads as absent.
@@ -69,6 +69,7 @@ pub fn read_data_dir(root: &Path) -> Result<DataDir, DataDirError> {
         maintainers: read_optional(&root.join("maintainers.toml"))?,
         topics: read_optional(&root.join("topics.toml"))?,
         synonyms: read_optional(&root.join("synonyms.toml"))?,
+        discovery: read_optional(&root.join("discovery.toml"))?,
     };
     Ok(DataDir {
         sources,

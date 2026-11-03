@@ -22,4 +22,6 @@ pub struct DataSources {
     pub topics: Option<SourceFile>,
     /// `data/synonyms.toml`.
     pub synonyms: Option<SourceFile>,
+    /// `data/discovery.toml`.
+    pub discovery: Option<SourceFile>,
 }

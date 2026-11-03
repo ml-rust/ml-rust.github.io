@@ -4,7 +4,7 @@ use crate::entry::Entry;
 use crate::ids::Slug;
 use crate::judgment::Judgment;
 use crate::load::{self, DataSources, Diagnostics};
-use crate::registry::{Maintainer, SynonymGroup, Topic};
+use crate::registry::{Discovery, Maintainer, SynonymGroup, Topic};
 
 /// A checked data set.
 ///
@@ -16,6 +16,7 @@ pub struct Catalogue {
     topics: Vec<Topic>,
     maintainers: Vec<Maintainer>,
     synonyms: Vec<SynonymGroup>,
+    discovery: Option<Discovery>,
 }
 
 impl Catalogue {
@@ -32,6 +33,7 @@ impl Catalogue {
         topics: Vec<Topic>,
         maintainers: Vec<Maintainer>,
         synonyms: Vec<SynonymGroup>,
+        discovery: Option<Discovery>,
     ) -> Self {
         Self {
             entries,
@@ -39,6 +41,7 @@ impl Catalogue {
             topics,
             maintainers,
             synonyms,
+            discovery,
         }
     }
 
@@ -71,6 +74,11 @@ impl Catalogue {
     pub fn synonyms(&self) -> &[SynonymGroup] {
         &self.synonyms
     }
+
+    /// The discovery rules, or `None` when `discovery.toml` is absent.
+    pub fn discovery(&self) -> Option<&Discovery> {
+        self.discovery.as_ref()
+    }
 }
 
 #[cfg(test)]
@@ -90,6 +98,7 @@ mod tests {
         assert_eq!(catalogue.topics().len(), 2);
         assert_eq!(catalogue.maintainers().len(), 2);
         assert_eq!(catalogue.synonyms().len(), 1);
+        assert!(catalogue.discovery().is_none());
         let alpha = Slug::new("alpha").expect("slug");
         assert!(catalogue.entry(&alpha).is_some());
     }

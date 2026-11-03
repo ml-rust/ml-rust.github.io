@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use catalogue_core::canonical_crate_name;
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
 use catalogue_signals::fetch;
 use catalogue_signals::usage::{self, Usage};
@@ -43,12 +44,12 @@ pub fn resolve_names(
     let by_name: HashMap<String, u32> = snapshot
         .crates
         .iter()
-        .map(|(&id, row)| (canonical(&row.name), id))
+        .map(|(&id, row)| (canonical_crate_name(&row.name), id))
         .collect();
     let mut ids = Vec::new();
     let mut unknown = Vec::new();
     for name in names {
-        match by_name.get(&canonical(name)) {
+        match by_name.get(&canonical_crate_name(name)) {
             Some(id) if !ids.contains(id) => ids.push(*id),
             Some(_) => {}
             None => unknown.push(name.clone()),
@@ -59,19 +60,6 @@ pub fn resolve_names(
     } else {
         Err(DumpCommandError::UnknownCrates { names: unknown })
     }
-}
-
-/// A crate name in lower case with `_` read as `-`.
-fn canonical(name: &str) -> String {
-    name.chars()
-        .map(|c| {
-            if c == '_' {
-                '-'
-            } else {
-                c.to_ascii_lowercase()
-            }
-        })
-        .collect()
 }
 
 /// The `key: value` lines of `dump usage`, one block per crate, blank line between.

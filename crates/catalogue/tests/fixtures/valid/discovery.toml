@@ -1,0 +1,3 @@
+categories = ["science::ml"]
+keywords = ["llm", "machine-learning"]
+core_crates = ["burn", "candle-core"]

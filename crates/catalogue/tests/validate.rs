@@ -23,6 +23,7 @@ fn valid_set_reads_files_sorted_by_name() {
     assert_eq!(names, ["alpha.toml", "beta.toml", "gamma.toml"]);
     assert!(data.diagnostics.is_empty());
     assert!(data.sources.synonyms.is_some());
+    assert!(data.sources.discovery.is_some());
 }
 
 #[test]
@@ -83,6 +84,15 @@ fn synonym_term_in_two_groups_is_reported() {
     expect_invalid(
         "synonym-duplicate",
         "term `cuda` already appears in group 1",
+        1,
+    );
+}
+
+#[test]
+fn discovery_rule_break_is_reported() {
+    expect_invalid(
+        "discovery-invalid",
+        "discovery.toml: keyword `LLM` must be lowercase",
         1,
     );
 }

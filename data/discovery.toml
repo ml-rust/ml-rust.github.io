@@ -1,0 +1,47 @@
+# Candidate discovery over the crates.io database dump.
+#
+# A crate becomes a candidate when it matches any rule below. Candidates are
+# leads for human review, never entries: an entry needs a merged PR.
+# Lists favour recall. A false lead costs one review, a missed crate costs more.
+
+# crates.io category slugs.
+categories = ["science::ml"]
+
+# crates.io keywords, lowercase, exactly as crates store them.
+keywords = [
+    "ai",
+    "autograd",
+    "computer-vision",
+    "deep-learning",
+    "embeddings",
+    "gguf",
+    "inference",
+    "llm",
+    "machine-learning",
+    "ml",
+    "neural-network",
+    "neural-networks",
+    "nlp",
+    "onnx",
+    "reinforcement-learning",
+    "tensor",
+    "transformer",
+    "transformers",
+]
+
+# Core ML crates. A crate whose latest version depends on one of these
+# (normal or build dependency) is a candidate.
+core_crates = [
+    "burn",
+    "candle-core",
+    "dfdx",
+    "linfa",
+    "ndarray",
+    "numr",
+    "ort",
+    "safetensors",
+    "smartcore",
+    "tch",
+    "tokenizers",
+    "tract-core",
+]

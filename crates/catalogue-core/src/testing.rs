@@ -112,13 +112,14 @@ pub(crate) fn valid() -> DataSources {
         maintainers: Some(file("maintainers.toml", MAINTAINERS)),
         topics: Some(file("topics.toml", TOPICS)),
         synonyms: Some(file("synonyms.toml", SYNONYMS)),
+        discovery: None,
     }
 }
 
 /// Replaces the file at `path`, or adds it when absent.
 ///
 /// A path that contains `entries/` or `judgments/` goes to that list.
-/// `maintainers.toml` and `topics.toml` replace the optional file of that name.
+/// `maintainers.toml`, `topics.toml` and `discovery.toml` replace the optional file of that name.
 /// Any other path replaces the synonyms file.
 pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
     let list = if path.contains("entries/") {
@@ -129,6 +130,7 @@ pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
         let slot = match path {
             "maintainers.toml" => &mut sources.maintainers,
             "topics.toml" => &mut sources.topics,
+            "discovery.toml" => &mut sources.discovery,
             _ => &mut sources.synonyms,
         };
         *slot = Some(file(path, contents));

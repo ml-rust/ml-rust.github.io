@@ -7,7 +7,8 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 
 - `crates/catalogue-core`: schema, validation, signal types, tier rules. Pure: no file IO, no network.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO, fetchers, site build, bot. `main.rs` only parses and dispatches.
-- `data/`: entries, judgments, maintainers, topics, synonyms. Licensed CC-BY-4.0 (`data/LICENSE`).
+- `data/`: entries, judgments, maintainers, topics, synonyms, discovery rules. Licensed CC-BY-4.0 (`data/LICENSE`).
+- Discovery output is a list of leads. A lead becomes an entry only through a merged PR.
 - Search engine changes belong in oxidoc's `oxidoc-search`. NEVER fork the engine into this repo.
 
 ## Invariants

@@ -8,11 +8,7 @@ use catalogue_signals::fetch::FetchError;
 use thiserror::Error;
 
 use crate::cache_dir::CacheDirError;
-
-/// Exit code for a dump that does not parse.
-pub(super) const EXIT_DATA: u8 = 1;
-/// Exit code for a read, write or network error.
-pub(super) const EXIT_IO: u8 = 2;
+use crate::exit::{INVALID, IO};
 
 /// A `catalogue dump` action that fails.
 #[derive(Debug, Error)]
@@ -60,9 +56,9 @@ impl DumpCommandError {
     /// The process exit code: 1 for dump content, 2 for IO and network.
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Read { source, .. } if !matches!(source, DumpError::Io { .. }) => EXIT_DATA,
-            Self::UnknownCrates { .. } => EXIT_DATA,
-            _ => EXIT_IO,
+            Self::Read { source, .. } if !matches!(source, DumpError::Io { .. }) => INVALID,
+            Self::UnknownCrates { .. } => INVALID,
+            _ => IO,
         }
     }
 }
@@ -77,7 +73,7 @@ mod tests {
             path: PathBuf::from("d"),
             source: DumpError::MissingTable { table: "crates" },
         };
-        assert_eq!(bad.exit_code(), EXIT_DATA);
+        assert_eq!(bad.exit_code(), INVALID);
         let io = DumpCommandError::Read {
             path: PathBuf::from("d"),
             source: DumpError::Io {
@@ -85,7 +81,7 @@ mod tests {
                 source: io::Error::other("x"),
             },
         };
-        assert_eq!(io.exit_code(), EXIT_IO);
+        assert_eq!(io.exit_code(), IO);
     }
 
     #[test]
@@ -95,6 +91,6 @@ mod tests {
         };
         let message = error.to_string();
         assert!(message.contains("nope, gone"), "{message}");
-        assert_eq!(error.exit_code(), EXIT_DATA);
+        assert_eq!(error.exit_code(), INVALID);
     }
 }
