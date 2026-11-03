@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use catalogue_core::Date;
 use catalogue_signals::github::RepoRef;
 use catalogue_signals::link::{CrateRelease, LinkCheck, LinkError, LinkOutcome, check_link};
 
@@ -9,6 +10,11 @@ use crate::recording_pacer::RecordingPacer;
 use crate::transport::{FakeResponse, FakeTransport};
 
 pub const SHA: &str = "a866b336f14aa57a07f0d0be9f8762746e64ecb4";
+
+/// The run date of every check.
+pub fn today() -> Date {
+    Date::new(2026, 11, 3).expect("date")
+}
 
 fn release() -> CrateRelease {
     CrateRelease {
@@ -58,6 +64,7 @@ pub fn run(
         &repo,
         &release(),
         cache_dir,
+        today(),
         &mut RecordingPacer::default(),
     );
     (transport, outcome)

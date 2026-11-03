@@ -50,7 +50,7 @@ pub use sandbox::{
     SandboxCommand, SandboxCommandError, SandboxList, read_build_checks, run_sandbox, sandbox_list,
 };
 pub use seed::{Seed, SeedArgs, SeedError, build_seed, run_seed, write_drafts};
-pub use tiers::{Network, TiersArgs, TiersError, run_tiers, tiers_report};
+pub use tiers::{Network, TiersArgs, TiersError, TiersRun, run_tiers, tiers_report};
 pub use token::NoToken;
 pub use usage::{render_usage, resolve_names};
 pub use validate::{Outcome, Summary, validate};

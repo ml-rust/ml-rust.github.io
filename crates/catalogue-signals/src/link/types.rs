@@ -1,5 +1,6 @@
 //! The types the link check takes and returns.
 
+use catalogue_core::Date;
 use serde::{Deserialize, Serialize};
 
 /// One published version of a crate.
@@ -101,6 +102,8 @@ pub struct LinkOutcome {
     pub check: LinkCheck,
     /// Whether the cache held the result, so no request was sent.
     pub cached: bool,
+    /// The UTC date the check ran: the run date for a new check, the stored date for a cached one.
+    pub checked: Date,
 }
 
 #[cfg(test)]

@@ -3,12 +3,14 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use catalogue_core::{Catalogue, EntryKind, Slug};
+use catalogue_core::{Catalogue, Date, EntryKind, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoRef};
 use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
-use catalogue_signals::link::{CrateRelease, LinkCheck, LinkError, cached_link, check_link};
+use catalogue_signals::link::{
+    CrateRelease, LinkCheck, LinkError, LinkOutcome, cached_link, check_link,
+};
 
 use super::collect::github_repo;
 use crate::batch;
@@ -19,8 +21,8 @@ type Target = (Slug, RepoRef, CrateRelease);
 /// The repo link results, keyed by slug.
 #[derive(Debug, Default)]
 pub(super) struct Links {
-    /// The result of each library that has one.
-    pub(super) checks: BTreeMap<Slug, LinkCheck>,
+    /// The result of each library that has one, with its check date.
+    pub(super) checks: BTreeMap<Slug, LinkOutcome>,
     /// Why a library has no result, when its check fails on that library alone.
     pub(super) notes: BTreeMap<Slug, String>,
 }
@@ -30,7 +32,8 @@ pub(super) struct Links {
 /// A library whose repo is not on GitHub gets [`LinkCheck::UnsupportedHost`]. A
 /// library with a GitHub repo and a release in `snapshot` gets
 /// [`check_link`] on its latest unyanked version, which reads and writes the
-/// link cache under `cache_dir`. A library with no such release gets no result.
+/// link cache under `cache_dir`. A new check is dated `today`, a cached one
+/// keeps its stored date. A library with no such release gets no result.
 /// A library whose package is missing or unreadable gets a note and no result.
 /// Token errors, rate-limit errors, transport errors and cache errors end the run.
 pub(super) fn fetch_links(
@@ -39,6 +42,7 @@ pub(super) fn fetch_links(
     transport: &dyn Transport,
     token: &str,
     cache_dir: &Path,
+    today: Date,
 ) -> Result<Links, LinkError> {
     let index = CrateIndex::new(snapshot);
     let mut links = Links::default();
@@ -49,9 +53,12 @@ pub(super) fn fetch_links(
         }
         match github_repo(entry) {
             Err(_) => {
-                links
-                    .checks
-                    .insert(slug.clone(), LinkCheck::UnsupportedHost);
+                let outcome = LinkOutcome {
+                    check: LinkCheck::UnsupportedHost,
+                    cached: false,
+                    checked: today,
+                };
+                links.checks.insert(slug.clone(), outcome);
             }
             Ok(repo) => {
                 if let Some(release) = primary_release(entry, snapshot, &index) {
@@ -62,7 +69,7 @@ pub(super) fn fetch_links(
     }
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
     check_targets(
-        &targets, transport, token, cache_dir, &mut pacer, &mut links,
+        &targets, transport, token, cache_dir, today, &mut pacer, &mut links,
     )?;
     Ok(links)
 }
@@ -76,6 +83,7 @@ fn check_targets(
     transport: &dyn Transport,
     token: &str,
     cache_dir: &Path,
+    today: Date,
     pacer: &mut dyn Pacer,
     links: &mut Links,
 ) -> Result<(), LinkError> {
@@ -84,7 +92,7 @@ fn check_targets(
         let (slug, repo, release) = target;
         match cached_link(cache_dir, repo, release) {
             Ok(Some(outcome)) => {
-                links.checks.insert(slug.clone(), outcome.check);
+                links.checks.insert(slug.clone(), outcome);
             }
             Ok(None) => misses.push(target),
             Err(error) => {
@@ -94,16 +102,16 @@ fn check_targets(
     }
     let checked = batch::each(&misses, pacer, |target, pacer| {
         let (_, repo, release) = &**target;
-        match check_link(transport, token, repo, release, cache_dir, pacer) {
-            Ok(outcome) => Ok(Ok(outcome.check)),
+        match check_link(transport, token, repo, release, cache_dir, today, pacer) {
+            Ok(outcome) => Ok(Ok(outcome)),
             Err(error) => entry_note(error).map(Err),
         }
     })?;
     for (target, result) in misses.iter().zip(checked) {
         let (slug, ..) = target;
         match result {
-            Ok(check) => {
-                links.checks.insert(slug.clone(), check);
+            Ok(outcome) => {
+                links.checks.insert(slug.clone(), outcome);
             }
             Err(note) => {
                 links.notes.insert(slug.clone(), note);
@@ -203,6 +211,15 @@ mod tests {
         }
     }
 
+    fn today() -> Date {
+        Date::new(2026, 11, 3).expect("date")
+    }
+
+    /// The check date of every cached result.
+    fn stored() -> Date {
+        Date::new(2026, 10, 1).expect("date")
+    }
+
     fn target(name: &str) -> Target {
         (
             Slug::new(name).expect("slug"),
@@ -229,6 +246,7 @@ mod tests {
                 &release,
                 &repo.to_string(),
                 &LinkCheck::NoVcsInfo,
+                stored(),
             )
             .expect("stores");
         }
@@ -238,7 +256,15 @@ mod tests {
         };
         let mut pacer = Counting::default();
         let mut links = Links::default();
-        let result = check_targets(targets, &transport, "t", dir.path(), &mut pacer, &mut links);
+        let result = check_targets(
+            targets,
+            &transport,
+            "t",
+            dir.path(),
+            today(),
+            &mut pacer,
+            &mut links,
+        );
         let urls = transport.urls.borrow().clone();
         (links, urls, pacer.waits, result)
     }
@@ -251,6 +277,12 @@ mod tests {
         assert!(urls.is_empty());
         assert_eq!(waits, 0);
         assert_eq!(links.checks.len(), 3);
+        assert!(
+            links
+                .checks
+                .values()
+                .all(|outcome| outcome.checked == stored())
+        );
     }
 
     #[test]

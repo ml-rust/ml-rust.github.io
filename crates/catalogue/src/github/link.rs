@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use catalogue_core::Date;
 use catalogue_signals::assemble::{CrateIndex, latest_release};
 use catalogue_signals::fetch;
 use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoRef};
@@ -10,6 +11,7 @@ use catalogue_signals::link::{CrateRelease, LinkOutcome, check_link};
 
 use super::command::GithubCommandError;
 use crate::cache_dir::resolve_cache_dir;
+use crate::clock::today_utc;
 use crate::dump::{DumpCommandError, read_cached};
 use crate::render::or_none;
 use crate::token::NoToken;
@@ -42,7 +44,10 @@ pub(super) fn link(
     })?;
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
-    let outcome = check_link(&transport, &token, &repo, &release, &cache_dir, &mut pacer)?;
+    let today = Date::from(today_utc());
+    let outcome = check_link(
+        &transport, &token, &repo, &release, &cache_dir, today, &mut pacer,
+    )?;
     Ok(render_link(&release, &outcome))
 }
 
@@ -81,7 +86,11 @@ mod tests {
     }
 
     fn outcome(check: LinkCheck, cached: bool) -> LinkOutcome {
-        LinkOutcome { check, cached }
+        LinkOutcome {
+            check,
+            cached,
+            checked: Date::new(2026, 11, 3).expect("date"),
+        }
     }
 
     #[test]

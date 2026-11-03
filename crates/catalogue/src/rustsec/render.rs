@@ -79,6 +79,7 @@ mod tests {
         let advisories = Advisories {
             by_crate: HashMap::from([("foo-bar".to_owned(), list)]),
             warnings: Vec::new(),
+            archive_date: None,
         };
         let text = render_crate(&advisories, "Foo_Bar", date(2026, 11, 3), 60);
         assert_eq!(

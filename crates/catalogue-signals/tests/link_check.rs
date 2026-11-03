@@ -20,7 +20,7 @@ mod transport;
 use cache::cache;
 use catalogue_signals::github::{GithubError, RepoRef};
 use catalogue_signals::link::{CrateRelease, LinkCheck, LinkError, check_link};
-use link_setup::{SHA, compare_code, compared, package, run, then, vcs, verified};
+use link_setup::{SHA, compare_code, compared, package, run, then, today, vcs, verified};
 use recording_pacer::RecordingPacer;
 use transport::{FakeResponse, FakeTransport};
 
@@ -156,6 +156,7 @@ fn a_name_that_breaks_a_url_or_a_path_is_rejected_before_any_request() {
             &repo,
             &release,
             &dir,
+            today(),
             &mut RecordingPacer::default(),
         );
         assert!(

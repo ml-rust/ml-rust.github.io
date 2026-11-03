@@ -56,7 +56,8 @@ fn list<T: AsRef<str>>(items: &[T]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::{EntryKind, Reason, Rule, Slug, Tier, Verdict};
+    use catalogue_core::{Date, EntryKind, Reason, Rule, Signals, Slug, Tier, Verdict};
+    use catalogue_signals::assemble::{FactSources, FetchDates};
     use catalogue_signals::history::Row;
 
     use super::*;
@@ -70,11 +71,25 @@ mod tests {
             active_users: None,
             docker_pulls: None,
         };
+        let sources = FactSources {
+            dump: Date::new(2026, 11, 2).expect("date"),
+            crate_page: None,
+            advisory_page: None,
+            repo_page: None,
+            releases_page: None,
+            homebrew_page: None,
+            repology_page: None,
+            docker_page: None,
+            dates: FetchDates::default(),
+        };
         Assessment {
             slug: Slug::new(slug).expect("slug"),
             verdict,
             row,
             notes: notes.iter().map(|note| (*note).to_owned()).collect(),
+            signals: Signals::unknown(EntryKind::Library),
+            sources,
+            stars: None,
         }
     }
 

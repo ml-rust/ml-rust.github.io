@@ -20,7 +20,7 @@ use std::fs;
 use cache::cache;
 use catalogue_signals::github::GithubError;
 use catalogue_signals::link::{LinkCheck, LinkError, links_dir};
-use link_setup::{SHA, compare_code, compared, package, run, then, vcs, verified};
+use link_setup::{SHA, compare_code, compared, package, run, then, today, vcs, verified};
 use transport::FakeResponse;
 
 #[test]
@@ -31,12 +31,15 @@ fn a_second_run_reads_the_cache_and_sends_nothing() {
         "a/b",
         &dir,
     );
-    assert!(!first.expect("checks").cached);
+    let first = first.expect("checks");
+    assert!(!first.cached);
+    assert_eq!(first.checked, today());
     assert!(links_dir(&dir).join("serde-json-1.0.1@a__b.json").is_file());
     let (transport, second) = run(vec![], "A/B", &dir);
     let second = second.expect("cache hit");
     assert!(second.cached);
     assert_eq!(second.check, verified(false));
+    assert_eq!(second.checked, today());
     assert!(transport.urls().is_empty());
 }
 

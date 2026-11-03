@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 use super::level::Tier;
 
-/// A tier rule.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// A tier rule. Serde names match [`Rule::as_str`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum Rule {
     /// The author or RustSec ends the project: archived repo, `unmaintained`
     /// advisory, deprecation notice, every version yanked, or crate deleted.
@@ -29,6 +32,21 @@ pub enum Rule {
 }
 
 impl Rule {
+    /// Every rule, in rule order.
+    pub const ALL: [Self; 11] = [
+        Self::InstantArchive,
+        Self::ExpectedInterval,
+        Self::Dormancy,
+        Self::Rot,
+        Self::Dead,
+        Self::Finished,
+        Self::New,
+        Self::Featured,
+        Self::FeaturedNeedsOutsideApproval,
+        Self::Listed,
+        Self::DemotionPending,
+    ];
+
     /// The kebab-case rule name shown on entry pages.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -99,19 +117,7 @@ mod tests {
 
     #[test]
     fn rule_names_are_kebab_case_and_distinct() {
-        let rules = [
-            Rule::InstantArchive,
-            Rule::ExpectedInterval,
-            Rule::Dormancy,
-            Rule::Rot,
-            Rule::Dead,
-            Rule::Finished,
-            Rule::New,
-            Rule::Featured,
-            Rule::FeaturedNeedsOutsideApproval,
-            Rule::Listed,
-            Rule::DemotionPending,
-        ];
+        let rules = Rule::ALL;
         let mut names: Vec<&str> = rules.iter().map(|rule| rule.as_str()).collect();
         assert!(
             names
@@ -121,6 +127,21 @@ mod tests {
         names.sort_unstable();
         names.dedup();
         assert_eq!(names.len(), rules.len());
+    }
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    struct Wrap {
+        rule: Rule,
+    }
+
+    #[test]
+    fn serde_names_are_the_rule_names() {
+        for rule in Rule::ALL {
+            let text = toml::to_string(&Wrap { rule }).expect("serializes");
+            assert_eq!(text, format!("rule = \"{}\"\n", rule.as_str()));
+            let back: Wrap = toml::from_str(&text).expect("parses");
+            assert_eq!(back.rule, rule);
+        }
     }
 
     #[test]

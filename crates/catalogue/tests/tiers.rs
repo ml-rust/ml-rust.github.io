@@ -35,7 +35,8 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
         None,
         today,
     )
-    .expect("report");
+    .expect("report")
+    .text;
     assert!(
         report.starts_with("entries: 3\n\nslug: alpha\n"),
         "{report}"
@@ -98,7 +99,8 @@ fn an_unmaintained_advisory_on_a_dependency_fires_the_deprecated_requirement_rul
         None,
         today,
     )
-    .expect("report");
+    .expect("report")
+    .text;
     assert!(
         !block(&clean, "alpha").contains("deprecated requirement"),
         "{clean}"
@@ -127,7 +129,8 @@ fn an_unmaintained_advisory_on_a_dependency_fires_the_deprecated_requirement_rul
         None,
         today,
     )
-    .expect("report");
+    .expect("report")
+    .text;
     let alpha = block(&report, "alpha");
     assert!(
         alpha.contains(
@@ -160,7 +163,8 @@ fn an_online_run_checks_the_link_of_each_library_with_a_release_and_caches_it() 
         None,
         today,
     )
-    .expect("report");
+    .expect("report")
+    .text;
     let alpha = block(&report, "alpha");
     assert!(alpha.contains(".cargo_vcs_info.json"), "{alpha}");
     assert!(!block(&report, "beta").contains(".cargo_vcs_info.json"));

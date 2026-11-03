@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use catalogue_core::canonical_crate_name;
+use catalogue_core::{Date, canonical_crate_name};
 use jiff::{Span, civil};
 
 use super::advisory::{Advisory, AdvisoryKind};
@@ -20,6 +20,9 @@ pub struct Advisories {
     pub by_crate: HashMap<String, Vec<Advisory>>,
     /// One line per file or field the reader skips, naming the archive path and the reason.
     pub warnings: Vec<String>,
+    /// The UTC date of the newest advisory file time in the archive. A GitHub
+    /// archive stamps each file with the commit time. `None` when no file carries a time.
+    pub archive_date: Option<Date>,
 }
 
 impl Advisories {
@@ -106,6 +109,7 @@ mod tests {
         Advisories {
             by_crate,
             warnings: Vec::new(),
+            archive_date: None,
         }
     }
 

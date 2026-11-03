@@ -3,10 +3,12 @@
 //! The crate reads no files and opens no connections. Callers pass the raw
 //! text of each data file in a [`DataSources`] and receive a checked
 //! [`Catalogue`] or the full list of [`Diagnostics`]. [`assess`] applies the
-//! tier rules to one entry's [`Signals`] and [`Context`].
+//! tier rules to one entry's [`Signals`] and [`Context`]. A [`TierReport`]
+//! holds every entry's tier with the source of each signal.
 
 mod catalogue;
 mod date;
+pub mod date_text;
 pub mod deprecation;
 mod entry;
 mod ids;
@@ -15,6 +17,7 @@ mod judgment;
 mod judgment_checks;
 mod load;
 mod registry;
+mod report;
 mod tier;
 
 #[cfg(test)]
@@ -38,5 +41,8 @@ pub use registry::{
     FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers,
     NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic,
     TopicSummary, Topics,
+};
+pub use report::{
+    EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, SignalFact, SourceRef, TierReport,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

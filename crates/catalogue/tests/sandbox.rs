@@ -98,7 +98,8 @@ fn alpha_block(checks: &BuildChecks) -> String {
         None,
         date(3),
     )
-    .expect("report");
+    .expect("report")
+    .text;
     report
         .split("\n\n")
         .find(|block| block.starts_with("slug: alpha\n"))

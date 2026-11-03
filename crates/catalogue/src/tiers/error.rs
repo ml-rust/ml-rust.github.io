@@ -1,5 +1,8 @@
 //! The errors of `catalogue tiers`.
 
+use std::io;
+use std::path::PathBuf;
+
 use catalogue_core::Diagnostics;
 use catalogue_signals::distribution::DistributionError;
 use catalogue_signals::github::GithubError;
@@ -61,13 +64,34 @@ pub enum TiersError {
     /// The `--build-checks` file cannot be read.
     #[error(transparent)]
     BuildChecks(#[from] SandboxError),
+    /// The `--json` report cannot be written.
+    #[error(
+        "cannot write the tier report {}: {source}. Check that the --json path is a writable file path, then rerun",
+        .path.display()
+    )]
+    Report {
+        /// The file or directory that fails.
+        path: PathBuf,
+        /// The error from the operating system.
+        source: io::Error,
+    },
+    /// A signal in the report has a value without a source link or fetch date.
+    #[error(
+        "the tier report cites no source or date for some signals, so it is not written: {}. Fix the fetch that produced them, then rerun",
+        .problems.join("; ")
+    )]
+    Uncited {
+        /// One line per problem, naming the entry and the signal.
+        problems: Vec<String>,
+    },
 }
 
 impl TiersError {
     /// The process exit code.
     ///
     /// 1 for data, a missing data file, a missing token, a rejected token and a
-    /// corrupt build check file. 2 for IO and network errors. The dump and archive codes for their errors.
+    /// corrupt build check file. 2 for IO, network and report write errors. The
+    /// dump and archive codes for their errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Invalid(_)
@@ -76,7 +100,8 @@ impl TiersError {
             | Self::Github(GithubError::Status { status: 401, .. })
             | Self::Link(LinkError::Github(GithubError::Status { status: 401, .. }))
             | Self::Distribution(DistributionError::Status { status: 401, .. })
-            | Self::BuildChecks(SandboxError::Corrupt { .. }) => INVALID,
+            | Self::BuildChecks(SandboxError::Corrupt { .. })
+            | Self::Uncited { .. } => INVALID,
             Self::Dump(error) => error.exit_code(),
             Self::Rustsec(error) => error.exit_code(),
             Self::Data(_)
@@ -86,7 +111,8 @@ impl TiersError {
             | Self::Link(_)
             | Self::History(_)
             | Self::BuildChecks(_)
-            | Self::Distribution(_) => IO,
+            | Self::Distribution(_)
+            | Self::Report { .. } => IO,
         }
     }
 }

@@ -3,7 +3,8 @@
 //! one entry, and judgments into its [`Context`](catalogue_core::Context).
 //!
 //! Every function is pure. [`library_signals`] reads the dump through a
-//! [`CrateIndex`] built once per check.
+//! [`CrateIndex`] built once per check. [`signal_facts`] cites the source and
+//! the data date of each signal for the entry page.
 
 mod adoption;
 mod app;
@@ -16,6 +17,7 @@ mod fixtures;
 mod index;
 mod library;
 mod link;
+mod provenance;
 mod requirements;
 mod sources;
 mod versions;
@@ -26,4 +28,7 @@ pub use context::context;
 pub use index::CrateIndex;
 pub use library::library_signals;
 pub use link::{latest_release, primary_release};
+pub use provenance::{
+    ADVISORY_PAGE, BUILD_CHECK_PAGE, DUMP_PAGE, DUMP_SOURCE, FactSources, FetchDates, signal_facts,
+};
 pub use sources::LibrarySources;

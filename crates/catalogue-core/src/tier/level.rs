@@ -59,6 +59,19 @@ mod tests {
         assert_eq!(Tier::from_name("Featured"), None);
     }
 
+    #[derive(Serialize)]
+    struct Out {
+        tier: Tier,
+    }
+
+    #[test]
+    fn writes_the_tier_names() {
+        for tier in Tier::ALL {
+            let text = toml::to_string(&Out { tier }).expect("serializes");
+            assert_eq!(text, format!("tier = \"{}\"\n", tier.as_str()));
+        }
+    }
+
     #[test]
     fn rejects_other_spellings() {
         assert!(toml::from_str::<Wrap>("tier = \"Featured\"").is_err());

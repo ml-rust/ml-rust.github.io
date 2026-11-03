@@ -1,7 +1,7 @@
 //! The JSON lines the sandbox check reads and writes.
 
 use catalogue_core::Date;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 /// One crate release the sandbox check builds: a line of the list file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,17 +51,12 @@ pub struct CheckRecord {
     /// The toolchain label, such as the output of `rustc --version`.
     pub toolchain: String,
     /// The UTC date of the check, written as `YYYY-MM-DD`.
-    #[serde(serialize_with = "date_text")]
+    #[serde(serialize_with = "catalogue_core::date_text::plain")]
     pub checked: Date,
     /// The outcome.
     pub result: CheckResult,
     /// A fixed-text reason. It never holds compiler output, at most an error code such as `E0599`.
     pub detail: String,
-}
-
-/// Writes `date` as a plain `YYYY-MM-DD` string.
-fn date_text<S: Serializer>(date: &Date, serializer: S) -> Result<S::Ok, S::Error> {
-    serializer.collect_str(date)
 }
 
 #[cfg(test)]

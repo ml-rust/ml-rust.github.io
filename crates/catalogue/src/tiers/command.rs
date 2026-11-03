@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Catalogue, Date, Deprecated, Thresholds};
+use catalogue_core::{Catalogue, Date, Deprecated, Thresholds, TierReport};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::history::{History, Snapshot, read_all, write};
@@ -16,6 +16,7 @@ use super::assess::assess_entries;
 use super::collect::{Network, fetch_all};
 use super::error::TiersError;
 use super::render::render_tiers;
+use super::report::{tier_report, write_report};
 use crate::cache_dir::resolve_cache_dir;
 use crate::clock::today_utc;
 use crate::data_dir::load_catalogue;
@@ -50,6 +51,20 @@ pub struct TiersArgs {
     /// counts only for a crate's latest release. Without it R6 reads as unknown.
     #[arg(long, value_name = "FILE")]
     pub build_checks: Option<PathBuf>,
+    /// Also write the tier report as JSON to FILE: each entry's tier, reasons,
+    /// notes and every signal with its source link and data date. The file is
+    /// replaced atomically after the history write.
+    #[arg(long, value_name = "FILE")]
+    pub json: Option<PathBuf>,
+}
+
+/// The outcome of one `catalogue tiers` check.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TiersRun {
+    /// The text report.
+    pub text: String,
+    /// The tier report, with the source and data date of each signal.
+    pub report: TierReport,
 }
 
 /// Runs `catalogue tiers` and returns the process exit code.
@@ -76,6 +91,7 @@ pub fn run_tiers(args: TiersArgs) -> ExitCode {
 /// Checks the data, reads the caches, fetches the network signals and renders the report.
 ///
 /// The token is read only for an online run, after the data checks and before the dump read.
+/// With `--json`, the tier report goes to that file after the history write.
 fn tiers(
     args: &TiersArgs,
     token: impl FnOnce() -> Result<String, NoToken>,
@@ -91,7 +107,7 @@ fn tiers(
         Some(path) => read_build_checks(path)?,
         None => BuildChecks::default(),
     };
-    match token {
+    let run = match token {
         None => tiers_report(
             &catalogue,
             &snapshot,
@@ -100,7 +116,7 @@ fn tiers(
             Network::Offline,
             args.history.as_deref(),
             today,
-        ),
+        )?,
         Some(token) => {
             let transport = ReqwestTransport::new()?;
             let network = Network::Online {
@@ -116,15 +132,20 @@ fn tiers(
                 network,
                 args.history.as_deref(),
                 today,
-            )
+            )?
         }
+    };
+    if let Some(path) = &args.json {
+        write_report(path, &run.report)?;
     }
+    Ok(run.text)
 }
 
 /// The `catalogue tiers` report for a checked catalogue on `today`.
 ///
 /// Fetches the network signals through `network`, assembles each entry's
 /// signals, applies the tier rules and renders one block per entry, in slug order.
+/// The same pass builds the [`TierReport`], with the source and data date of each signal.
 /// `build_checks` holds the sandbox results that rot signal R6 reads.
 ///
 /// With `history_dir`, the run reads the snapshots in that directory before it
@@ -145,12 +166,13 @@ pub fn tiers_report(
     network: Network<'_>,
     history_dir: Option<&Path>,
     today: Date,
-) -> Result<String, TiersError> {
+) -> Result<TiersRun, TiersError> {
+    let (thresholds, _) = required(catalogue)?;
     let history = match history_dir {
         Some(dir) => read_all(dir)?,
         None => History::default(),
     };
-    let fetched = fetch_all(catalogue, snapshot, network, today.civil())?;
+    let fetched = fetch_all(catalogue, snapshot, network, today)?;
     let assessments = assess_entries(
         catalogue,
         snapshot,
@@ -167,7 +189,10 @@ pub fn tiers_report(
             .collect();
         write(dir, &Snapshot { date: today, rows })?;
     }
-    Ok(render_tiers(&assessments))
+    Ok(TiersRun {
+        text: render_tiers(&assessments),
+        report: tier_report(&assessments, thresholds, today),
+    })
 }
 
 /// The thresholds and the deprecated list, which the tier rules need.
@@ -221,6 +246,7 @@ mod tests {
             offline,
             history: None,
             build_checks: None,
+            json: None,
         }
     }
 
@@ -232,6 +258,7 @@ mod tests {
         assert!(!args.offline);
         assert_eq!(args.history, None);
         assert_eq!(args.build_checks, None);
+        assert_eq!(args.json, None);
         let args = parse(&["--data", "d", "--cache-dir", "c", "--offline"]);
         assert_eq!(args.data, PathBuf::from("d"));
         assert_eq!(args.cache_dir, Some(PathBuf::from("c")));
@@ -239,6 +266,9 @@ mod tests {
         let args = parse(&["--history", "h", "--build-checks", "b.jsonl"]);
         assert_eq!(args.history, Some(PathBuf::from("h")));
         assert_eq!(args.build_checks, Some(PathBuf::from("b.jsonl")));
+        let args = parse(&["--offline", "--json", "report.json"]);
+        assert!(args.offline);
+        assert_eq!(args.json, Some(PathBuf::from("report.json")));
     }
 
     #[test]

@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use catalogue_core::{Catalogue, Entry, EntryKind, Slug, normalize_repo_url};
+use catalogue_core::{Catalogue, Date, Entry, EntryKind, Slug, normalize_repo_url};
 use catalogue_signals::distribution::{
     HOMEBREW_INTERVAL, HomebrewInstalls, RELEASES_INTERVAL, REPOLOGY_INTERVAL, ReleaseDownloads,
     RepologyPackaging, homebrew_installs, release_downloads, repology_packaging,
@@ -11,8 +11,7 @@ use catalogue_signals::distribution::{
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoFacts, RepoRef, repo_facts};
 use catalogue_signals::http::{IntervalPacer, Transport};
-use catalogue_signals::link::LinkCheck;
-use jiff::civil;
+use catalogue_signals::link::LinkOutcome;
 
 use super::docker::fetch_docker;
 use super::error::TiersError;
@@ -36,10 +35,13 @@ pub enum Network<'a> {
 }
 
 /// The network signals of one entry, with a note for each source that had no answer.
+///
+/// Every value comes from a request on the run date, except `link`, which
+/// carries its own check date.
 #[derive(Debug, Default)]
 pub(crate) struct Fetched {
     pub(crate) facts: Option<RepoFacts>,
-    pub(crate) link: Option<LinkCheck>,
+    pub(crate) link: Option<LinkOutcome>,
     pub(crate) releases: Option<ReleaseDownloads>,
     pub(crate) homebrew: Option<HomebrewInstalls>,
     pub(crate) repology: Option<RepologyPackaging>,
@@ -60,7 +62,7 @@ pub(crate) fn fetch_all(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
     network: Network<'_>,
-    today: civil::Date,
+    today: Date,
 ) -> Result<BTreeMap<Slug, Fetched>, TiersError> {
     let mut out: BTreeMap<Slug, Fetched> = catalogue
         .entries()
@@ -84,7 +86,7 @@ pub(crate) fn fetch_all(
     }
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
     let facts = batch::each(&repos, &mut pacer, |(_, repo), pacer| {
-        match repo_facts(transport, token, repo, today, pacer) {
+        match repo_facts(transport, token, repo, today.civil(), pacer) {
             Ok(found) => Ok(Ok(found)),
             Err(error @ GithubError::Graphql { .. }) => Ok(Err(error.to_string())),
             Err(error) => Err(error),
@@ -96,9 +98,9 @@ pub(crate) fn fetch_all(
             Err(note) => note_on(&mut out, slug, note),
         }
     }
-    let links = fetch_links(catalogue, snapshot, transport, token, cache_dir)?;
-    for (slug, check) in links.checks {
-        slot(&mut out, &slug).link = Some(check);
+    let links = fetch_links(catalogue, snapshot, transport, token, cache_dir, today)?;
+    for (slug, outcome) in links.checks {
+        slot(&mut out, &slug).link = Some(outcome);
     }
     for (slug, note) in links.notes {
         note_on(&mut out, &slug, note);

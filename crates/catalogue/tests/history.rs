@@ -65,6 +65,7 @@ fn report(dir: &Path, network: Network<'_>, today: Date) -> String {
         today,
     )
     .expect("report")
+    .text
 }
 
 fn block<'a>(report: &'a str, slug: &str) -> &'a str {

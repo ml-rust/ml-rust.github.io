@@ -3,13 +3,15 @@
 use std::io::{self, Read};
 use std::path::Path;
 
-use catalogue_core::canonical_crate_name;
+use catalogue_core::{Date, canonical_crate_name};
 use flate2::read::MultiGzDecoder;
+use jiff::Timestamp;
 
 use super::advisories::Advisories;
 use super::block::parse;
 use super::error::RustsecError;
 use crate::archive::{is_file, name_parts};
+use crate::dump::utc_date;
 
 /// Bytes read from one advisory file at most.
 const MAX_FILE_BYTES: u64 = 1 << 20;
@@ -20,7 +22,8 @@ const MAX_FILE_BYTES: u64 = 1 << 20;
 /// entries, including the toolchain advisories under `<top>/rust/`, are
 /// ignored. Each kept file starts with a fenced `toml` block. A file with no
 /// such block, invalid TOML, or a bad date adds a line to
-/// [`Advisories::warnings`] and the pass continues.
+/// [`Advisories::warnings`] and the pass continues. The newest file time of
+/// the kept files sets [`Advisories::archive_date`]. A time of 0 counts as none.
 ///
 /// # Errors
 ///
@@ -30,6 +33,7 @@ pub fn read(reader: impl Read) -> Result<Advisories, RustsecError> {
     let mut archive = tar::Archive::new(MultiGzDecoder::new(reader));
     let mut advisories = Advisories::default();
     let mut files = 0_usize;
+    let mut newest = 0_u64;
     for entry in archive.entries().map_err(archive_error)? {
         let mut entry = entry.map_err(archive_error)?;
         if !is_file(entry.header().entry_type()) {
@@ -41,6 +45,9 @@ pub fn read(reader: impl Read) -> Result<Advisories, RustsecError> {
         };
         let label = path.to_string_lossy().into_owned();
         files += 1;
+        if let Ok(seconds) = entry.header().mtime() {
+            newest = newest.max(seconds);
+        }
         let mut bytes = Vec::new();
         entry
             .by_ref()
@@ -61,10 +68,21 @@ pub fn read(reader: impl Read) -> Result<Advisories, RustsecError> {
     if files == 0 {
         return Err(RustsecError::Empty);
     }
+    advisories.archive_date = file_date(newest);
     for list in advisories.by_crate.values_mut() {
         list.sort_by(|a, b| a.date.cmp(&b.date).then_with(|| a.id.cmp(&b.id)));
     }
     Ok(advisories)
+}
+
+/// The UTC date of a file time in seconds. `None` for 0 or a time out of range.
+fn file_date(seconds: u64) -> Option<Date> {
+    if seconds == 0 {
+        return None;
+    }
+    let seconds = i64::try_from(seconds).ok()?;
+    let timestamp = Timestamp::from_second(seconds).ok()?;
+    Some(Date::from(utc_date(timestamp)))
 }
 
 fn archive_error(source: io::Error) -> RustsecError {
@@ -141,6 +159,31 @@ mod tests {
         format!(
             "```toml\n[advisory]\nid = \"{id}\"\npackage = \"{package}\"\ndate = \"{day}\"\n{extra}\n[versions]\n{versions}\n```\n\n# Title\n"
         )
+    }
+
+    #[test]
+    fn the_newest_file_time_sets_the_archive_date() {
+        let text = file("R1", "foo", "2021-01-01", "", "patched = []");
+        let mut builder = tar::Builder::new(GzEncoder::new(Vec::new(), Compression::fast()));
+        for (name, mtime) in [("R1", 1_793_000_000_u64), ("R2", 1_793_611_800)] {
+            let mut header = Header::new_gnu();
+            header.set_size(text.len() as u64);
+            header.set_mode(0o644);
+            header.set_mtime(mtime);
+            let path = format!("advisory-db-main/crates/foo/{name}.md");
+            builder
+                .append_data(&mut header, path, text.as_bytes())
+                .expect("file entry");
+        }
+        let bytes = builder
+            .into_inner()
+            .expect("tar stream")
+            .finish()
+            .expect("gzip stream");
+        let all = read(bytes.as_slice()).expect("reads");
+        assert_eq!(all.archive_date, Some(Date::from(date(2026, 11, 2))));
+        let untimed = read_files(&[("crates/foo/R1.md", text.as_str())]);
+        assert_eq!(untimed.archive_date, None);
     }
 
     fn read_files(files: &[(&str, &str)]) -> Advisories {

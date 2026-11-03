@@ -2,6 +2,8 @@
 
 use std::path::Path;
 
+use catalogue_core::Date;
+
 use super::cache::{cached_check, store_check};
 use super::check::{CommitStanding, commit_standing};
 use super::error::LinkError;
@@ -22,7 +24,7 @@ const PACKAGE_HOST: &str = "https://static.crates.io/crates";
 /// there. A package without a `git.sha1` gives [`LinkCheck::NoVcsInfo`]. A
 /// commit gets the GitHub lookup of [`commit_standing`] with `token`. A commit
 /// that only a fork holds gives [`LinkCheck::NotOnDefaultBranch`]. The result
-/// goes into the cache. An error is never cached.
+/// goes into the cache with `today` as its check date. An error is never cached.
 ///
 /// # Errors
 ///
@@ -35,6 +37,7 @@ pub fn check_link(
     repo: &RepoRef,
     release: &CrateRelease,
     cache_dir: &Path,
+    today: Date,
     pacer: &mut dyn Pacer,
 ) -> Result<LinkOutcome, LinkError> {
     if let Some(outcome) = cached_link(cache_dir, repo, release)? {
@@ -48,16 +51,17 @@ pub fn check_link(
         },
         (None, _) => LinkCheck::NoVcsInfo,
     };
-    store_check(cache_dir, release, &repo.to_string(), &check)?;
+    store_check(cache_dir, release, &repo.to_string(), &check, today)?;
     Ok(LinkOutcome {
         check,
         cached: false,
+        checked: today,
     })
 }
 
 /// The cached result for `release` and `repo`, with no request.
 ///
-/// Returns `None` on a cache miss. A hit has `cached` set.
+/// Returns `None` on a cache miss. A hit has `cached` set and the stored check date.
 ///
 /// # Errors
 ///
@@ -75,12 +79,7 @@ pub fn cached_link(
             });
         }
     }
-    Ok(
-        cached_check(cache_dir, release, &repo.to_string())?.map(|check| LinkOutcome {
-            check,
-            cached: true,
-        }),
-    )
+    cached_check(cache_dir, release, &repo.to_string())
 }
 
 /// The commit and dirty flag in the package of `release`. The commit is `None` without commit data.

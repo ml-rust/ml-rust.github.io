@@ -2,19 +2,21 @@
 //!
 //! A result is immutable for one crate, version and repo. The file
 //! `<cache>/links/<canonical-crate>-<version>@<owner>__<repo>.json`, with the
-//! repo lowercase, holds `{rule, repo, result}`. Each repo has its own file.
-//! `rule` names the verification rule that wrote the result. A file from an
-//! older rule, or with no `rule`, reads as a miss.
+//! repo lowercase, holds `{rule, repo, result, checked}`. Each repo has its own
+//! file. `rule` names the verification rule that wrote the result. `checked` is
+//! the UTC date of the check. A file from an older rule, with no `rule`, or
+//! with no `checked` date reads as a miss.
 
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use catalogue_core::canonical_crate_name;
+use catalogue_core::date_text::plain;
+use catalogue_core::{Date, canonical_crate_name};
 use serde::{Deserialize, Serialize};
 
 use super::error::LinkError;
-use super::types::{CrateRelease, LinkCheck};
+use super::types::{CrateRelease, LinkCheck, LinkOutcome};
 use crate::atomic::write_atomic;
 
 /// The directory under `cache_dir` that holds the link results.
@@ -34,6 +36,9 @@ struct Record {
     rule: u32,
     repo: String,
     result: LinkCheck,
+    /// The date of the check. A file without it reads as a miss.
+    #[serde(serialize_with = "plain")]
+    checked: Date,
 }
 
 fn file_path(cache_dir: &Path, release: &CrateRelease, repo: &str) -> PathBuf {
@@ -44,8 +49,10 @@ fn file_path(cache_dir: &Path, release: &CrateRelease, repo: &str) -> PathBuf {
 
 /// The cached result for `release` and `repo` under `cache_dir`.
 ///
-/// Returns `None` when no file exists, the file is not a link record, the file
-/// comes from an older rule, or the file names another repo. Repo names compare without regard to ASCII case.
+/// A hit has `cached` set and the stored check date. Returns `None` when no
+/// file exists, the file is not a link record, the file comes from an older
+/// rule or has no check date, or the file names another repo. Repo names
+/// compare without regard to ASCII case.
 ///
 /// # Errors
 ///
@@ -54,7 +61,7 @@ pub fn cached_check(
     cache_dir: &Path,
     release: &CrateRelease,
     repo: &str,
-) -> Result<Option<LinkCheck>, LinkError> {
+) -> Result<Option<LinkOutcome>, LinkError> {
     let path = file_path(cache_dir, release, repo);
     let bytes = match fs::read(&path) {
         Ok(bytes) => bytes,
@@ -64,10 +71,15 @@ pub fn cached_check(
     let Ok(record) = serde_json::from_slice::<Record>(&bytes) else {
         return Ok(None);
     };
-    Ok((record.rule == RULE && record.repo.eq_ignore_ascii_case(repo)).then_some(record.result))
+    let current = record.rule == RULE && record.repo.eq_ignore_ascii_case(repo);
+    Ok(current.then_some(LinkOutcome {
+        check: record.result,
+        cached: true,
+        checked: record.checked,
+    }))
 }
 
-/// Stores `result` for `release` and `repo` under `cache_dir`.
+/// Stores `result` for `release` and `repo` under `cache_dir`, checked on `checked`.
 ///
 /// The write goes to a temporary file that is renamed into place, so a reader
 /// never sees a partial file and a failed write leaves no temporary file.
@@ -80,12 +92,14 @@ pub fn store_check(
     release: &CrateRelease,
     repo: &str,
     result: &LinkCheck,
+    checked: Date,
 ) -> Result<(), LinkError> {
     let path = file_path(cache_dir, release, repo);
     let record = Record {
         rule: RULE,
         repo: repo.to_ascii_lowercase(),
         result: result.clone(),
+        checked,
     };
     let bytes = serde_json::to_vec(&record).map_err(|error| LinkError::Cache {
         path: path.clone(),

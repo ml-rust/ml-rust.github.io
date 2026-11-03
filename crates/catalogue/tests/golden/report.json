@@ -1,0 +1,972 @@
+{
+  "schema": 1,
+  "generated": "2026-11-03",
+  "thresholds_version": 1,
+  "calibrated": null,
+  "entries": {
+    "alpha": {
+      "tier": "new",
+      "stable": false,
+      "dormant": false,
+      "demotion_pending": null,
+      "reasons": [
+        {
+          "rule": "expected-interval",
+          "detail": "version 1.3.0 base 200, capped at 2 releases = 100, raised to the 365-day floor: E = 365 days"
+        },
+        {
+          "rule": "dormancy",
+          "detail": "last activity 2026-09-01, 63 days ago, E = 365: active"
+        },
+        {
+          "rule": "rot",
+          "detail": "deprecated requirement `tokio 0.1 (https://example.com/tokio-deprecation)`"
+        },
+        {
+          "rule": "new",
+          "detail": "new: 0 active users < 2"
+        }
+      ],
+      "unknown": [],
+      "notes": [],
+      "signals": [
+        {
+          "name": "first_release",
+          "label": "First release",
+          "value": "2025-01-01",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "latest_version",
+          "label": "Latest version",
+          "value": "1.3.0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "release_count",
+          "label": "Releases",
+          "value": "2",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_release",
+          "label": "Latest release",
+          "value": "2026-09-01",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_yanked",
+          "label": "Every version yanked",
+          "value": "false",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "crate_deleted",
+          "label": "Crate deleted from crates.io",
+          "value": "false",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_prerelease",
+          "label": "Every version a prerelease",
+          "value": "false",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "active_users",
+          "label": "Active users",
+          "value": "0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "new_adopters",
+          "label": "New adopters over 12 months",
+          "value": "0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "peak_users",
+          "label": "Peak active users",
+          "value": "0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "former_glory",
+          "label": "Active users as a share of the peak",
+          "value": "1",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "downloads_per_month",
+          "label": "Downloads over 30 days",
+          "value": "0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "rustsec_unmaintained",
+          "label": "RustSec unmaintained advisory",
+          "value": "none",
+          "source": {
+            "label": "RustSec advisory database",
+            "url": "https://rustsec.org/packages/alpha-crate.html"
+          },
+          "fetched": "2026-11-01",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "unpatched_vulnerabilities",
+          "label": "Unpatched vulnerabilities past the grace window",
+          "value": "none",
+          "source": {
+            "label": "RustSec advisory database",
+            "url": "https://rustsec.org/packages/alpha-crate.html"
+          },
+          "fetched": "2026-11-01",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecation_notice",
+          "label": "Deprecation notice",
+          "value": "none",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecated_requirement",
+          "label": "Deprecated requirement",
+          "value": "tokio 0.1 (https://example.com/tokio-deprecation)",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_fails",
+          "label": "Latest release fails cargo check",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_checked",
+          "label": "Build check date",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_toolchain",
+          "label": "Build check toolchain",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_archived",
+          "label": "Repository archived",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_gone",
+          "label": "Repository gone",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_human_commit",
+          "label": "Latest human commit",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "oldest_unanswered_days",
+          "label": "Days the oldest outside issue waits for a reply",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "maintainer_replies_365",
+          "label": "Maintainer replies over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docs_present",
+          "label": "Published docs",
+          "value": "true",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_link_verified",
+          "label": "Release commit on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_last3",
+          "label": "Binary downloads over the last 3 releases",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_per_release",
+          "label": "Binary downloads per release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "homebrew_on_request_365d",
+          "label": "Homebrew installs on request over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repology_families",
+          "label": "Repology repository families",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_growth_90d",
+          "label": "Docker pull growth over 90 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_baseline",
+          "label": "Docker pulls at the growth baseline",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "stars",
+          "label": "GitHub stars",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        }
+      ]
+    },
+    "beta": {
+      "tier": "listed",
+      "stable": false,
+      "dormant": null,
+      "demotion_pending": null,
+      "reasons": [
+        {
+          "rule": "expected-interval",
+          "detail": "latest version unknown: E = 365 days"
+        },
+        {
+          "rule": "dormancy",
+          "detail": "last release and last human commit unknown: dormancy unknown"
+        },
+        {
+          "rule": "featured",
+          "detail": "not featured: unknown active_users, new_adopters, repo_link_verified, former_glory, docs_present, last_release, last_human_commit"
+        },
+        {
+          "rule": "listed",
+          "detail": "listed: no archive, new or featured rule applies"
+        }
+      ],
+      "unknown": [
+        "latest_version",
+        "last_release",
+        "last_human_commit",
+        "oldest_unanswered_days",
+        "maintainer_replies_365",
+        "former_glory",
+        "repo_gone",
+        "build_fails",
+        "new_adopters",
+        "first_release",
+        "all_prerelease",
+        "active_users",
+        "repo_link_verified",
+        "docs_present"
+      ],
+      "notes": [
+        "crate beta-crate is not in the dump"
+      ],
+      "signals": [
+        {
+          "name": "first_release",
+          "label": "First release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "latest_version",
+          "label": "Latest version",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "release_count",
+          "label": "Releases",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_release",
+          "label": "Latest release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_yanked",
+          "label": "Every version yanked",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "crate_deleted",
+          "label": "Crate deleted from crates.io",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_prerelease",
+          "label": "Every version a prerelease",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "active_users",
+          "label": "Active users",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "new_adopters",
+          "label": "New adopters over 12 months",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "peak_users",
+          "label": "Peak active users",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "former_glory",
+          "label": "Active users as a share of the peak",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "downloads_per_month",
+          "label": "Downloads over 30 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "rustsec_unmaintained",
+          "label": "RustSec unmaintained advisory",
+          "value": "none",
+          "source": {
+            "label": "RustSec advisory database",
+            "url": "https://rustsec.org/packages/beta-crate.html"
+          },
+          "fetched": "2026-11-01",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "unpatched_vulnerabilities",
+          "label": "Unpatched vulnerabilities past the grace window",
+          "value": "none",
+          "source": {
+            "label": "RustSec advisory database",
+            "url": "https://rustsec.org/packages/beta-crate.html"
+          },
+          "fetched": "2026-11-01",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecation_notice",
+          "label": "Deprecation notice",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecated_requirement",
+          "label": "Deprecated requirement",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_fails",
+          "label": "Latest release fails cargo check",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_checked",
+          "label": "Build check date",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_toolchain",
+          "label": "Build check toolchain",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_archived",
+          "label": "Repository archived",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_gone",
+          "label": "Repository gone",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_human_commit",
+          "label": "Latest human commit",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "oldest_unanswered_days",
+          "label": "Days the oldest outside issue waits for a reply",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "maintainer_replies_365",
+          "label": "Maintainer replies over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docs_present",
+          "label": "Published docs",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_link_verified",
+          "label": "Release commit on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_last3",
+          "label": "Binary downloads over the last 3 releases",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_per_release",
+          "label": "Binary downloads per release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "homebrew_on_request_365d",
+          "label": "Homebrew installs on request over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repology_families",
+          "label": "Repology repository families",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_growth_90d",
+          "label": "Docker pull growth over 90 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_baseline",
+          "label": "Docker pulls at the growth baseline",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "stars",
+          "label": "GitHub stars",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        }
+      ]
+    },
+    "gamma": {
+      "tier": "listed",
+      "stable": false,
+      "dormant": null,
+      "demotion_pending": null,
+      "reasons": [
+        {
+          "rule": "expected-interval",
+          "detail": "app: E = 365 days"
+        },
+        {
+          "rule": "dormancy",
+          "detail": "last release and last human commit unknown: dormancy unknown"
+        },
+        {
+          "rule": "featured",
+          "detail": "not featured: unknown binary_downloads_last3, homebrew_on_request_365d, repology_families, docker_pull_growth_90d, last_release, last_human_commit"
+        },
+        {
+          "rule": "listed",
+          "detail": "listed: no archive, new or featured rule applies"
+        }
+      ],
+      "unknown": [
+        "last_release",
+        "last_human_commit",
+        "oldest_unanswered_days",
+        "maintainer_replies_365",
+        "unpatched_vulnerabilities",
+        "repo_gone",
+        "binary_downloads_per_release",
+        "first_release",
+        "all_prerelease",
+        "binary_downloads_last3",
+        "homebrew_on_request_365d",
+        "repology_families",
+        "docker_pull_growth_90d"
+      ],
+      "notes": [],
+      "signals": [
+        {
+          "name": "first_release",
+          "label": "First release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "latest_version",
+          "label": "Latest version",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "release_count",
+          "label": "Releases",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_release",
+          "label": "Latest release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_yanked",
+          "label": "Every version yanked",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "crate_deleted",
+          "label": "Crate deleted from crates.io",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_prerelease",
+          "label": "Every version a prerelease",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "active_users",
+          "label": "Active users",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "new_adopters",
+          "label": "New adopters over 12 months",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "peak_users",
+          "label": "Peak active users",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "former_glory",
+          "label": "Active users as a share of the peak",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "downloads_per_month",
+          "label": "Downloads over 30 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "rustsec_unmaintained",
+          "label": "RustSec unmaintained advisory",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "unpatched_vulnerabilities",
+          "label": "Unpatched vulnerabilities past the grace window",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecation_notice",
+          "label": "Deprecation notice",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "deprecated_requirement",
+          "label": "Deprecated requirement",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_fails",
+          "label": "Latest release fails cargo check",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_checked",
+          "label": "Build check date",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "build_toolchain",
+          "label": "Build check toolchain",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_archived",
+          "label": "Repository archived",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_gone",
+          "label": "Repository gone",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "last_human_commit",
+          "label": "Latest human commit",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "oldest_unanswered_days",
+          "label": "Days the oldest outside issue waits for a reply",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "maintainer_replies_365",
+          "label": "Maintainer replies over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docs_present",
+          "label": "Published docs",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repo_link_verified",
+          "label": "Release commit on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_last3",
+          "label": "Binary downloads over the last 3 releases",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "binary_downloads_per_release",
+          "label": "Binary downloads per release",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "homebrew_on_request_365d",
+          "label": "Homebrew installs on request over 365 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repology_families",
+          "label": "Repology repository families",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_growth_90d",
+          "label": "Docker pull growth over 90 days",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "docker_pull_baseline",
+          "label": "Docker pulls at the growth baseline",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "stars",
+          "label": "GitHub stars",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        }
+      ]
+    }
+  }
+}
