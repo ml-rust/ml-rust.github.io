@@ -145,15 +145,23 @@ fn prefix_within(text: &str, room: usize) -> &str {
     if text.len() <= room {
         return text;
     }
-    let mut end = room;
-    while !text.is_char_boundary(end) {
-        end = end.saturating_sub(1);
-    }
-    let head = text.get(..end).unwrap_or_default();
+    let head = char_prefix(text, room);
     match head.rfind('\n') {
         Some(at) => head.get(..at).unwrap_or_default(),
         None => head,
     }
+}
+
+/// The longest prefix of `text` within `room` bytes that ends at a character boundary.
+pub(crate) fn char_prefix(text: &str, room: usize) -> &str {
+    if text.len() <= room {
+        return text;
+    }
+    let mut end = room;
+    while !text.is_char_boundary(end) {
+        end = end.saturating_sub(1);
+    }
+    text.get(..end).unwrap_or_default()
 }
 
 /// `lines` sorted, without repeats.
@@ -235,6 +243,8 @@ mod tests {
         assert_eq!(prefix_within("ab\ncd", 4), "ab");
         assert_eq!(prefix_within("abcd", 3), "abc");
         assert_eq!(prefix_within("aé", 2), "a");
+        assert_eq!(char_prefix("aé\nb", 2), "a");
+        assert_eq!(char_prefix("ab", 9), "ab");
     }
 
     #[test]

@@ -4,6 +4,7 @@ members = [
     "crates/catalogue-signals",
     "crates/catalogue-bot",
     "crates/catalogue-github",
+    "crates/catalogue-triage",
     "crates/catalogue",
 ]
 resolver = "3"
@@ -58,3 +59,5 @@ catalogue-signals = { path = "crates/catalogue-signals" }
 catalogue-bot = { path = "crates/catalogue-bot" }
 # The GitHub App client of the bot: App auth, installation tokens and label sync.
 catalogue-github = { path = "crates/catalogue-github" }
+# The advisory LLM link check of the bot: provider fallback, Ollama web_fetch and GitHub page reads.
+catalogue-triage = { path = "crates/catalogue-triage" }

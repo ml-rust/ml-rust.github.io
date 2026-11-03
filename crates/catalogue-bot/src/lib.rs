@@ -10,7 +10,8 @@
 //! comment, and [`comment_body`] builds the comment text within GitHub's cap.
 //! [`approval_event`] reads the approval from the issue events, [`decide`]
 //! applies the ownership rules, and [`pr_decision`] turns an approved issue
-//! into the data PR it becomes.
+//! into the data PR it becomes. [`triage`] holds the pure parts of the
+//! advisory LLM link check.
 
 mod check;
 mod comment;
@@ -18,6 +19,7 @@ mod convert;
 mod form;
 mod labels;
 mod pr;
+pub mod triage;
 
 pub use check::{Block, CheckInput, CheckReport, Section, check_submission, label_report};
 pub use comment::{

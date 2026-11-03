@@ -1,0 +1,23 @@
+[package]
+name = "catalogue-triage"
+version.workspace = true
+description = "Advisory LLM link check of the ml-rust catalogue bot: provider fallback, Ollama web_fetch and GitHub page reads"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+catalogue-bot.workspace = true
+catalogue-github.workspace = true
+catalogue-signals.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+catalogue-github = { workspace = true, features = ["testing"] }
+jiff.workspace = true
+tempfile.workspace = true

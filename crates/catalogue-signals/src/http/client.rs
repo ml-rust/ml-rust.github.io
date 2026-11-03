@@ -32,10 +32,21 @@ impl ReqwestTransport {
     ///
     /// Returns [`HttpError::Client`] when the TLS backend cannot start.
     pub fn new() -> Result<Self, HttpError> {
+        Self::with_timeout(READ_TIMEOUT)
+    }
+
+    /// Builds the client with `timeout` for the response head and for each body read.
+    ///
+    /// A slow API, such as a model provider, passes a longer wait than the default.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`HttpError::Client`] when the TLS backend cannot start.
+    pub fn with_timeout(timeout: Duration) -> Result<Self, HttpError> {
         let client = Client::builder()
             .user_agent(USER_AGENT)
             .connect_timeout(CONNECT_TIMEOUT)
-            .timeout(READ_TIMEOUT)
+            .timeout(timeout)
             .build()
             .map_err(|error| HttpError::Client {
                 reason: error.to_string(),

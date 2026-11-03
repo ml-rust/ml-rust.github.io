@@ -151,6 +151,7 @@ dependencies = [
  "catalogue-core",
  "jiff",
  "serde",
+ "serde_json",
  "thiserror",
  "toml",
  "url",
@@ -199,6 +200,21 @@ dependencies = [
  "tempfile",
  "thiserror",
  "toml",
+ "url",
+]
+
+[[package]]
+name = "catalogue-triage"
+version = "0.1.0"
+dependencies = [
+ "catalogue-bot",
+ "catalogue-github",
+ "catalogue-signals",
+ "jiff",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
  "url",
 ]
 
