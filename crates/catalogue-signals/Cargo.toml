@@ -1,0 +1,19 @@
+[package]
+name = "catalogue-signals"
+version.workspace = true
+description = "Collects raw catalogue signals from the crates.io database dump"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+catalogue-core.workspace = true
+csv.workspace = true
+flate2.workspace = true
+jiff.workspace = true
+rustc-hash.workspace = true
+serde_json.workspace = true
+tar.workspace = true
+thiserror.workspace = true

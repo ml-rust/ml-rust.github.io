@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/catalogue-core", "crates/catalogue"]
+members = ["crates/catalogue-core", "crates/catalogue-signals", "crates/catalogue"]
 resolver = "3"
 
 [workspace.package]
@@ -16,11 +16,21 @@ serde = { version = "1", features = ["derive"] }
 toml = "1"
 # Typed error enums in the core and the CLI library.
 thiserror = "2"
-# Calendar dates (`added`, `date`, `since`) without a time zone.
+# Calendar dates (`added`, `date`, `since`) and the UTC timestamps in the dump.
 jiff = "0.2"
 # Parsed and normalised repository, homepage, issue and evidence links.
 url = { version = "2", features = ["serde"] }
 # Argument parsing for the `catalogue` command.
 clap = { version = "4", features = ["derive"] }
+# Gzip decoding of the crates.io database dump, and encoding in its tests.
+flate2 = "1"
+# Streams the entries of the crates.io database dump archive.
+tar = "0.4"
+# Reads the psql CSV tables inside the crates.io database dump.
+csv = "1"
+# Parses `metadata.json` in the crates.io database dump.
+serde_json = "1"
+# Fast hashing for maps keyed by crates.io integer ids.
+rustc-hash = "2"
 # Pure data model and validation, shared by the CLI.
 catalogue-core = { path = "crates/catalogue-core" }
