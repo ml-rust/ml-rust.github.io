@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submit · Rust ML catalogue</title>
+<link rel="stylesheet" href="/assets/site.42ea1367.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<a class="site-name" href="/">Rust ML catalogue</a>
+<form class="site-search" action="/search/" method="get" role="search">
+<label for="site-search-q">Search the catalogue</label>
+<input id="site-search-q" name="q" type="search">
+<button type="submit">Search</button>
+</form>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/topics/">Topics</a></li>
+<li><a href="/rules/">Rules</a></li>
+<li><a href="/changes/">Changes</a></li>
+<li><a href="/submit/" aria-current="page">Submit</a></li>
+</ul>
+</nav>
+</header>
+<main id="main" tabindex="-1">
+
+<h1>Submit</h1>
+<p>Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
+<ul class="form-list">
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=submit.yml">Submit a project</a>: Propose a new library or app for the catalogue.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=correctness.yml">Correctness report</a>: Report a wrong fact on an entry.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=supersedes.yml">Supersedes or fork</a>: Report that one entry replaces another.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=kind.yml">Product or demo</a>: Set whether an entry is a product or a demo.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=category.yml">Category change</a>: Change the topics of an entry.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=demotion.yml">Featured demotion</a>: Approve moving a Featured entry to a lower tier.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=featured-approval.yml">Featured approval</a>: Approve Featured for an org-affiliated entry.</li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=maintainer.yml">Maintainer statement</a>: State whether a project is maintained or finished.</li>
+</ul>
+
+<h2 id="approval">Approval</h2>
+<p>A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue.</p>
+<p>Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</p>
+<p>After approval, the bot opens a pull request with the data change. Merging that pull request applies it.</p>
+<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
+<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
+<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
+
+<h2 id="topics">Topics</h2>
+<p>The submit and category forms take topic slugs from this list.</p>
+<table>
+<thead>
+<tr><th scope="col">Slug</th><th scope="col">Name</th><th scope="col">Parent</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="/topics/ml/"><code>ml</code></a></td><td>Machine learning</td><td></td></tr>
+<tr><td><a href="/topics/tensors/"><code>tensors</code></a></td><td>Tensors</td><td><code>ml</code></td></tr>
+</tbody>
+</table>
+
+</main>
+<footer class="site-footer">
+<p>Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>. Source: <a href="https://github.com/ml-rust/ml-rust.github.io">ml-rust/ml-rust.github.io</a>.</p>
+</footer>
+</body>
+</html>

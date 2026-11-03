@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rules · Rust ML catalogue</title>
+<link rel="stylesheet" href="/assets/site.42ea1367.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<a class="site-name" href="/">Rust ML catalogue</a>
+<form class="site-search" action="/search/" method="get" role="search">
+<label for="site-search-q">Search the catalogue</label>
+<input id="site-search-q" name="q" type="search">
+<button type="submit">Search</button>
+</form>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/topics/">Topics</a></li>
+<li><a href="/rules/" aria-current="page">Rules</a></li>
+<li><a href="/changes/">Changes</a></li>
+<li><a href="/submit/">Submit</a></li>
+</ul>
+</nav>
+</header>
+<main id="main" tabindex="-1">
+
+<h1>Tier rules</h1>
+<p>Tiers come from fixed thresholds over raw signals. There is no composite score.</p>
+<p>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</p>
+<p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
+<div class="threshold-status">
+<p>Thresholds version 3.</p>
+<p>Calibrated on 2026-11-03.</p>
+<p>The values stay frozen until the yearly recalibration. Any change raises the version.</p>
+</div>
+
+<h2 id="tiers">Tiers</h2>
+<dl class="tier-list">
+<dt>Featured</dt>
+<dd>Shown first. It passes every Featured gate.</dd>
+<dt>Listed</dt>
+<dd>Shown in the normal listing. No other tier applies.</dd>
+<dt>New</dt>
+<dd>A young, prerelease or barely used project.</dd>
+<dt>Archived</dt>
+<dd>No longer maintained, or ended by its author.</dd>
+</dl>
+<p>The check applies the rules below in order. A signal that is missing counts neither way.</p>
+
+<section aria-labelledby="instant-archive">
+<h2 id="instant-archive">Instant archive</h2>
+<p>Any one of these signals archives an entry at once.</p>
+<ul>
+<li>The repository is archived.</li>
+<li>RustSec lists an unmaintained advisory for the crate.</li>
+<li>The crate carries a deprecation notice.</li>
+<li>Every version is yanked.</li>
+<li>The crate is deleted from crates.io.</li>
+</ul>
+<p>A “maintained” statement does not override these signals.</p>
+</section>
+
+<section aria-labelledby="interval">
+<h2 id="interval">Expected update interval</h2>
+<p>Each entry gets an expected update interval E, in days.</p>
+<p>A library starts from a base chosen by its latest version. The first matching base in the table applies.</p>
+<p>Then E is capped at the release count times the days-per-release cap.</p>
+<p>Then E doubles when monthly downloads pass their limit. It doubles again when active users pass theirs.</p>
+<p>E is never below the dormancy floor.</p>
+<p>An app, or a library with no known latest version, uses the dormancy floor.</p>
+<p>A step that lacks its signal is left out.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>interval.patch_gt3_major_ge1</code></th><td class="number">700</td><td>Base in days: patch above 3 and major at least 1.</td></tr>
+<tr><th scope="row"><code>interval.patch_gt3</code></th><td class="number">450</td><td>Base in days: patch above 3.</td></tr>
+<tr><th scope="row"><code>interval.patch_gt0</code></th><td class="number">300</td><td>Base in days: patch above 0.</td></tr>
+<tr><th scope="row"><code>interval.major_ge1</code></th><td class="number">200</td><td>Base in days: major at least 1.</td></tr>
+<tr><th scope="row"><code>interval.minor_gt3</code></th><td class="number">140</td><td>Base in days: minor above 3.</td></tr>
+<tr><th scope="row"><code>interval.other</code></th><td class="number">80</td><td>Base in days: every other version.</td></tr>
+<tr><th scope="row"><code>interval.days_per_release_cap</code></th><td class="number">50</td><td>Days per release. E is at most the release count times this.</td></tr>
+<tr><th scope="row"><code>interval.downloads_per_month_double</code></th><td class="number">50000</td><td>Monthly downloads above this double E.</td></tr>
+<tr><th scope="row"><code>interval.active_users_double</code></th><td class="number">10</td><td>Active users above this double E.</td></tr>
+<tr><th scope="row"><code>dormancy.min_days</code></th><td class="number">365</td><td>The dormancy floor: smallest E in days, and E for every app.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="dormancy">
+<h2 id="dormancy">Dormancy</h2>
+<p>An entry is dormant when the days since its latest release or latest human commit reach E.</p>
+<p>Bot commits do not count.</p>
+<p>With neither date known, dormancy is unknown.</p>
+</section>
+
+<section aria-labelledby="rot">
+<h2 id="rot">Rot signals</h2>
+<p>Each check counts six rot signals.</p>
+<ul>
+<li><strong>R1</strong> An outside issue is unanswered past the issue limit, and no maintainer replied within the reply window.</li>
+<li><strong>R2</strong> A vulnerability advisory is unpatched past the grace window.</li>
+<li><strong>R3</strong> A library’s former glory is below the lost-glory limit.</li>
+<li><strong>R4</strong> The latest release requires a deprecated dependency.</li>
+<li><strong>R5</strong> The repository no longer exists.</li>
+<li><strong>R6</strong> A library’s latest release fails cargo check on current stable Rust.</li>
+</ul>
+<p>Former glory is active users as a share of their peak.</p>
+<p>R3 and R6 apply to libraries only. Apps have no former glory and no crate release to check.</p>
+<p>A sandbox build check older than its age limit counts as unknown.</p>
+<p>A rot check that lacks a signal counts neither way.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>rot.unanswered_days</code></th><td class="number">270</td><td>R1 issue limit: days an outside issue stays unanswered.</td></tr>
+<tr><th scope="row"><code>rot.maintainer_silence_days</code></th><td class="number">365</td><td>R1 reply window: days over which maintainer replies count.</td></tr>
+<tr><th scope="row"><code>rot.advisory_grace_days</code></th><td class="number">60</td><td>R2 grace window: days an advisory stays unpatched.</td></tr>
+<tr><th scope="row"><code>rot.lost_glory_below</code></th><td class="number">0.5</td><td>R3 lost-glory limit: a former glory below this share is rot.</td></tr>
+<tr><th scope="row"><code>rot.build_check_max_age_days</code></th><td class="number">45</td><td>R6 age limit: days a sandbox build check stays valid.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="dead">
+<h2 id="dead">Dead</h2>
+<p>A dormant entry is dead on a check when it has enough rot signals and no “maintained” statement.</p>
+<p>Enough dead checks in a row archive the entry.</p>
+<p>Unknown dormancy is not dead.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>dormancy.dead_rot_signals</code></th><td class="number">2</td><td>Fewest rot signals that make a dormant entry dead.</td></tr>
+<tr><th scope="row"><code>dormancy.dead_consecutive_checks</code></th><td class="number">2</td><td>Dead checks in a row that archive an entry.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="finished">
+<h2 id="finished">Finished</h2>
+<p>A dormant entry with no rot signal that is still adopted is finished.</p>
+<p>A “finished” maintainer statement with no rot signal also makes an entry finished.</p>
+<p>No rot signal means every rot check is known and none fires.</p>
+<p>A library stays adopted on new adopters or on former glory.</p>
+<p>An app stays adopted on binary downloads per release.</p>
+<p>A finished entry carries a stable label. It counts as active for Featured.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>finished.min_former_glory</code></th><td class="number">0.8</td><td>Lowest former glory of a finished library.</td></tr>
+<tr><th scope="row"><code>finished.min_new_adopters</code></th><td class="number">1</td><td>Fewest new adopters of a finished library.</td></tr>
+<tr><th scope="row"><code>finished.min_binary_downloads_per_release</code></th><td class="number">200</td><td>Fewest binary downloads per release of a finished app.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="new">
+<h2 id="new">New</h2>
+<p>An entry is New when any one of these holds.</p>
+<ul>
+<li>Its first release is younger than the age limit.</li>
+<li>Every version is a prerelease or 0.0.x.</li>
+<li>A library has fewer active users than the user floor.</li>
+</ul>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>new.max_age_days</code></th><td class="number">180</td><td>Age limit: a first release fewer days ago than this is New.</td></tr>
+<tr><th scope="row"><code>new.min_active_users</code></th><td class="number">2</td><td>User floor: a library with fewer active users than this is New.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="featured-library">
+<h2 id="featured-library">Featured library</h2>
+<p>A library is Featured when it is active and passes every gate.</p>
+<p>Active means not dormant, or finished.</p>
+<ul>
+<li>Active users or new adopters reach their limit.</li>
+<li>No vulnerability advisory is unpatched past the grace window.</li>
+<li>The repository link is verified against the crate’s .cargo_vcs_info.json.</li>
+<li>Former glory reaches its floor.</li>
+<li>Docs are present.</li>
+</ul>
+<p>A gate that lacks its signal does not pass.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>library_featured.min_active_users</code></th><td class="number">11</td><td>Fewest active users. This gate or the new-adopter gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_new_adopters</code></th><td class="number">9</td><td>Fewest new adopters over 12 months. This gate or the active-user gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_former_glory</code></th><td class="number">0.5</td><td>Lowest former glory, a share from 0 to 1.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="featured-app">
+<h2 id="featured-app">Featured app</h2>
+<p>An app is Featured when it is active and enough of these use signals pass.</p>
+<ul>
+<li>Binary downloads over the last three releases.</li>
+<li>Homebrew installs on request over 365 days.</li>
+<li>Repology repository families that package the app.</li>
+<li>Docker pull growth over 90 days.</li>
+</ul>
+<p>Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>app_featured.min_signals</code></th><td class="number">2</td><td>How many of the four use signals must pass.</td></tr>
+<tr><th scope="row"><code>app_featured.binary_downloads</code></th><td class="number">884</td><td>Fewest binary downloads over the last three releases.</td></tr>
+<tr><th scope="row"><code>app_featured.homebrew_on_request_365d</code></th><td class="number">500</td><td>Fewest Homebrew installs on request over 365 days.</td></tr>
+<tr><th scope="row"><code>app_featured.repology_families</code></th><td class="number">2</td><td>Fewest Repology repository families that package the app.</td></tr>
+<tr><th scope="row"><code>app_featured.docker_pull_growth_90d</code></th><td class="number">10000</td><td>Smallest Docker pull growth over 90 days.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="outside-approval">
+<h2 id="outside-approval">Outside approval</h2>
+<p>An org-affiliated entry that passes Featured needs a featured-approval judgment.</p>
+<p>A maintainer outside the ml-rust organization approves it. Without it, the entry is Listed.</p>
+</section>
+
+<section aria-labelledby="listed">
+<h2 id="listed">Listed</h2>
+<p>An entry that no rule above places is Listed.</p>
+</section>
+
+<section aria-labelledby="demotion-guard">
+<h2 id="demotion-guard">Demotion guard</h2>
+<p>A Featured entry keeps Featured until a demotion judgment approves the drop.</p>
+<p>An instant archive skips this guard.</p>
+</section>
+
+</main>
+<footer class="site-footer">
+<p>Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>. Source: <a href="https://github.com/ml-rust/ml-rust.github.io">ml-rust/ml-rust.github.io</a>.</p>
+</footer>
+</body>
+</html>

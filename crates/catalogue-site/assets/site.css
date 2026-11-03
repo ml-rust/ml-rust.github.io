@@ -1,0 +1,328 @@
+/* Stylesheet of the ml-rust catalogue. One file, no build step. */
+
+:root {
+  color-scheme: light dark;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --measure: 72ch;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --radius: 0.25rem;
+
+  /* Light pairs. Every text colour reaches 7:1 on every background it meets. */
+  --bg: #ffffff;
+  --bg-raised: #f3f4f6;
+  --text: #111827;
+  --text-muted: #374151;
+  --border: #6b7280;
+  --link: #0a4599;
+  --link-visited: #5b2a9e;
+  --focus: #b4005a;
+  --table-head-bg: #e5e7eb;
+
+  /* Tier badges. Each badge also prints its tier name. */
+  --tier-featured-bg: #0f5132;
+  --tier-featured-text: #ffffff;
+  --tier-listed-bg: #e5e7eb;
+  --tier-listed-text: #111827;
+  --tier-new-bg: #084298;
+  --tier-new-text: #ffffff;
+  --tier-archived-bg: #4b5563;
+  --tier-archived-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Dark pairs, with the same 7:1 floor. */
+  :root {
+    --bg: #0d1117;
+    --bg-raised: #161b22;
+    --text: #f0f6fc;
+    --text-muted: #c9d1d9;
+    --border: #8b949e;
+    --link: #79b8ff;
+    --link-visited: #d2a8ff;
+    --focus: #ffd33d;
+    --table-head-bg: #21262d;
+
+    --tier-featured-bg: #3fb950;
+    --tier-featured-text: #000000;
+    --tier-listed-bg: #30363d;
+    --tier-listed-text: #f0f6fc;
+    --tier-new-bg: #79b8ff;
+    --tier-new-text: #000000;
+    --tier-archived-bg: #a8b1ba;
+    --tier-archived-text: #000000;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-body);
+  font-size: 100%;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0 auto;
+  max-width: var(--measure);
+  padding: 0 var(--space-3);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p,
+ul,
+ol,
+dl,
+table {
+  margin: 0 0 var(--space-3);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.15em;
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+a:hover {
+  text-decoration-thickness: 0.15em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Skip link: hidden until it takes focus. */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
+  color: var(--link);
+  border: 2px solid var(--focus);
+  border-radius: var(--radius);
+  z-index: 10;
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+}
+
+/* Header, search and navigation. */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-name {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-name:visited {
+  color: var(--text);
+}
+
+.site-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.site-search label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.site-search input,
+.site-search button {
+  font: inherit;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.site-search button {
+  background: var(--bg-raised);
+  cursor: pointer;
+}
+
+.site-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration-thickness: 0.2em;
+}
+
+.site-footer {
+  margin-top: var(--space-5);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Tables: a clear header row, numbers aligned right. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+th,
+td {
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--table-head-bg);
+  font-weight: 700;
+  border-bottom-width: 2px;
+}
+
+tbody th {
+  font-weight: 400;
+}
+
+td.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Rules page. */
+.threshold-status {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-raised);
+  border-left: 4px solid var(--border);
+  margin-bottom: var(--space-3);
+}
+
+.threshold-status p {
+  margin: var(--space-1) 0;
+}
+
+.tier-list dt {
+  font-weight: 700;
+}
+
+.tier-list dd {
+  margin: 0 0 var(--space-2) var(--space-3);
+}
+
+.form-list li {
+  margin-bottom: var(--space-2);
+}
+
+/* Tier badges carry their tier name as text. Colour only repeats it. */
+.tier-badge {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.tier-badge.tier-featured {
+  background: var(--tier-featured-bg);
+  color: var(--tier-featured-text);
+}
+
+.tier-badge.tier-listed {
+  background: var(--tier-listed-bg);
+  color: var(--tier-listed-text);
+}
+
+.tier-badge.tier-new {
+  background: var(--tier-new-bg);
+  color: var(--tier-new-text);
+}
+
+.tier-badge.tier-archived {
+  background: var(--tier-archived-bg);
+  color: var(--tier-archived-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .tier-badge {
+    border-color: CanvasText;
+  }
+}

@@ -5,6 +5,7 @@ members = [
     "crates/catalogue-bot",
     "crates/catalogue-github",
     "crates/catalogue-triage",
+    "crates/catalogue-site",
     "crates/catalogue",
 ]
 resolver = "3"
@@ -47,6 +48,8 @@ jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_r
 # SHA-256 of issue bodies and check reports in the bot comment marker, over the
 # aws-lc-rs that rustls already links.
 aws-lc-rs = { version = "1", default-features = false, features = ["aws-lc-sys"] }
+# HTML templates for the static site. Escapes every value by default.
+askama = { version = "0.16", default-features = false, features = ["derive", "std"] }
 # Zeroes the App key bytes and the access tokens when they drop.
 zeroize = "1"
 # Temporary directories for the download tests, created under the build directory.
@@ -61,3 +64,5 @@ catalogue-bot = { path = "crates/catalogue-bot" }
 catalogue-github = { path = "crates/catalogue-github" }
 # The advisory LLM link check of the bot: provider fallback, Ollama web_fetch and GitHub page reads.
 catalogue-triage = { path = "crates/catalogue-triage" }
+# The static site renderer: templates, page data and refusal rules.
+catalogue-site = { path = "crates/catalogue-site" }

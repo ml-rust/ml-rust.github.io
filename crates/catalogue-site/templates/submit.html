@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Submit{% endblock %}
+{% block content %}
+<h1>Submit</h1>
+<p>Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
+<ul class="form-list">
+{%- for form in forms %}
+<li><a href="{{ form.href }}">{{ form.name }}</a>: {{ form.description }}</li>
+{%- endfor %}
+</ul>
+
+<h2 id="approval">Approval</h2>
+<p>A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue.</p>
+<p>Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</p>
+<p>After approval, the bot opens a pull request with the data change. Merging that pull request applies it.</p>
+<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
+<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
+<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
+
+<h2 id="topics">Topics</h2>
+<p>The submit and category forms take topic slugs from this list.</p>
+{%- if topics.is_empty() %}
+<p>No topic exists yet.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Slug</th><th scope="col">Name</th><th scope="col">Parent</th></tr>
+</thead>
+<tbody>
+{%- for topic in topics %}
+<tr><td><a href="{{ topic.href }}"><code>{{ topic.id }}</code></a></td><td>{{ topic.name }}</td><td>{% if !topic.parent.is_empty() %}<code>{{ topic.parent }}</code>{% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
+{% endblock %}

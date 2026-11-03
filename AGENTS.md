@@ -10,6 +10,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-bot`: issue form parsing, data file drafts, check reports, the labels file and its sync plan, the pure parts of the link check. Pure: no IO, network, clock or env.
 - `crates/catalogue-github`: the bot's GitHub App client: private key, App JWT, installation tokens, REST calls. Keys and tokens never reach logs, errors or disk.
 - `crates/catalogue-triage`: the bot's advisory LLM link check: provider fallback, Ollama `web_fetch` reads, GitHub page reads. The bot host NEVER fetches an evidence link itself.
+- `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `data/`: entries, judgments, maintainers, topics, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.

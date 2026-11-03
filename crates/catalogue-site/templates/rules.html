@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Rules{% endblock %}
+{% block content %}
+<h1>Tier rules</h1>
+<p>Tiers come from fixed thresholds over raw signals. There is no composite score.</p>
+<p>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</p>
+<p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
+<div class="threshold-status">
+{%- for line in status %}
+<p>{{ line }}</p>
+{%- endfor %}
+</div>
+
+<h2 id="tiers">Tiers</h2>
+<dl class="tier-list">
+{%- for tier in tiers %}
+<dt>{{ tier.name }}</dt>
+<dd>{{ tier.meaning }}</dd>
+{%- endfor %}
+</dl>
+<p>The check applies the rules below in order. A signal that is missing counts neither way.</p>
+{%- for section in sections %}
+
+<section aria-labelledby="{{ section.id }}">
+<h2 id="{{ section.id }}">{{ section.title }}</h2>
+{%- for line in section.lead %}
+<p>{{ line }}</p>
+{%- endfor %}
+{%- if !section.items.is_empty() %}
+<ul>
+{%- for item in section.items %}
+<li>{% if !item.label.is_empty() %}<strong>{{ item.label }}</strong> {% endif %}{{ item.text }}</li>
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- for line in section.notes %}
+<p>{{ line }}</p>
+{%- endfor %}
+{%- if !section.rows.is_empty() %}
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+{%- for row in section.rows %}
+<tr><th scope="row"><code>{{ row.key }}</code></th><td class="number">{{ row.value }}</td><td>{{ row.meaning }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
+</section>
+{%- endfor %}
+{% endblock %}

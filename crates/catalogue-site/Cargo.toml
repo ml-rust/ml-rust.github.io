@@ -1,0 +1,19 @@
+[package]
+name = "catalogue-site"
+version.workspace = true
+description = "Renders the ml-rust catalogue static site from checked data and a tier report"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+askama.workspace = true
+aws-lc-rs.workspace = true
+catalogue-core.workspace = true
+thiserror.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
