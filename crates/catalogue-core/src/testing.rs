@@ -110,6 +110,7 @@ unanswered_days = 270
 maintainer_silence_days = 365
 advisory_grace_days = 60
 lost_glory_below = 0.5
+build_check_max_age_days = 45
 
 [finished]
 min_former_glory = 0.8

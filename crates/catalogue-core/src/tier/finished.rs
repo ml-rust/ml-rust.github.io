@@ -85,12 +85,12 @@ pub(super) fn finished(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tier::fixtures::{context, dormant_library, featured_app, thresholds};
+    use crate::tier::fixtures::{context, dormant_library, featured_app, thresholds, today};
     use crate::tier::rot::rot;
 
     fn check(signals: &Signals, ctx: &Context, dormant: Fact) -> Finished {
         let t = thresholds();
-        let found = rot(signals, &t.rot);
+        let found = rot(signals, today(), &t.rot);
         finished(signals, ctx, &dormant, &found, &t.finished)
     }
 

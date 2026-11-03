@@ -9,6 +9,7 @@ use std::path::Path;
 use catalogue::{Network, load_catalogue, tiers_report};
 use catalogue_core::Date;
 use catalogue_signals::rustsec::{Advisories, Advisory, AdvisoryKind};
+use catalogue_signals::sandbox::BuildChecks;
 use link_transport::{PACKAGE_URL, Router};
 use tiers_dump::{fixture, snapshot};
 
@@ -29,6 +30,7 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
         &catalogue,
         &snapshot(),
         &Advisories::default(),
+        &BuildChecks::default(),
         Network::Offline,
         None,
         today,
@@ -57,7 +59,8 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
         "{alpha}"
     );
     assert!(alpha.contains("\ndemotion_pending: -\n"), "{alpha}");
-    assert!(alpha.contains("repo_gone"), "{alpha}");
+    // An active entry lists no unknown rot fact: rot counts only when dormant.
+    assert!(!alpha.contains("repo_gone"), "{alpha}");
     assert!(alpha.ends_with("\nnotes: -"), "{alpha}");
 
     let beta = block(&report, "beta");
@@ -90,6 +93,7 @@ fn an_unmaintained_advisory_on_a_dependency_fires_the_deprecated_requirement_rul
         &catalogue,
         &dump,
         &Advisories::default(),
+        &BuildChecks::default(),
         Network::Offline,
         None,
         today,
@@ -118,6 +122,7 @@ fn an_unmaintained_advisory_on_a_dependency_fires_the_deprecated_requirement_rul
         &catalogue,
         &dump,
         &advisories,
+        &BuildChecks::default(),
         Network::Offline,
         None,
         today,
@@ -150,6 +155,7 @@ fn an_online_run_checks_the_link_of_each_library_with_a_release_and_caches_it() 
         &catalogue,
         &snapshot(),
         &Advisories::default(),
+        &BuildChecks::default(),
         network,
         None,
         today,

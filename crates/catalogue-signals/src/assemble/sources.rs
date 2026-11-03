@@ -5,6 +5,7 @@ use catalogue_core::{Deprecated, Thresholds};
 use super::index::CrateIndex;
 use crate::dump::{DumpSnapshot, IdMap};
 use crate::rustsec::Advisories;
+use crate::sandbox::BuildChecks;
 use crate::usage::Usage;
 
 /// The inputs every library entry shares on one check.
@@ -22,4 +23,6 @@ pub struct LibrarySources<'a> {
     pub deprecated: &'a Deprecated,
     /// The published thresholds. Supplies the advisory grace window.
     pub thresholds: &'a Thresholds,
+    /// The sandbox build check results. Empty when the run reads none.
+    pub build_checks: &'a BuildChecks,
 }

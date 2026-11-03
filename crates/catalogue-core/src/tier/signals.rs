@@ -42,6 +42,12 @@ pub struct Signals {
     pub deprecation_notice: Option<String>,
     /// A deprecated requirement in the latest release, such as `tokio 0.1`, when one exists.
     pub deprecated_requirement: Option<String>,
+    /// Whether the latest release fails `cargo check` on the toolchain of the sandbox check.
+    pub build_fails: Option<bool>,
+    /// The date of the sandbox check behind `build_fails`.
+    pub build_checked: Option<Date>,
+    /// The toolchain of the sandbox check behind `build_fails`, such as `rustc 1.95.0`.
+    pub build_toolchain: Option<String>,
     /// Whether the repository is archived.
     pub repo_archived: Option<bool>,
     /// Whether the repository no longer exists.
@@ -89,6 +95,9 @@ impl Signals {
             unpatched_vulnerabilities: None,
             deprecation_notice: None,
             deprecated_requirement: None,
+            build_fails: None,
+            build_checked: None,
+            build_toolchain: None,
             repo_archived: None,
             repo_gone: None,
             last_human_commit: None,
@@ -121,6 +130,8 @@ mod tests {
         assert!(!signals.is_library());
         assert!(signals.first_release.is_none());
         assert!(signals.unpatched_vulnerabilities.is_none());
+        assert!(signals.build_fails.is_none());
+        assert!(signals.build_checked.is_none());
         assert!(signals.docker_pull_growth_90d.is_none());
         assert!(Signals::unknown(EntryKind::Library).is_library());
     }

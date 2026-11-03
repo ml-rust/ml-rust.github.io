@@ -235,6 +235,7 @@ fn snapshot(slug: &str, tier: Tier) -> Vec<u8> {
         kind: EntryKind::Library,
         tier,
         dead_now: false,
+        dormant: None,
         active_users: None,
         docker_pulls: None,
     };

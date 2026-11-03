@@ -20,6 +20,7 @@ fn row(tier: Tier, docker_pulls: Option<u64>) -> Row {
         kind: EntryKind::App,
         tier,
         dead_now: tier == Tier::Archived,
+        dormant: Some(tier == Tier::Archived),
         active_users: Some(2.5),
         docker_pulls,
     }
@@ -67,8 +68,8 @@ fn a_snapshot_round_trips_through_its_dated_file() {
     assert_eq!(
         lines(&path),
         [
-            r#"{"slug":"alpha","kind":"app","tier":"archived","dead_now":true,"active_users":2.5,"docker_pulls":null}"#,
-            r#"{"slug":"zeta","kind":"app","tier":"featured","dead_now":false,"active_users":2.5,"docker_pulls":10}"#,
+            r#"{"slug":"alpha","kind":"app","tier":"archived","dead_now":true,"dormant":true,"active_users":2.5,"docker_pulls":null}"#,
+            r#"{"slug":"zeta","kind":"app","tier":"featured","dead_now":false,"dormant":false,"active_users":2.5,"docker_pulls":10}"#,
         ]
     );
     let history = read_all(&dir).expect("read");
@@ -154,6 +155,16 @@ fn a_corrupt_file_is_an_error_that_names_its_path() {
     let message = error.to_string();
     assert!(message.contains(&path.display().to_string()), "{message}");
     assert!(message.contains("Restore the file from git"), "{message}");
+}
+
+#[test]
+fn a_line_without_dormant_reads_as_unknown() {
+    let (_guard, dir) = cache();
+    let old = r#"{"slug":"a","kind":"app","tier":"listed","dead_now":false,"active_users":null,"docker_pulls":null}"#;
+    fs::write(dir.join("2026-11-01.jsonl.gz"), gzip(&format!("{old}\n"))).expect("write");
+    let history = read_all(&dir).expect("read");
+    let rows = &history.snapshots()[0].rows;
+    assert_eq!(rows.get("a").map(|row| row.dormant), Some(None));
 }
 
 #[test]

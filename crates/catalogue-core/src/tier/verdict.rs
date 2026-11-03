@@ -73,6 +73,9 @@ pub struct Verdict {
     pub tier: Tier,
     /// Whether the entry is finished: dormant by design, not decayed.
     pub stable: bool,
+    /// Whether the dormancy rule finds the entry dormant. `None` when dormancy is
+    /// unknown or an instant archive ends the check first.
+    pub dormant: Option<bool>,
     /// Whether this check finds the entry dead. Feeds the next check's `prior_dead_checks`.
     pub dead_now: bool,
     /// Rule outcomes in rule order.
@@ -125,6 +128,7 @@ mod tests {
         let verdict = Verdict {
             tier: Tier::Listed,
             stable: false,
+            dormant: None,
             dead_now: false,
             reasons: vec![Reason::new(Rule::Listed, "listed")],
             unknown: Vec::new(),

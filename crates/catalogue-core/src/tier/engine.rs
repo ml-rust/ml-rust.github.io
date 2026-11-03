@@ -29,6 +29,7 @@ pub fn assess(signals: &Signals, context: &Context, thresholds: &Thresholds) -> 
         return Verdict {
             tier: Tier::Archived,
             stable: false,
+            dormant: None,
             dead_now: false,
             reasons: ended,
             unknown: Vec::new(),
@@ -49,8 +50,12 @@ pub fn assess(signals: &Signals, context: &Context, thresholds: &Thresholds) -> 
         None => Fact::unknown(idle.needs),
     };
 
-    let rot = rot(signals, &thresholds.rot);
-    notes.needs(&rot.needs);
+    let rot = rot(signals, context.today, &thresholds.rot);
+    // Rot counts only toward the dead rule, which needs dormancy, and toward
+    // the finished rule, which reports its own missing facts.
+    if idle.dormant != Some(false) {
+        notes.needs(&rot.needs);
+    }
     notes.reasons.extend(rot.found.iter().cloned());
 
     let dead = dead(idle.dormant, rot.count(), context, &thresholds.dormancy);
@@ -79,6 +84,7 @@ pub fn assess(signals: &Signals, context: &Context, thresholds: &Thresholds) -> 
     Verdict {
         tier: held.tier,
         stable: done.stable,
+        dormant: idle.dormant,
         dead_now: dead.now,
         reasons: notes.reasons,
         unknown: notes.unknown,
@@ -112,6 +118,7 @@ mod tests {
         assert!(!verdict.stable);
         assert!(!verdict.dead_now);
         assert!(verdict.unknown.is_empty(), "{:?}", verdict.unknown);
+        assert_eq!(verdict.dormant, Some(false));
         assert_eq!(
             rules(&verdict),
             [Rule::ExpectedInterval, Rule::Dormancy, Rule::Featured]
@@ -142,12 +149,14 @@ mod tests {
         assert!(verdict.demotion_pending.is_none());
         assert_eq!(rules(&verdict), [Rule::InstantArchive]);
         assert!(!verdict.dead_now);
+        assert_eq!(verdict.dormant, None);
     }
 
     #[test]
     fn dead_archives_on_the_second_consecutive_check() {
         let first = run(&dead_library(), &context());
         assert!(first.dead_now);
+        assert_eq!(first.dormant, Some(true));
         assert_eq!(first.tier, Tier::Listed);
         assert!(first.has(Rule::Dead));
         assert_eq!(rules(&first).iter().filter(|r| **r == Rule::Rot).count(), 2);
@@ -174,6 +183,23 @@ mod tests {
         let verdict = run(&signals, &ctx);
         assert!(!verdict.dead_now);
         assert_eq!(verdict.tier, Tier::Listed);
+    }
+
+    #[test]
+    fn a_failing_build_counts_toward_dead() {
+        let signals = Signals {
+            repo_gone: Some(false),
+            build_fails: Some(true),
+            ..dead_library()
+        };
+        let verdict = run(&signals, &context());
+        assert!(verdict.dead_now);
+        assert!(
+            verdict
+                .reasons
+                .iter()
+                .any(|reason| reason.detail.contains("fails `cargo check`"))
+        );
     }
 
     #[test]
@@ -247,6 +273,35 @@ mod tests {
         let held = run(&signals, &ctx);
         assert_eq!(held.tier, Tier::Featured);
         assert_eq!(held.demotion_pending, Some(Tier::New));
+    }
+
+    #[test]
+    fn an_active_entry_lists_no_unknown_rot_fact() {
+        let mut signals = featured_library();
+        signals.build_fails = None;
+        signals.repo_gone = None;
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.dormant, Some(false));
+        assert!(
+            !verdict.unknown.contains(&"build_fails"),
+            "{:?}",
+            verdict.unknown
+        );
+        assert!(
+            !verdict.unknown.contains(&"repo_gone"),
+            "{:?}",
+            verdict.unknown
+        );
+
+        let mut idle = dormant_library();
+        idle.build_fails = None;
+        let verdict = run(&idle, &context());
+        assert_eq!(verdict.dormant, Some(true));
+        assert!(
+            verdict.unknown.contains(&"build_fails"),
+            "{:?}",
+            verdict.unknown
+        );
     }
 
     #[test]

@@ -9,12 +9,11 @@ use std::process::ExitCode;
 use catalogue_bot::{CheckInput, CheckReport, FormKind, IssueMeta, check_submission, parse_form};
 use catalogue_core::{Date, GithubLogin, IdError, Tier};
 use clap::{Args, Subcommand};
-use jiff::Timestamp;
-use jiff::tz::TimeZone;
 use thiserror::Error;
 
 use super::labels::{LabelsArgs, run_labels};
 use super::run::{RunArgs, run_run};
+use crate::clock::today_utc;
 use crate::data_dir::{DataDirError, read_data_dir};
 use crate::exit::{INVALID, IO};
 
@@ -144,9 +143,7 @@ pub fn run_bot(command: BotCommand) -> ExitCode {
         BotCommand::Labels(args) => run_labels(&args),
         BotCommand::Run(args) => run_run(&args),
         BotCommand::Check(args) => {
-            let today = args
-                .today
-                .unwrap_or_else(|| Timestamp::now().to_zoned(TimeZone::UTC).date());
+            let today = args.today.unwrap_or_else(today_utc);
             match bot_check(&args, Date::from(today)) {
                 Ok(report) => {
                     print!("{}", report.markdown());

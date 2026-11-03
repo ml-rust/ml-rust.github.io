@@ -56,6 +56,9 @@ pub(crate) fn featured_library() -> Signals {
         maintainer_replies_365: Some(25),
         docs_present: Some(true),
         repo_link_verified: Some(true),
+        build_fails: Some(false),
+        build_checked: Some(day(2026, 10, 27)),
+        build_toolchain: Some("rustc 1.95.0".to_owned()),
         ..Signals::unknown(EntryKind::Library)
     }
 }

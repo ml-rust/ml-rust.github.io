@@ -171,6 +171,7 @@ source = "human"
             kind: EntryKind::Library,
             tier,
             dead_now,
+            dormant: None,
             active_users: None,
             docker_pulls: None,
         };

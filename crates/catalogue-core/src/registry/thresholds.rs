@@ -115,6 +115,8 @@ pub struct RotThresholds {
     pub advisory_grace_days: u32,
     /// A `former_glory` below this share counts as rot.
     pub lost_glory_below: f64,
+    /// Days a sandbox build check stays valid. An older check reads as unknown.
+    pub build_check_max_age_days: u32,
 }
 
 /// Adoption that keeps a dormant entry `stable`.
@@ -174,6 +176,9 @@ impl Thresholds {
         if self.dormancy.dead_consecutive_checks == 0 {
             out.push("dormancy.dead_consecutive_checks = 0 must be at least 1".to_owned());
         }
+        if self.rot.build_check_max_age_days == 0 {
+            out.push("rot.build_check_max_age_days = 0 must be at least 1".to_owned());
+        }
         in_range(
             "app_featured.min_signals",
             self.app_featured.min_signals,
@@ -217,6 +222,32 @@ mod tests {
         assert!(t.calibrated.is_none());
         assert_eq!(t.interval.patch_gt3_major_ge1, 700);
         assert_eq!(t.app_featured.docker_pull_growth_90d, 10_000);
+        assert_eq!(t.rot.build_check_max_age_days, 45);
+    }
+
+    #[test]
+    fn the_committed_file_parses_and_passes() {
+        let t = parse(include_str!("../../../../data/thresholds.toml"));
+        assert!(t.problems().is_empty(), "{:?}", t.problems());
+        assert_eq!(t.version, 3);
+        assert_eq!(t.rot.build_check_max_age_days, 45);
+    }
+
+    #[test]
+    fn build_check_age_must_be_at_least_one_day() {
+        let found = problems_with(
+            "build_check_max_age_days = 45",
+            "build_check_max_age_days = 0",
+        );
+        assert!(has(
+            &found,
+            "rot.build_check_max_age_days = 0 must be at least 1"
+        ));
+        let text = THRESHOLDS.replace(
+            "build_check_max_age_days = 45",
+            "build_check_max_age_days = -1",
+        );
+        assert!(toml::from_str::<Thresholds>(&text).is_err());
     }
 
     #[test]
@@ -270,8 +301,9 @@ mod tests {
 
     #[test]
     fn signal_counts_cannot_exceed_the_signals_counted() {
-        let found = problems_with("dead_rot_signals = 2", "dead_rot_signals = 6");
-        assert!(has(&found, "between 1 and 5"));
+        assert!(problems_with("dead_rot_signals = 2", "dead_rot_signals = 6").is_empty());
+        let found = problems_with("dead_rot_signals = 2", "dead_rot_signals = 7");
+        assert!(has(&found, "between 1 and 6"));
         let found = problems_with("min_signals = 2", "min_signals = 5");
         assert!(has(
             &found,

@@ -16,6 +16,7 @@ use crate::dump::{
 use crate::github::{Facts, RepoFacts};
 use crate::link::LinkCheck;
 use crate::rustsec::{Advisories, Advisory, AdvisoryKind};
+use crate::sandbox::BuildChecks;
 use crate::usage::Usage;
 
 /// The published thresholds file.
@@ -204,6 +205,7 @@ pub(crate) struct World {
     usage: IdMap<Usage>,
     advisories: Advisories,
     deprecated: Deprecated,
+    pub(crate) build_checks: BuildChecks,
 }
 
 impl World {
@@ -217,6 +219,7 @@ impl World {
             usage: IdMap::default(),
             advisories: Advisories::default(),
             deprecated,
+            build_checks: BuildChecks::default(),
         }
     }
 
@@ -243,6 +246,7 @@ impl World {
             advisories: &self.advisories,
             deprecated: &self.deprecated,
             thresholds: &thresholds,
+            build_checks: &self.build_checks,
         };
         library_signals(&library(crates), &sources, facts, link, today())
     }

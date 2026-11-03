@@ -8,6 +8,7 @@
 mod adoption;
 mod app;
 mod assembled;
+mod build;
 mod context;
 mod facts;
 #[cfg(test)]

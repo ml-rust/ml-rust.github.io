@@ -10,6 +10,7 @@ use catalogue::{Network, load_catalogue, tiers_report};
 use catalogue_core::{Catalogue, Date, EntryKind, Tier};
 use catalogue_signals::history::{Row, Snapshot, read_all, write};
 use catalogue_signals::rustsec::Advisories;
+use catalogue_signals::sandbox::BuildChecks;
 use docker_transport::DockerRouter;
 use tiers_dump::{fixture, snapshot};
 
@@ -35,6 +36,7 @@ fn row(kind: EntryKind, tier: Tier, docker_pulls: Option<u64>) -> Row {
         kind,
         tier,
         dead_now: false,
+        dormant: None,
         active_users: None,
         docker_pulls,
     }
@@ -57,6 +59,7 @@ fn report(dir: &Path, network: Network<'_>, today: Date) -> String {
         &catalogue(),
         &snapshot(),
         &Advisories::default(),
+        &BuildChecks::default(),
         network,
         Some(dir),
         today,

@@ -9,19 +9,20 @@ use catalogue_signals::fetch;
 use catalogue_signals::history::{History, Snapshot, read_all, write};
 use catalogue_signals::http::ReqwestTransport;
 use catalogue_signals::rustsec::Advisories;
+use catalogue_signals::sandbox::BuildChecks;
 use clap::Args;
-use jiff::Timestamp;
-use jiff::tz::TimeZone;
 
 use super::assess::assess_entries;
 use super::collect::{Network, fetch_all};
 use super::error::TiersError;
 use super::render::render_tiers;
 use crate::cache_dir::resolve_cache_dir;
+use crate::clock::today_utc;
 use crate::data_dir::load_catalogue;
 use crate::dump::read_cached;
 use crate::exit::INVALID;
 use crate::rustsec::read_cached as read_advisories;
+use crate::sandbox::read_build_checks;
 use crate::token::{NoToken, token_from_env};
 
 /// Days of download history read from the dump: the `downloads_per_month` window.
@@ -45,11 +46,15 @@ pub struct TiersArgs {
     /// signals as history, so `--offline` conflicts with it.
     #[arg(long, value_name = "DIR", conflicts_with = "offline")]
     pub history: Option<PathBuf>,
+    /// Result file of `catalogue sandbox check`, for rot signal R6. A result
+    /// counts only for a crate's latest release. Without it R6 reads as unknown.
+    #[arg(long, value_name = "FILE")]
+    pub build_checks: Option<PathBuf>,
 }
 
 /// Runs `catalogue tiers` and returns the process exit code.
 pub fn run_tiers(args: TiersArgs) -> ExitCode {
-    let today = Date::from(Timestamp::now().to_zoned(TimeZone::UTC).date());
+    let today = Date::from(today_utc());
     match tiers(&args, token_from_env, today) {
         Ok(text) => {
             println!("{text}");
@@ -82,11 +87,16 @@ fn tiers(
     let cache_dir = resolve_cache_dir(args.cache_dir.clone())?;
     let snapshot = read_cached(&fetch::dump_path(&cache_dir), DOWNLOAD_WINDOW_DAYS)?;
     let advisories = read_advisories(&fetch::rustsec_path(&cache_dir))?;
+    let build_checks = match &args.build_checks {
+        Some(path) => read_build_checks(path)?,
+        None => BuildChecks::default(),
+    };
     match token {
         None => tiers_report(
             &catalogue,
             &snapshot,
             &advisories,
+            &build_checks,
             Network::Offline,
             args.history.as_deref(),
             today,
@@ -102,6 +112,7 @@ fn tiers(
                 &catalogue,
                 &snapshot,
                 &advisories,
+                &build_checks,
                 network,
                 args.history.as_deref(),
                 today,
@@ -114,6 +125,7 @@ fn tiers(
 ///
 /// Fetches the network signals through `network`, assembles each entry's
 /// signals, applies the tier rules and renders one block per entry, in slug order.
+/// `build_checks` holds the sandbox results that rot signal R6 reads.
 ///
 /// With `history_dir`, the run reads the snapshots in that directory before it
 /// applies the rules, then writes the snapshot of `today` to it. Without it,
@@ -129,6 +141,7 @@ pub fn tiers_report(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
     advisories: &Advisories,
+    build_checks: &BuildChecks,
     network: Network<'_>,
     history_dir: Option<&Path>,
     today: Date,
@@ -138,7 +151,15 @@ pub fn tiers_report(
         None => History::default(),
     };
     let fetched = fetch_all(catalogue, snapshot, network, today.civil())?;
-    let assessments = assess_entries(catalogue, snapshot, advisories, &fetched, &history, today)?;
+    let assessments = assess_entries(
+        catalogue,
+        snapshot,
+        advisories,
+        build_checks,
+        &fetched,
+        &history,
+        today,
+    )?;
     if let Some(dir) = history_dir {
         let rows = assessments
             .iter()
@@ -199,6 +220,7 @@ mod tests {
             cache_dir: Some(PathBuf::from("/nonexistent/cache")),
             offline,
             history: None,
+            build_checks: None,
         }
     }
 
@@ -209,12 +231,14 @@ mod tests {
         assert_eq!(args.cache_dir, None);
         assert!(!args.offline);
         assert_eq!(args.history, None);
+        assert_eq!(args.build_checks, None);
         let args = parse(&["--data", "d", "--cache-dir", "c", "--offline"]);
         assert_eq!(args.data, PathBuf::from("d"));
         assert_eq!(args.cache_dir, Some(PathBuf::from("c")));
         assert!(args.offline);
-        let args = parse(&["--history", "h"]);
+        let args = parse(&["--history", "h", "--build-checks", "b.jsonl"]);
         assert_eq!(args.history, Some(PathBuf::from("h")));
+        assert_eq!(args.build_checks, Some(PathBuf::from("b.jsonl")));
     }
 
     #[test]

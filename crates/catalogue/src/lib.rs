@@ -5,6 +5,7 @@ pub mod bot;
 pub mod cache_dir;
 pub mod calibrate;
 pub mod cli;
+mod clock;
 pub mod data_dir;
 pub mod discover;
 pub mod distribution;
@@ -14,6 +15,7 @@ mod exit;
 pub mod github;
 mod render;
 pub mod rustsec;
+pub mod sandbox;
 pub mod seed;
 pub mod tiers;
 mod token;
@@ -44,6 +46,9 @@ pub use github::{
     GithubCommand, GithubCommandError, render_all, render_facts, render_link, run_github,
 };
 pub use rustsec::{RustsecCommand, RustsecCommandError, render_crate, run_rustsec};
+pub use sandbox::{
+    SandboxCommand, SandboxCommandError, SandboxList, read_build_checks, run_sandbox, sandbox_list,
+};
 pub use seed::{Seed, SeedArgs, SeedError, build_seed, run_seed, write_drafts};
 pub use tiers::{Network, TiersArgs, TiersError, run_tiers, tiers_report};
 pub use token::NoToken;

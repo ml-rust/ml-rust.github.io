@@ -12,6 +12,7 @@ use crate::ecosystems::{EcosystemsCommand, run_ecosystems};
 use crate::exit::{INVALID, IO};
 use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
+use crate::sandbox::{SandboxCommand, run_sandbox};
 use crate::seed::{SeedArgs, run_seed};
 use crate::tiers::{TiersArgs, run_tiers};
 use crate::validate::{Outcome, validate};
@@ -82,6 +83,15 @@ pub enum Command {
     /// reads the token from the `GITHUB_TOKEN` environment variable and fetches
     /// repo facts and app distribution counts.
     Tiers(TiersArgs),
+    /// List dormant crates and run `cargo check` on their latest release.
+    ///
+    /// The result file feeds rot signal R6 through `catalogue tiers --build-checks`.
+    /// `check` runs third-party build scripts and refuses to run outside CI.
+    Sandbox {
+        /// The sandbox action to run.
+        #[command(subcommand)]
+        command: SandboxCommand,
+    },
     /// Draft entries from discovery for human review.
     ///
     /// Drafts one library entry per crate that matches `discovery.toml`, has
@@ -111,6 +121,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Rustsec { command } => run_rustsec(command),
         Command::Calibrate { command } => run_calibrate(command),
         Command::Tiers(args) => run_tiers(args),
+        Command::Sandbox { command } => run_sandbox(command),
         Command::Seed(args) => run_seed(args),
         Command::Bot { command } => run_bot(command),
     }

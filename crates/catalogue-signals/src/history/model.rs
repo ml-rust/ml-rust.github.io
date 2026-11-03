@@ -17,6 +17,10 @@ pub struct Row {
     pub tier: Tier,
     /// Whether the check found the entry dead.
     pub dead_now: bool,
+    /// Whether the check found the entry dormant. `None` when unknown, and in
+    /// snapshots written before the field existed.
+    #[serde(default)]
+    pub dormant: Option<bool>,
     /// Active external users. `None` when unknown.
     pub active_users: Option<f64>,
     /// Docker Hub pulls summed over the entry's images. `None` when unknown.

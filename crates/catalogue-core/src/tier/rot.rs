@@ -1,10 +1,11 @@
 use super::fact::{Fact, show};
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
+use crate::date::Date;
 use crate::registry::RotThresholds;
 
 /// Number of rot signals the rules count.
-pub(crate) const ROT_SIGNALS: u32 = 5;
+pub(crate) const ROT_SIGNALS: u32 = 6;
 
 /// The rot signals found on one check.
 #[derive(Debug, Clone, PartialEq)]
@@ -103,8 +104,32 @@ fn repo_gone(signals: &Signals) -> (Fact, String) {
     (fact, "repository is gone".to_owned())
 }
 
-/// Rule 4: counts the rot signals R1 to R5.
-pub(super) fn rot(signals: &Signals, t: &RotThresholds) -> Rot {
+/// R6: a library's latest release fails `cargo check` on current stable Rust.
+///
+/// The sandbox check runs in CI and records its date. A check older than
+/// `build_check_max_age_days` on `today`, or one without a date, reads as unknown.
+/// Apps have no crate release to check.
+fn build_fails(signals: &Signals, today: Date, t: &RotThresholds) -> (Fact, String) {
+    let fresh = signals
+        .build_checked
+        .is_some_and(|checked| today.days_since(checked) <= i64::from(t.build_check_max_age_days));
+    let fact = if !signals.is_library() {
+        Fact::known(false)
+    } else if fresh {
+        Fact::of("build_fails", signals.build_fails, |fails| fails)
+    } else {
+        Fact::unknown(vec!["build_fails"])
+    };
+    let detail = format!(
+        "latest release fails `cargo check` on {}, checked {}",
+        signals.build_toolchain.as_deref().unwrap_or("unknown"),
+        show(signals.build_checked)
+    );
+    (fact, detail)
+}
+
+/// Rule 4: counts the rot signals R1 to R6 on `today`.
+pub(super) fn rot(signals: &Signals, today: Date, t: &RotThresholds) -> Rot {
     let mut out = Rot {
         found: Vec::new(),
         needs: Vec::new(),
@@ -115,6 +140,7 @@ pub(super) fn rot(signals: &Signals, t: &RotThresholds) -> Rot {
         lost_glory(signals, t),
         deprecated_requirement(signals),
         repo_gone(signals),
+        build_fails(signals, today, t),
     ] {
         match fact.value {
             Some(true) => out.found.push(Reason::new(Rule::Rot, detail)),
@@ -129,10 +155,19 @@ pub(super) fn rot(signals: &Signals, t: &RotThresholds) -> Rot {
 mod tests {
     use super::*;
     use crate::entry::EntryKind;
-    use crate::tier::fixtures::{featured_app, featured_library, thresholds};
+    use crate::tier::fixtures::{days_ago, featured_app, featured_library, thresholds, today};
 
     fn rot_of(signals: &Signals) -> Rot {
-        rot(signals, &thresholds().rot)
+        rot(signals, today(), &thresholds().rot)
+    }
+
+    fn checked(fails: Option<bool>, age_days: i64) -> Signals {
+        Signals {
+            build_fails: fails,
+            build_checked: Some(days_ago(age_days)),
+            build_toolchain: Some("rustc 1.95.0".to_owned()),
+            ..featured_library()
+        }
     }
 
     #[test]
@@ -245,9 +280,60 @@ mod tests {
             former_glory: Some(0.1),
             deprecated_requirement: Some("tokio 0.1".to_owned()),
             repo_gone: Some(true),
+            build_fails: Some(true),
             ..featured_library()
         };
         assert_eq!(rot_of(&signals).count(), ROT_SIGNALS);
+    }
+
+    #[test]
+    fn r6_counts_a_fresh_failing_check_and_names_the_toolchain_and_date() {
+        let found = rot_of(&checked(Some(true), 3));
+        assert_eq!(found.count(), 1);
+        assert_eq!(
+            found.found[0].detail,
+            format!(
+                "latest release fails `cargo check` on rustc 1.95.0, checked {}",
+                days_ago(3)
+            )
+        );
+        let passes = rot_of(&checked(Some(false), 3));
+        assert_eq!(passes.count(), 0);
+        assert!(passes.clear().is_true());
+    }
+
+    #[test]
+    fn r6_without_a_result_is_unknown() {
+        let found = rot_of(&checked(None, 3));
+        assert_eq!(found.count(), 0);
+        assert_eq!(found.needs, ["build_fails"]);
+        let undated = Signals {
+            build_checked: None,
+            ..checked(Some(true), 3)
+        };
+        assert_eq!(rot_of(&undated).needs, ["build_fails"]);
+    }
+
+    #[test]
+    fn r6_reads_a_check_past_the_age_limit_as_unknown() {
+        let at_limit = rot_of(&checked(Some(true), 45));
+        assert_eq!(at_limit.count(), 1);
+        let stale = rot_of(&checked(Some(true), 46));
+        assert_eq!(stale.count(), 0);
+        assert_eq!(stale.needs, ["build_fails"]);
+        assert_eq!(stale.clear().value, None);
+    }
+
+    #[test]
+    fn r6_never_fires_on_an_app() {
+        let app = Signals {
+            build_fails: Some(true),
+            build_checked: Some(today()),
+            ..featured_app()
+        };
+        assert_eq!(rot_of(&app).count(), 0);
+        let unknown = rot_of(&Signals::unknown(EntryKind::App));
+        assert!(!unknown.needs.contains(&"build_fails"));
     }
 
     #[test]
@@ -261,7 +347,8 @@ mod tests {
                 "maintainer_replies_365",
                 "unpatched_vulnerabilities",
                 "former_glory",
-                "repo_gone"
+                "repo_gone",
+                "build_fails"
             ]
         );
         assert_eq!(found.clear().value, None);

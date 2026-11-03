@@ -6,6 +6,7 @@ use catalogue_signals::github::GithubError;
 use catalogue_signals::history::HistoryError;
 use catalogue_signals::http::HttpError;
 use catalogue_signals::link::LinkError;
+use catalogue_signals::sandbox::SandboxError;
 use thiserror::Error;
 
 use crate::cache_dir::CacheDirError;
@@ -57,13 +58,16 @@ pub enum TiersError {
     /// The history directory cannot be read or written.
     #[error(transparent)]
     History(#[from] HistoryError),
+    /// The `--build-checks` file cannot be read.
+    #[error(transparent)]
+    BuildChecks(#[from] SandboxError),
 }
 
 impl TiersError {
     /// The process exit code.
     ///
-    /// 1 for data, a missing data file, a missing token and a rejected token. 2
-    /// for IO and network errors. The dump and archive codes for their errors.
+    /// 1 for data, a missing data file, a missing token, a rejected token and a
+    /// corrupt build check file. 2 for IO and network errors. The dump and archive codes for their errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Invalid(_)
@@ -71,7 +75,8 @@ impl TiersError {
             | Self::Token(_)
             | Self::Github(GithubError::Status { status: 401, .. })
             | Self::Link(LinkError::Github(GithubError::Status { status: 401, .. }))
-            | Self::Distribution(DistributionError::Status { status: 401, .. }) => INVALID,
+            | Self::Distribution(DistributionError::Status { status: 401, .. })
+            | Self::BuildChecks(SandboxError::Corrupt { .. }) => INVALID,
             Self::Dump(error) => error.exit_code(),
             Self::Rustsec(error) => error.exit_code(),
             Self::Data(_)
@@ -80,6 +85,7 @@ impl TiersError {
             | Self::Github(_)
             | Self::Link(_)
             | Self::History(_)
+            | Self::BuildChecks(_)
             | Self::Distribution(_) => IO,
         }
     }

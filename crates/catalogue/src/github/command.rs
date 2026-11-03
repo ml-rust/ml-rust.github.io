@@ -9,15 +9,14 @@ use catalogue_signals::github::{
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use catalogue_signals::link::LinkError;
 use clap::Subcommand;
-use jiff::Timestamp;
 use jiff::civil::Date;
-use jiff::tz::TimeZone;
 use thiserror::Error;
 
 use super::link::link;
 use super::render::render_all;
 use crate::batch;
 use crate::cache_dir::CacheDirError;
+use crate::clock::today_utc;
 use crate::dump::DumpCommandError;
 use crate::exit::{INVALID, IO};
 use crate::token::{NoToken, token_from_env};
@@ -142,7 +141,7 @@ fn facts(
 ) -> Result<String, GithubCommandError> {
     let repos = parse_repos(arguments)?;
     let token = token?;
-    let today = today.unwrap_or_else(|| Timestamp::now().to_zoned(TimeZone::UTC).date());
+    let today = today.unwrap_or_else(today_utc);
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
     let found: Vec<RepoFacts> = batch::each(&repos, &mut pacer, |repo, pacer| {

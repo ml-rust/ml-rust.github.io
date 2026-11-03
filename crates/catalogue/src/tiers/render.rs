@@ -66,6 +66,7 @@ mod tests {
             kind: EntryKind::Library,
             tier: verdict.tier,
             dead_now: verdict.dead_now,
+            dormant: verdict.dormant,
             active_users: None,
             docker_pulls: None,
         };
@@ -82,6 +83,7 @@ mod tests {
         let held = Verdict {
             tier: Tier::Featured,
             stable: true,
+            dormant: Some(true),
             dead_now: true,
             reasons: vec![
                 Reason::new(Rule::Dormancy, "last activity 2020-01-01: dormant"),
@@ -93,6 +95,7 @@ mod tests {
         let plain = Verdict {
             tier: Tier::Listed,
             stable: false,
+            dormant: Some(false),
             dead_now: false,
             reasons: Vec::new(),
             unknown: Vec::new(),

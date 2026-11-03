@@ -9,6 +9,7 @@ use catalogue_signals::assemble::{
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
 use catalogue_signals::history::{History, Row};
 use catalogue_signals::rustsec::Advisories;
+use catalogue_signals::sandbox::BuildChecks;
 use catalogue_signals::usage;
 
 use super::collect::Fetched;
@@ -31,10 +32,12 @@ pub(crate) struct Assessment {
 /// evaluated on the dump date. An entry absent from `fetched` reads as having
 /// no network signals. Fetch notes come before assembly notes. `history` supplies
 /// each entry's previous tier, its dead run and its Docker baseline.
+/// `build_checks` supplies the sandbox results of each library's crates.
 pub(crate) fn assess_entries(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
     advisories: &Advisories,
+    build_checks: &BuildChecks,
     fetched: &BTreeMap<Slug, Fetched>,
     history: &History,
     today: Date,
@@ -56,6 +59,7 @@ pub(crate) fn assess_entries(
         advisories,
         deprecated,
         thresholds,
+        build_checks,
     };
     let none = Fetched::default();
     let assessments = catalogue
@@ -83,6 +87,7 @@ pub(crate) fn assess_entries(
                 kind: entry.kind,
                 tier: verdict.tier,
                 dead_now: verdict.dead_now,
+                dormant: verdict.dormant,
                 active_users: signals.active_users,
                 docker_pulls: network.docker_pulls,
             };

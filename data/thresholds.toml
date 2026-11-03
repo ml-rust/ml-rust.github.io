@@ -3,10 +3,10 @@
 # `catalogue calibrate` measured the marked values at p90 of their population.
 # `calibrated` is the date of the crates.io dump it read. Unmarked values keep
 # their pre-calibration research numbers. Values stay frozen until the yearly
-# recalibration, which raises `version`.
+# recalibration. Any change to the file raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 2
+version = 3
 calibrated = 2026-11-03
 
 [new]
@@ -51,6 +51,8 @@ unanswered_days = 270
 maintainer_silence_days = 365
 advisory_grace_days = 60
 lost_glory_below = 0.5
+# Not calibrated: the sandbox check runs weekly, so 45 days allows missed runs.
+build_check_max_age_days = 45
 
 [finished]
 min_former_glory = 0.8

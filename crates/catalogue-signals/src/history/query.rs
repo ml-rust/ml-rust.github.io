@@ -130,6 +130,7 @@ mod tests {
             kind: EntryKind::App,
             tier,
             dead_now,
+            dormant: None,
             active_users: None,
             docker_pulls,
         }

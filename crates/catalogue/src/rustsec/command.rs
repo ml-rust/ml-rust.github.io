@@ -8,13 +8,12 @@ use std::process::ExitCode;
 use catalogue_signals::fetch;
 use catalogue_signals::rustsec::{self, Advisories, UNPATCHED_GRACE_DAYS};
 use clap::Subcommand;
-use jiff::Timestamp;
 use jiff::civil;
-use jiff::tz::TimeZone;
 
 use super::error::RustsecCommandError;
 use super::render::render_crate;
 use crate::cache_dir::resolve_cache_dir;
+use crate::clock::today_utc;
 use crate::dump::render_outcome;
 
 /// Bytes buffered when reading the archive file.
@@ -64,7 +63,7 @@ fn run(command: RustsecCommand) -> Result<String, RustsecCommandError> {
             let cache_dir = resolve_cache_dir(cache_dir)?;
             let advisories = read_cached(&fetch::rustsec_path(&cache_dir))?;
             eprintln!("warnings: {}", advisories.warnings.len());
-            Ok(show(&advisories, &names, today()))
+            Ok(show(&advisories, &names, today_utc()))
         }
     }
 }
@@ -76,10 +75,6 @@ fn show(advisories: &Advisories, names: &[String], today: civil::Date) -> String
         .map(|name| render_crate(advisories, name, today, UNPATCHED_GRACE_DAYS))
         .collect::<Vec<_>>()
         .join("\n\n")
-}
-
-fn today() -> civil::Date {
-    Timestamp::now().to_zoned(TimeZone::UTC).date()
 }
 
 /// Reads the archive file at `path`.

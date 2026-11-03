@@ -4,6 +4,7 @@ use catalogue_core::{Date, Entry, EntryKind, Signals};
 
 use super::adoption::adoption;
 use super::assembled::Assembled;
+use super::build::apply_build_checks;
 use super::facts::apply_facts;
 use super::link::apply_link;
 use super::requirements::deprecated_requirement;
@@ -38,6 +39,9 @@ const MONTH_DAYS: usize = 30;
 ///   primary's default version that the deprecated list matches, as `<crate> <req>`,
 ///   or that names a crate with an unmaintained advisory, as `<crate> (<RUSTSEC-ID>)`.
 /// - `docs_present`: the primary publishes a README.
+/// - `build_fails`, `build_checked`, `build_toolchain`: the sandbox results for
+///   each family crate's latest release. A `fails` for any crate sets true. A
+///   `passes` for every crate sets false. Anything else leaves them unknown.
 /// - `repo_link_verified`: `link.verified()`. `None` leaves it unknown. A
 ///   missing commit, a release without commit data, an unsupported host and a
 ///   dirty release each add a note.
@@ -79,6 +83,13 @@ pub fn library_signals(
     let unpatched = advisories.unpatched_vulnerabilities(primary.as_str(), today.civil(), grace);
     signals.unpatched_vulnerabilities = Some(unpatched.iter().map(|a| a.id.clone()).collect());
     family_span(sources.dump, index, &family, &mut signals);
+    apply_build_checks(
+        entry,
+        sources.dump,
+        index,
+        sources.build_checks,
+        &mut signals,
+    );
     adoption(&family, sources.usage, &mut signals);
     match index.id(primary.as_str()) {
         Some(id) => primary_signals(sources, id, &mut signals, &mut notes),
