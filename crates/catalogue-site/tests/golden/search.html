@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search · Rust ML catalogue</title>
+<link rel="stylesheet" href="/assets/site.13d19258.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<a class="site-name" href="/">Rust ML catalogue</a>
+<form class="site-search" action="/search/" method="get" role="search">
+<label for="site-search-q">Search the catalogue</label>
+<input id="site-search-q" name="q" type="search">
+<button type="submit">Search</button>
+</form>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/topics/">Topics</a></li>
+<li><a href="/rules/">Rules</a></li>
+<li><a href="/changes/">Changes</a></li>
+<li><a href="/submit/">Submit</a></li>
+</ul>
+</nav>
+</header>
+<main id="main" tabindex="-1">
+
+<h1>Search</h1>
+<p>Search entries by name, crate, topic or description. Tick filters to narrow the results.</p>
+<form class="search-form" id="search-form" action="/search/" method="get" role="search">
+<p class="search-box">
+<label for="search-q">Search terms</label>
+<input id="search-q" name="q" type="search" autocomplete="off">
+<button type="submit">Search</button>
+</p>
+<div class="search-filters">
+<fieldset class="search-filter">
+<legend>Kind</legend>
+<ul>
+<li><input type="checkbox" id="filter-kind-library" name="kind" value="library"> <label for="filter-kind-library">Library</label> <span class="facet-count" id="filter-kind-library-count"></span></li>
+<li><input type="checkbox" id="filter-kind-app" name="kind" value="app"> <label for="filter-kind-app">App</label> <span class="facet-count" id="filter-kind-app-count"></span></li>
+</ul>
+</fieldset>
+<fieldset class="search-filter">
+<legend>Topic</legend>
+<ul>
+<li><input type="checkbox" id="filter-topic-ml" name="topic" value="ml"> <label for="filter-topic-ml">Machine learning</label> <span class="facet-count" id="filter-topic-ml-count"></span></li>
+<li><input type="checkbox" id="filter-topic-tensors" name="topic" value="tensors"> <label for="filter-topic-tensors">Tensors</label> <span class="facet-count" id="filter-topic-tensors-count"></span></li>
+</ul>
+</fieldset>
+<fieldset class="search-filter">
+<legend>Tier</legend>
+<ul>
+<li><input type="checkbox" id="filter-tier-featured" name="tier" value="featured"> <label for="filter-tier-featured">Featured</label> <span class="facet-count" id="filter-tier-featured-count"></span></li>
+<li><input type="checkbox" id="filter-tier-listed" name="tier" value="listed"> <label for="filter-tier-listed">Listed</label> <span class="facet-count" id="filter-tier-listed-count"></span></li>
+<li><input type="checkbox" id="filter-tier-new" name="tier" value="new"> <label for="filter-tier-new">New</label> <span class="facet-count" id="filter-tier-new-count"></span></li>
+<li><input type="checkbox" id="filter-tier-archived" name="tier" value="archived"> <label for="filter-tier-archived">Archived</label> <span class="facet-count" id="filter-tier-archived-count"></span></li>
+</ul>
+</fieldset>
+<fieldset class="search-filter">
+<legend>Organization</legend>
+<ul>
+<li><input type="checkbox" id="filter-org-ml-rust" name="org" value="ml-rust"> <label for="filter-org-ml-rust">ml-rust organization</label> <span class="facet-count" id="filter-org-ml-rust-count"></span></li>
+<li><input type="checkbox" id="filter-org-community" name="org" value="community"> <label for="filter-org-community">Community</label> <span class="facet-count" id="filter-org-community-count"></span></li>
+</ul>
+</fieldset>
+</div>
+</form>
+<p class="search-status" id="search-status" role="status"></p>
+<ol class="search-results" id="search-results" aria-live="polite"></ol>
+<noscript>
+<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">topics</a> instead.</p>
+<ul class="link-list">
+<li><a href="/topics/ml/">Machine learning</a></li>
+<li><a href="/topics/tensors/">Tensors</a></li>
+</ul>
+</noscript>
+<script type="module" src="/search/search.6562dd22.js"></script>
+
+</main>
+<footer class="site-footer">
+<p>Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>. Source: <a href="https://github.com/ml-rust/ml-rust.github.io">ml-rust/ml-rust.github.io</a>.</p>
+</footer>
+</body>
+</html>

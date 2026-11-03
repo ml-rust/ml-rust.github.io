@@ -2,12 +2,12 @@
 
 use askama::Template;
 
-use crate::asset::Stylesheet;
+use crate::asset::HashedAsset;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
 use crate::pages::{
-    ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage, SubmitPage,
-    TopicPage, TopicsPage, project_file, topic_file,
+    ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage, SearchPage,
+    SubmitPage, TopicPage, TopicsPage, project_file, topic_file,
 };
 use crate::refusal;
 use crate::search::{search_files, search_records};
@@ -23,6 +23,9 @@ pub struct OutputFile {
 
 /// Builds every page, asset and search index file of the site, sorted by path.
 ///
+/// The search page loads `search/oxidoc_search.js`, the wasm module of the
+/// search engine. This build does not emit it: the deploy adds it.
+///
 /// The refusal checks run before any page renders. Without a report, no page
 /// shows a tier and the search index holds no tier.
 ///
@@ -33,12 +36,14 @@ pub struct OutputFile {
 /// the search index fails to encode.
 pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError> {
     refusal::check(inputs)?;
-    let stylesheet = Stylesheet::site();
+    let stylesheet = HashedAsset::stylesheet();
+    let script = HashedAsset::search_script();
     let layout = |current| Layout::new(stylesheet.href(), current);
     let catalogue = inputs.catalogue;
     let report = inputs.report;
     let mut files = vec![
         stylesheet.file(),
+        script.file(),
         render(
             "index.html".to_owned(),
             &HomePage::new(layout(None), inputs),
@@ -58,6 +63,10 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         render(
             "submit/index.html".to_owned(),
             &SubmitPage::new(layout(Some(NavItem::Submit)), catalogue.topics()),
+        )?,
+        render(
+            "search/index.html".to_owned(),
+            &SearchPage::new(layout(None), script.href(), catalogue, report),
         )?,
         render("404.html".to_owned(), &NotFoundPage::new(layout(None)))?,
     ];

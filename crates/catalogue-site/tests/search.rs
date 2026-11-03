@@ -199,7 +199,12 @@ fn the_build_writes_the_index_files() {
         assert!(files.contains_key(&search_path(name)), "{name}");
     }
     let rendered = fixture::site(&fixture::files(), true);
-    assert!(rendered.keys().all(|path| !path.starts_with(SEARCH_DIR)));
+    assert!(
+        rendered
+            .keys()
+            .all(|path| !(path.starts_with(SEARCH_DIR) && path.ends_with(".bin")))
+    );
+    assert!(rendered.contains_key(&search_path("index.html")));
 }
 
 #[test]

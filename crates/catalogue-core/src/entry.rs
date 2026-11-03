@@ -22,6 +22,9 @@ pub enum EntryKind {
 }
 
 impl EntryKind {
+    /// Every kind, libraries first.
+    pub const ALL: [Self; 2] = [Self::Library, Self::App];
+
     /// The lowercase name used in data files.
     pub fn as_str(self) -> &'static str {
         match self {

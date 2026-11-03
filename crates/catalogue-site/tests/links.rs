@@ -12,7 +12,7 @@ use common::{TOPICS, catalogue, pages, thresholds};
 
 /// Pages the site links to that this crate does not emit.
 /// An entry that ends in `/` also covers every page below it.
-const PENDING: [&str; 1] = ["/search/"];
+const PENDING: [&str; 0] = [];
 
 /// The value of every `href`, `src` and `action` attribute in `html`.
 fn targets(html: &str) -> Vec<&str> {
@@ -79,6 +79,12 @@ fn every_internal_link_resolves() {
         "{all:?}"
     );
     assert!(all.contains(&"/topics/tensors/"), "{all:?}");
+    assert!(all.contains(&"/search/"), "{all:?}");
+    assert!(
+        all.iter()
+            .any(|target| target.starts_with("/search/search.")),
+        "{all:?}"
+    );
 }
 
 #[test]

@@ -17,18 +17,39 @@ const HOSTILE: &str = r#"<script>"'&"#;
 /// [`HOSTILE`] as the pages print it.
 const ESCAPED: &str = "&#60;script&#62;&#34;&#39;&#38;";
 
+/// The start of the one script tag the site emits: the search page loads its driver.
+const SEARCH_SCRIPT_TAG: &str = "<script type=\"module\" src=\"/search/search.";
+
+/// Whether `text` holds a `<script` tag other than the search page's own.
+fn holds_raw_script(text: &str) -> bool {
+    text.replace(SEARCH_SCRIPT_TAG, "").contains("<script")
+}
+
+#[test]
+fn the_script_check_allows_only_the_search_script() {
+    assert!(!holds_raw_script(
+        "<script type=\"module\" src=\"/search/search.0a1b2c3d.js\"></script>"
+    ));
+    assert!(holds_raw_script("<script>alert(1)</script>"));
+    assert!(holds_raw_script(
+        "<script type=\"module\" src=\"/x.js\"></script>"
+    ));
+}
+
 #[test]
 fn a_topic_name_with_markup_is_escaped() {
     let topics =
         format!("{TOPICS}\n[[topic]]\nid = \"hostile\"\nname = '''{HOSTILE}alert(1)</script>'''\n");
     let site = pages(&catalogue(&topics, Some(&thresholds(None))));
-    let submit = &site["submit/index.html"];
-    assert!(
-        submit.contains(&format!("{ESCAPED}alert(1)&#60;/script&#62;")),
-        "{submit}"
-    );
+    for page in ["submit/index.html", "search/index.html"] {
+        let html = &site[page];
+        assert!(
+            html.contains(&format!("{ESCAPED}alert(1)&#60;/script&#62;")),
+            "{page}: {html}"
+        );
+    }
     for (path, text) in &site {
-        assert!(!text.contains("<script"), "{path} holds raw markup");
+        assert!(!holds_raw_script(text), "{path} holds raw markup");
     }
 }
 
@@ -88,7 +109,7 @@ fn hostile_data_text_never_reaches_a_page_raw() {
             );
         }
         for (path, text) in &site {
-            assert!(!text.contains("<script"), "{path} holds raw markup");
+            assert!(!holds_raw_script(text), "{path} holds raw markup");
             assert!(
                 !text.contains("href=\"javascript:"),
                 "{path} links a script"

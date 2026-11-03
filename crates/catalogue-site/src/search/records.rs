@@ -24,10 +24,19 @@ const DESCRIPTION_WEIGHT: f32 = 1.5;
 /// The weight of the synonym terms.
 const ALIASES_WEIGHT: f32 = 1.0;
 
+/// The tag of the entry kind.
+pub(crate) const KIND_TAG: &str = "kind";
+/// The tag of the organization: [`ORG_AFFILIATED`] or [`ORG_COMMUNITY`].
+pub(crate) const ORG_TAG: &str = "org";
+/// The tag of one effective topic id.
+pub(crate) const TOPIC_TAG: &str = "topic";
+/// The tag of the tier. Present only with a tier report.
+pub(crate) const TIER_TAG: &str = "tier";
+
 /// The `org` tag of an entry with `org_affiliated = true`.
-const ORG_AFFILIATED: &str = "ml-rust";
+pub(crate) const ORG_AFFILIATED: &str = "ml-rust";
 /// The `org` tag of every other entry.
-const ORG_COMMUNITY: &str = "community";
+pub(crate) const ORG_COMMUNITY: &str = "community";
 
 /// One search record per entry of `catalogue`, in slug order.
 ///
@@ -103,18 +112,18 @@ fn record(
     } else {
         ORG_COMMUNITY
     };
-    record.tags = vec![tag("kind", entry.kind.as_str()), tag("org", org)];
+    record.tags = vec![tag(KIND_TAG, entry.kind.as_str()), tag(ORG_TAG, org)];
     record.tags.extend(
         effective
             .topics
             .iter()
-            .map(|topic| tag("topic", topic.as_str())),
+            .map(|topic| tag(TOPIC_TAG, topic.as_str())),
     );
     let tier = report
         .and_then(|report| report.entries.get(effective.slug))
         .map(|found| found.tier);
     if let Some(tier) = tier {
-        record.tags.push(tag("tier", tier.as_str()));
+        record.tags.push(tag(TIER_TAG, tier.as_str()));
     }
     record.boost = tier_boost(tier);
     record.snippet = Some(description.to_owned());

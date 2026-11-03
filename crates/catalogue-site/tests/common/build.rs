@@ -24,7 +24,7 @@ pub fn source(path: &str, contents: &str) -> SourceFile {
 
 /// Every page and asset of a build over `catalogue`, keyed by path, as UTF-8 text.
 ///
-/// The binary files under [`SEARCH_DIR`] are left out.
+/// The binary index files under [`SEARCH_DIR`] are left out.
 pub fn render(
     catalogue: &Catalogue,
     report: Option<&TierReport>,
@@ -39,7 +39,7 @@ pub fn render(
     let search = format!("{SEARCH_DIR}/");
     files
         .into_iter()
-        .filter(|file| !file.path.starts_with(&search))
+        .filter(|file| !(file.path.starts_with(&search) && file.path.ends_with(".bin")))
         .map(|file| {
             let text = String::from_utf8(file.bytes)
                 .unwrap_or_else(|error| panic!("{} is not UTF-8: {error}", file.path));

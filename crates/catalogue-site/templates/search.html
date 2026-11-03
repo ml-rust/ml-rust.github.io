@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1>Search</h1>
+<p>Search entries by name, crate, topic or description. Tick filters to narrow the results.</p>
+<form class="search-form" id="search-form" action="/search/" method="get" role="search">
+<p class="search-box">
+<label for="search-q">Search terms</label>
+<input id="search-q" name="q" type="search" autocomplete="off">
+<button type="submit">Search</button>
+</p>
+<div class="search-filters">
+{%- for group in groups %}
+<fieldset class="search-filter">
+<legend>{{ group.legend }}</legend>
+<ul>
+{%- for option in group.options %}
+<li><input type="checkbox" id="{{ option.id }}" name="{{ group.key }}" value="{{ option.value }}"> <label for="{{ option.id }}">{{ option.label }}</label> <span class="facet-count" id="{{ option.id }}-count"></span></li>
+{%- endfor %}
+</ul>
+</fieldset>
+{%- endfor %}
+</div>
+</form>
+<p class="search-status" id="search-status" role="status"></p>
+<ol class="search-results" id="search-results" aria-live="polite"></ol>
+<noscript>
+<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">topics</a> instead.</p>
+{%- if !topics.is_empty() %}
+<ul class="link-list">
+{%- for link in topics %}
+<li><a href="{{ link.href }}">{{ link.name }}</a></li>
+{%- endfor %}
+</ul>
+{%- endif %}
+</noscript>
+<script type="module" src="{{ script }}"></script>
+{% endblock %}

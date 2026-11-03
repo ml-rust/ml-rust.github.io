@@ -451,6 +451,74 @@ td.not-measured {
   font-style: italic;
 }
 
+/* Search page: the query box, the filter groups, then the results. */
+.search-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-box input,
+.search-box button {
+  font: inherit;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.search-box input {
+  flex: 1 1 20ch;
+}
+
+.search-box button {
+  background: var(--bg-raised);
+  cursor: pointer;
+}
+
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.search-filter {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.search-filter legend {
+  font-weight: 700;
+}
+
+.search-filter ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.facet-count,
+.search-status {
+  color: var(--text-muted);
+}
+
+.search-result {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-result-title {
+  font-weight: 700;
+}
+
+.search-result-snippet,
+.search-result-tags {
+  margin: var(--space-1) 0 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto;
@@ -463,7 +531,8 @@ td.not-measured {
   .entry-kind,
   .entry-label,
   .stable-label,
-  .topic-card {
+  .topic-card,
+  .search-filter {
     border-color: CanvasText;
   }
 
