@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use catalogue_github::{ApiError, WRITE_INTERVAL};
+use catalogue_signals::crates_io::CRATES_IO_INTERVAL;
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use clap::Args;
 use jiff::Timestamp;
@@ -30,7 +31,7 @@ pub struct RunArgs {
 ///
 /// Prints one line per checked issue on stdout, and warnings and failures on
 /// stderr. The code is 0 when every issue is checked, 1 for a config, labels
-/// file or key to fix, and 2 when an issue, a fetch or the lock fails.
+/// file or key to fix, and 2 when an issue, a fetch, a PR step or the lock fails.
 pub(crate) fn run_run(args: &RunArgs) -> ExitCode {
     let path = config_path(args.config.as_deref(), std::env::var_os(CONFIG_VAR));
     let result = load_config(&path)
@@ -44,8 +45,17 @@ pub(crate) fn run_run(args: &RunArgs) -> ExitCode {
             )?;
             let transport = ReqwestTransport::new().map_err(ApiError::from)?;
             let mut pacer = IntervalPacer::new(WRITE_INTERVAL);
+            let mut crates_pacer = IntervalPacer::new(CRATES_IO_INTERVAL);
             let clock = Timestamp::now;
-            run_pass(&transport, &mut pacer, &clock, &config, &args.labels, &dir)
+            run_pass(
+                &transport,
+                &mut pacer,
+                &mut crates_pacer,
+                &clock,
+                &config,
+                &args.labels,
+                &dir,
+            )
         });
     match result {
         Ok(report) => {

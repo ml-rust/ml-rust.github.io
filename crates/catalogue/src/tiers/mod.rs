@@ -11,3 +11,5 @@ mod render;
 pub use collect::Network;
 pub use command::{TiersArgs, run_tiers, tiers_report};
 pub use error::TiersError;
+
+pub(crate) use collect::github_repo;

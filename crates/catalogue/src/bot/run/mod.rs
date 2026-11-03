@@ -1,10 +1,12 @@
-//! `catalogue bot run`: one poll pass that checks every open issue with a form label.
+//! `catalogue bot run`: one poll pass that checks every open issue with a form
+//! label and turns approved issues into data PRs.
 
 mod command;
 mod error;
 mod issue;
 mod lock;
 mod pass;
+mod pr;
 mod state;
 
 pub use command::RunArgs;

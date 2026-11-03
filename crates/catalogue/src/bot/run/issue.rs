@@ -4,14 +4,16 @@ use std::num::NonZeroU64;
 
 use catalogue_bot::{
     APPROVED, CheckInput, CheckReport, CommentAction, Desired, Form, FormError, FormKind,
-    IssueMeta, Marker, Previous, Sha256, check_submission, comment_body, label_report, parse_form,
-    plan,
+    IssueMeta, Marker, Note, Previous, Sha256, approval_stale, check_submission, comment_body,
+    label_report, parse_form, plan, report_digest,
 };
 use catalogue_core::{CommitSha, DataSources, Date, GithubLogin, Tier};
 use catalogue_github::{ApiError, Comment, CommentUpdate, Issue, RepoClient};
+use catalogue_signals::crates_io::CratesIo;
 use catalogue_signals::history::Snapshot;
 
 use super::error::IssueError;
+use super::pr::{PrOutcome, open_pr};
 use super::state::IssueState;
 
 /// What every issue check of one run shares.
@@ -44,35 +46,56 @@ pub(super) fn has_form_label(issue: &Issue) -> bool {
         .any(|label| FormKind::from_label(label).is_some())
 }
 
-/// Checks `issue` and applies the writes the plan asks for.
+/// Checks `issue`, opens its data PR when it is approved, and applies the
+/// writes the plan asks for.
 ///
 /// `cached` is the state from the last run. It names the comment to read
-/// first. The marker in the comment decides, never the cache.
+/// first. The marker in the comment decides, never the cache. The PR step
+/// runs only when the issue carries `approved`, the report does not block,
+/// and the approval still covers the checked body. Its status goes into the
+/// comment text and the marker digest.
 pub(super) fn check_issue(
     client: &mut RepoClient<'_>,
+    crates: &mut CratesIo<'_>,
     context: &RunContext<'_>,
     issue: &Issue,
     cached: Option<&IssueState>,
 ) -> Result<Checked, IssueError> {
     let number = issue.number;
     let api = |source| IssueError::Api { number, source };
-    let report = build_report(context, issue)?;
+    let meta = issue_meta(issue)?;
+    let report = build_report(context, issue, &meta);
+    let body = Sha256::of(issue.body.as_bytes());
+    let previous = find_previous(client, context.slug, number, cached).map_err(api)?;
+    let stale = approval_stale(previous.as_ref(), &body, &issue.labels);
+    let approved = issue.labels.iter().any(|label| label == APPROVED);
+    let pr = if approved && !stale && !report.blocking {
+        open_pr(client, crates, context, issue, &meta, body, report.blocking)?
+    } else {
+        PrOutcome::default()
+    };
+    let mut notes = Vec::new();
+    if stale {
+        notes.push(Note::BodyChanged);
+    }
+    let refused = pr.note.is_some();
+    notes.extend(pr.note);
     let desired = Desired {
         marker: Marker {
-            body: Sha256::of(issue.body.as_bytes()),
-            report: Sha256::of(report.markdown().as_bytes()),
+            body,
+            report: report_digest(&report, pr.status.as_ref()),
             main: Some(context.main_sha.clone()),
         },
         blocking: report.blocking,
+        note: refused,
     };
-    let previous = find_previous(client, context.slug, number, cached).map_err(api)?;
     let actions = plan(&desired, previous.as_ref(), &issue.labels);
-    let mut changes = Vec::new();
+    let mut changes = pr.changes;
     if actions.drop_approved {
         client.remove_label(number, APPROVED).map_err(api)?;
         changes.push(format!("removed {APPROVED}"));
     }
-    let text = comment_body(&desired.marker, &report, actions.drop_approved);
+    let text = comment_body(&desired.marker, &report, pr.status.as_ref(), &notes);
     let comment_id = match (actions.comment, &previous) {
         (CommentAction::Skip, Some(found)) => found.comment_id,
         (CommentAction::Update(id), _) => {
@@ -115,34 +138,35 @@ pub(super) fn check_issue(
     })
 }
 
-/// The check report of `issue`: the form check, or the label error when its
-/// labels name no form or several.
-fn build_report(context: &RunContext<'_>, issue: &Issue) -> Result<CheckReport, IssueError> {
+/// The number and author of `issue`, from the API fields.
+fn issue_meta(issue: &Issue) -> Result<IssueMeta, IssueError> {
     let number = issue.number;
     let author = issue
         .author
         .as_ref()
         .and_then(|author| GithubLogin::new(author.login.as_str()).ok());
-    let (Some(author), Some(issue_number)) = (author, NonZeroU64::new(number)) else {
-        return Err(IssueError::Author { number });
-    };
+    match (author, NonZeroU64::new(number)) {
+        (Some(author), Some(number)) => Ok(IssueMeta { number, author }),
+        _ => Err(IssueError::Author { number }),
+    }
+}
+
+/// The check report of `issue`: the form check, or the label error when its
+/// labels name no form or several.
+fn build_report(context: &RunContext<'_>, issue: &Issue, meta: &IssueMeta) -> CheckReport {
     let kind = match FormKind::from_labels(issue.labels.iter().map(String::as_str)) {
         Ok(kind) => kind,
-        Err(error) => return Ok(label_report(&error)),
+        Err(error) => return label_report(&error),
     };
     let form = parse_form(kind, &issue.body);
-    let meta = IssueMeta {
-        number: issue_number,
-        author,
-    };
-    Ok(check_submission(&CheckInput {
+    check_submission(&CheckInput {
         main: context.main,
         kind,
         form: &form,
-        meta: &meta,
+        meta,
         today: context.today,
         current_tier: entry_tier(&form, context.snapshot),
-    }))
+    })
 }
 
 /// The snapshot tier of the entry a judgment form names.

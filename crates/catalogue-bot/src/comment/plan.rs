@@ -1,5 +1,6 @@
 //! The writes one issue needs, from the desired check and the previous bot comment.
 
+use super::digest::Sha256;
 use super::marker::Marker;
 use super::names::{APPROVED, BOT_CHECKED, NEEDS_FIX};
 
@@ -10,6 +11,8 @@ pub struct Desired {
     pub marker: Marker,
     /// Whether the report blocks the issue.
     pub blocking: bool,
+    /// Whether the comment carries a one-time note, so a matching marker still gets a rewrite.
+    pub note: bool,
 }
 
 /// The bot comment already on the issue.
@@ -45,13 +48,25 @@ pub struct Actions {
     pub drop_approved: bool,
 }
 
+/// Whether `approved` covers a body the bot never checked: the issue carries
+/// it, and the `previous` marker covers a body other than `body`.
+pub fn approval_stale(
+    previous: Option<&Previous>,
+    body: &Sha256,
+    current_labels: &[String],
+) -> bool {
+    current_labels.iter().any(|label| label == APPROVED)
+        && previous.is_some_and(|found| found.marker.body != *body)
+}
+
 /// Plans the writes for one issue that carries `current_labels`.
 ///
 /// - Labels: `needs-fix` when the report blocks, else `bot-checked`. The other one goes.
 /// - Comment: post one when `previous` is `None`. Rewrite it when its marker
-///   differs from the desired one in the body, the report or `main`. Skip otherwise.
-/// - Approval: drop `approved` when a previous marker exists and covers a
-///   different body. A maintainer approved text the bot has not checked.
+///   differs from the desired one in the body, the report or `main`, or when
+///   the desired comment carries a note. Skip otherwise.
+/// - Approval: drop `approved` when [`approval_stale`] holds. A maintainer
+///   approved text the bot has not checked.
 pub fn plan(desired: &Desired, previous: Option<&Previous>, current_labels: &[String]) -> Actions {
     let has = |name: &str| current_labels.iter().any(|label| label == name);
     let (wanted, other) = if desired.blocking {
@@ -71,11 +86,10 @@ pub fn plan(desired: &Desired, previous: Option<&Previous>, current_labels: &[St
     };
     let comment = match previous {
         None => CommentAction::Create,
-        Some(found) if found.marker == desired.marker => CommentAction::Skip,
+        Some(found) if found.marker == desired.marker && !desired.note => CommentAction::Skip,
         Some(found) => CommentAction::Update(found.comment_id),
     };
-    let drop_approved =
-        has(APPROVED) && previous.is_some_and(|found| found.marker.body != desired.marker.body);
+    let drop_approved = approval_stale(previous, &desired.marker.body, current_labels);
     Actions {
         comment,
         add_labels,
@@ -89,7 +103,6 @@ mod tests {
     use catalogue_core::CommitSha;
 
     use super::*;
-    use crate::comment::digest::Sha256;
 
     fn marker(body: &str, report: &str, main: Option<&str>) -> Marker {
         Marker {
@@ -103,6 +116,7 @@ mod tests {
         Desired {
             marker: marker("b", "r", Some("a")),
             blocking,
+            note: false,
         }
     }
 
@@ -162,6 +176,15 @@ mod tests {
             );
             assert_eq!(actions.comment, CommentAction::Update(9));
         }
+    }
+
+    #[test]
+    fn a_note_rewrites_a_matching_comment() {
+        let same = previous(marker("b", "r", Some("a")));
+        let mut noted = desired(false);
+        noted.note = true;
+        let actions = plan(&noted, Some(&same), &labels(&["bot-checked"]));
+        assert_eq!(actions.comment, CommentAction::Update(9));
     }
 
     #[test]

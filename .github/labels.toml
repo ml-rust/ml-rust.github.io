@@ -55,3 +55,8 @@ description = "The bot checked the issue and found no error"
 name = "needs-fix"
 color = "e11d21"
 description = "The bot check found errors to fix"
+
+[[label]]
+name = "pr-open"
+color = "6f42c1"
+description = "The bot opened the data PR for this issue"

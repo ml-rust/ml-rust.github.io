@@ -8,17 +8,21 @@
 //! repo labels file and [`plan_sync`] plans the label sync. [`plan`] decides the
 //! comment and label writes for one issue from the [`Marker`] of the last bot
 //! comment, and [`comment_body`] builds the comment text within GitHub's cap.
+//! [`approval_event`] reads the approval from the issue events, [`decide`]
+//! applies the ownership rules, and [`pr_decision`] turns an approved issue
+//! into the data PR it becomes.
 
 mod check;
 mod comment;
 mod convert;
 mod form;
 mod labels;
+mod pr;
 
 pub use check::{Block, CheckInput, CheckReport, Section, check_submission, label_report};
 pub use comment::{
     APPROVED, Actions, BOT_CHECKED, CommentAction, Desired, MAX_COMMENT_BYTES, Marker, NEEDS_FIX,
-    Previous, Sha256, comment_body, plan,
+    Note, PR_OPEN, PrStatus, Previous, Sha256, approval_stale, comment_body, plan, report_digest,
 };
 pub use convert::{
     Affiliation, Approval, ENTRIES_DIR, IssueMeta, JUDGMENTS_DIR, JudgmentDraft, PrNotes,
@@ -33,4 +37,10 @@ pub use form::{
 pub use labels::{
     DESCRIPTION_MAX, LabelProblem, LabelSpec, LabelUpdate, LabelsError, LabelsFile, RepoLabel,
     SyncPlan, parse_labels, plan_sync,
+};
+pub use pr::{
+    Account, ApprovalEvent, ApprovalSource, BRANCH_PREFIX, Basis, CrateOwner, CrateOwners,
+    EventActor, ExistingPr, IssueEvent, OwnerFacts, Ownership, PrDecision, PrInput, PrIssue,
+    PrPlan, Prepared, PullFacts, RepoFacts, TeamOwner, approval_event, branch_name, decide,
+    existing_pr, membership_org, pr_decision, precheck, prepare,
 };

@@ -2,50 +2,25 @@
 
 #[path = "common/bot_github.rs"]
 mod bot_github;
+#[path = "common/bot_pass.rs"]
+mod bot_pass;
 #[path = "common/bot_setup.rs"]
 mod bot_setup;
 
 use std::fs;
-use std::path::PathBuf;
 
 use bot_github::{
-    BOT_LOGIN, LABELS, SHA, Signals, assert_redacted, body, comment, comment_text, comment_url,
-    comments_url, github, issue, issue_labels_url, post_comment_url, writes,
+    BOT_LOGIN, LABELS, SHA, Signals, body, comment, comment_text, comment_url, comments_url,
+    github, issue, issue_labels_url, new_comment, post_comment_url, writes,
 };
+use bot_pass::{run, state_dir, try_run};
 use bot_setup::{BotSetup, bot_setup};
+use catalogue::RunError;
 use catalogue::bot::run::{LOCK_FILE, take_lock};
-use catalogue::{RunError, RunReport, run_pass};
 use catalogue_bot::{Marker, Sha256};
 use catalogue_core::{CommitSha, Tier};
-use catalogue_github::testing::{Method, NoWait, Reply, ScriptedTransport};
-use jiff::Timestamp;
+use catalogue_github::testing::{Method, Reply};
 use serde_json::{Value, json};
-
-fn now() -> Timestamp {
-    "2026-11-04T00:00:00Z".parse().expect("time")
-}
-
-fn state_dir(setup: &BotSetup) -> PathBuf {
-    setup.config.state_dir.clone().expect("state dir")
-}
-
-fn try_run(setup: &BotSetup, transport: &ScriptedTransport) -> Result<RunReport, RunError> {
-    let mut pacer = NoWait::default();
-    run_pass(
-        transport,
-        &mut pacer,
-        &now,
-        &setup.config,
-        &setup.labels,
-        &state_dir(setup),
-    )
-}
-
-fn run(setup: &BotSetup, transport: &ScriptedTransport) -> RunReport {
-    let report = try_run(setup, transport).expect("runs");
-    assert_redacted(transport);
-    report
-}
 
 /// The state file as JSON.
 fn state(setup: &BotSetup) -> Value {
@@ -81,23 +56,6 @@ fn first_run(setup: &BotSetup) -> String {
         .collect();
     assert_eq!(posts.len(), 1);
     comment_text(&posts[0])
-}
-
-/// `transport` with the routes of an issue that has no bot comment yet: the empty
-/// listing, a post that creates comment `id` and the label write.
-fn new_comment(transport: ScriptedTransport, number: u64, id: u64) -> ScriptedTransport {
-    transport
-        .route(Method::Get, &comments_url(number), Reply::new(200, "[]"))
-        .route(
-            Method::Post,
-            &post_comment_url(number),
-            Reply::new(201, json!({"id": id}).to_string()),
-        )
-        .route(
-            Method::Post,
-            &issue_labels_url(number),
-            Reply::new(200, "[]"),
-        )
 }
 
 /// The bot comment 900 on issue 12 with `text`.

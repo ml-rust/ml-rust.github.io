@@ -1,6 +1,7 @@
 //! Raw catalogue signals collected from external sources.
 //!
-//! [`http`] holds the shared HTTP transport. [`fetch`] downloads the crates.io
+//! [`http`] holds the shared HTTP transport. [`crates_io`] reads the owners
+//! of one crate from the crates.io API. [`fetch`] downloads the crates.io
 //! database dump and the RustSec advisory archive. [`dump`] reads the dump.
 //! [`usage`] derives adoption signals from what it holds. [`discover`] selects
 //! candidate crates from it. [`github`] searches GitHub for candidate repos.
@@ -19,6 +20,7 @@ mod archive;
 pub mod assemble;
 pub mod atomic;
 pub mod calibrate;
+pub mod crates_io;
 pub mod discover;
 pub mod distribution;
 pub mod dump;

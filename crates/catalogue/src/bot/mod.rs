@@ -2,7 +2,8 @@
 //!
 //! `check` reads an issue form offline. `labels` syncs the repo labels as the
 //! GitHub App named in the bot config. `run` checks every open issue with a
-//! form label and writes the bot comment and labels.
+//! form label, writes the bot comment and labels, and opens the data PR of
+//! each approved issue.
 
 mod command;
 mod config;

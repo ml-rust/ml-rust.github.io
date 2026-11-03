@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use catalogue_bot::{FormKind, LabelsFile, parse_labels};
 
 /// The labels the bot sets on issues.
-const BOT_LABELS: [&str; 3] = ["bot-checked", "needs-fix", "approved"];
+const BOT_LABELS: [&str; 4] = ["bot-checked", "needs-fix", "approved", "pr-open"];
 
 fn github_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.github")

@@ -7,6 +7,13 @@
 owner = "ml-rust"
 repo = "ml-rust.github.io"
 
+# The App needs these repository permissions:
+# - Issues: read and write. Comments, labels and issue events.
+# - Contents: read and write. The data files, the tier snapshots and the bot branches.
+# - Pull requests: read and write. The data PRs.
+# Branch protection on `main` must not list the App as a bypass actor.
+# Its data PRs then merge only through the review that protection asks for.
+
 # From the GitHub App settings page.
 app_id = 123456
 # From the URL of the App installation on the owner: .../installations/<id>.

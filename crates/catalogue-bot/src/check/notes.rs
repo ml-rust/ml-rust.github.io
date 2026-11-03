@@ -90,7 +90,7 @@ pub(super) fn approvers_section(context: &Context<'_>) -> Section {
         (Err(_), Some(_)) => "Unknown, because main does not load.".to_owned(),
         (Ok(catalogue), Some(record)) => {
             let reporter = &context.input.meta.author;
-            let mut found = match record {
+            let found = match record {
                 Record::Submit(submission) => catalogue.submission_approvers(
                     submission.slug.as_str(),
                     submission.entry.org_affiliated,
@@ -100,15 +100,16 @@ pub(super) fn approvers_section(context: &Context<'_>) -> Section {
                     catalogue.eligible_approvers(&draft.entry, reporter, &draft.judgment)
                 }
             };
-            found.sort_by_key(GithubLogin::normalized);
-            found.dedup_by(|a, b| a.same_account(b));
-            listing(&found)
+            approver_listing(found)
         }
     };
     text_section("Approvers", &text)
 }
 
-fn listing(found: &[GithubLogin]) -> String {
+/// The sentence that lists `found` approvers, sorted by login without repeats.
+pub(crate) fn approver_listing(mut found: Vec<GithubLogin>) -> String {
+    found.sort_by_key(GithubLogin::normalized);
+    found.dedup_by(|a, b| a.same_account(b));
     if found.is_empty() {
         return "No eligible approver. No maintainer in `data/maintainers.toml` passes the approval rules for this issue.".to_owned();
     }

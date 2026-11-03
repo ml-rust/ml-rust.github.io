@@ -4,12 +4,9 @@ use catalogue_signals::http::percent_encode;
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-use crate::api::Verb;
+use crate::api::{PER_PAGE, Verb};
 use crate::client::RepoClient;
 use crate::error::ApiError;
-
-/// Labels per page of a listing, the most GitHub serves.
-const PER_PAGE: u32 = 100;
 
 /// A label as the API lists it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

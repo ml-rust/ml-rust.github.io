@@ -4,6 +4,7 @@ use std::io;
 use std::path::PathBuf;
 
 use catalogue_github::ApiError;
+use catalogue_signals::crates_io::CratesIoError;
 use thiserror::Error;
 
 use crate::bot::labels::LabelsCommandError;
@@ -75,5 +76,13 @@ pub enum IssueError {
         number: u64,
         /// The failed call.
         source: ApiError,
+    },
+    /// A crates.io owner lookup for the issue fails. The bot opens no PR this pass.
+    #[error("issue {number}: {source}")]
+    CratesIo {
+        /// The issue number.
+        number: u64,
+        /// The failed lookup.
+        source: CratesIoError,
     },
 }

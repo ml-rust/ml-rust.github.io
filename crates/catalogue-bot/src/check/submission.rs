@@ -28,7 +28,7 @@ pub struct CheckInput<'a> {
 }
 
 /// The record an issue proposes.
-pub(super) enum Record {
+pub(crate) enum Record {
     /// A new entry.
     Submit(Box<Submission>),
     /// A judgment that waits for approval.
@@ -37,7 +37,7 @@ pub(super) enum Record {
 
 impl Record {
     /// The file path relative to the repository root.
-    pub(super) fn path(&self) -> String {
+    pub(crate) fn path(&self) -> String {
         match self {
             Self::Submit(found) => found.path(),
             Self::Judgment(draft) => draft.path(),
@@ -106,22 +106,34 @@ pub fn check_submission(input: &CheckInput<'_>) -> CheckReport {
 
 /// The record of the parsed form, and every problem in the order found.
 fn convert(input: &CheckInput<'_>) -> (Option<Record>, Vec<String>) {
-    let form = match input.form {
+    proposed_record(input.form, input.kind, input.meta, input.today)
+}
+
+/// The record that `form` proposes under the label `kind`, and every problem
+/// in the order found. `today` becomes `added` on a new entry.
+pub(crate) fn proposed_record(
+    form: &Result<Form, Vec<FormError>>,
+    kind: FormKind,
+    meta: &IssueMeta,
+    today: Date,
+) -> (Option<Record>, Vec<String>) {
+    let form = match form {
         Ok(form) => form,
         Err(errors) => return (None, errors.iter().map(ToString::to_string).collect()),
     };
-    if form.kind() != input.kind {
+    if form.kind() != kind {
         let problem = format!(
             "the body holds the `{}` form, but the label names `{}`",
             form.kind(),
-            input.kind
+            kind
         );
         return (None, vec![problem]);
     }
     let record = match form {
-        Form::Submit(answers) => submission(answers, input.meta, input.today)
-            .map(|found| Record::Submit(Box::new(found))),
-        Form::Judgment(answers) => judgment_draft(answers, input.meta).map(Record::Judgment),
+        Form::Submit(answers) => {
+            submission(answers, meta, today).map(|found| Record::Submit(Box::new(found)))
+        }
+        Form::Judgment(answers) => judgment_draft(answers, meta).map(Record::Judgment),
     };
     match record {
         Ok(record) => (Some(record), Vec::new()),

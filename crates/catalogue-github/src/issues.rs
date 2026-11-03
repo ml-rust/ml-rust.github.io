@@ -1,16 +1,14 @@
 //! Issues, issue comments and issue labels.
 
 use catalogue_signals::http::percent_encode;
+use jiff::Timestamp;
 use serde::Deserialize;
 use serde::de::IgnoredAny;
 use serde_json::{Map, Value};
 
-use crate::api::{Verb, parse_json};
+use crate::api::{PER_PAGE, Verb, parse_json};
 use crate::client::RepoClient;
 use crate::error::ApiError;
-
-/// Items per page of a listing, the most GitHub serves.
-const PER_PAGE: u32 = 100;
 
 /// The account that wrote an issue or a comment, as the API reports it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -34,11 +32,13 @@ impl Author {
     }
 }
 
-/// An open issue, as the listing reports it.
+/// An issue, as the API reports it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Issue {
     /// The issue number.
     pub number: u64,
+    /// Whether the issue is open.
+    pub open: bool,
     /// The issue title.
     pub title: String,
     /// The body exactly as the API returns it. A `null` body reads as empty.
@@ -84,10 +84,12 @@ pub enum CommentUpdate {
     Missing,
 }
 
-/// The issue fields the listing reads.
+/// The issue fields the client reads.
 #[derive(Deserialize)]
 struct RawIssue {
     number: u64,
+    #[serde(default)]
+    state: Option<String>,
     #[serde(default, deserialize_with = "null_as_empty")]
     title: String,
     #[serde(default, deserialize_with = "null_as_empty")]
@@ -101,10 +103,52 @@ struct RawIssue {
     pull_request: Option<IgnoredAny>,
 }
 
-/// A label name inside an issue.
+/// A label name inside an issue or an event.
 #[derive(Deserialize)]
 struct RawLabel {
     name: String,
+}
+
+impl RawIssue {
+    /// The issue, open when the API says so or `listed_open` holds.
+    fn into_issue(self, listed_open: bool) -> Issue {
+        Issue {
+            number: self.number,
+            open: listed_open || self.state.as_deref() == Some("open"),
+            title: self.title,
+            body: self.body,
+            author: self.user,
+            labels: self.labels.into_iter().map(|label| label.name).collect(),
+        }
+    }
+}
+
+/// One issue event, as the API reports it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IssueEvent {
+    /// The event id.
+    pub id: u64,
+    /// The event name, such as `labeled`.
+    pub event: String,
+    /// The account that caused the event. `None` when the API sends none.
+    pub actor: Option<Author>,
+    /// The label name of a label event.
+    pub label: Option<String>,
+    /// When the event happened.
+    pub created_at: Timestamp,
+}
+
+/// The event fields the client reads.
+#[derive(Deserialize)]
+struct RawEvent {
+    id: u64,
+    #[serde(default, deserialize_with = "null_as_empty")]
+    event: String,
+    #[serde(default)]
+    actor: Option<Author>,
+    #[serde(default)]
+    label: Option<RawLabel>,
+    created_at: String,
 }
 
 /// The id of a created comment.
@@ -140,14 +184,58 @@ impl RepoClient<'_> {
         Ok(raw
             .into_iter()
             .filter(|issue| issue.pull_request.is_none())
-            .map(|issue| Issue {
-                number: issue.number,
-                title: issue.title,
-                body: issue.body,
-                author: issue.user,
-                labels: issue.labels.into_iter().map(|label| label.name).collect(),
-            })
+            .map(|issue| issue.into_issue(true))
             .collect())
+    }
+
+    /// Issue `number` as it is now. A pull request with that number is an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when the call fails, the answer is not the
+    /// expected JSON, or the number names a pull request.
+    pub fn issue(&mut self, number: u64) -> Result<Issue, ApiError> {
+        let url = self.repo_url(&format!("/issues/{number}"));
+        let answer = self.call(Verb::Get, &url, None, &[200])?;
+        let raw: RawIssue = parse_json(&url, &answer.body)?;
+        if raw.pull_request.is_some() || raw.number != number {
+            return Err(ApiError::Content {
+                url,
+                reason: format!("the answer is not issue {number}. Report it"),
+            });
+        }
+        Ok(raw.into_issue(false))
+    }
+
+    /// Every event of issue `number`, in API order.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when a call fails, a page is not the expected
+    /// JSON, an event time is not a timestamp, or the listing passes the page cap.
+    pub fn issue_events(&mut self, number: u64) -> Result<Vec<IssueEvent>, ApiError> {
+        let url = self.repo_url(&format!("/issues/{number}/events?per_page={PER_PAGE}"));
+        let raw: Vec<RawEvent> = self.get_pages(&url)?;
+        raw.into_iter()
+            .map(|event| {
+                let created_at = event.created_at.parse::<Timestamp>().map_err(|_| {
+                    ApiError::Content {
+                        url: url.clone(),
+                        reason: format!(
+                            "event {} has no valid `created_at`. Rerun later. If the error persists, report it",
+                            event.id
+                        ),
+                    }
+                })?;
+                Ok(IssueEvent {
+                    id: event.id,
+                    event: event.event,
+                    actor: event.actor,
+                    label: event.label.map(|label| label.name),
+                    created_at,
+                })
+            })
+            .collect()
     }
 
     /// Every comment on issue `number`, oldest first.
@@ -269,6 +357,27 @@ mod tests {
         let pr: RawIssue =
             serde_json::from_str(r#"{"number":4,"pull_request":{"url":"u"}}"#).expect("parses");
         assert!(pr.pull_request.is_some());
+        let closed: RawIssue =
+            serde_json::from_str(r#"{"number":5,"state":"closed"}"#).expect("parses");
+        assert!(!closed.into_issue(false).open);
+    }
+
+    #[test]
+    fn an_event_with_a_null_actor_and_no_label_parses() {
+        let event: RawEvent = serde_json::from_str(
+            r#"{"id":1,"event":"labeled","actor":null,"label":{"name":"approved","color":"x"},"created_at":"2026-11-03T10:00:00Z"}"#,
+        )
+        .expect("parses");
+        assert!(event.actor.is_none());
+        assert_eq!(
+            event.label.map(|label| label.name).as_deref(),
+            Some("approved")
+        );
+        let closed: RawEvent = serde_json::from_str(
+            r#"{"id":2,"event":"closed","actor":{"login":"a","type":"User"},"created_at":"2026-11-03T10:00:00Z"}"#,
+        )
+        .expect("parses");
+        assert!(closed.label.is_none());
     }
 
     #[test]

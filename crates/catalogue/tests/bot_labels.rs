@@ -127,7 +127,7 @@ fn a_sync_creates_and_updates_and_never_deletes() {
         posts[0].json().expect("token body"),
         json!({
             "repositories": ["catalogue-test"],
-            "permissions": {"issues": "write", "contents": "read"},
+            "permissions": {"issues": "write", "contents": "write", "pull_requests": "write"},
         })
     );
     assert_eq!(posts[1].url, LABELS_URL);

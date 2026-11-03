@@ -5,6 +5,7 @@ use std::path::Path;
 
 use catalogue_core::Date;
 use catalogue_github::{AppKey, Clock, GithubApp};
+use catalogue_signals::crates_io::CratesIo;
 use catalogue_signals::http::{Pacer, Transport};
 use jiff::tz::TimeZone;
 
@@ -40,10 +41,12 @@ pub struct RunReport {
 ///
 /// The pass takes the lock in `state_dir`, syncs the labels to the file at
 /// `labels_path`, reads the data files of `main` and the newest tier
-/// snapshot, then checks every open issue with a form label. It writes the
-/// state file after each issue and drops issues that left the work set. An
-/// issue that fails is reported and the pass goes on. The `pacer` spaces every
-/// request. The `clock` signs the JWTs and gives the date of the check.
+/// snapshot, then checks every open issue with a form label. An approved
+/// issue whose report does not block becomes a data PR. It writes the state
+/// file after each issue and drops issues that left the work set. An issue
+/// that fails is reported and the pass goes on. The `pacer` spaces every
+/// GitHub request. The `crates_pacer` spaces the crates.io owner lookups.
+/// The `clock` signs the JWTs and gives the date of the check.
 ///
 /// # Errors
 ///
@@ -52,6 +55,7 @@ pub struct RunReport {
 pub fn run_pass(
     transport: &dyn Transport,
     pacer: &mut dyn Pacer,
+    crates_pacer: &mut dyn Pacer,
     clock: Clock<'_>,
     config: &BotConfig,
     labels_path: &Path,
@@ -63,6 +67,7 @@ pub fn run_pass(
     let state_path = state_dir.join(STATE_FILE);
     let (mut state, warning) = BotState::load(&state_path);
     let app = GithubApp::new(transport, pacer, config.app_id.get(), key, clock);
+    let mut crates = CratesIo::new(transport, crates_pacer);
     let mut client = app.repo(
         config.installation_id.get(),
         config.repo.clone(),
@@ -89,7 +94,8 @@ pub fn run_pass(
     let mut work = BTreeSet::new();
     for issue in issues.iter().filter(|issue| has_form_label(issue)) {
         work.insert(issue.number);
-        match check_issue(&mut client, &context, issue, state.get(issue.number)) {
+        let cached = state.get(issue.number);
+        match check_issue(&mut client, &mut crates, &context, issue, cached) {
             Ok(checked) => {
                 report.lines.push(checked.summary);
                 if state.get(issue.number) != Some(&checked.state) {

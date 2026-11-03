@@ -51,6 +51,11 @@ description = "The bot checked the issue and found no error"
 name = "needs-fix"
 color = "e11d21"
 description = "The bot check found errors to fix"
+
+[[label]]
+name = "pr-open"
+color = "6f42c1"
+description = "The bot opened the data PR for this issue"
 "#;
 
 /// The tier snapshots on the `signals` branch.
@@ -94,17 +99,23 @@ pub fn body(name: &str) -> String {
     fs::read_to_string(path).expect("body fixture")
 }
 
-/// An open issue as the listing returns it.
+/// An open issue by `dave` as the listing returns it.
 pub fn issue(number: u64, body: &str, labels: &[&str]) -> Value {
+    issue_by(number, body, labels, "dave")
+}
+
+/// An open issue by `author` as the API returns it.
+pub fn issue_by(number: u64, body: &str, labels: &[&str], author: &str) -> Value {
     let labels: Vec<Value> = labels
         .iter()
         .map(|name| json!({"name": name, "color": "000000"}))
         .collect();
     json!({
         "number": number,
+        "state": "open",
         "title": "an issue",
         "body": body,
-        "user": {"login": "dave", "type": "User"},
+        "user": {"login": author, "type": "User"},
         "labels": labels,
     })
 }
@@ -235,6 +246,23 @@ fn snapshot(slug: &str, tier: Tier) -> Vec<u8> {
     fs::read(path).expect("snapshot bytes")
 }
 
+/// `transport` with the routes of an issue that has no bot comment yet: the empty
+/// listing, a post that creates comment `id` and the label write.
+pub fn new_comment(transport: ScriptedTransport, number: u64, id: u64) -> ScriptedTransport {
+    transport
+        .route(Method::Get, &comments_url(number), Reply::new(200, "[]"))
+        .route(
+            Method::Post,
+            &post_comment_url(number),
+            Reply::new(201, json!({"id": id}).to_string()),
+        )
+        .route(
+            Method::Post,
+            &issue_labels_url(number),
+            Reply::new(200, "[]"),
+        )
+}
+
 /// Every request that writes to GitHub, the token request left out.
 pub fn writes(transport: &ScriptedTransport) -> Vec<Recorded> {
     transport
@@ -252,13 +280,18 @@ pub fn comment_text(request: &Recorded) -> String {
         .expect("comment body")
 }
 
-/// Asserts that every request sent the catalogue `User-Agent` and a redacted token.
+/// Asserts that every request sent the catalogue `User-Agent`, that every
+/// GitHub request sent a redacted token, and that no other request sent one.
 pub fn assert_redacted(transport: &ScriptedTransport) {
     let requests = transport.requests();
     assert!(!requests.is_empty());
     for request in requests {
         assert_eq!(request.header("User-Agent"), Some(USER_AGENT));
-        assert_eq!(request.header("Authorization"), Some(REDACTED));
+        let expected = request
+            .url
+            .starts_with("https://api.github.com/")
+            .then_some(REDACTED);
+        assert_eq!(request.header("Authorization"), expected, "{}", request.url);
         assert!(!format!("{request:?}").contains(TOKEN), "{request:?}");
     }
 }

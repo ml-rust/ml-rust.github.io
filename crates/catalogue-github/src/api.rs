@@ -19,6 +19,9 @@ const ACCEPT_JSON: &str = "application/vnd.github+json";
 /// The most pages one listing reads. A listing with more is an error.
 pub const MAX_PAGES: usize = 50;
 
+/// Items per page of a listing, the most GitHub serves.
+pub(crate) const PER_PAGE: u32 = 100;
+
 /// The shortest gap between two requests. GitHub asks for at least one second
 /// between write calls. Pass it to an `IntervalPacer`.
 pub const WRITE_INTERVAL: Duration = Duration::from_secs(1);

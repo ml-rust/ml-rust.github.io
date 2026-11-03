@@ -114,12 +114,14 @@ impl LabelsReport {
     }
 }
 
-/// The permissions the bot token asks for. Labels and comments sit under
-/// `issues`. The data files and the tier snapshots sit under `contents`.
+/// The permissions the bot token asks for. Labels, comments and issue events
+/// sit under `issues`. The data files, the tier snapshots and the bot branch
+/// commits sit under `contents`. The data PRs sit under `pull_requests`.
 pub(crate) fn permissions() -> Permissions {
     Permissions::new()
         .with("issues", Access::Write)
-        .with("contents", Access::Read)
+        .with("contents", Access::Write)
+        .with("pull_requests", Access::Write)
 }
 
 /// Syncs the labels of the configured repo to the file at `labels_path`.
