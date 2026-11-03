@@ -6,7 +6,9 @@ pub mod data_dir;
 pub mod discover;
 pub mod dump;
 mod exit;
+pub mod github;
 pub mod rustsec;
+mod token;
 pub mod usage;
 pub mod validate;
 
@@ -18,6 +20,8 @@ pub use discover::{
     run_discover,
 };
 pub use dump::{DumpCommand, DumpCommandError, render_outcome, render_stats, run_dump};
+pub use github::{GithubCommand, GithubCommandError, render_all, render_facts, run_github};
 pub use rustsec::{RustsecCommand, RustsecCommandError, render_crate, run_rustsec};
+pub use token::NoToken;
 pub use usage::{render_usage, resolve_names};
 pub use validate::{Outcome, Summary, validate};

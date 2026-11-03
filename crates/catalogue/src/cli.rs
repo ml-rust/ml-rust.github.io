@@ -6,6 +6,7 @@ use clap::{Parser, Subcommand};
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::dump::{DumpCommand, run_dump};
 use crate::exit::{INVALID, IO};
+use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
 use crate::validate::{Outcome, validate};
 
@@ -39,6 +40,12 @@ pub enum Command {
         #[command(subcommand)]
         command: DiscoverCommand,
     },
+    /// Read facts about GitHub repos.
+    Github {
+        /// The github action to run.
+        #[command(subcommand)]
+        command: GithubCommand,
+    },
     /// Download and inspect the RustSec advisory database.
     Rustsec {
         /// The rustsec action to run.
@@ -55,6 +62,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Validate { data } => run_validate(&data),
         Command::Dump { command } => run_dump(command),
         Command::Discover { command } => run_discover(command),
+        Command::Github { command } => run_github(command),
         Command::Rustsec { command } => run_rustsec(command),
     }
 }

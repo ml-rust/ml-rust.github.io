@@ -15,9 +15,7 @@ use catalogue_signals::http::ReqwestTransport;
 use super::command::{DiscoverError, load_catalogue, report_error};
 use crate::cache_dir::resolve_cache_dir;
 use crate::dump::{DumpCommandError, read_cached};
-
-/// The environment variable that holds the GitHub token.
-const TOKEN_VAR: &str = "GITHUB_TOKEN";
+use crate::token::{NoToken, token_from_env};
 
 /// Days of download history read from the dump. The link check needs none.
 const LINK_WINDOW_DAYS: u16 = 1;
@@ -33,7 +31,7 @@ pub struct GithubReport {
 
 /// Runs `discover github` and returns the process exit code.
 pub(super) fn run_github(data: &Path, cache_dir: Option<PathBuf>) -> ExitCode {
-    match discover_github(data, cache_dir, std::env::var(TOKEN_VAR).ok()) {
+    match discover_github(data, cache_dir, token_from_env()) {
         Ok(report) => {
             for warning in &report.warnings {
                 eprintln!("warning: {warning}");
@@ -45,21 +43,13 @@ pub(super) fn run_github(data: &Path, cache_dir: Option<PathBuf>) -> ExitCode {
     }
 }
 
-/// The token from the value of `GITHUB_TOKEN`, trimmed.
-fn token_from(value: Option<String>) -> Result<String, DiscoverError> {
-    value
-        .map(|token| token.trim().to_owned())
-        .filter(|token| !token.is_empty())
-        .ok_or(DiscoverError::NoToken)
-}
-
 /// Checks the data, searches GitHub and reports the repos no crate links to.
 fn discover_github(
     data: &Path,
     cache_dir: Option<PathBuf>,
-    token: Option<String>,
+    token: Result<String, NoToken>,
 ) -> Result<GithubReport, DiscoverError> {
-    let token = token_from(token)?;
+    let token = token?;
     let catalogue = load_catalogue(data)?;
     let path = data.join("discovery.toml");
     let discovery = catalogue
@@ -225,13 +215,5 @@ mod tests {
     fn no_leads_print_only_the_header() {
         let report = build_github_report(&GithubFound::default(), &HashSet::new(), &HashMap::new());
         assert_eq!(report.text, "github leads: 0");
-    }
-
-    #[test]
-    fn a_blank_token_is_missing() {
-        for value in [None, Some(String::new()), Some("  \n".to_owned())] {
-            assert!(matches!(token_from(value), Err(DiscoverError::NoToken)));
-        }
-        assert_eq!(token_from(Some(" t\n".to_owned())).expect("token"), "t");
     }
 }

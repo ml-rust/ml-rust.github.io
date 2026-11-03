@@ -17,6 +17,7 @@ use crate::cache_dir::resolve_cache_dir;
 use crate::data_dir::{DataDirError, read_data_dir};
 use crate::dump::{DumpCommandError, read_cached};
 use crate::exit::{INVALID, IO};
+use crate::token::NoToken;
 
 /// The `catalogue discover` actions.
 #[derive(Debug, Subcommand)]
@@ -69,10 +70,8 @@ pub enum DiscoverError {
         path: PathBuf,
     },
     /// `GITHUB_TOKEN` is unset or empty.
-    #[error(
-        "set GITHUB_TOKEN; `GITHUB_TOKEN=$(gh auth token) catalogue discover github` works locally"
-    )]
-    NoToken,
+    #[error(transparent)]
+    Token(#[from] NoToken),
     /// The cached dump cannot be found or read.
     #[error(transparent)]
     Dump(#[from] DumpCommandError),
@@ -89,7 +88,7 @@ impl DiscoverError {
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Data(_) => IO,
-            Self::Invalid(_) | Self::NoRules { .. } | Self::NoTopics { .. } | Self::NoToken => {
+            Self::Invalid(_) | Self::NoRules { .. } | Self::NoTopics { .. } | Self::Token(_) => {
                 INVALID
             }
             Self::Dump(error) => error.exit_code(),
@@ -210,8 +209,8 @@ mod tests {
         };
         assert_eq!(topics.exit_code(), INVALID);
         assert!(topics.to_string().contains("discovery.toml"));
-        assert_eq!(DiscoverError::NoToken.exit_code(), INVALID);
-        let message = DiscoverError::NoToken.to_string();
+        assert_eq!(DiscoverError::Token(NoToken).exit_code(), INVALID);
+        let message = DiscoverError::Token(NoToken).to_string();
         assert!(message.contains("set GITHUB_TOKEN"), "{message}");
         assert!(message.contains("gh auth token"), "{message}");
         let status = |status| {
