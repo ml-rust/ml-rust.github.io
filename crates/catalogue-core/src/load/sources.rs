@@ -24,4 +24,6 @@ pub struct DataSources {
     pub synonyms: Option<SourceFile>,
     /// `data/discovery.toml`.
     pub discovery: Option<SourceFile>,
+    /// `data/thresholds.toml`.
+    pub thresholds: Option<SourceFile>,
 }

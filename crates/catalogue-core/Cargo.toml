@@ -1,7 +1,7 @@
 [package]
 name = "catalogue-core"
 version.workspace = true
-description = "Data model, parsing and cross-file validation for the ml-rust catalogue"
+description = "Data model, parsing, cross-file validation and tier rules for the ml-rust catalogue"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

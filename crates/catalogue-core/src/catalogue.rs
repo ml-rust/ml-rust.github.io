@@ -4,7 +4,7 @@ use crate::entry::Entry;
 use crate::ids::Slug;
 use crate::judgment::Judgment;
 use crate::load::{self, DataSources, Diagnostics};
-use crate::registry::{Discovery, Maintainer, SynonymGroup, Topic};
+use crate::registry::{Discovery, Maintainer, SynonymGroup, Thresholds, Topic};
 
 /// A checked data set.
 ///
@@ -17,6 +17,7 @@ pub struct Catalogue {
     maintainers: Vec<Maintainer>,
     synonyms: Vec<SynonymGroup>,
     discovery: Option<Discovery>,
+    thresholds: Option<Thresholds>,
 }
 
 impl Catalogue {
@@ -34,6 +35,7 @@ impl Catalogue {
         maintainers: Vec<Maintainer>,
         synonyms: Vec<SynonymGroup>,
         discovery: Option<Discovery>,
+        thresholds: Option<Thresholds>,
     ) -> Self {
         Self {
             entries,
@@ -42,6 +44,7 @@ impl Catalogue {
             maintainers,
             synonyms,
             discovery,
+            thresholds,
         }
     }
 
@@ -79,6 +82,11 @@ impl Catalogue {
     pub fn discovery(&self) -> Option<&Discovery> {
         self.discovery.as_ref()
     }
+
+    /// The tier thresholds, or `None` when `thresholds.toml` is absent.
+    pub fn thresholds(&self) -> Option<&Thresholds> {
+        self.thresholds.as_ref()
+    }
 }
 
 #[cfg(test)]
@@ -99,6 +107,7 @@ mod tests {
         assert_eq!(catalogue.maintainers().len(), 2);
         assert_eq!(catalogue.synonyms().len(), 1);
         assert!(catalogue.discovery().is_none());
+        assert!(catalogue.thresholds().is_none());
         let alpha = Slug::new("alpha").expect("slug");
         assert!(catalogue.entry(&alpha).is_some());
     }

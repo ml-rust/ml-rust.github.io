@@ -1,8 +1,9 @@
-//! Data model, parsing and cross-file validation for the ml-rust catalogue.
+//! Data model, parsing, cross-file validation and tier rules for the ml-rust catalogue.
 //!
 //! The crate reads no files and opens no connections. Callers pass the raw
 //! text of each data file in a [`DataSources`] and receive a checked
-//! [`Catalogue`] or the full list of [`Diagnostics`].
+//! [`Catalogue`] or the full list of [`Diagnostics`]. [`assess`] applies the
+//! tier rules to one entry's [`Signals`] and [`Context`].
 
 mod catalogue;
 mod date;
@@ -27,6 +28,8 @@ pub use ids::{
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use registry::{
-    Discovery, Maintainer, Maintainers, SynonymGroup, Synonyms, Topic, TopicSummary, Topics,
+    AppFeaturedThresholds, Discovery, DormancyThresholds, FinishedThresholds, IntervalThresholds,
+    LibraryFeaturedThresholds, Maintainer, Maintainers, NewThresholds, RotThresholds, SynonymGroup,
+    Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
-pub use tier::Tier;
+pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

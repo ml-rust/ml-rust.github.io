@@ -10,6 +10,7 @@ mod parse;
 mod run;
 mod sources;
 mod synonyms;
+mod thresholds;
 mod topics;
 
 pub use diagnostics::{Diagnostic, Diagnostics};

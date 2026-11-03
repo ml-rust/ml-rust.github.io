@@ -27,7 +27,11 @@ fn describe(error: &toml::de::Error, contents: &str) -> String {
     }
 }
 
-fn parse_file<T: DeserializeOwned>(file: &SourceFile, diags: &mut Diagnostics) -> Option<T> {
+/// Parses one file. A broken file is reported and yields `None`.
+pub(crate) fn parse_file<T: DeserializeOwned>(
+    file: &SourceFile,
+    diags: &mut Diagnostics,
+) -> Option<T> {
     match toml::from_str::<T>(&file.contents) {
         Ok(value) => Some(value),
         Err(error) => {

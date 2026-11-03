@@ -64,6 +64,9 @@ pub enum JudgmentKind {
         /// The new status.
         status: MaintainerStatus,
     },
+    /// A maintainer outside the organization approves Featured for an
+    /// `org_affiliated` entry. The variant carries no fields.
+    FeaturedApproval {},
 }
 
 impl JudgmentKind {
@@ -170,6 +173,7 @@ date = 2026-11-03
             "type = \"category\"\ntopics = [\"tensors\"]\n",
             "type = \"demotion\"\nfrom = \"featured\"\nto = \"listed\"\n",
             "type = \"maintainer\"\nstatus = \"finished\"\n",
+            "type = \"featured-approval\"\n",
         ] {
             assert!(problems(&doc(true, body)).is_empty(), "{body}");
         }
@@ -186,6 +190,27 @@ date = 2026-11-03
             ))
             .is_err()
         );
+    }
+
+    #[test]
+    fn featured_approval_has_no_fields() {
+        let judgment = parse(&doc(true, "type = \"featured-approval\"\n")).expect("parses");
+        assert_eq!(judgment.judgment, JudgmentKind::FeaturedApproval {});
+        assert!(
+            parse(&doc(
+                true,
+                "type = \"featured-approval\"\nto = \"featured\"\n"
+            ))
+            .is_err()
+        );
+        let text = toml::to_string(&judgment).expect("serializes");
+        assert!(text.contains("type = \"featured-approval\""), "{text}");
+    }
+
+    #[test]
+    fn featured_approval_needs_evidence() {
+        let body = "type = \"featured-approval\"\n";
+        assert!(has(&problems(&doc(false, body)), "evidence"));
     }
 
     #[test]

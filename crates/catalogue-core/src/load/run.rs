@@ -6,6 +6,7 @@ use super::maintainers::check_maintainers;
 use super::parse::{parse_all, parse_optional};
 use super::sources::DataSources;
 use super::synonyms::check_synonyms;
+use super::thresholds::check_thresholds;
 use super::topics::check_topics;
 use crate::catalogue::Catalogue;
 use crate::entry::Entry;
@@ -32,6 +33,11 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
         parsed.value
     });
 
+    let thresholds = sources
+        .thresholds
+        .as_ref()
+        .and_then(|file| check_thresholds(file, &mut diags));
+
     let topic_ids = check_topics(&topics, &mut diags);
     let maintainer_index = check_maintainers(&maintainers, &mut diags);
     check_synonyms(&synonyms, &mut diags);
@@ -55,6 +61,7 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
             maintainers.value.maintainer,
             synonyms.value.group,
             discovery,
+            thresholds,
         ))
     } else {
         Err(diags)

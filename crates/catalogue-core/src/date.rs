@@ -7,6 +7,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use thiserror::Error;
 use toml::value::{Date as TomlDate, Datetime};
 
+/// Seconds in one civil day. Civil date arithmetic has no leap seconds or zone shifts.
+const SECONDS_PER_DAY: i64 = 86_400;
+
 /// A calendar date without time or zone.
 ///
 /// A TOML file writes it as a native date (`added = 2026-11-03`) or as a
@@ -39,6 +42,11 @@ impl Date {
     /// The underlying civil date.
     pub fn civil(self) -> civil::Date {
         self.0
+    }
+
+    /// Whole days from `earlier` to `self`. Negative when `earlier` is later.
+    pub fn days_since(self, earlier: Date) -> i64 {
+        self.0.duration_since(earlier.0).as_secs() / SECONDS_PER_DAY
     }
 
     fn from_toml(value: Datetime) -> Result<Self, DateError> {
@@ -160,6 +168,16 @@ mod tests {
         ] {
             assert!(toml::from_str::<Wrap>(bad).is_err(), "{bad}");
         }
+    }
+
+    #[test]
+    fn days_since_counts_whole_days_across_years_and_leap_days() {
+        let day = |y, m, d| Date::new(y, m, d).expect("valid date");
+        assert_eq!(day(2026, 11, 3).days_since(day(2026, 11, 3)), 0);
+        assert_eq!(day(2026, 11, 3).days_since(day(2026, 11, 2)), 1);
+        assert_eq!(day(2025, 1, 1).days_since(day(2024, 1, 1)), 366);
+        assert_eq!(day(2026, 1, 1).days_since(day(2025, 1, 1)), 365);
+        assert_eq!(day(2026, 11, 2).days_since(day(2026, 11, 3)), -1);
     }
 
     #[test]

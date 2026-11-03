@@ -1,8 +1,9 @@
 use super::super::diagnostics::Diagnostics;
 use super::Refs;
-use crate::judgment::Judgment;
+use crate::judgment::{Judgment, JudgmentKind};
 
-/// Checks the approver against the maintainer list and the conflict rules.
+/// Checks the approver against the maintainer list and the conflict rules,
+/// and that a featured approval names an org affiliated entry.
 pub(super) fn check(path: &str, judgment: &Judgment, refs: &Refs<'_>, diags: &mut Diagnostics) {
     let org_member = refs
         .maintainers
@@ -23,10 +24,18 @@ pub(super) fn check(path: &str, judgment: &Judgment, refs: &Refs<'_>, diags: &mu
             ),
         );
     }
-    let affiliated = refs
-        .entries
-        .get(&judgment.entry)
-        .is_some_and(|entry| entry.org_affiliated);
+    let entry = refs.entries.get(&judgment.entry);
+    let affiliated = entry.is_some_and(|entry| entry.org_affiliated);
+    let approves_featured = matches!(judgment.judgment, JudgmentKind::FeaturedApproval {});
+    if entry.is_some() && !affiliated && approves_featured {
+        diags.push(
+            path,
+            format!(
+                "featured-approval applies only to an org affiliated entry, and `{}` is not",
+                judgment.entry
+            ),
+        );
+    }
     if affiliated && org_member == Some(true) {
         diags.push(
             path,
@@ -94,6 +103,53 @@ status = "finished"
             &mut src,
             "judgments/7.toml",
             &JUDGMENT.replace("entry = \"alpha\"", "entry = \"beta\""),
+        );
+        expect_error(src, "must not be an org member");
+    }
+
+    fn featured_approval(entry: &str, approver: &str) -> String {
+        JUDGMENT
+            .replace("entry = \"alpha\"", &format!("entry = \"{entry}\""))
+            .replace(
+                "approver = \"carol\"",
+                &format!("approver = \"{approver}\""),
+            )
+            .replace(
+                "type = \"correctness\"\nfinding = \"The README claims support the code lacks.\"\n",
+                "type = \"featured-approval\"\n",
+            )
+    }
+
+    #[test]
+    fn outside_approval_of_an_affiliated_entry_passes() {
+        let text = featured_approval("beta", "bob");
+        assert!(text.contains("featured-approval"), "{text}");
+        let mut src = valid();
+        put(&mut src, "judgments/7.toml", &text);
+        assert!(errors(src).is_empty());
+    }
+
+    #[test]
+    fn featured_approval_on_an_unaffiliated_entry_is_reported() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "judgments/7.toml",
+            &featured_approval("alpha", "bob"),
+        );
+        expect_error(
+            src,
+            "featured-approval applies only to an org affiliated entry, and `alpha` is not",
+        );
+    }
+
+    #[test]
+    fn org_member_featured_approval_is_reported() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "judgments/7.toml",
+            &featured_approval("beta", "carol"),
         );
         expect_error(src, "must not be an org member");
     }

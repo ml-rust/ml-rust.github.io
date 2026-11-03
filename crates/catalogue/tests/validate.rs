@@ -24,6 +24,7 @@ fn valid_set_reads_files_sorted_by_name() {
     assert!(data.diagnostics.is_empty());
     assert!(data.sources.synonyms.is_some());
     assert!(data.sources.discovery.is_some());
+    assert!(data.sources.thresholds.is_some());
 }
 
 #[test]
@@ -100,6 +101,15 @@ fn discovery_rule_break_is_reported() {
 #[test]
 fn github_topic_rule_breaks_are_reported() {
     expect_invalid("discovery-github-invalid", "GitHub topic", 2);
+}
+
+#[test]
+fn thresholds_rule_break_is_reported() {
+    expect_invalid(
+        "thresholds-invalid",
+        "thresholds.toml: rot.lost_glory_below = 1.5 must be a share in [0, 1]",
+        1,
+    );
 }
 
 #[test]
