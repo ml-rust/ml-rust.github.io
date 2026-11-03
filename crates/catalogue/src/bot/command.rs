@@ -14,6 +14,7 @@ use jiff::tz::TimeZone;
 use thiserror::Error;
 
 use super::labels::{LabelsArgs, run_labels};
+use super::run::{RunArgs, run_run};
 use crate::data_dir::{DataDirError, read_data_dir};
 use crate::exit::{INVALID, IO};
 
@@ -32,6 +33,16 @@ pub enum BotCommand {
     /// and updates ones whose color or description differ. Never deletes a
     /// label: each label the file lacks is listed. `--dry-run` changes nothing.
     Labels(LabelsArgs),
+    /// Check every open issue with a form label, once.
+    ///
+    /// Signs in as the GitHub App from the bot config and syncs the labels
+    /// first. Reads the data files of `main` and the newest tier snapshot on
+    /// the `signals` branch. Posts or updates one bot comment per issue, sets
+    /// `bot-checked` or `needs-fix`, and removes `approved` when the body
+    /// changed after the last check. Rewrites a comment only when the body,
+    /// the report or `main` changed. Takes a lock in the state directory, so
+    /// two runs never overlap.
+    Run(RunArgs),
 }
 
 /// The arguments of `catalogue bot check`.
@@ -125,10 +136,13 @@ pub fn bot_check(args: &CheckArgs, today: Date) -> Result<CheckReport, BotError>
 /// `check` prints the report on stdout. Its code is 0 for a report with no
 /// blocking error, 1 for a blocking report and 2 for a read error. `labels`
 /// prints the plan. Its code is 1 for a file or key to fix and 2 for a read
-/// or network error.
+/// or network error. `run` prints one line per issue. Its code is 0 when every
+/// issue is checked, 1 for a file or key to fix, and 2 when an issue, a fetch
+/// or the lock fails.
 pub fn run_bot(command: BotCommand) -> ExitCode {
     match command {
         BotCommand::Labels(args) => run_labels(&args),
+        BotCommand::Run(args) => run_run(&args),
         BotCommand::Check(args) => {
             let today = args
                 .today

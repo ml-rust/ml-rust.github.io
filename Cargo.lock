@@ -133,9 +133,11 @@ dependencies = [
  "catalogue-github",
  "catalogue-signals",
  "clap",
+ "flate2",
  "jiff",
  "serde",
  "serde_json",
+ "tar",
  "tempfile",
  "thiserror",
  "toml",
@@ -145,6 +147,7 @@ dependencies = [
 name = "catalogue-bot"
 version = "0.1.0"
 dependencies = [
+ "aws-lc-rs",
  "catalogue-core",
  "serde",
  "thiserror",
@@ -167,6 +170,7 @@ dependencies = [
 name = "catalogue-github"
 version = "0.1.0"
 dependencies = [
+ "catalogue-core",
  "catalogue-github",
  "catalogue-signals",
  "jiff",

@@ -20,6 +20,7 @@ mod token;
 pub mod usage;
 pub mod validate;
 
+pub use bot::run::{RunArgs, RunError, RunReport, run_pass};
 pub use bot::{
     BotCommand, BotConfig, BotError, CONFIG_VAR, CheckArgs, ConfigError, DEFAULT_CONFIG,
     LabelsArgs, LabelsCommandError, LabelsReport, bot_check, config_path, load_config, run_bot,

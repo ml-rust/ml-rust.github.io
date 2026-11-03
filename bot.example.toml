@@ -18,5 +18,6 @@ installation_id = 12345678
 # /run/credentials/catalogue-bot.service/app.pem. The bot expands no variable.
 private_key_path = "/etc/catalogue-bot/app.pem"
 
-# Optional. The directory for bot state.
+# Optional. The directory for the bot lock and state cache.
+# Default: $STATE_DIRECTORY under systemd, else the user cache directory.
 # state_dir = "/var/lib/catalogue-bot"

@@ -1,4 +1,4 @@
-//! Atomic file replacement shared by every writer in the crate.
+//! Atomic file replacement shared by every writer.
 
 use std::ffi::OsString;
 use std::fs::{self, File};
@@ -10,13 +10,13 @@ use thiserror::Error;
 /// A step of an atomic write that fails.
 #[derive(Debug, Error)]
 #[error("{}: {source}", .path.display())]
-pub(crate) struct AtomicError {
+pub struct AtomicError {
     /// The file or directory that fails. The temporary file for a create,
     /// write or sync error, the parent directory for a directory error, and
     /// the target for a rename error.
-    pub(crate) path: PathBuf,
+    pub path: PathBuf,
     /// The error from the operating system.
-    pub(crate) source: io::Error,
+    pub source: io::Error,
 }
 
 /// Wraps an OS error as an [`AtomicError`] for `path`.
@@ -49,7 +49,7 @@ fn temp_path(target: &Path) -> Result<PathBuf, AtomicError> {
 /// # Errors
 ///
 /// Returns an [`AtomicError`] that names the failing path.
-pub(crate) fn write_atomic(
+pub fn write_atomic(
     target: &Path,
     fill: impl FnOnce(&mut File) -> io::Result<()>,
 ) -> Result<(), AtomicError> {

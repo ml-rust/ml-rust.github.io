@@ -2,6 +2,7 @@
 
 use std::io::{self, Read};
 
+use catalogue_core::CommitSha;
 use flate2::read::MultiGzDecoder;
 use serde::Deserialize;
 use thiserror::Error;
@@ -13,9 +14,6 @@ pub const MAX_VCS_INFO: u64 = 64 << 10;
 
 /// The file name Cargo writes into a package.
 const FILE_NAME: &str = ".cargo_vcs_info.json";
-
-/// The length of a git commit hash in hex digits.
-const SHA1_LEN: usize = 40;
 
 /// What `.cargo_vcs_info.json` records.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -94,15 +92,10 @@ pub fn read_vcs_info(
         let sha1 = git
             .and_then(|git| git.sha1)
             .map(|sha1| sha1.to_ascii_lowercase())
-            .filter(|sha1| is_sha1(sha1));
+            .filter(|sha1| CommitSha::new(sha1.as_str()).is_ok());
         return Ok(Some(VcsInfo { sha1, dirty }));
     }
     Ok(None)
-}
-
-/// Whether `text` is 40 hex digits.
-fn is_sha1(text: &str) -> bool {
-    text.len() == SHA1_LEN && text.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 #[cfg(test)]

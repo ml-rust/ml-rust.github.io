@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fs::{self, File};
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Read};
 use std::path::Path;
 
 use catalogue_core::{Date, Slug};
@@ -47,7 +47,7 @@ pub fn read_all(dir: &Path) -> Result<History, HistoryError> {
     let mut snapshots = Vec::new();
     for item in listing {
         let item = item.map_err(list_error)?;
-        let Some(date) = item.file_name().to_str().and_then(date_of) else {
+        let Some(date) = item.file_name().to_str().and_then(snapshot_date) else {
             continue;
         };
         if !item.path().is_file() {
@@ -59,7 +59,7 @@ pub fn read_all(dir: &Path) -> Result<History, HistoryError> {
 }
 
 /// The date a snapshot file name holds, when the name is exactly `YYYY-MM-DD.jsonl.gz`.
-fn date_of(name: &str) -> Option<Date> {
+pub fn snapshot_date(name: &str) -> Option<Date> {
     let stem = name.strip_suffix(SUFFIX)?;
     let parsed: civil::Date = stem.parse().ok()?;
     (parsed.to_string() == stem).then(|| Date::from(parsed))
@@ -71,12 +71,25 @@ fn read_file(path: &Path, date: Date) -> Result<Snapshot, HistoryError> {
         path: path.to_path_buf(),
         source,
     })?;
+    read_snapshot(BufReader::new(file), path, date)
+}
+
+/// Reads one snapshot dated `date` from its gzip bytes in `reader`.
+///
+/// `path` names the snapshot in errors. A caller that fetches a snapshot
+/// passes its remote name.
+///
+/// # Errors
+///
+/// Returns [`HistoryError::Corrupt`] when the bytes are not gzip, hold a line
+/// that is not a valid row, or hold an invalid or repeated slug.
+pub fn read_snapshot(reader: impl Read, path: &Path, date: Date) -> Result<Snapshot, HistoryError> {
     let corrupt = |line: Option<usize>, reason: String| HistoryError::Corrupt {
         path: path.to_path_buf(),
         line,
         reason,
     };
-    let reader = BufReader::new(GzDecoder::new(BufReader::new(file)));
+    let reader = BufReader::new(GzDecoder::new(reader));
     let mut rows = BTreeMap::new();
     for (index, text) in reader.lines().enumerate() {
         let number = index.saturating_add(1);

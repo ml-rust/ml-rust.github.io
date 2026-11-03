@@ -18,7 +18,8 @@ pub struct BotSetup {
 
 /// Writes the setup with `labels` as the labels file.
 ///
-/// The config names `ml-rust/catalogue-test`, App 123456 and installation 77.
+/// The config names `ml-rust/catalogue-test`, App 123456, installation 77
+/// and the state directory `state` inside the scratch directory.
 pub fn bot_setup(labels: &str) -> BotSetup {
     let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target");
     fs::create_dir_all(&base).expect("target dir");
@@ -35,7 +36,7 @@ pub fn bot_setup(labels: &str) -> BotSetup {
     fs::write(
         &config_path,
         "owner = \"ml-rust\"\nrepo = \"catalogue-test\"\napp_id = 123456\n\
-         installation_id = 77\nprivate_key_path = \"app.pem\"\n",
+         installation_id = 77\nprivate_key_path = \"app.pem\"\nstate_dir = \"state\"\n",
     )
     .expect("write config");
     let labels_path = dir.path().join("labels.toml");

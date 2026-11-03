@@ -11,12 +11,13 @@
 //! [`history`] keeps the daily snapshots that the two-check dead rule and
 //! Docker growth read. [`assemble`] turns all of them into the tier signals of
 //! one entry. [`calibrate`] reads percentiles of the tier signals, for setting
-//! thresholds.
+//! thresholds. [`repo_archive`] reads the data files from a repo archive.
+//! [`atomic`] replaces a file so a reader never sees a partial one.
 
 mod agent;
 mod archive;
 pub mod assemble;
-mod atomic;
+pub mod atomic;
 pub mod calibrate;
 pub mod discover;
 pub mod distribution;
@@ -27,6 +28,7 @@ pub mod github;
 pub mod history;
 pub mod http;
 pub mod link;
+pub mod repo_archive;
 pub mod rustsec;
 pub mod seed;
 pub mod usage;

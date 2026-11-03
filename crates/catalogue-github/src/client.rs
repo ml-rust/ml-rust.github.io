@@ -150,6 +150,16 @@ impl<'a> RepoClient<'a> {
         self.with_token(|api, token| api.call(verb, url, token, body, accepted))
     }
 
+    /// Sends one GET with the installation token that asks for the media type `accept`.
+    pub(crate) fn get_accept(
+        &mut self,
+        url: &str,
+        accept: &str,
+        accepted: &[u16],
+    ) -> Result<Answer, ApiError> {
+        self.with_token(|api, token| api.call_accept(Verb::Get, url, token, accept, None, accepted))
+    }
+
     /// Reads every page of the listing at `url` with the installation token.
     pub(crate) fn get_pages<T: DeserializeOwned>(&mut self, url: &str) -> Result<Vec<T>, ApiError> {
         self.with_token(|api, token| api.get_pages(url, token))

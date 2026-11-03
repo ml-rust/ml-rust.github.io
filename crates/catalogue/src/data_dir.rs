@@ -3,7 +3,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use catalogue_core::{Catalogue, DataSources, Diagnostics, SourceFile};
+use catalogue_core::{Catalogue, DataPlace, DataSources, Diagnostics, SourceFile};
 use thiserror::Error;
 
 /// A failure to read the data directory.
@@ -62,18 +62,17 @@ pub fn read_data_dir(root: &Path) -> Result<DataDir, DataDirError> {
         Err(source) => return Err(io_error(root, source)),
     }
     let mut diagnostics = Diagnostics::new();
-    let entries = read_toml_dir(&root.join("entries"), &mut diagnostics)?;
-    let judgments = read_toml_dir(&root.join("judgments"), &mut diagnostics)?;
-    let sources = DataSources {
-        entries,
-        judgments,
-        maintainers: read_optional(&root.join("maintainers.toml"))?,
-        topics: read_optional(&root.join("topics.toml"))?,
-        synonyms: read_optional(&root.join("synonyms.toml"))?,
-        discovery: read_optional(&root.join("discovery.toml"))?,
-        thresholds: read_optional(&root.join("thresholds.toml"))?,
-        deprecated: read_optional(&root.join("deprecated.toml"))?,
-    };
+    let mut sources = DataSources::default();
+    for place in DataPlace::LISTS {
+        for file in read_toml_dir(&root.join(place.name()), &mut diagnostics)? {
+            sources.put(place, file);
+        }
+    }
+    for place in DataPlace::FILES {
+        if let Some(file) = read_optional(&root.join(place.name()))? {
+            sources.put(place, file);
+        }
+    }
     Ok(DataDir {
         sources,
         diagnostics,
@@ -141,8 +140,11 @@ fn read_toml_dir(
     paths.sort();
     let mut files = Vec::new();
     for path in paths {
-        let is_toml_file =
-            path.is_file() && path.extension().and_then(OsStr::to_str) == Some("toml");
+        let is_toml_file = path.is_file()
+            && path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .is_some_and(DataPlace::is_record_name);
         if is_toml_file {
             files.push(read_source(&path)?);
         } else {

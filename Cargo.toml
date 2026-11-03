@@ -43,6 +43,9 @@ rustc-hash = "2"
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 # RS256 signing of the GitHub App JWT, over the aws-lc-rs that rustls already links.
 jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs", "use_pem"] }
+# SHA-256 of issue bodies and check reports in the bot comment marker, over the
+# aws-lc-rs that rustls already links.
+aws-lc-rs = { version = "1", default-features = false, features = ["aws-lc-sys"] }
 # Zeroes the App key bytes and the access tokens when they drop.
 zeroize = "1"
 # Temporary directories for the download tests, created under the build directory.

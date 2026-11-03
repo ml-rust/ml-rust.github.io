@@ -1,7 +1,7 @@
 [package]
 name = "catalogue-github"
 version.workspace = true
-description = "GitHub App client of the ml-rust catalogue bot: App auth, installation tokens and label sync"
+description = "GitHub App client of the ml-rust catalogue bot: App auth, installation tokens, issues, comments and labels"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -13,6 +13,7 @@ publish = false
 testing = []
 
 [dependencies]
+catalogue-core.workspace = true
 catalogue-signals.workspace = true
 jiff.workspace = true
 jsonwebtoken.workspace = true

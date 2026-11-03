@@ -5,14 +5,21 @@
 //! form's own sections, [`submission`] and [`judgment_draft`] build the
 //! records, and [`check_submission`] reports every problem as markdown in
 //! which issue text stays inside fenced blocks. [`parse_labels`] reads the
-//! repo labels file and [`plan_sync`] plans the label sync.
+//! repo labels file and [`plan_sync`] plans the label sync. [`plan`] decides the
+//! comment and label writes for one issue from the [`Marker`] of the last bot
+//! comment, and [`comment_body`] builds the comment text within GitHub's cap.
 
 mod check;
+mod comment;
 mod convert;
 mod form;
 mod labels;
 
-pub use check::{Block, CheckInput, CheckReport, Section, check_submission};
+pub use check::{Block, CheckInput, CheckReport, Section, check_submission, label_report};
+pub use comment::{
+    APPROVED, Actions, BOT_CHECKED, CommentAction, Desired, MAX_COMMENT_BYTES, Marker, NEEDS_FIX,
+    Previous, Sha256, comment_body, plan,
+};
 pub use convert::{
     Affiliation, Approval, ENTRIES_DIR, IssueMeta, JUDGMENTS_DIR, JudgmentDraft, PrNotes,
     SlugSource, Submission, draft_toml, entry_toml, judgment, judgment_draft, judgment_toml,

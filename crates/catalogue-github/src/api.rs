@@ -13,8 +13,8 @@ use crate::secret::Secret;
 /// The base URL of the GitHub REST API. A next-page link must start with it.
 pub const API_URL: &str = "https://api.github.com";
 
-/// The media type of every request.
-const ACCEPT: &str = "application/vnd.github+json";
+/// The media type of a JSON request.
+const ACCEPT_JSON: &str = "application/vnd.github+json";
 
 /// The most pages one listing reads. A listing with more is an error.
 pub const MAX_PAGES: usize = 50;
@@ -29,6 +29,7 @@ pub(crate) enum Verb {
     Get,
     Post,
     Patch,
+    Delete,
 }
 
 impl Verb {
@@ -38,6 +39,7 @@ impl Verb {
             Self::Get => "GET",
             Self::Post => "POST",
             Self::Patch => "PATCH",
+            Self::Delete => "DELETE",
         }
     }
 }
@@ -59,7 +61,7 @@ impl<'a> Api<'a> {
 
     /// Sends one call with `bearer` and returns an answer whose status is in `accepted`.
     ///
-    /// A `body` goes out as JSON.
+    /// A `body` goes out as JSON. The call asks for JSON.
     pub(crate) fn call(
         &mut self,
         verb: Verb,
@@ -68,7 +70,20 @@ impl<'a> Api<'a> {
         body: Option<&str>,
         accepted: &[u16],
     ) -> Result<Answer, ApiError> {
-        let mut headers = rest_headers(bearer.expose(), ACCEPT);
+        self.call_accept(verb, url, bearer, ACCEPT_JSON, body, accepted)
+    }
+
+    /// Like [`call`](Self::call), but the call asks for the media type `accept`.
+    pub(crate) fn call_accept(
+        &mut self,
+        verb: Verb,
+        url: &str,
+        bearer: &Secret,
+        accept: &str,
+        body: Option<&str>,
+        accepted: &[u16],
+    ) -> Result<Answer, ApiError> {
+        let mut headers = rest_headers(bearer.expose(), accept);
         headers.push(("User-Agent", USER_AGENT.to_owned()));
         if body.is_some() {
             headers.push(("Content-Type", "application/json".to_owned()));
@@ -79,6 +94,7 @@ impl<'a> Api<'a> {
             Verb::Get => transport.get(url, &headers),
             Verb::Post => transport.post(url, &headers, bytes),
             Verb::Patch => transport.patch(url, &headers, bytes),
+            Verb::Delete => transport.delete(url, &headers, bytes),
         };
         self.paced
             .send(url, send, accepted)

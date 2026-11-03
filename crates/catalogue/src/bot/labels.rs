@@ -5,10 +5,12 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_bot::{LabelSpec, LabelsError, RepoLabel, SyncPlan, parse_labels, plan_sync};
+use catalogue_bot::{
+    LabelSpec, LabelsError, LabelsFile, RepoLabel, SyncPlan, parse_labels, plan_sync,
+};
 use catalogue_github::{
     Access, ApiError, AppKey, Clock, GithubApp, KeyError, Label, LabelFields, Permissions,
-    WRITE_INTERVAL,
+    RepoClient, WRITE_INTERVAL,
 };
 use catalogue_signals::http::{IntervalPacer, Pacer, ReqwestTransport, Transport};
 use clap::Args;
@@ -112,8 +114,9 @@ impl LabelsReport {
     }
 }
 
-/// The permissions the label sync token asks for. Labels sit under `issues`.
-fn permissions() -> Permissions {
+/// The permissions the bot token asks for. Labels and comments sit under
+/// `issues`. The data files and the tier snapshots sit under `contents`.
+pub(crate) fn permissions() -> Permissions {
     Permissions::new()
         .with("issues", Access::Write)
         .with("contents", Access::Read)
@@ -137,15 +140,7 @@ pub fn sync_labels(
     labels_path: &Path,
     dry_run: bool,
 ) -> Result<LabelsReport, LabelsCommandError> {
-    let text =
-        fs::read_to_string(labels_path).map_err(|source| LabelsCommandError::LabelsRead {
-            path: labels_path.to_path_buf(),
-            source,
-        })?;
-    let file = parse_labels(&text).map_err(|source| LabelsCommandError::LabelsFile {
-        path: labels_path.to_path_buf(),
-        source,
-    })?;
+    let file = read_labels_file(labels_path)?;
     let key = AppKey::read(&config.private_key_path)?;
     let app = GithubApp::new(transport, pacer, config.app_id.get(), key, clock);
     let mut client = app.repo(
@@ -153,8 +148,31 @@ pub fn sync_labels(
         config.repo.clone(),
         permissions(),
     );
+    sync_with(&mut client, &file, dry_run).map_err(LabelsCommandError::from)
+}
+
+/// Reads and checks the labels file at `path`.
+pub(crate) fn read_labels_file(path: &Path) -> Result<LabelsFile, LabelsCommandError> {
+    let text = fs::read_to_string(path).map_err(|source| LabelsCommandError::LabelsRead {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    parse_labels(&text).map_err(|source| LabelsCommandError::LabelsFile {
+        path: path.to_path_buf(),
+        source,
+    })
+}
+
+/// Syncs the labels of the repo of `client` to `file`. With `dry_run` it only plans.
+///
+/// Changes applied before a failed call stay.
+pub(crate) fn sync_with(
+    client: &mut RepoClient<'_>,
+    file: &LabelsFile,
+    dry_run: bool,
+) -> Result<LabelsReport, ApiError> {
     let existing: Vec<RepoLabel> = client.labels()?.into_iter().map(repo_label).collect();
-    let plan = plan_sync(&file, &existing);
+    let plan = plan_sync(file, &existing);
     if !dry_run {
         for label in &plan.create {
             client.create_label(&fields(label))?;

@@ -27,12 +27,12 @@ pub use entry::{
     MAX_DESCRIPTION_CHARS,
 };
 pub use ids::{
-    CrateName, GithubLogin, IdError, Slug, canonical_crate_name, normalize_repo_url,
+    CommitSha, CrateName, GithubLogin, IdError, Slug, canonical_crate_name, normalize_repo_url,
     push_canonical_crate_name,
 };
 pub use intake::{description_text, entry_name, repo_link};
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
-pub use load::{DataSources, Diagnostic, Diagnostics, SourceFile};
+pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use registry::{
     AppFeaturedThresholds, Deprecated, DeprecatedRequirement, Discovery, DormancyThresholds,
     FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers,

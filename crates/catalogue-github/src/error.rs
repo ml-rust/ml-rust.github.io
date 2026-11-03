@@ -1,6 +1,8 @@
 //! Errors from the GitHub App client.
 
+use catalogue_signals::history::HistoryError;
 use catalogue_signals::http::{HttpError, PacedError};
+use catalogue_signals::repo_archive::RepoArchiveError;
 use thiserror::Error;
 
 /// A GitHub API call that ends without a usable answer.
@@ -82,6 +84,30 @@ pub enum ApiError {
         link: String,
         /// The API base URL.
         api: &'static str,
+    },
+    /// An answer arrives with a body that breaks a rule of the call.
+    #[error("the answer from {url} is not usable: {reason}")]
+    Content {
+        /// The requested URL.
+        url: String,
+        /// What is wrong, with the next action.
+        reason: String,
+    },
+    /// A repo archive cannot be read as the catalogue data.
+    #[error("the repo archive from {url}: {source}")]
+    Archive {
+        /// The requested URL.
+        url: String,
+        /// What the archive reader reports.
+        source: RepoArchiveError,
+    },
+    /// A fetched tier snapshot is corrupt.
+    #[error("the tier snapshot from {url}: {source}")]
+    Snapshot {
+        /// The requested URL.
+        url: String,
+        /// What the snapshot reader reports.
+        source: HistoryError,
     },
     /// The App JWT cannot be signed.
     #[error(
