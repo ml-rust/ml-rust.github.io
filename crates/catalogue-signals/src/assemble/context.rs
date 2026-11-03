@@ -6,8 +6,8 @@ use crate::history::History;
 
 /// The context of entry `entry_slug` on `today`.
 ///
-/// - `maintainer_statement`: the status of the latest `maintainer` judgment by
-///   date. On the same date the higher issue number wins.
+/// - `maintainer_statement`: the status of the newest `maintainer` judgment, by
+///   [`Catalogue::maintainer_statement`].
 /// - `demotion_approved`: any `demotion` judgment exists for the entry.
 /// - `featured_approved`: any `featured-approval` judgment exists for the entry.
 /// - `org_affiliated`: the entry's own flag. False for a slug the catalogue lacks.
@@ -27,24 +27,14 @@ pub fn context(
     context.org_affiliated = catalogue
         .entry(entry_slug)
         .is_some_and(|entry| entry.org_affiliated);
-    let mut latest = None;
-    for (&issue, judgment) in catalogue.judgments() {
-        if &judgment.entry != entry_slug {
-            continue;
-        }
-        match &judgment.judgment {
-            JudgmentKind::Maintainer { status } => {
-                let key = (judgment.date, issue);
-                if latest.is_none_or(|(found, _)| key > found) {
-                    latest = Some((key, *status));
-                }
-            }
+    context.maintainer_statement = catalogue.maintainer_statement(entry_slug);
+    for (_, judgment) in catalogue.judgments_of(entry_slug) {
+        match judgment.judgment {
             JudgmentKind::Demotion { .. } => context.demotion_approved = true,
             JudgmentKind::FeaturedApproval {} => context.featured_approved = true,
             _ => {}
         }
     }
-    context.maintainer_statement = latest.map(|(_, status)| status);
     context
 }
 
