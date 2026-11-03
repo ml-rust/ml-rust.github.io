@@ -5,6 +5,7 @@ use clap::{Parser, Subcommand};
 
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::dump::{DumpCommand, run_dump};
+use crate::ecosystems::{EcosystemsCommand, run_ecosystems};
 use crate::exit::{INVALID, IO};
 use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
@@ -40,6 +41,12 @@ pub enum Command {
         #[command(subcommand)]
         command: DiscoverCommand,
     },
+    /// Read dependent counts from ecosyste.ms.
+    Ecosystems {
+        /// The ecosystems action to run.
+        #[command(subcommand)]
+        command: EcosystemsCommand,
+    },
     /// Read facts about GitHub repos.
     Github {
         /// The github action to run.
@@ -62,6 +69,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Validate { data } => run_validate(&data),
         Command::Dump { command } => run_dump(command),
         Command::Discover { command } => run_discover(command),
+        Command::Ecosystems { command } => run_ecosystems(command),
         Command::Github { command } => run_github(command),
         Command::Rustsec { command } => run_rustsec(command),
     }
