@@ -8,11 +8,10 @@ use jiff::{Span, Timestamp};
 use serde::Deserialize;
 
 use super::error::GithubError;
-use super::paced::{Paced, parse_json};
-use super::pacer::Pacer;
+use super::json::parse_json;
 use super::query::{PER_PAGE, search_url};
 use super::repo::{FoundRepo, GithubFound, GithubRules, Repo};
-use crate::http::Transport;
+use crate::http::{Paced, Pacer, Transport};
 
 /// The most repos one query serves.
 const MAX_RESULTS: u64 = 1000;

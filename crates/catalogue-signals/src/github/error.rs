@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-use crate::http::HttpError;
+use crate::http::{HttpError, PacedError};
 
 /// A search or facts query the fetcher cannot finish.
 #[derive(Debug, Error)]
@@ -66,6 +66,19 @@ pub enum GithubError {
         /// What the date library reports.
         reason: String,
     },
+}
+
+impl From<PacedError> for GithubError {
+    fn from(error: PacedError) -> Self {
+        match error {
+            PacedError::Http(error) => Self::Http(error),
+            PacedError::Status { url, status } => Self::status(&url, status),
+            PacedError::Body { url, source } => Self::Body { url, source },
+            PacedError::RetriesExhausted { url, retries } => {
+                Self::RetriesExhausted { url, retries }
+            }
+        }
+    }
 }
 
 impl GithubError {

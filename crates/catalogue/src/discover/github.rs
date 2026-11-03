@@ -8,9 +8,9 @@ use catalogue_core::normalize_repo_url;
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::github::{
-    GithubError, GithubFound, GithubRules, Repo, SleepPacer, search_repos,
+    GITHUB_INTERVAL, GithubError, GithubFound, GithubRules, Repo, search_repos,
 };
-use catalogue_signals::http::ReqwestTransport;
+use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 
 use super::command::{DiscoverError, load_catalogue, report_error};
 use crate::cache_dir::resolve_cache_dir;
@@ -73,7 +73,12 @@ fn discover_github(
     let snapshot = read_cached(&fetch::dump_path(&cache_dir), LINK_WINDOW_DAYS)?;
     let linked = linked_repos(&snapshot);
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
-    let found = search_repos(&transport, &token, &rules, &mut SleepPacer)?;
+    let found = search_repos(
+        &transport,
+        &token,
+        &rules,
+        &mut IntervalPacer::new(GITHUB_INTERVAL),
+    )?;
     Ok(build_github_report(&found, &linked, &listed))
 }
 

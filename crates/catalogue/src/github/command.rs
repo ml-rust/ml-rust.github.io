@@ -3,9 +3,9 @@
 use std::process::ExitCode;
 
 use catalogue_signals::github::{
-    GithubError, Pacer, RepoFacts, RepoRef, RepoRefError, SleepPacer, repo_facts,
+    GITHUB_INTERVAL, GithubError, Pacer, RepoFacts, RepoRef, RepoRefError, repo_facts,
 };
-use catalogue_signals::http::{Headers, ReqwestTransport};
+use catalogue_signals::http::{Headers, IntervalPacer, ReqwestTransport};
 use clap::Subcommand;
 use jiff::Timestamp;
 use jiff::civil::Date;
@@ -92,7 +92,7 @@ fn facts(
     let token = token?;
     let today = today.unwrap_or_else(|| Timestamp::now().to_zoned(TimeZone::UTC).date());
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
-    let mut pacer = SleepPacer;
+    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
     let mut results: Vec<(RepoRef, RepoFacts)> = Vec::with_capacity(repos.len());
     for (index, repo) in repos.into_iter().enumerate() {
         if index > 0 {

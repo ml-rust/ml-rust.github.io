@@ -12,14 +12,15 @@
 
 mod error;
 mod facts;
-mod paced;
+mod json;
 mod pacer;
 mod query;
 mod repo;
 mod search;
 
+pub use crate::http::Pacer;
 pub use error::GithubError;
 pub use facts::{CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoRef, RepoRefError, repo_facts};
-pub use pacer::{Pacer, SleepPacer};
+pub use pacer::GITHUB_INTERVAL;
 pub use repo::{FoundRepo, GithubFound, GithubRules, Repo};
 pub use search::{search_repos, search_repos_on};

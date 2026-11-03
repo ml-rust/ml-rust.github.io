@@ -8,9 +8,8 @@ use super::repo_ref::RepoRef;
 use super::response::{ApiError, Envelope};
 use super::types::RepoFacts;
 use crate::github::error::GithubError;
-use crate::github::paced::{Paced, parse_json};
-use crate::github::pacer::Pacer;
-use crate::http::Transport;
+use crate::github::json::parse_json;
+use crate::http::{Paced, Pacer, Transport};
 
 /// The error type GitHub gives a name it cannot resolve.
 const NOT_FOUND: &str = "NOT_FOUND";
