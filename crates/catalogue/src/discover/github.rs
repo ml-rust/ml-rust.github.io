@@ -8,7 +8,7 @@ use catalogue_core::normalize_repo_url;
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::github::{
-    GITHUB_INTERVAL, GithubError, GithubFound, GithubRules, Repo, search_repos,
+    FoundRepo, GITHUB_INTERVAL, GithubError, GithubFound, GithubRules, Repo, search_repos,
 };
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 
@@ -43,13 +43,22 @@ pub(super) fn run_github(data: &Path, cache_dir: Option<PathBuf>) -> ExitCode {
     }
 }
 
-/// Checks the data, searches GitHub and reports the repos no crate links to.
-fn discover_github(
+/// What one GitHub search found, with the links that filter and label it.
+pub(crate) struct Searched {
+    /// The repos the search returned.
+    pub(crate) found: GithubFound,
+    /// The normalised repository links of every crate in the dump.
+    pub(crate) linked: HashSet<String>,
+    /// Entry slugs by normalised repository link.
+    pub(crate) listed: HashMap<String, String>,
+}
+
+/// Checks the data, reads the cached dump and searches GitHub.
+pub(crate) fn search(
     data: &Path,
     cache_dir: Option<PathBuf>,
-    token: Result<String, NoToken>,
-) -> Result<GithubReport, DiscoverError> {
-    let token = token?;
+    token: &str,
+) -> Result<Searched, DiscoverError> {
     let catalogue = load_catalogue(data)?;
     let path = data.join("discovery.toml");
     let discovery = catalogue
@@ -75,11 +84,30 @@ fn discover_github(
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
     let found = search_repos(
         &transport,
-        &token,
+        token,
         &rules,
         &mut IntervalPacer::new(GITHUB_INTERVAL),
     )?;
-    Ok(build_github_report(&found, &linked, &listed))
+    Ok(Searched {
+        found,
+        linked,
+        listed,
+    })
+}
+
+/// Checks the data, searches GitHub and reports the repos no crate links to.
+fn discover_github(
+    data: &Path,
+    cache_dir: Option<PathBuf>,
+    token: Result<String, NoToken>,
+) -> Result<GithubReport, DiscoverError> {
+    let token = token?;
+    let searched = search(data, cache_dir, &token)?;
+    Ok(build_github_report(
+        &searched.found,
+        &searched.linked,
+        &searched.listed,
+    ))
 }
 
 /// The normalised repository links of every crate in the dump.
@@ -90,6 +118,29 @@ fn linked_repos(snapshot: &DumpSnapshot) -> HashSet<String> {
         .filter_map(|row| row.repository.as_deref())
         .filter_map(normalize_repo_url)
         .collect()
+}
+
+/// The repos in `found` that no crate in `linked` points to, with their
+/// normalised links, by stars descending, then name.
+pub(crate) fn leads<'a>(
+    found: &'a GithubFound,
+    linked: &HashSet<String>,
+) -> Vec<(&'a FoundRepo, String)> {
+    let mut leads: Vec<(&FoundRepo, String)> = found
+        .repos
+        .iter()
+        .filter_map(|item| {
+            let key = normalize_repo_url(&item.repo.html_url)?;
+            (!linked.contains(&key)).then_some((item, key))
+        })
+        .collect();
+    leads.sort_by(|a, b| {
+        b.0.repo
+            .stargazers_count
+            .cmp(&a.0.repo.stargazers_count)
+            .then_with(|| a.0.repo.full_name.cmp(&b.0.repo.full_name))
+    });
+    leads
 }
 
 /// Renders the repos in `found` that no crate in `linked` points to.
@@ -105,23 +156,10 @@ pub fn build_github_report(
     linked: &HashSet<String>,
     listed: &HashMap<String, String>,
 ) -> GithubReport {
-    let mut leads: Vec<(&Repo, Option<&String>, String)> = found
-        .repos
-        .iter()
-        .filter_map(|item| {
-            let key = normalize_repo_url(&item.repo.html_url)?;
-            if linked.contains(&key) {
-                None
-            } else {
-                Some((&item.repo, listed.get(&key), item.matched_topics.join(",")))
-            }
-        })
+    let leads: Vec<(&Repo, Option<&String>, String)> = leads(found, linked)
+        .into_iter()
+        .map(|(item, key)| (&item.repo, listed.get(&key), item.matched_topics.join(",")))
         .collect();
-    leads.sort_by(|a, b| {
-        b.0.stargazers_count
-            .cmp(&a.0.stargazers_count)
-            .then_with(|| a.0.full_name.cmp(&b.0.full_name))
-    });
     let mut lines = vec![format!("github leads: {}", leads.len())];
     for (repo, slug, topics) in leads {
         let pushed = repo.pushed_at.split('T').next().unwrap_or_default();

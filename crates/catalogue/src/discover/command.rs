@@ -113,7 +113,7 @@ pub fn run_discover(command: DiscoverCommand) -> ExitCode {
 }
 
 /// Prints the outcome of an action that fails and returns its exit code.
-pub(super) fn report_error(error: DiscoverError) -> ExitCode {
+pub(crate) fn report_error(error: DiscoverError) -> ExitCode {
     if let DiscoverError::Invalid(diagnostics) = &error {
         for diagnostic in diagnostics {
             eprintln!("{diagnostic}");
@@ -138,8 +138,28 @@ fn run_crates(data: &Path, cache_dir: Option<PathBuf>, window_days: u16) -> Exit
 }
 
 /// Reads and checks the data directory, and returns the catalogue.
-pub(super) fn load_catalogue(data: &Path) -> Result<Catalogue, DiscoverError> {
+pub(crate) fn load_catalogue(data: &Path) -> Result<Catalogue, DiscoverError> {
     data_dir::load_catalogue(data)?.map_err(DiscoverError::Invalid)
+}
+
+/// The crates.io candidate rules of `discovery.toml` in `catalogue`.
+///
+/// `data` only names the rules file in the error.
+pub(crate) fn crate_rules(catalogue: &Catalogue, data: &Path) -> Result<Rules, DiscoverError> {
+    let Some(discovery) = catalogue.discovery() else {
+        return Err(DiscoverError::NoRules {
+            path: data.join("discovery.toml"),
+        });
+    };
+    Ok(Rules {
+        categories: discovery.categories.clone(),
+        keywords: discovery.keywords.clone(),
+        core_crates: discovery
+            .core_crates
+            .iter()
+            .map(ToString::to_string)
+            .collect(),
+    })
 }
 
 /// Checks the data, reads the cached dump and reports the candidates.
@@ -149,20 +169,7 @@ fn discover_crates(
     window_days: u16,
 ) -> Result<Report, DiscoverError> {
     let catalogue = load_catalogue(data)?;
-    let Some(discovery) = catalogue.discovery() else {
-        return Err(DiscoverError::NoRules {
-            path: data.join("discovery.toml"),
-        });
-    };
-    let rules = Rules {
-        categories: discovery.categories.clone(),
-        keywords: discovery.keywords.clone(),
-        core_crates: discovery
-            .core_crates
-            .iter()
-            .map(ToString::to_string)
-            .collect(),
-    };
+    let rules = crate_rules(&catalogue, data)?;
     let mut listed: HashMap<String, &str> = HashMap::new();
     for (slug, entry) in catalogue.entries() {
         for name in &entry.crates {

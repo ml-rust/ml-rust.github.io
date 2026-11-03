@@ -3,6 +3,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+use crate::calibrate::{CalibrateCommand, run_calibrate};
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::distribution::{DistributionCommand, run_distribution};
 use crate::dump::{DumpCommand, run_dump};
@@ -67,6 +68,12 @@ pub enum Command {
         #[command(subcommand)]
         command: RustsecCommand,
     },
+    /// Print percentiles of the tier signals, for setting thresholds.
+    Calibrate {
+        /// The calibrate action to run.
+        #[command(subcommand)]
+        command: CalibrateCommand,
+    },
     /// Assign each entry its tier and print the reasons.
     ///
     /// Reads the cached crates.io dump and RustSec archive. Unless `--offline`,
@@ -87,6 +94,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Ecosystems { command } => run_ecosystems(command),
         Command::Github { command } => run_github(command),
         Command::Rustsec { command } => run_rustsec(command),
+        Command::Calibrate { command } => run_calibrate(command),
         Command::Tiers(args) => run_tiers(args),
     }
 }

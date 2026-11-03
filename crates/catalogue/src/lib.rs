@@ -2,6 +2,7 @@
 
 mod batch;
 pub mod cache_dir;
+pub mod calibrate;
 pub mod cli;
 pub mod data_dir;
 pub mod discover;
@@ -18,6 +19,7 @@ pub mod usage;
 pub mod validate;
 
 pub use cache_dir::{CacheDirError, default_cache_dir, resolve_cache_dir};
+pub use calibrate::{CalibrateCommand, CalibrateError, build_crates_report, run_calibrate};
 pub use cli::{Cli, Command, run};
 pub use data_dir::{DataDir, DataDirError, load_catalogue, read_data_dir};
 pub use discover::{

@@ -9,12 +9,14 @@
 //! [`rustsec`] reads the advisory archive. [`link`] checks that a crate was
 //! published from its repo. [`history`] keeps the daily snapshots that the
 //! two-check dead rule and Docker growth read. [`assemble`] turns all of them
-//! into the tier signals of one entry.
+//! into the tier signals of one entry. [`calibrate`] reads percentiles of the
+//! tier signals, for setting thresholds.
 
 mod agent;
 mod archive;
 pub mod assemble;
 mod atomic;
+pub mod calibrate;
 pub mod discover;
 pub mod distribution;
 pub mod dump;
