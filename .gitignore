@@ -1,0 +1,36 @@
+# Rust build output
+/target/
+/target-*/
+**/*.rs.bk
+
+# Generated site (CI builds it and deploys the Pages artifact)
+/dist/
+
+# Local data caches (crates.io dump, API responses, RustSec clone)
+/cache/
+/.cache/
+
+# Secrets: provider keys, GitHub App private key
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Per-machine bot config (bot.example.toml is committed)
+/bot.toml
+
+# Agent and session scratch
+/.claude/prep/
+/.claude/settings.local.json
+/.pi-subagents/
+/.codex/
+
+# Logs
+*.log
+
+# Editors and OS
+/.idea/
+/.vscode/
+*.swp
+.DS_Store
