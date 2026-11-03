@@ -1,0 +1,10 @@
+entry = "alpha"
+issue = "https://github.com/ml-rust/ml-rust.github.io/issues/4"
+reporter = "dave"
+approver = "bob"
+date = 2026-11-03
+evidence = ["https://example.com/proof-4"]
+
+[judgment]
+type = "category"
+topics = ["tensors"]

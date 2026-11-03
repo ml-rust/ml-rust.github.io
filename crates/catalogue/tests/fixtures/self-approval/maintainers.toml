@@ -1,0 +1,9 @@
+[[maintainer]]
+login = "carol"
+org_member = true
+since = 2026-01-01
+
+[[maintainer]]
+login = "bob"
+org_member = false
+since = 2026-02-01

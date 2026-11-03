@@ -1,0 +1,10 @@
+entry = "alpha"
+issue = "https://github.com/ml-rust/ml-rust.github.io/issues/1"
+reporter = "dave"
+approver = "zed"
+date = 2026-11-03
+evidence = ["https://example.com/proof-1"]
+
+[judgment]
+type = "correctness"
+finding = "The README claims support the code lacks."

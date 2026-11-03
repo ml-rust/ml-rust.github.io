@@ -1,0 +1,11 @@
+entry = "alpha"
+issue = "https://github.com/ml-rust/ml-rust.github.io/issues/5"
+reporter = "dave"
+approver = "bob"
+date = 2026-11-03
+evidence = ["https://example.com/proof-5"]
+
+[judgment]
+type = "demotion"
+from = "featured"
+to = "listed"

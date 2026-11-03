@@ -1,0 +1,12 @@
+[[topic]]
+id = "ml"
+name = "Machine learning"
+
+[[topic]]
+id = "tensors"
+name = "Tensors"
+parent = "ml"
+
+[topic.summary]
+text = "Array types and the operations on them."
+evidence = ["https://example.com/tensors"]

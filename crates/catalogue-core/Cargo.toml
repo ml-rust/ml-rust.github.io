@@ -1,0 +1,16 @@
+[package]
+name = "catalogue-core"
+version = "0.1.0"
+description = "Data model, parsing and cross-file validation for the ml-rust catalogue"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+serde.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+jiff.workspace = true
+url.workspace = true

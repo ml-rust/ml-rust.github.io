@@ -1,0 +1,5 @@
+[[group]]
+terms = ["gpu", "cuda"]
+
+[[group]]
+terms = ["cpu", "processor"]
