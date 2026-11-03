@@ -12,7 +12,5 @@ publish = false
 catalogue-core.workspace = true
 catalogue-signals.workspace = true
 clap.workspace = true
-thiserror.workspace = true
-
-[dev-dependencies]
 jiff.workspace = true
+thiserror.workspace = true

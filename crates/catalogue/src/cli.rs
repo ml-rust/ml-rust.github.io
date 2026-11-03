@@ -6,6 +6,7 @@ use clap::{Parser, Subcommand};
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::dump::{DumpCommand, run_dump};
 use crate::exit::{INVALID, IO};
+use crate::rustsec::{RustsecCommand, run_rustsec};
 use crate::validate::{Outcome, validate};
 
 /// Checks the ml-rust catalogue data files.
@@ -38,16 +39,23 @@ pub enum Command {
         #[command(subcommand)]
         command: DiscoverCommand,
     },
+    /// Download and inspect the RustSec advisory database.
+    Rustsec {
+        /// The rustsec action to run.
+        #[command(subcommand)]
+        command: RustsecCommand,
+    },
 }
 
 /// Runs the parsed command and returns the process exit code.
 ///
-/// The code is 0 for success, 1 for data or dump errors and 2 for an IO or network error.
+/// The code is 0 for success, 1 for data, dump or archive errors and 2 for an IO or network error.
 pub fn run(cli: Cli) -> ExitCode {
     match cli.command {
         Command::Validate { data } => run_validate(&data),
         Command::Dump { command } => run_dump(command),
         Command::Discover { command } => run_discover(command),
+        Command::Rustsec { command } => run_rustsec(command),
     }
 }
 
@@ -232,6 +240,32 @@ mod tests {
             (data, cache_dir),
             (PathBuf::from("d"), Some(PathBuf::from("c")))
         );
+    }
+
+    #[test]
+    fn rustsec_fetch_and_show_take_an_optional_cache_dir() {
+        let cli = Cli::try_parse_from(["catalogue", "rustsec", "fetch", "--cache-dir", "c"])
+            .expect("parses");
+        let Command::Rustsec {
+            command: RustsecCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected rustsec fetch");
+        };
+        assert_eq!(cache_dir, Some(PathBuf::from("c")));
+        let cli =
+            Cli::try_parse_from(["catalogue", "rustsec", "show", "numr", "blazr"]).expect("parses");
+        let Command::Rustsec {
+            command: RustsecCommand::Show { names, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected rustsec show");
+        };
+        assert_eq!(
+            (names, cache_dir),
+            (vec!["numr".to_owned(), "blazr".to_owned()], None)
+        );
+        assert!(Cli::try_parse_from(["catalogue", "rustsec", "show"]).is_err());
     }
 
     #[test]
