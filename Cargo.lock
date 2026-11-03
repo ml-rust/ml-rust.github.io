@@ -119,6 +119,7 @@ dependencies = [
  "catalogue-signals",
  "clap",
  "jiff",
+ "tempfile",
  "thiserror",
  "toml",
 ]

@@ -14,6 +14,7 @@ use crate::dump::{
     Requirement, VersionRow,
 };
 use crate::github::{Facts, RepoFacts};
+use crate::link::LinkCheck;
 use crate::rustsec::{Advisories, Advisory, AdvisoryKind};
 use crate::usage::Usage;
 
@@ -220,6 +221,19 @@ impl World {
     }
 
     pub(crate) fn run(&self, crates: &[&str], facts: Option<&RepoFacts>) -> Assembled {
+        self.assemble(crates, facts, None)
+    }
+
+    pub(crate) fn run_linked(&self, crates: &[&str], link: Option<&LinkCheck>) -> Assembled {
+        self.assemble(crates, None, link)
+    }
+
+    fn assemble(
+        &self,
+        crates: &[&str],
+        facts: Option<&RepoFacts>,
+        link: Option<&LinkCheck>,
+    ) -> Assembled {
         let index = CrateIndex::new(&self.dump.snapshot);
         let thresholds = thresholds();
         let sources = LibrarySources {
@@ -230,7 +244,7 @@ impl World {
             deprecated: &self.deprecated,
             thresholds: &thresholds,
         };
-        library_signals(&library(crates), &sources, facts, today())
+        library_signals(&library(crates), &sources, facts, link, today())
     }
 
     pub(crate) fn users(&mut self, id: u32, current: f64) {

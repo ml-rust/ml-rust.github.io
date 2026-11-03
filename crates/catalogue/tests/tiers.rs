@@ -1,4 +1,8 @@
-use std::path::PathBuf;
+#[path = "common/link_transport.rs"]
+mod link_transport;
+
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use catalogue::{Network, load_catalogue, tiers_report};
 use catalogue_core::Date;
@@ -7,6 +11,7 @@ use catalogue_signals::dump::{
 };
 use catalogue_signals::rustsec::{Advisories, Advisory, AdvisoryKind};
 use jiff::Timestamp;
+use link_transport::{PACKAGE_URL, Router};
 
 /// Path of the fixture data directory named `case`.
 fn fixture(case: &str) -> PathBuf {
@@ -194,4 +199,44 @@ fn an_unmaintained_advisory_on_a_dependency_fires_the_deprecated_requirement_rul
         ),
         "{alpha}"
     );
+}
+
+#[test]
+fn an_online_run_checks_the_link_of_each_library_with_a_release_and_caches_it() {
+    let catalogue = load_catalogue(&fixture("valid"))
+        .expect("fixture reads")
+        .expect("fixture is valid");
+    let today = Date::new(2026, 11, 3).expect("date");
+    let cache_dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("tiers-links");
+    let _ = fs::remove_dir_all(&cache_dir);
+    let router = Router::default();
+    let network = Network::Online {
+        transport: &router,
+        token: "sekret-xyz",
+        cache_dir: &cache_dir,
+    };
+    let report = tiers_report(
+        &catalogue,
+        &snapshot(),
+        &Advisories::default(),
+        network,
+        today,
+    )
+    .expect("report");
+    let alpha = block(&report, "alpha");
+    assert!(alpha.contains(".cargo_vcs_info.json"), "{alpha}");
+    assert!(!block(&report, "beta").contains(".cargo_vcs_info.json"));
+    let package_requests = router
+        .urls()
+        .iter()
+        .filter(|url| *url == PACKAGE_URL)
+        .count();
+    assert_eq!(package_requests, 1);
+    assert!(
+        cache_dir
+            .join("links")
+            .join("alpha-crate-1.3.0@ml-rust__alpha.json")
+            .is_file()
+    );
+    let _ = fs::remove_dir_all(&cache_dir);
 }

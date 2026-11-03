@@ -8,6 +8,7 @@ use jiff::{Span, Timestamp};
 use serde::Deserialize;
 
 use super::error::GithubError;
+use super::headers::rest_headers;
 use super::json::parse_json;
 use super::query::{PER_PAGE, search_url};
 use super::repo::{FoundRepo, GithubFound, GithubRules, Repo};
@@ -54,7 +55,7 @@ pub fn search_repos_on(
 ) -> Result<GithubFound, GithubError> {
     let mut run = Run {
         transport,
-        authorization: format!("Bearer {token}"),
+        token,
         paced: Paced::new(pacing),
         min_stars: rules.min_stars,
         found: BTreeMap::new(),
@@ -84,7 +85,7 @@ struct Page {
 /// The state of one search.
 struct Run<'a> {
     transport: &'a dyn Transport,
-    authorization: String,
+    token: &'a str,
     paced: Paced<'a>,
     min_stars: u32,
     found: BTreeMap<String, FoundRepo>,
@@ -144,11 +145,7 @@ impl Run<'_> {
     /// Fetches and parses one page, retrying rate-limit answers.
     fn page(&mut self, url: &str) -> Result<Page, GithubError> {
         let transport = self.transport;
-        let headers = [
-            ("Accept", "application/vnd.github+json".to_owned()),
-            ("X-GitHub-Api-Version", "2022-11-28".to_owned()),
-            ("Authorization", self.authorization.clone()),
-        ];
+        let headers = rest_headers(self.token, "application/vnd.github+json");
         let bytes = self.paced.fetch(url, || transport.get(url, &headers))?;
         parse_json(url, &bytes)
     }

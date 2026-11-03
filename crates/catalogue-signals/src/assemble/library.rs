@@ -5,11 +5,13 @@ use catalogue_core::{Date, Entry, EntryKind, Signals};
 use super::adoption::adoption;
 use super::assembled::Assembled;
 use super::facts::apply_facts;
+use super::link::apply_link;
 use super::requirements::deprecated_requirement;
 use super::sources::LibrarySources;
 use super::versions::{family_span, primary_releases};
 use crate::dump::DumpSnapshot;
 use crate::github::RepoFacts;
+use crate::link::LinkCheck;
 
 /// Days of downloads that `downloads_per_month` sums.
 const MONTH_DAYS: usize = 30;
@@ -36,7 +38,9 @@ const MONTH_DAYS: usize = 30;
 ///   primary's default version that the deprecated list matches, as `<crate> <req>`,
 ///   or that names a crate with an unmaintained advisory, as `<crate> (<RUSTSEC-ID>)`.
 /// - `docs_present`: the primary publishes a README.
-/// - `repo_link_verified`: unknown. A `.cargo_vcs_info.json` check sets it.
+/// - `repo_link_verified`: `link.verified()`. `None` leaves it unknown. A
+///   missing commit, a release without commit data, an unsupported host and a
+///   dirty release each add a note.
 /// - Repository signals come from `facts`. `None` leaves them unknown.
 ///
 /// Each family crate missing from the dump, and each requirement the
@@ -45,11 +49,13 @@ pub fn library_signals(
     entry: &Entry,
     sources: &LibrarySources<'_>,
     facts: Option<&RepoFacts>,
+    link: Option<&LinkCheck>,
     today: Date,
 ) -> Assembled {
     let mut signals = Signals::unknown(EntryKind::Library);
     let mut notes = Vec::new();
     apply_facts(facts, &mut signals);
+    apply_link(link, &mut signals, &mut notes);
     let Some(primary) = entry.crates.first() else {
         notes.push("the entry lists no crate".to_owned());
         return Assembled { signals, notes };

@@ -30,7 +30,9 @@ pub use distribution::{
 };
 pub use dump::{DumpCommand, DumpCommandError, render_outcome, render_stats, run_dump};
 pub use ecosystems::{EcosystemsCommand, EcosystemsCommandError, run_ecosystems};
-pub use github::{GithubCommand, GithubCommandError, render_all, render_facts, run_github};
+pub use github::{
+    GithubCommand, GithubCommandError, render_all, render_facts, render_link, run_github,
+};
 pub use rustsec::{RustsecCommand, RustsecCommandError, render_crate, run_rustsec};
 pub use tiers::{Network, TiersArgs, TiersError, run_tiers, tiers_report};
 pub use token::NoToken;

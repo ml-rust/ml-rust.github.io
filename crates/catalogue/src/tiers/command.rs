@@ -9,6 +9,7 @@ use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::github::GithubError;
 use catalogue_signals::http::{HttpError, ReqwestTransport};
+use catalogue_signals::link::LinkError;
 use catalogue_signals::rustsec::Advisories;
 use clap::Args;
 use jiff::Timestamp;
@@ -78,6 +79,9 @@ pub enum TiersError {
     /// A release, Homebrew or Repology request fails.
     #[error(transparent)]
     Distribution(#[from] DistributionError),
+    /// A repo link check fails.
+    #[error(transparent)]
+    Link(#[from] LinkError),
 }
 
 impl TiersError {
@@ -91,6 +95,7 @@ impl TiersError {
             | Self::MissingFile { .. }
             | Self::Token(_)
             | Self::Github(GithubError::Status { status: 401, .. })
+            | Self::Link(LinkError::Github(GithubError::Status { status: 401, .. }))
             | Self::Distribution(DistributionError::Status { status: 401, .. }) => INVALID,
             Self::Dump(error) => error.exit_code(),
             Self::Rustsec(error) => error.exit_code(),
@@ -98,6 +103,7 @@ impl TiersError {
             | Self::CacheDir(_)
             | Self::Http(_)
             | Self::Github(_)
+            | Self::Link(_)
             | Self::Distribution(_) => IO,
         }
     }
@@ -145,6 +151,7 @@ fn tiers(
             let network = Network::Online {
                 transport: &transport,
                 token: &token,
+                cache_dir: &cache_dir,
             };
             tiers_report(&catalogue, &snapshot, &advisories, network, today)
         }
@@ -168,7 +175,7 @@ pub fn tiers_report(
     network: Network<'_>,
     today: Date,
 ) -> Result<String, TiersError> {
-    let fetched = fetch_all(catalogue, network, today.civil())?;
+    let fetched = fetch_all(catalogue, snapshot, network, today.civil())?;
     let assessments = assess_entries(catalogue, snapshot, advisories, &fetched, today)?;
     Ok(render_tiers(&assessments))
 }

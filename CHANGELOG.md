@@ -14,6 +14,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue dump usage`: adoption signals of named crates.
 - `catalogue discover crates` and `discover github`: candidate crates and app repos for review.
 - `catalogue github facts`: repo state, human commits and maintainer response.
+- `catalogue github link`: checks that a crate was published from a commit on the default branch of its repo. A commit that only a fork holds does not verify.
 - `catalogue rustsec fetch` and `rustsec show`: RustSec advisories per crate.
 - `catalogue ecosystems crates`: ecosyste.ms dependents per crate.
 - `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.

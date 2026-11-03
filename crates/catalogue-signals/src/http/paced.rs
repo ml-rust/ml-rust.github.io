@@ -84,7 +84,7 @@ impl<'a> Paced<'a> {
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
     ) -> Result<Vec<u8>, PacedError> {
-        match self.run(url, send, false)? {
+        match self.run(url, send, &[])? {
             Some(bytes) => Ok(bytes),
             None => Err(PacedError::Status {
                 url: url.to_owned(),
@@ -103,14 +103,28 @@ impl<'a> Paced<'a> {
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
     ) -> Result<Option<Vec<u8>>, PacedError> {
-        self.run(url, send, true)
+        self.run(url, send, &[404])
+    }
+
+    /// Like [`fetch`](Self::fetch), but an answer with a status in `absent` gives `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PacedError`] as [`fetch`](Self::fetch) does.
+    pub(crate) fn fetch_absent(
+        &mut self,
+        url: &str,
+        send: impl FnMut() -> Result<Response, HttpError>,
+        absent: &[u16],
+    ) -> Result<Option<Vec<u8>>, PacedError> {
+        self.run(url, send, absent)
     }
 
     fn run(
         &mut self,
         url: &str,
         mut send: impl FnMut() -> Result<Response, HttpError>,
-        missing_ok: bool,
+        absent: &[u16],
     ) -> Result<Option<Vec<u8>>, PacedError> {
         let mut retries = 0;
         loop {
@@ -124,7 +138,7 @@ impl<'a> Paced<'a> {
                 self.previous = Some(headers);
                 return read_body(url, response.body).map(Some);
             }
-            if missing_ok && response.status == 404 {
+            if absent.contains(&response.status) {
                 self.previous = Some(headers);
                 return Ok(None);
             }

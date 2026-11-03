@@ -3,6 +3,7 @@
 mod assess;
 mod collect;
 mod command;
+mod links;
 mod render;
 
 pub use collect::Network;

@@ -7,7 +7,7 @@ use serde::Deserialize;
 use super::assets::is_binary_asset;
 use super::error::DistributionError;
 use super::json::{parse_json, parse_timestamp};
-use crate::github::RepoRef;
+use crate::github::{RepoRef, rest_headers};
 use crate::http::{Paced, Pacer, Transport, percent_encode};
 
 /// The API name used in errors.
@@ -87,11 +87,7 @@ pub fn release_downloads(
         percent_encode(&repo.owner),
         percent_encode(&repo.name)
     );
-    let headers = [
-        ("Accept", "application/vnd.github+json".to_owned()),
-        ("X-GitHub-Api-Version", "2022-11-28".to_owned()),
-        ("Authorization", format!("Bearer {token}")),
-    ];
+    let headers = rest_headers(token, "application/vnd.github+json");
     let mut paced = Paced::new(pacer);
     let Some(bytes) = paced
         .fetch_optional(&url, || transport.get(&url, &headers))

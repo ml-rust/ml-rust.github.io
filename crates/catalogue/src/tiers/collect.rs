@@ -1,17 +1,21 @@
 //! The network signals of `catalogue tiers`: repo facts and app distribution counts.
 
 use std::collections::BTreeMap;
+use std::path::Path;
 
 use catalogue_core::{Catalogue, Entry, EntryKind, Slug, normalize_repo_url};
 use catalogue_signals::distribution::{
     HOMEBREW_INTERVAL, HomebrewInstalls, RELEASES_INTERVAL, REPOLOGY_INTERVAL, ReleaseDownloads,
     RepologyPackaging, homebrew_installs, release_downloads, repology_packaging,
 };
+use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoFacts, RepoRef, repo_facts};
 use catalogue_signals::http::{IntervalPacer, Transport};
+use catalogue_signals::link::LinkCheck;
 use jiff::civil;
 
 use super::command::TiersError;
+use super::links::fetch_links;
 use crate::batch;
 
 /// Where the network signals come from.
@@ -25,6 +29,8 @@ pub enum Network<'a> {
         transport: &'a dyn Transport,
         /// The GitHub token.
         token: &'a str,
+        /// The cache directory. Its `links` directory holds the repo link results.
+        cache_dir: &'a Path,
     },
 }
 
@@ -32,6 +38,7 @@ pub enum Network<'a> {
 #[derive(Debug, Default)]
 pub(crate) struct Fetched {
     pub(crate) facts: Option<RepoFacts>,
+    pub(crate) link: Option<LinkCheck>,
     pub(crate) releases: Option<ReleaseDownloads>,
     pub(crate) homebrew: Option<HomebrewInstalls>,
     pub(crate) repology: Option<RepologyPackaging>,
@@ -42,10 +49,13 @@ pub(crate) struct Fetched {
 ///
 /// Every entry with a GitHub repo gets its repo facts. Every app with a GitHub
 /// repo gets its release downloads, then the Homebrew and Repology counts its
-/// `distribution` names. Each source has its own pacer. A GraphQL error for one
-/// repo becomes a note. Any other error ends the run.
+/// `distribution` names. Every library gets its repo link check, which
+/// `snapshot` supplies the release for. Each source has its own pacer. A
+/// GraphQL error for one repo becomes a note. So does a missing or unreadable
+/// package, which leaves the repo link unknown. Any other error ends the run.
 pub(crate) fn fetch_all(
     catalogue: &Catalogue,
+    snapshot: &DumpSnapshot,
     network: Network<'_>,
     today: civil::Date,
 ) -> Result<BTreeMap<Slug, Fetched>, TiersError> {
@@ -54,7 +64,12 @@ pub(crate) fn fetch_all(
         .keys()
         .map(|slug| (slug.clone(), Fetched::default()))
         .collect();
-    let Network::Online { transport, token } = network else {
+    let Network::Online {
+        transport,
+        token,
+        cache_dir,
+    } = network
+    else {
         return Ok(out);
     };
     let mut repos: Vec<(Slug, RepoRef)> = Vec::new();
@@ -77,6 +92,13 @@ pub(crate) fn fetch_all(
             Ok(found) => slot(&mut out, slug).facts = Some(found),
             Err(note) => note_on(&mut out, slug, note),
         }
+    }
+    let links = fetch_links(catalogue, snapshot, transport, token, cache_dir)?;
+    for (slug, check) in links.checks {
+        slot(&mut out, &slug).link = Some(check);
+    }
+    for (slug, note) in links.notes {
+        note_on(&mut out, &slug, note);
     }
     let apps: Vec<(Slug, RepoRef)> = repos
         .into_iter()

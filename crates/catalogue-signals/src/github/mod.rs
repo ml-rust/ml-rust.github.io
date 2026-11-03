@@ -12,6 +12,7 @@
 
 mod error;
 mod facts;
+mod headers;
 mod json;
 mod pacer;
 mod query;
@@ -21,6 +22,8 @@ mod search;
 pub use crate::http::Pacer;
 pub use error::GithubError;
 pub use facts::{CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoRef, RepoRefError, repo_facts};
+pub(crate) use headers::rest_headers;
+pub(crate) use json::parse_json;
 pub use pacer::GITHUB_INTERVAL;
 pub use repo::{FoundRepo, GithubFound, GithubRules, Repo};
 pub use search::{search_repos, search_repos_on};

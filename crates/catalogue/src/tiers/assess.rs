@@ -59,7 +59,9 @@ pub(crate) fn assess_entries(
             let network = fetched.get(slug).unwrap_or(&none);
             let facts = network.facts.as_ref();
             let Assembled { signals, notes } = match entry.kind {
-                EntryKind::Library => library_signals(entry, &sources, facts, today),
+                EntryKind::Library => {
+                    library_signals(entry, &sources, facts, network.link.as_ref(), today)
+                }
                 EntryKind::App => app_signals(
                     facts,
                     network.releases.as_ref(),

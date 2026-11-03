@@ -16,4 +16,5 @@ jiff.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+tempfile.workspace = true
 toml.workspace = true
