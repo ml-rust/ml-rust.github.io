@@ -132,6 +132,7 @@ dependencies = [
  "catalogue-core",
  "catalogue-github",
  "catalogue-signals",
+ "catalogue-triage",
  "clap",
  "flate2",
  "jiff",
@@ -141,6 +142,7 @@ dependencies = [
  "tempfile",
  "thiserror",
  "toml",
+ "url",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@ use std::num::NonZeroU64;
 use catalogue_bot::{
     APPROVED, CheckInput, CheckReport, CommentAction, Desired, Form, FormError, FormKind,
     IssueMeta, Marker, Note, Previous, Sha256, approval_stale, check_submission, comment_body,
-    label_report, parse_form, plan, report_digest,
+    label_report, parse_form, plan, posted_section, report_digest,
 };
 use catalogue_core::{CommitSha, DataSources, Date, GithubLogin, Tier};
 use catalogue_github::{ApiError, Comment, CommentUpdate, Issue, RepoClient};
@@ -15,6 +15,7 @@ use catalogue_signals::history::Snapshot;
 use super::error::IssueError;
 use super::pr::{PrOutcome, open_pr};
 use super::state::IssueState;
+use super::triage::{LinkCheck, PreviousComment, triage_issue};
 
 /// What every issue check of one run shares.
 pub(super) struct RunContext<'a> {
@@ -28,6 +29,8 @@ pub(super) struct RunContext<'a> {
     pub snapshot: Option<&'a Snapshot>,
     /// The date that becomes `added` on a new entry.
     pub today: Date,
+    /// The unix second of the check, for the link check wait.
+    pub now: i64,
 }
 
 /// The result of one issue check.
@@ -36,6 +39,16 @@ pub(super) struct Checked {
     pub state: IssueState,
     /// What changed on the issue, for the run summary.
     pub summary: String,
+    /// Problems that did not stop the check, such as a failed link check.
+    pub warnings: Vec<String>,
+}
+
+/// The bot comment already on an issue: its marker and its text.
+struct Found {
+    /// The comment id and marker.
+    previous: Previous,
+    /// The comment text, where the last link check section sits.
+    text: String,
 }
 
 /// Whether `issue` carries a form label.
@@ -46,28 +59,31 @@ pub(super) fn has_form_label(issue: &Issue) -> bool {
         .any(|label| FormKind::from_label(label).is_some())
 }
 
-/// Checks `issue`, opens its data PR when it is approved, and applies the
-/// writes the plan asks for.
+/// Checks `issue`, opens its data PR when it is approved, runs the link
+/// check, and applies the writes the plan asks for.
 ///
 /// `cached` is the state from the last run. It names the comment to read
 /// first. The marker in the comment decides, never the cache. The PR step
 /// runs only when the issue carries `approved`, the report does not block,
 /// and the approval still covers the checked body. Its status goes into the
-/// comment text and the marker digest.
+/// comment text and the marker digest. The link check runs only with a
+/// `link_check`. Its section goes last in the comment and into the marker digest.
 pub(super) fn check_issue(
     client: &mut RepoClient<'_>,
     crates: &mut CratesIo<'_>,
     context: &RunContext<'_>,
     issue: &Issue,
     cached: Option<&IssueState>,
+    link_check: Option<&mut LinkCheck<'_>>,
 ) -> Result<Checked, IssueError> {
     let number = issue.number;
     let api = |source| IssueError::Api { number, source };
     let meta = issue_meta(issue)?;
-    let report = build_report(context, issue, &meta);
+    let (report, form) = build_report(context, issue, &meta);
     let body = Sha256::of(issue.body.as_bytes());
-    let previous = find_previous(client, context.slug, number, cached).map_err(api)?;
-    let stale = approval_stale(previous.as_ref(), &body, &issue.labels);
+    let found = find_previous(client, context.slug, number, cached).map_err(api)?;
+    let previous = found.as_ref().map(|found| &found.previous);
+    let stale = approval_stale(previous, &body, &issue.labels);
     let approved = issue.labels.iter().any(|label| label == APPROVED);
     let pr = if approved && !stale && !report.blocking {
         open_pr(client, crates, context, issue, &meta, body, report.blocking)?
@@ -80,22 +96,51 @@ pub(super) fn check_issue(
     }
     let refused = pr.note.is_some();
     notes.extend(pr.note);
+    let triaged = triage_issue(
+        link_check,
+        client,
+        form.as_ref(),
+        found.as_ref().map(|found| PreviousComment {
+            marker: &found.previous.marker,
+            text: &found.text,
+        }),
+        cached,
+        context.now,
+        number,
+    );
+    let section = posted_section(
+        &report,
+        pr.status.as_ref(),
+        &notes,
+        triaged.section.as_deref(),
+    );
+    let section = section.as_deref();
     let desired = Desired {
         marker: Marker {
             body,
-            report: report_digest(&report, pr.status.as_ref()),
+            report: report_digest(&report, pr.status.as_ref(), section),
             main: Some(context.main_sha.clone()),
+            triage: triaged.digest,
         },
         blocking: report.blocking,
         note: refused,
     };
-    let actions = plan(&desired, previous.as_ref(), &issue.labels);
+    let actions = plan(&desired, previous, &issue.labels);
     let mut changes = pr.changes;
+    if triaged.ran {
+        changes.push("links checked".to_owned());
+    }
     if actions.drop_approved {
         client.remove_label(number, APPROVED).map_err(api)?;
         changes.push(format!("removed {APPROVED}"));
     }
-    let text = comment_body(&desired.marker, &report, pr.status.as_ref(), &notes);
+    let text = comment_body(
+        &desired.marker,
+        &report,
+        pr.status.as_ref(),
+        &notes,
+        section,
+    );
     let comment_id = match (actions.comment, &previous) {
         (CommentAction::Skip, Some(found)) => found.comment_id,
         (CommentAction::Update(id), _) => {
@@ -133,8 +178,11 @@ pub(super) fn check_issue(
             body_sha256: desired.marker.body.to_string(),
             report_sha256: desired.marker.report.to_string(),
             main: desired.marker.main.as_ref().map(ToString::to_string),
+            triage_sha256: desired.marker.triage.as_ref().map(ToString::to_string),
+            triage_retry_after: triaged.retry_after,
         },
         summary,
+        warnings: triaged.warning.into_iter().collect(),
     })
 }
 
@@ -151,22 +199,29 @@ fn issue_meta(issue: &Issue) -> Result<IssueMeta, IssueError> {
     }
 }
 
-/// The check report of `issue`: the form check, or the label error when its
-/// labels name no form or several.
-fn build_report(context: &RunContext<'_>, issue: &Issue, meta: &IssueMeta) -> CheckReport {
+/// The check report of `issue` and its parsed form: the form check, or the
+/// label error when its labels name no form or several.
+///
+/// The form is `None` when the labels name no single form or the body does not parse.
+fn build_report(
+    context: &RunContext<'_>,
+    issue: &Issue,
+    meta: &IssueMeta,
+) -> (CheckReport, Option<Form>) {
     let kind = match FormKind::from_labels(issue.labels.iter().map(String::as_str)) {
         Ok(kind) => kind,
-        Err(error) => return label_report(&error),
+        Err(error) => return (label_report(&error), None),
     };
     let form = parse_form(kind, &issue.body);
-    check_submission(&CheckInput {
+    let report = check_submission(&CheckInput {
         main: context.main,
         kind,
         form: &form,
         meta,
         today: context.today,
         current_tier: entry_tier(&form, context.snapshot),
-    })
+    });
+    (report, form.ok())
 }
 
 /// The snapshot tier of the entry a judgment form names.
@@ -177,18 +232,21 @@ fn entry_tier(form: &Result<Form, Vec<FormError>>, snapshot: Option<&Snapshot>) 
     snapshot?.rows.get(&judgment.entry).map(|row| row.tier)
 }
 
-/// The marker of `comment` when the App bot wrote it on issue `number`.
+/// The marker and text of `comment` when the App bot wrote it on issue `number`.
 ///
 /// A comment by any other account, of any other type, or without a valid
 /// marker on its first line gives `None`. A forged marker never counts.
-fn bot_marker(comment: &Comment, slug: &str, number: u64) -> Option<Previous> {
+fn bot_marker(comment: &Comment, slug: &str, number: u64) -> Option<Found> {
     let author = comment.author.as_ref()?;
     if !author.is_app_bot(slug) || !comment.is_on_issue(number) {
         return None;
     }
-    Marker::of_comment(&comment.body).map(|marker| Previous {
-        comment_id: comment.id,
-        marker,
+    Marker::of_comment(&comment.body).map(|marker| Found {
+        previous: Previous {
+            comment_id: comment.id,
+            marker,
+        },
+        text: comment.body.clone(),
     })
 }
 
@@ -199,7 +257,7 @@ fn find_previous(
     slug: &str,
     number: u64,
     cached: Option<&IssueState>,
-) -> Result<Option<Previous>, ApiError> {
+) -> Result<Option<Found>, ApiError> {
     if let Some(cached) = cached
         && let Some(comment) = client.comment(cached.comment_id)?
         && let Some(found) = bot_marker(&comment, slug, number)
@@ -215,7 +273,7 @@ fn first_bot_comment(
     slug: &str,
     number: u64,
     skip: Option<u64>,
-) -> Result<Option<Previous>, ApiError> {
+) -> Result<Option<Found>, ApiError> {
     Ok(client
         .issue_comments(number)?
         .iter()
@@ -236,9 +294,9 @@ fn update_or_post(
         return Ok(id);
     }
     if let Some(other) = first_bot_comment(client, slug, number, Some(id))?
-        && client.update_comment(other.comment_id, text)? == CommentUpdate::Updated
+        && client.update_comment(other.previous.comment_id, text)? == CommentUpdate::Updated
     {
-        return Ok(other.comment_id);
+        return Ok(other.previous.comment_id);
     }
     client.create_comment(number, text)
 }

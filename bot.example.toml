@@ -28,3 +28,52 @@ private_key_path = "/etc/catalogue-bot/app.pem"
 # Optional. The directory for the bot lock and state cache.
 # Default: $STATE_DIRECTORY under systemd, else the user cache directory.
 # state_dir = "/var/lib/catalogue-bot"
+
+# Optional. The advisory LLM link check of the evidence links on submit and
+# judgment issues. Its result is a collapsed comment section only. No label,
+# tier or approval reads it. The bot host never fetches an evidence link:
+# GitHub pages come through the GitHub API, other pages through Ollama web_fetch.
+# Without this section the check is off. With it, `enabled` defaults to true.
+[triage]
+enabled = false
+# The links checked per issue. Later links show as not checked.
+max_links = 5
+# The seconds one model or web_fetch request waits for an answer.
+request_timeout_secs = 90
+# The attempts per model before the next model.
+max_attempts_per_model = 2
+# The seconds before a check that no model answered runs again.
+retry_after_secs = 3600
+
+# The providers, tried in order. Each model is tried in order within its provider.
+# Keys never go in this file. `api_key_env` names a variable, and the bot reads
+# it at the start of each run. Under systemd, set the variables in a file named
+# by `EnvironmentFile=` that only the bot user can read.
+# A provider whose variable is unset or empty is skipped with a warning.
+[[triage.providers]]
+name = "ollama"
+base_url = "https://ollama.com/v1"
+api_key_env = "OLLAMA_API_KEY"
+# Example model ids. Replace them with models your account can use.
+models = ["example-model-a", "example-model-b"]
+
+[[triage.providers]]
+name = "openrouter"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+# Example model id. Replace it with a model your account can use.
+models = ["example-org/example-model"]
+# Optional. Extra request headers. The bot sets Authorization, Content-Type,
+# Accept and User-Agent itself.
+[triage.providers.headers]
+X-Title = "ml-rust catalogue"
+# Optional. Extra request body fields. The bot sets model, messages,
+# response_format and stream itself.
+# [triage.providers.request]
+# provider = { sort = "latency" }
+
+# Optional. The web_fetch service for links outside GitHub. Without it, or with
+# its variable unset, those links show as not read.
+[triage.fetch]
+web_fetch_url = "https://ollama.com/api/web_fetch"
+api_key_env = "OLLAMA_API_KEY"

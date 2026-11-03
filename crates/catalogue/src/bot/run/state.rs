@@ -56,6 +56,14 @@ pub struct IssueState {
     pub report_sha256: String,
     /// The `main` commit the check read. `None` when unknown.
     pub main: Option<String>,
+    /// The digest of the claim, the links and the page sources the comment
+    /// marker records, in hex. `None` when the marker records none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub triage_sha256: Option<String>,
+    /// The unix second before which the link check of the issue does not run
+    /// again, after no model answered. `None` when the check is not waiting.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub triage_retry_after: Option<i64>,
 }
 
 /// The state file in its JSON form.
@@ -210,6 +218,8 @@ mod tests {
             body_sha256: "a".repeat(64),
             report_sha256: "b".repeat(64),
             main: None,
+            triage_sha256: None,
+            triage_retry_after: None,
         }
     }
 
@@ -231,6 +241,17 @@ mod tests {
         let (loaded, warning) = BotState::load(&path);
         assert_eq!(warning, None);
         assert_eq!(loaded, state);
+        assert!(!text.contains("triage"), "{text}");
+        state.insert(
+            14,
+            IssueState {
+                triage_sha256: Some("c".repeat(64)),
+                triage_retry_after: Some(1_800_000_000),
+                ..entry()
+            },
+        );
+        state.save(&path).expect("saves");
+        assert_eq!(BotState::load(&path), (state.clone(), None));
         state.retain(&BTreeSet::from([13]));
         assert!(state.get(12).is_none() && state.get(13).is_some());
     }

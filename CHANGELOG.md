@@ -26,4 +26,5 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue bot labels`: syncs the repo labels to `.github/labels.toml` as the GitHub App. It never deletes a label.
 - `catalogue bot run`: checks every open issue with a form label and keeps one bot comment and its label current.
 - `catalogue bot run`: opens a data PR for each approved issue.
+- `catalogue bot run`: adds an advisory LLM check of evidence links.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

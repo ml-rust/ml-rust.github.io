@@ -1,4 +1,4 @@
-//! The bot config file: the repo, the GitHub App and its private key.
+//! Reads the bot config file: the repo, the GitHub App, its private key and the link check.
 
 use std::ffi::OsString;
 use std::fs;
@@ -10,6 +10,8 @@ use catalogue_signals::github::{RepoRef, RepoRefError};
 use serde::Deserialize;
 use thiserror::Error;
 
+use super::triage::{RawTriage, TriageConfig, TriageConfigError};
+
 /// The environment variable that names the config file.
 pub const CONFIG_VAR: &str = "CATALOGUE_BOT_CONFIG";
 
@@ -17,7 +19,7 @@ pub const CONFIG_VAR: &str = "CATALOGUE_BOT_CONFIG";
 pub const DEFAULT_CONFIG: &str = "bot.toml";
 
 /// The bot config, with relative paths resolved against the config file's directory.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BotConfig {
     /// The repo the bot works on.
     pub repo: RepoRef,
@@ -29,6 +31,8 @@ pub struct BotConfig {
     pub private_key_path: PathBuf,
     /// The directory for bot state, when set.
     pub state_dir: Option<PathBuf>,
+    /// The advisory LLM link check. Off when the `[triage]` section is absent.
+    pub triage: TriageConfig,
 }
 
 /// A config file that cannot be used.
@@ -61,6 +65,14 @@ pub enum ConfigError {
         /// The rejected `owner/repo`.
         source: RepoRefError,
     },
+    /// A `[triage]` value cannot be used.
+    #[error("the bot config {}: {source}", .path.display())]
+    Triage {
+        /// The config file.
+        path: PathBuf,
+        /// The rejected field and the fix.
+        source: TriageConfigError,
+    },
 }
 
 #[derive(Deserialize)]
@@ -73,6 +85,8 @@ struct RawConfig {
     private_key_path: PathBuf,
     #[serde(default)]
     state_dir: Option<PathBuf>,
+    #[serde(default)]
+    triage: Option<RawTriage>,
 }
 
 /// The config path: `flag` when given, else a non-empty `env` value, else [`DEFAULT_CONFIG`].
@@ -89,11 +103,12 @@ pub fn config_path(flag: Option<&Path>, env: Option<OsString>) -> PathBuf {
 /// Reads and checks the config at `path`.
 ///
 /// The file holds no secret. It names the key file, and the key stays there.
+/// The `[triage]` section names key variables, and the run reads them.
 ///
 /// # Errors
 ///
 /// Returns a [`ConfigError`] when the file cannot be read, is not in the
-/// config shape, or names no valid repo.
+/// config shape, names no valid repo, or holds a `[triage]` value that cannot be used.
 pub fn load_config(path: &Path) -> Result<BotConfig, ConfigError> {
     let text = fs::read_to_string(path).map_err(|source| ConfigError::Read {
         path: path.to_path_buf(),
@@ -114,6 +129,13 @@ fn parse_config(path: &Path, text: &str) -> Result<BotConfig, ConfigError> {
             source,
         }
     })?;
+    let triage = match raw.triage {
+        Some(section) => section.check().map_err(|source| ConfigError::Triage {
+            path: path.to_path_buf(),
+            source,
+        })?,
+        None => TriageConfig::default(),
+    };
     let base = path.parent().unwrap_or(Path::new(""));
     Ok(BotConfig {
         repo,
@@ -121,6 +143,7 @@ fn parse_config(path: &Path, text: &str) -> Result<BotConfig, ConfigError> {
         installation_id: raw.installation_id,
         private_key_path: base.join(raw.private_key_path),
         state_dir: raw.state_dir.map(|dir| base.join(dir)),
+        triage,
     })
 }
 
@@ -128,7 +151,7 @@ fn parse_config(path: &Path, text: &str) -> Result<BotConfig, ConfigError> {
 mod tests {
     use super::*;
 
-    const EXAMPLE: &str = include_str!("../../../../bot.example.toml");
+    const EXAMPLE: &str = include_str!("../../../../../bot.example.toml");
 
     #[test]
     fn the_flag_wins_then_the_variable_then_the_default() {
@@ -152,6 +175,54 @@ mod tests {
         let config = parse_config(Path::new("bot.example.toml"), EXAMPLE).expect("parses");
         assert_eq!(config.repo.to_string(), "ml-rust/ml-rust.github.io");
         assert!(config.private_key_path.is_absolute());
+        let names: Vec<&str> = config
+            .triage
+            .providers
+            .iter()
+            .map(|provider| provider.name.as_str())
+            .collect();
+        assert_eq!(names, ["ollama", "openrouter"]);
+        assert!(!config.triage.enabled);
+        assert!(config.triage.fetch.is_some());
+    }
+
+    const BASE: &str = "owner = \"o\"\nrepo = \"r\"\napp_id = 1\ninstallation_id = 2\n\
+                        private_key_path = \"k\"\n";
+
+    #[test]
+    fn a_config_without_triage_turns_the_check_off() {
+        let config = parse_config(Path::new("bot.toml"), BASE).expect("parses");
+        assert_eq!(config.triage, TriageConfig::default());
+    }
+
+    #[test]
+    fn bad_triage_values_name_the_field() {
+        let provider = "[[triage.providers]]\nname = \"p\"\nbase_url = \"https://ollama.com/v1\"\n\
+                        api_key_env = \"P_KEY\"\nmodels = [\"m\"]\n";
+        for (text, needle) in [
+            (format!("{BASE}[triage]\nlimit = 3\n"), "limit"),
+            (
+                format!("{BASE}[triage]\n{provider}").replace("https://ollama", "http://ollama"),
+                "`triage.providers.base_url`",
+            ),
+            (
+                format!("{BASE}[triage]\n{provider}[triage.providers.request]\nmessages = []\n"),
+                "`triage.providers.request`",
+            ),
+            (
+                format!("{BASE}[triage]\n{provider}").replace("models = [\"m\"]\n", ""),
+                "models",
+            ),
+            (
+                format!("{BASE}[triage]\n{provider}").replace("[\"m\"]", "[]"),
+                "`triage.providers.models`",
+            ),
+        ] {
+            let error = parse_config(Path::new("bot.toml"), &text).expect_err(&text);
+            let message = error.to_string();
+            assert!(message.starts_with("the bot config bot.toml"), "{message}");
+            assert!(message.contains(needle), "{message}");
+        }
     }
 
     #[test]

@@ -11,5 +11,9 @@ mod labels;
 pub mod run;
 
 pub use command::{BotCommand, BotError, CheckArgs, bot_check, run_bot};
-pub use config::{BotConfig, CONFIG_VAR, ConfigError, DEFAULT_CONFIG, config_path, load_config};
+pub use config::{
+    BotConfig, CONFIG_VAR, ConfigError, DEFAULT_CONFIG, DEFAULT_MAX_ATTEMPTS_PER_MODEL,
+    DEFAULT_MAX_LINKS, DEFAULT_REQUEST_TIMEOUT_SECS, DEFAULT_RETRY_AFTER_SECS, FetchConfig,
+    ProviderConfig, TriageConfig, TriageConfigError, config_path, load_config,
+};
 pub use labels::{LabelsArgs, LabelsCommandError, LabelsReport, sync_labels};

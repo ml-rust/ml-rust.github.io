@@ -224,6 +224,7 @@ fn a_forged_marker_by_another_account_is_ignored() {
         body: Sha256::of(submit_body(false).as_bytes()),
         report: Sha256::of(b"anything"),
         main: None,
+        triage: None,
     }
     .render();
     let comments = json!([

@@ -283,15 +283,25 @@ pub fn comment_text(request: &Recorded) -> String {
 /// Asserts that every request sent the catalogue `User-Agent`, that every
 /// GitHub request sent a redacted token, and that no other request sent one.
 pub fn assert_redacted(transport: &ScriptedTransport) {
+    assert_redacted_for(transport, &[], &[]);
+}
+
+/// Asserts what [`assert_redacted`] asserts, except that a request to a URL
+/// under one of `keyed` also sends a redacted key. No request shows the
+/// token or any of `secrets`.
+pub fn assert_redacted_for(transport: &ScriptedTransport, keyed: &[&str], secrets: &[&str]) {
     let requests = transport.requests();
     assert!(!requests.is_empty());
     for request in requests {
         assert_eq!(request.header("User-Agent"), Some(USER_AGENT));
-        let expected = request
-            .url
-            .starts_with("https://api.github.com/")
+        let expected = std::iter::once("https://api.github.com/")
+            .chain(keyed.iter().copied())
+            .any(|prefix| request.url.starts_with(prefix))
             .then_some(REDACTED);
         assert_eq!(request.header("Authorization"), expected, "{}", request.url);
-        assert!(!format!("{request:?}").contains(TOKEN), "{request:?}");
+        let shown = format!("{request:?}");
+        for secret in std::iter::once(TOKEN).chain(secrets.iter().copied()) {
+            assert!(!shown.contains(secret), "{shown}");
+        }
     }
 }

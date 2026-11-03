@@ -68,7 +68,9 @@ impl LabelsCommandError {
     /// The process exit code: 1 for a file or key to fix, 2 for a read or network error.
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Config(ConfigError::Parse { .. } | ConfigError::Repo { .. })
+            Self::Config(
+                ConfigError::Parse { .. } | ConfigError::Repo { .. } | ConfigError::Triage { .. },
+            )
             | Self::LabelsFile { .. }
             | Self::Key(KeyError::Exposed { .. } | KeyError::NotRsaKey { .. }) => INVALID,
             Self::Config(ConfigError::Read { .. })
