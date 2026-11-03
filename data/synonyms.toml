@@ -1,0 +1,66 @@
+# Search synonyms.
+#
+# Each group lists terms that mean the same thing. When an entry's name,
+# topics or description holds one term of a group, the search index adds the
+# other terms of that group to the entry, so a query for any of them finds it.
+#
+# A group holds only true synonyms and abbreviations. A human reviews every group.
+# Terms are lowercase and trimmed. A group has at least two terms.
+# No term appears in two groups.
+
+[[group]]
+terms = ["ml", "machine learning"]
+
+[[group]]
+terms = ["llm", "large language model"]
+
+[[group]]
+terms = ["nlp", "natural language processing"]
+
+[[group]]
+terms = ["cv", "computer vision"]
+
+[[group]]
+terms = ["rl", "reinforcement learning"]
+
+[[group]]
+terms = ["gbdt", "gradient boosted decision trees", "gradient boosted trees"]
+
+[[group]]
+terms = ["svm", "support vector machine"]
+
+[[group]]
+terms = ["knn", "k-nearest neighbors", "k-nearest neighbours"]
+
+[[group]]
+terms = ["cnn", "convolutional neural network"]
+
+[[group]]
+terms = ["rnn", "recurrent neural network"]
+
+[[group]]
+terms = ["gnn", "graph neural network"]
+
+[[group]]
+terms = ["onnx", "open neural network exchange"]
+
+[[group]]
+terms = ["ndarray", "n-dimensional array"]
+
+[[group]]
+terms = ["autodiff", "automatic differentiation"]
+
+[[group]]
+terms = ["asr", "automatic speech recognition", "speech recognition", "speech to text"]
+
+[[group]]
+terms = ["tts", "text to speech", "speech synthesis"]
+
+[[group]]
+terms = ["ocr", "optical character recognition"]
+
+[[group]]
+terms = ["rag", "retrieval augmented generation"]
+
+[[group]]
+terms = ["gpu", "graphics processing unit"]

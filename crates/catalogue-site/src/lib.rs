@@ -5,7 +5,8 @@
 //! an optional [`catalogue_core::TierReport`] and the tier changes in
 //! [`SiteInputs`]. It returns every page and asset as an [`OutputFile`]:
 //! the home page, the topic list, one page per topic and per entry, the tier
-//! changes, the rules, the submit page and the not-found page.
+//! changes, the rules, the submit page, the not-found page and the search
+//! index under [`SEARCH_DIR`]. [`search_records`] gives one search record per entry.
 //! Without a report, no page shows a tier.
 //!
 //! Templates escape every value. [`SafeHref`] carries every link built from data.
@@ -18,6 +19,7 @@ mod href;
 mod inputs;
 mod pages;
 mod refusal;
+mod search;
 
 pub use build::{OutputFile, build_site};
 pub use error::SiteError;
@@ -25,3 +27,4 @@ pub use forms::{ISSUE_FORMS, IssueForm};
 pub use href::SafeHref;
 pub use inputs::{SiteInputs, TierChangeRow};
 pub use pages::SITE_NAME;
+pub use search::{NO_TIER_BOOST, SEARCH_DIR, TIER_BOOSTS, search_records};

@@ -1,0 +1,5 @@
+# Copy to `.cargo/config.toml` and set the path to your oxidoc checkout.
+# A relative path starts at the repository root.
+# Needed until oxidoc-search is published on crates.io.
+[patch.crates-io]
+oxidoc-search = { path = "../oxidoc/oxidoc/oxidoc-search" }

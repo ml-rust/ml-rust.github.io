@@ -10,6 +10,7 @@ use crate::pages::{
     TopicPage, TopicsPage, project_file, topic_file,
 };
 use crate::refusal;
+use crate::search::{search_files, search_records};
 
 /// One file of the built site.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,15 +21,16 @@ pub struct OutputFile {
     pub bytes: Vec<u8>,
 }
 
-/// Builds every page and asset of the site, sorted by path.
+/// Builds every page, asset and search index file of the site, sorted by path.
 ///
 /// The refusal checks run before any page renders. Without a report, no page
-/// shows a tier.
+/// shows a tier and the search index holds no tier.
 ///
 /// # Errors
 ///
-/// Returns the first refusal from the checks on `inputs`, or
-/// [`SiteError::Render`] when a template fails.
+/// Returns the first refusal from the checks on `inputs`. Returns
+/// [`SiteError::Render`] when a template fails, and [`SiteError::Search`] when
+/// the search index fails to encode.
 pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError> {
     refusal::check(inputs)?;
     let stylesheet = Stylesheet::site();
@@ -69,6 +71,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             files.push(render(project_file(slug), &page)?);
         }
     }
+    files.extend(search_files(&search_records(catalogue, report))?);
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
 }

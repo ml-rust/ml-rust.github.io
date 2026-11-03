@@ -17,6 +17,6 @@ pub(crate) use layout::{Layout, NavItem};
 pub(crate) use not_found::NotFoundPage;
 pub(crate) use project::ProjectPage;
 pub(crate) use rules::RulesPage;
-pub(crate) use shared::{project_file, topic_file};
+pub(crate) use shared::{project_file, project_href, topic_file, topic_link};
 pub(crate) use submit::SubmitPage;
 pub(crate) use topics::{TopicPage, TopicsPage};

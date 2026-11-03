@@ -44,6 +44,20 @@ org_member = false
 since = 2026-02-01
 "#;
 
+/// Two groups that Beta matches, one that Delta matches, and one that no entry matches.
+const SYNONYMS: &str = r#"[[group]]
+terms = ["ml", "machine learning"]
+
+[[group]]
+terms = ["cli", "command line", "command-line interface"]
+
+[[group]]
+terms = ["autodiff", "automatic differentiation"]
+
+[[group]]
+terms = ["ocr", "optical character recognition"]
+"#;
+
 /// A library with two crates and a homepage, described by its crate.
 const ALPHA: &str = r#"name = "Alpha"
 kind = "library"
@@ -174,6 +188,7 @@ pub fn files() -> Vec<(String, String)> {
     [
         ("topics.toml", TOPICS),
         ("maintainers.toml", MAINTAINERS),
+        ("synonyms.toml", SYNONYMS),
         ("entries/alpha.toml", ALPHA),
         ("entries/beta.toml", BETA),
         ("entries/gamma.toml", GAMMA),
@@ -193,9 +208,13 @@ pub fn files() -> Vec<(String, String)> {
 ///
 /// `tiered` adds the tier report. The tier changes go in either way.
 pub fn site(files: &[(String, String)], tiered: bool) -> BTreeMap<String, String> {
-    let catalogue = load(files);
-    let report = report();
+    let (catalogue, report) = data(files);
     render(&catalogue, tiered.then_some(&report), &changes())
+}
+
+/// The checked catalogue of `files` with calibrated thresholds, and the tier report over it.
+pub fn data(files: &[(String, String)]) -> (Catalogue, TierReport) {
+    (load(files), report())
 }
 
 /// The checked catalogue of `files`, with a thresholds file calibrated on 2026-11-03.
@@ -215,6 +234,8 @@ fn load(files: &[(String, String)]) -> Catalogue {
             sources.topics = Some(file);
         } else if path == "maintainers.toml" {
             sources.maintainers = Some(file);
+        } else if path == "synonyms.toml" {
+            sources.synonyms = Some(file);
         } else {
             panic!("the fixture has no place for {path}");
         }

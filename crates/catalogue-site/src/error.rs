@@ -39,6 +39,9 @@ pub enum SiteError {
     /// The report and the catalogue hold different slugs.
     #[error(transparent)]
     ReportMismatch(#[from] ReportMismatch),
+    /// The search index failed to encode.
+    #[error("encoding the search index failed: {0}")]
+    Search(#[source] oxidoc_search::SearchError),
     /// A template failed to render.
     #[error("rendering {path} failed: {source}")]
     Render {

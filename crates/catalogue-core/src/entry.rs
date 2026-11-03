@@ -21,6 +21,16 @@ pub enum EntryKind {
     App,
 }
 
+impl EntryKind {
+    /// The lowercase name used in data files.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Library => "library",
+            Self::App => "app",
+        }
+    }
+}
+
 /// Where a description comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -177,6 +187,16 @@ mod tests {
 
     fn has(problems: &[String], needle: &str) -> bool {
         problems.iter().any(|p| p.contains(needle))
+    }
+
+    #[test]
+    fn kind_names_match_the_data_files() {
+        for kind in [EntryKind::Library, EntryKind::App] {
+            let text = format!("kind = \"{}\"", kind.as_str());
+            let parsed: toml::Table = toml::from_str(&text).expect("toml");
+            let value = parsed.get("kind").cloned().expect("kind");
+            assert_eq!(value.try_into::<EntryKind>().expect("kind"), kind);
+        }
     }
 
     #[test]
