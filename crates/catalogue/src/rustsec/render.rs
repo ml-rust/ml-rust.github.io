@@ -3,6 +3,8 @@
 use catalogue_signals::rustsec::Advisories;
 use jiff::civil;
 
+use crate::render::{NONE, or_none};
+
 /// The block of lines `rustsec show` prints for crate `name`.
 ///
 /// The first line is `name`. Each advisory follows as
@@ -16,9 +18,7 @@ pub fn render_crate(
 ) -> String {
     let mut lines = vec![name.to_owned()];
     for advisory in advisories.for_crate(name) {
-        let withdrawn = advisory
-            .withdrawn
-            .map_or_else(|| "-".to_owned(), |date| date.to_string());
+        let withdrawn = or_none(advisory.withdrawn);
         lines.push(format!(
             "{}\t{}\t{}\twithdrawn:{withdrawn}\tpatched:{}",
             advisory.id,
@@ -29,7 +29,7 @@ pub fn render_crate(
     }
     let unmaintained = advisories
         .unmaintained(name)
-        .map_or("-", |advisory| advisory.id.as_str());
+        .map_or(NONE, |advisory| advisory.id.as_str());
     lines.push(format!("unmaintained: {unmaintained}"));
     let unpatched: Vec<&str> = advisories
         .unpatched_vulnerabilities(name, today, min_age_days)
@@ -37,7 +37,7 @@ pub fn render_crate(
         .map(|advisory| advisory.id.as_str())
         .collect();
     let unpatched = if unpatched.is_empty() {
-        "-".to_owned()
+        NONE.to_owned()
     } else {
         unpatched.join(", ")
     };

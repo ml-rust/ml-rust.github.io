@@ -3,9 +3,9 @@
 use std::process::ExitCode;
 
 use catalogue_signals::github::{
-    GITHUB_INTERVAL, GithubError, Pacer, RepoFacts, RepoRef, RepoRefError, repo_facts,
+    GITHUB_INTERVAL, GithubError, RepoFacts, RepoRef, RepoRefError, repo_facts,
 };
-use catalogue_signals::http::{Headers, IntervalPacer, ReqwestTransport};
+use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use clap::Subcommand;
 use jiff::Timestamp;
 use jiff::civil::Date;
@@ -13,6 +13,7 @@ use jiff::tz::TimeZone;
 use thiserror::Error;
 
 use super::render::render_all;
+use crate::batch;
 use crate::exit::{INVALID, IO};
 use crate::token::{NoToken, token_from_env};
 
@@ -93,14 +94,10 @@ fn facts(
     let today = today.unwrap_or_else(|| Timestamp::now().to_zoned(TimeZone::UTC).date());
     let transport = ReqwestTransport::new().map_err(GithubError::from)?;
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
-    let mut results: Vec<(RepoRef, RepoFacts)> = Vec::with_capacity(repos.len());
-    for (index, repo) in repos.into_iter().enumerate() {
-        if index > 0 {
-            pacer.wait(&Headers::default());
-        }
-        let found = repo_facts(&transport, &token, &repo, today, &mut pacer)?;
-        results.push((repo, found));
-    }
+    let found: Vec<RepoFacts> = batch::each(&repos, &mut pacer, |repo, pacer| {
+        repo_facts(&transport, &token, repo, today, pacer)
+    })?;
+    let results: Vec<(RepoRef, RepoFacts)> = repos.into_iter().zip(found).collect();
     Ok(render_all(&results))
 }
 

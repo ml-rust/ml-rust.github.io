@@ -15,4 +15,5 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue github facts`: repo state, human commits and maintainer response.
 - `catalogue rustsec fetch` and `rustsec show`: RustSec advisories per crate.
 - `catalogue ecosystems crates`: ecosyste.ms dependents per crate.
+- `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

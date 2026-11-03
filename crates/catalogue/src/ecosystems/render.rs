@@ -2,8 +2,7 @@
 
 use catalogue_signals::ecosystems::CrateDependents;
 
-/// The value printed for a crate that ecosyste.ms does not know.
-const NONE: &str = "-";
+use crate::render::NONE;
 
 /// The `key: value` lines of one crate, with no trailing newline.
 ///

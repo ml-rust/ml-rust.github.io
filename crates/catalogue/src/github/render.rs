@@ -4,13 +4,7 @@ use catalogue_signals::github::{CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoRe
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
-/// The value printed for a fact that does not exist.
-const NONE: &str = "-";
-
-/// The value of an optional fact, or [`NONE`].
-fn or_none<T: ToString>(value: Option<T>) -> String {
-    value.map_or_else(|| NONE.to_owned(), |value| value.to_string())
-}
+use crate::render::{NONE, or_none};
 
 /// The UTC date of a timestamp, as `YYYY-MM-DD`.
 fn day(when: Timestamp) -> String {

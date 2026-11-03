@@ -5,11 +5,12 @@ use std::process::ExitCode;
 use catalogue_signals::ecosystems::{
     CrateDependents, ECOSYSTEMS_INTERVAL, EcosystemsError, crate_dependents,
 };
-use catalogue_signals::http::{Headers, IntervalPacer, Pacer, ReqwestTransport};
+use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use clap::Subcommand;
 use thiserror::Error;
 
 use super::render::render_all;
+use crate::batch;
 use crate::exit::{INVALID, IO};
 
 /// The `catalogue ecosystems` actions.
@@ -71,14 +72,11 @@ fn crates(names: &[String]) -> Result<String, EcosystemsCommandError> {
     }
     let transport = ReqwestTransport::new().map_err(EcosystemsError::from)?;
     let mut pacer = IntervalPacer::new(ECOSYSTEMS_INTERVAL);
-    let mut results: Vec<(String, Option<CrateDependents>)> = Vec::with_capacity(names.len());
-    for (index, name) in names.iter().enumerate() {
-        if index > 0 {
-            pacer.wait(&Headers::default());
-        }
-        let found = crate_dependents(&transport, name, &mut pacer)?;
-        results.push((name.clone(), found));
-    }
+    let found: Vec<Option<CrateDependents>> = batch::each(names, &mut pacer, |name, pacer| {
+        crate_dependents(&transport, name, pacer)
+    })?;
+    let results: Vec<(String, Option<CrateDependents>)> =
+        names.iter().cloned().zip(found).collect();
     Ok(render_all(&results))
 }
 

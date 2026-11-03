@@ -4,6 +4,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 use crate::discover::{DiscoverCommand, run_discover};
+use crate::distribution::{DistributionCommand, run_distribution};
 use crate::dump::{DumpCommand, run_dump};
 use crate::ecosystems::{EcosystemsCommand, run_ecosystems};
 use crate::exit::{INVALID, IO};
@@ -41,6 +42,12 @@ pub enum Command {
         #[command(subcommand)]
         command: DiscoverCommand,
     },
+    /// Read release, Homebrew, Docker Hub and Repology counts for apps.
+    Distribution {
+        /// The distribution action to run.
+        #[command(subcommand)]
+        command: DistributionCommand,
+    },
     /// Read dependent counts from ecosyste.ms.
     Ecosystems {
         /// The ecosystems action to run.
@@ -69,6 +76,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Validate { data } => run_validate(&data),
         Command::Dump { command } => run_dump(command),
         Command::Discover { command } => run_discover(command),
+        Command::Distribution { command } => run_distribution(command),
         Command::Ecosystems { command } => run_ecosystems(command),
         Command::Github { command } => run_github(command),
         Command::Rustsec { command } => run_rustsec(command),

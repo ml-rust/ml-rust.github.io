@@ -1,13 +1,16 @@
 //! Command line front end for the ml-rust catalogue data files.
 
+mod batch;
 pub mod cache_dir;
 pub mod cli;
 pub mod data_dir;
 pub mod discover;
+pub mod distribution;
 pub mod dump;
 pub mod ecosystems;
 mod exit;
 pub mod github;
+mod render;
 pub mod rustsec;
 mod token;
 pub mod usage;
@@ -19,6 +22,10 @@ pub use data_dir::{DataDir, DataDirError, read_data_dir};
 pub use discover::{
     DiscoverCommand, DiscoverError, GithubReport, Report, build_github_report, build_report,
     run_discover,
+};
+pub use distribution::{
+    DistributionCommand, DistributionCommandError, render_docker, render_homebrew, render_releases,
+    render_repology, run_distribution,
 };
 pub use dump::{DumpCommand, DumpCommandError, render_outcome, render_stats, run_dump};
 pub use ecosystems::{EcosystemsCommand, EcosystemsCommandError, run_ecosystems};
