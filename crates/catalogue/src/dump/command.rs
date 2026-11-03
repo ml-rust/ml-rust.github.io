@@ -110,7 +110,10 @@ pub(crate) fn read_cached(path: &Path, window_days: u16) -> Result<DumpSnapshot,
 
 #[cfg(test)]
 mod tests {
+    use clap::Parser;
+
     use super::*;
+    use crate::cli::{Cli, Command};
     use crate::exit::IO;
 
     #[test]
@@ -120,5 +123,67 @@ mod tests {
         assert!(message.contains("/nonexistent/db-dump.tar.gz"), "{message}");
         assert!(message.contains("catalogue dump fetch"), "{message}");
         assert_eq!(error.exit_code(), IO);
+    }
+
+    #[test]
+    fn dump_fetch_takes_an_optional_cache_dir() {
+        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch"]).expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected dump fetch");
+        };
+        assert_eq!(cache_dir, None);
+        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch", "--cache-dir", "c"])
+            .expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected dump fetch");
+        };
+        assert_eq!(cache_dir, Some(PathBuf::from("c")));
+    }
+
+    #[test]
+    fn dump_stats_window_defaults_to_90_days() {
+        let cli = Cli::try_parse_from(["catalogue", "dump", "stats"]).expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Stats { window_days, .. },
+        } = cli.command
+        else {
+            panic!("expected dump stats");
+        };
+        assert_eq!(window_days, 90);
+        let cli = Cli::try_parse_from(["catalogue", "dump", "stats", "--window-days", "30"])
+            .expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Stats { window_days, .. },
+        } = cli.command
+        else {
+            panic!("expected dump stats");
+        };
+        assert_eq!(window_days, 30);
+    }
+
+    #[test]
+    fn dump_usage_takes_crate_names() {
+        let cli =
+            Cli::try_parse_from(["catalogue", "dump", "usage", "numr", "blazr"]).expect("parses");
+        let Command::Dump {
+            command:
+                DumpCommand::Usage {
+                    names,
+                    cache_dir,
+                    window_days,
+                },
+        } = cli.command
+        else {
+            panic!("expected dump usage");
+        };
+        assert_eq!(names, ["numr", "blazr"]);
+        assert_eq!((cache_dir, window_days), (None, 90));
+        assert!(Cli::try_parse_from(["catalogue", "dump", "usage"]).is_err());
     }
 }

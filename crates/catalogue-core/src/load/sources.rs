@@ -26,4 +26,6 @@ pub struct DataSources {
     pub discovery: Option<SourceFile>,
     /// `data/thresholds.toml`.
     pub thresholds: Option<SourceFile>,
+    /// `data/deprecated.toml`.
+    pub deprecated: Option<SourceFile>,
 }

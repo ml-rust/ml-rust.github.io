@@ -1,0 +1,25 @@
+//! The inputs every library entry shares on one check.
+
+use catalogue_core::{Deprecated, Thresholds};
+
+use super::index::CrateIndex;
+use crate::dump::{DumpSnapshot, IdMap};
+use crate::rustsec::Advisories;
+use crate::usage::Usage;
+
+/// The inputs every library entry shares on one check.
+#[derive(Debug, Clone, Copy)]
+pub struct LibrarySources<'a> {
+    /// The crates.io dump.
+    pub dump: &'a DumpSnapshot,
+    /// The name and version index of `dump`.
+    pub index: &'a CrateIndex,
+    /// Adoption signals by crate id, from one [`usage::compute`](crate::usage::compute) call.
+    pub usage: &'a IdMap<Usage>,
+    /// The RustSec advisories.
+    pub advisories: &'a Advisories,
+    /// The deprecated requirements list.
+    pub deprecated: &'a Deprecated,
+    /// The published thresholds. Supplies the advisory grace window.
+    pub thresholds: &'a Thresholds,
+}

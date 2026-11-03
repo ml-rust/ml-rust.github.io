@@ -22,7 +22,7 @@ const CRATES: &[&str; 8] = &[
 
 const DELETED: &[&str; 2] = &["name", "deleted_at"];
 
-/// Reads `crates`. The README feeds the deprecation scan and is then dropped.
+/// Reads `crates`. The README feeds the deprecation scan and `has_readme`, then is dropped.
 pub(crate) fn read_crates(input: impl Read) -> Result<IdMap<CrateRow>, DumpError> {
     let mut out = IdMap::default();
     for_each_row(
@@ -50,6 +50,7 @@ pub(crate) fn read_crates(input: impl Read) -> Result<IdMap<CrateRow>, DumpError
                 homepage: row.optional_string(homepage)?,
                 repository: row.optional_string(repository)?,
                 deprecation: deprecation::scan(description, readme),
+                has_readme: readme.is_some_and(|text| !text.trim().is_empty()),
             };
             out.insert(row.id(id)?, crate_row);
             Ok(())
@@ -102,7 +103,9 @@ mod tests {
         let notice = foo.deprecation.as_ref().expect("readme notice");
         assert_eq!(notice.field, Field::Readme);
         assert_eq!(notice.phrase, "This crate is deprecated, \"really\".");
+        assert!(foo.has_readme);
         let bar = crates.get(&2).expect("bar");
+        assert!(!bar.has_readme);
         assert_eq!(bar.repository.as_deref(), Some("https://github.com/x/bar"));
         let notice = bar.deprecation.as_ref().expect("description notice");
         assert_eq!(notice.field, Field::Description);
@@ -114,6 +117,15 @@ mod tests {
             3,baz,2026-01-01 00:00:00+00,2026-01-01 00:00:00+00,Tensors,,,\"# baz\"\n";
         let crates = read_crates(csv.as_bytes()).expect("reads");
         assert_eq!(crates.get(&3).and_then(|c| c.deprecation.as_ref()), None);
+        assert_eq!(crates.get(&3).map(|c| c.has_readme), Some(true));
+    }
+
+    #[test]
+    fn blank_readme_is_no_readme() {
+        let csv = "id,name,created_at,updated_at,description,homepage,repository,readme\n\
+            4,qux,2026-01-01 00:00:00+00,2026-01-01 00:00:00+00,,,,\"  \n \"\n";
+        let crates = read_crates(csv.as_bytes()).expect("reads");
+        assert_eq!(crates.get(&4).map(|c| c.has_readme), Some(false));
     }
 
     #[test]

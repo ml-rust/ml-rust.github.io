@@ -59,7 +59,7 @@ pub struct DumpMeta {
     pub directory: String,
 }
 
-/// One row of the `crates` table, without the README.
+/// One row of the `crates` table, without the README text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CrateRow {
     /// The crate name.
@@ -76,6 +76,8 @@ pub struct CrateRow {
     pub repository: Option<String>,
     /// The deprecation notice found in the description or README.
     pub deprecation: Option<DeprecationNotice>,
+    /// Whether the crate publishes a README with text other than whitespace.
+    pub has_readme: bool,
 }
 
 /// One row of the `versions` table.

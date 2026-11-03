@@ -1,0 +1,11 @@
+# Deprecated requirements. Each row names a requirement on a crate that the
+# crate's own authors deprecated. Every row carries a `source` link to that
+# statement. No row is added without one.
+#
+# A requirement on `crate` is deprecated when it allows no version at or above
+# `below`. A `below` of 999999.0.0 marks the whole crate as deprecated.
+# The tier rules count a deprecated requirement in a library's default
+# version as a rot signal. Rule text: crates/catalogue-core/src/registry/deprecated/.
+# RustSec unmaintained advisories add requirements automatically. They need no row.
+
+requirement = []

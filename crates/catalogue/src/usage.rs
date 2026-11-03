@@ -107,6 +107,7 @@ mod tests {
                     homepage: None,
                     repository: None,
                     deprecation: None,
+                    has_readme: false,
                 };
                 (id, row)
             })

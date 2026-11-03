@@ -25,6 +25,7 @@ fn valid_set_reads_files_sorted_by_name() {
     assert!(data.sources.synonyms.is_some());
     assert!(data.sources.discovery.is_some());
     assert!(data.sources.thresholds.is_some());
+    assert!(data.sources.deprecated.is_some());
 }
 
 #[test]
@@ -110,6 +111,11 @@ fn thresholds_rule_break_is_reported() {
         "thresholds.toml: rot.lost_glory_below = 1.5 must be a share in [0, 1]",
         1,
     );
+}
+
+#[test]
+fn deprecated_rule_breaks_are_reported() {
+    expect_invalid("deprecated-invalid", "deprecated.toml: requirement 2: ", 3);
 }
 
 #[test]

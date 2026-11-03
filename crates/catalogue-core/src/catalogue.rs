@@ -4,20 +4,21 @@ use crate::entry::Entry;
 use crate::ids::Slug;
 use crate::judgment::Judgment;
 use crate::load::{self, DataSources, Diagnostics};
-use crate::registry::{Discovery, Maintainer, SynonymGroup, Thresholds, Topic};
+use crate::registry::{Deprecated, Discovery, Maintainer, SynonymGroup, Thresholds, Topic};
 
 /// A checked data set.
 ///
 /// Every cross-file rule holds for a value of this type.
 #[derive(Debug, Clone)]
 pub struct Catalogue {
-    entries: BTreeMap<Slug, Entry>,
-    judgments: BTreeMap<u64, Judgment>,
-    topics: Vec<Topic>,
-    maintainers: Vec<Maintainer>,
-    synonyms: Vec<SynonymGroup>,
-    discovery: Option<Discovery>,
-    thresholds: Option<Thresholds>,
+    pub(crate) entries: BTreeMap<Slug, Entry>,
+    pub(crate) judgments: BTreeMap<u64, Judgment>,
+    pub(crate) topics: Vec<Topic>,
+    pub(crate) maintainers: Vec<Maintainer>,
+    pub(crate) synonyms: Vec<SynonymGroup>,
+    pub(crate) discovery: Option<Discovery>,
+    pub(crate) thresholds: Option<Thresholds>,
+    pub(crate) deprecated: Option<Deprecated>,
 }
 
 impl Catalogue {
@@ -26,26 +27,6 @@ impl Catalogue {
     /// On failure the result lists every error found, not only the first.
     pub fn load(sources: DataSources) -> Result<Self, Diagnostics> {
         load::load(sources)
-    }
-
-    pub(crate) fn new(
-        entries: BTreeMap<Slug, Entry>,
-        judgments: BTreeMap<u64, Judgment>,
-        topics: Vec<Topic>,
-        maintainers: Vec<Maintainer>,
-        synonyms: Vec<SynonymGroup>,
-        discovery: Option<Discovery>,
-        thresholds: Option<Thresholds>,
-    ) -> Self {
-        Self {
-            entries,
-            judgments,
-            topics,
-            maintainers,
-            synonyms,
-            discovery,
-            thresholds,
-        }
     }
 
     /// Entries keyed by slug, in sorted slug order.
@@ -87,6 +68,11 @@ impl Catalogue {
     pub fn thresholds(&self) -> Option<&Thresholds> {
         self.thresholds.as_ref()
     }
+
+    /// The deprecated requirements, or `None` when `deprecated.toml` is absent.
+    pub fn deprecated(&self) -> Option<&Deprecated> {
+        self.deprecated.as_ref()
+    }
 }
 
 #[cfg(test)]
@@ -108,6 +94,7 @@ mod tests {
         assert_eq!(catalogue.synonyms().len(), 1);
         assert!(catalogue.discovery().is_none());
         assert!(catalogue.thresholds().is_none());
+        assert!(catalogue.deprecated().is_none());
         let alpha = Slug::new("alpha").expect("slug");
         assert!(catalogue.entry(&alpha).is_some());
     }

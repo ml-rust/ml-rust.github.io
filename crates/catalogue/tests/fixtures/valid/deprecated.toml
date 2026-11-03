@@ -1,0 +1,5 @@
+[[requirement]]
+crate = "tokio"
+below = "1.0.0"
+reason = "Releases before 1.0 are no longer supported."
+source = "https://example.com/tokio-deprecation"

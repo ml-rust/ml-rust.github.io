@@ -144,8 +144,11 @@ pub fn build_github_report(
 #[cfg(test)]
 mod tests {
     use catalogue_signals::github::FoundRepo;
+    use clap::Parser;
 
     use super::*;
+    use crate::cli::{Cli, Command};
+    use crate::discover::DiscoverCommand;
 
     fn found(name: &str, stars: u32, pushed: &str, topics: &[&str]) -> FoundRepo {
         FoundRepo {
@@ -220,5 +223,37 @@ mod tests {
     fn no_leads_print_only_the_header() {
         let report = build_github_report(&GithubFound::default(), &HashSet::new(), &HashMap::new());
         assert_eq!(report.text, "github leads: 0");
+    }
+
+    #[test]
+    fn discover_github_has_defaults_and_takes_options() {
+        let cli = Cli::try_parse_from(["catalogue", "discover", "github"]).expect("parses");
+        let Command::Discover {
+            command: DiscoverCommand::Github { data, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected discover github");
+        };
+        assert_eq!((data, cache_dir), (PathBuf::from("data"), None));
+        let cli = Cli::try_parse_from([
+            "catalogue",
+            "discover",
+            "github",
+            "--data",
+            "d",
+            "--cache-dir",
+            "c",
+        ])
+        .expect("parses");
+        let Command::Discover {
+            command: DiscoverCommand::Github { data, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected discover github");
+        };
+        assert_eq!(
+            (data, cache_dir),
+            (PathBuf::from("d"), Some(PathBuf::from("c")))
+        );
     }
 }

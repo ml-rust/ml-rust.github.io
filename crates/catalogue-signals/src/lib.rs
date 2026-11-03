@@ -6,10 +6,12 @@
 //! candidate crates from it. [`github`] searches GitHub for candidate repos.
 //! [`ecosystems`] reads dependent counts from ecosyste.ms. [`distribution`]
 //! reads release, Homebrew, Docker Hub and Repology counts for apps.
-//! [`rustsec`] reads the advisory archive.
+//! [`rustsec`] reads the advisory archive. [`assemble`] turns all of them
+//! into the tier signals of one entry.
 
 mod agent;
 mod archive;
+pub mod assemble;
 pub mod discover;
 pub mod distribution;
 pub mod dump;

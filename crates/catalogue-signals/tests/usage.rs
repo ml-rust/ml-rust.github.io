@@ -29,6 +29,7 @@ fn crate_row(name: &str) -> CrateRow {
         homepage: None,
         repository: None,
         deprecation: None,
+        has_readme: false,
     }
 }
 

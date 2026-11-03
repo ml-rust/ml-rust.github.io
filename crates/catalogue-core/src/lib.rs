@@ -28,8 +28,9 @@ pub use ids::{
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use registry::{
-    AppFeaturedThresholds, Discovery, DormancyThresholds, FinishedThresholds, IntervalThresholds,
-    LibraryFeaturedThresholds, Maintainer, Maintainers, NewThresholds, RotThresholds, SynonymGroup,
-    Synonyms, Thresholds, Topic, TopicSummary, Topics,
+    AppFeaturedThresholds, Deprecated, DeprecatedRequirement, Discovery, DormancyThresholds,
+    FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers,
+    NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic,
+    TopicSummary, Topics,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

@@ -83,7 +83,7 @@ fn today() -> civil::Date {
 }
 
 /// Reads the archive file at `path`.
-fn read_cached(path: &Path) -> Result<Advisories, RustsecCommandError> {
+pub(crate) fn read_cached(path: &Path) -> Result<Advisories, RustsecCommandError> {
     let file = File::open(path).map_err(|source| {
         if source.kind() == io::ErrorKind::NotFound {
             RustsecCommandError::Missing {
@@ -106,9 +106,11 @@ fn read_cached(path: &Path) -> Result<Advisories, RustsecCommandError> {
 
 #[cfg(test)]
 mod tests {
+    use clap::Parser;
     use jiff::civil::date;
 
     use super::*;
+    use crate::cli::{Cli, Command};
     use crate::exit::IO;
 
     #[test]
@@ -129,5 +131,31 @@ mod tests {
         let text = show(&Advisories::default(), &names, date(2026, 11, 3));
         assert_eq!(text.matches("\n\n").count(), 1);
         assert!(text.starts_with("a\n") && text.contains("\n\nb\n"));
+    }
+
+    #[test]
+    fn rustsec_fetch_and_show_take_an_optional_cache_dir() {
+        let cli = Cli::try_parse_from(["catalogue", "rustsec", "fetch", "--cache-dir", "c"])
+            .expect("parses");
+        let Command::Rustsec {
+            command: RustsecCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected rustsec fetch");
+        };
+        assert_eq!(cache_dir, Some(PathBuf::from("c")));
+        let cli =
+            Cli::try_parse_from(["catalogue", "rustsec", "show", "numr", "blazr"]).expect("parses");
+        let Command::Rustsec {
+            command: RustsecCommand::Show { names, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected rustsec show");
+        };
+        assert_eq!(
+            (names, cache_dir),
+            (vec!["numr".to_owned(), "blazr".to_owned()], None)
+        );
+        assert!(Cli::try_parse_from(["catalogue", "rustsec", "show"]).is_err());
     }
 }

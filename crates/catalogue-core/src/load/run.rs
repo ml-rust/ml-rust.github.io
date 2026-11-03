@@ -1,3 +1,4 @@
+use super::deprecated::check_deprecated;
 use super::diagnostics::Diagnostics;
 use super::discovery::check_discovery;
 use super::entries::check_entries;
@@ -37,6 +38,10 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
         .thresholds
         .as_ref()
         .and_then(|file| check_thresholds(file, &mut diags));
+    let deprecated = sources
+        .deprecated
+        .as_ref()
+        .and_then(|file| check_deprecated(file, &mut diags));
 
     let topic_ids = check_topics(&topics, &mut diags);
     let maintainer_index = check_maintainers(&maintainers, &mut diags);
@@ -54,15 +59,16 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
     let judgments = check_judgments(judgment_files, &refs, &mut diags);
 
     if diags.is_empty() {
-        Ok(Catalogue::new(
+        Ok(Catalogue {
             entries,
             judgments,
-            topics.value.topic,
-            maintainers.value.maintainer,
-            synonyms.value.group,
+            topics: topics.value.topic,
+            maintainers: maintainers.value.maintainer,
+            synonyms: synonyms.value.group,
             discovery,
             thresholds,
-        ))
+            deprecated,
+        })
     } else {
         Err(diags)
     }

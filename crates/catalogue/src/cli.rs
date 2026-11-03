@@ -10,6 +10,7 @@ use crate::ecosystems::{EcosystemsCommand, run_ecosystems};
 use crate::exit::{INVALID, IO};
 use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
+use crate::tiers::{TiersArgs, run_tiers};
 use crate::validate::{Outcome, validate};
 
 /// Checks the ml-rust catalogue data files.
@@ -66,6 +67,12 @@ pub enum Command {
         #[command(subcommand)]
         command: RustsecCommand,
     },
+    /// Assign each entry its tier and print the reasons.
+    ///
+    /// Reads the cached crates.io dump and RustSec archive. Unless `--offline`,
+    /// reads the token from the `GITHUB_TOKEN` environment variable and fetches
+    /// repo facts and app distribution counts.
+    Tiers(TiersArgs),
 }
 
 /// Runs the parsed command and returns the process exit code.
@@ -80,6 +87,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Ecosystems { command } => run_ecosystems(command),
         Command::Github { command } => run_github(command),
         Command::Rustsec { command } => run_rustsec(command),
+        Command::Tiers(args) => run_tiers(args),
     }
 }
 
@@ -123,173 +131,6 @@ mod tests {
             panic!("expected validate");
         };
         assert_eq!(data, PathBuf::from("other"));
-    }
-
-    #[test]
-    fn dump_fetch_takes_an_optional_cache_dir() {
-        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch"]).expect("parses");
-        let Command::Dump {
-            command: DumpCommand::Fetch { cache_dir },
-        } = cli.command
-        else {
-            panic!("expected dump fetch");
-        };
-        assert_eq!(cache_dir, None);
-        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch", "--cache-dir", "c"])
-            .expect("parses");
-        let Command::Dump {
-            command: DumpCommand::Fetch { cache_dir },
-        } = cli.command
-        else {
-            panic!("expected dump fetch");
-        };
-        assert_eq!(cache_dir, Some(PathBuf::from("c")));
-    }
-
-    #[test]
-    fn dump_stats_window_defaults_to_90_days() {
-        let cli = Cli::try_parse_from(["catalogue", "dump", "stats"]).expect("parses");
-        let Command::Dump {
-            command: DumpCommand::Stats { window_days, .. },
-        } = cli.command
-        else {
-            panic!("expected dump stats");
-        };
-        assert_eq!(window_days, 90);
-        let cli = Cli::try_parse_from(["catalogue", "dump", "stats", "--window-days", "30"])
-            .expect("parses");
-        let Command::Dump {
-            command: DumpCommand::Stats { window_days, .. },
-        } = cli.command
-        else {
-            panic!("expected dump stats");
-        };
-        assert_eq!(window_days, 30);
-    }
-
-    #[test]
-    fn dump_usage_takes_crate_names() {
-        let cli =
-            Cli::try_parse_from(["catalogue", "dump", "usage", "numr", "blazr"]).expect("parses");
-        let Command::Dump {
-            command:
-                DumpCommand::Usage {
-                    names,
-                    cache_dir,
-                    window_days,
-                },
-        } = cli.command
-        else {
-            panic!("expected dump usage");
-        };
-        assert_eq!(names, ["numr", "blazr"]);
-        assert_eq!((cache_dir, window_days), (None, 90));
-        assert!(Cli::try_parse_from(["catalogue", "dump", "usage"]).is_err());
-    }
-
-    #[test]
-    fn discover_crates_has_defaults_and_takes_options() {
-        let cli = Cli::try_parse_from(["catalogue", "discover", "crates"]).expect("parses");
-        let Command::Discover {
-            command:
-                DiscoverCommand::Crates {
-                    data,
-                    cache_dir,
-                    window_days,
-                },
-        } = cli.command
-        else {
-            panic!("expected discover crates");
-        };
-        assert_eq!(
-            (data, cache_dir, window_days),
-            (PathBuf::from("data"), None, 90)
-        );
-        let cli = Cli::try_parse_from([
-            "catalogue",
-            "discover",
-            "crates",
-            "--data",
-            "d",
-            "--cache-dir",
-            "c",
-            "--window-days",
-            "30",
-        ])
-        .expect("parses");
-        let Command::Discover {
-            command:
-                DiscoverCommand::Crates {
-                    data,
-                    cache_dir,
-                    window_days,
-                },
-        } = cli.command
-        else {
-            panic!("expected discover crates");
-        };
-        assert_eq!(
-            (data, cache_dir, window_days),
-            (PathBuf::from("d"), Some(PathBuf::from("c")), 30)
-        );
-    }
-
-    #[test]
-    fn discover_github_has_defaults_and_takes_options() {
-        let cli = Cli::try_parse_from(["catalogue", "discover", "github"]).expect("parses");
-        let Command::Discover {
-            command: DiscoverCommand::Github { data, cache_dir },
-        } = cli.command
-        else {
-            panic!("expected discover github");
-        };
-        assert_eq!((data, cache_dir), (PathBuf::from("data"), None));
-        let cli = Cli::try_parse_from([
-            "catalogue",
-            "discover",
-            "github",
-            "--data",
-            "d",
-            "--cache-dir",
-            "c",
-        ])
-        .expect("parses");
-        let Command::Discover {
-            command: DiscoverCommand::Github { data, cache_dir },
-        } = cli.command
-        else {
-            panic!("expected discover github");
-        };
-        assert_eq!(
-            (data, cache_dir),
-            (PathBuf::from("d"), Some(PathBuf::from("c")))
-        );
-    }
-
-    #[test]
-    fn rustsec_fetch_and_show_take_an_optional_cache_dir() {
-        let cli = Cli::try_parse_from(["catalogue", "rustsec", "fetch", "--cache-dir", "c"])
-            .expect("parses");
-        let Command::Rustsec {
-            command: RustsecCommand::Fetch { cache_dir },
-        } = cli.command
-        else {
-            panic!("expected rustsec fetch");
-        };
-        assert_eq!(cache_dir, Some(PathBuf::from("c")));
-        let cli =
-            Cli::try_parse_from(["catalogue", "rustsec", "show", "numr", "blazr"]).expect("parses");
-        let Command::Rustsec {
-            command: RustsecCommand::Show { names, cache_dir },
-        } = cli.command
-        else {
-            panic!("expected rustsec show");
-        };
-        assert_eq!(
-            (names, cache_dir),
-            (vec!["numr".to_owned(), "blazr".to_owned()], None)
-        );
-        assert!(Cli::try_parse_from(["catalogue", "rustsec", "show"]).is_err());
     }
 
     #[test]

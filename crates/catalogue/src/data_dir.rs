@@ -3,7 +3,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use catalogue_core::{DataSources, Diagnostics, SourceFile};
+use catalogue_core::{Catalogue, DataSources, Diagnostics, SourceFile};
 use thiserror::Error;
 
 /// A failure to read the data directory.
@@ -41,7 +41,8 @@ pub struct DataDir {
 }
 
 /// Reads `entries/*.toml`, `judgments/*.toml`, `maintainers.toml`,
-/// `topics.toml`, `synonyms.toml`, `discovery.toml` and `thresholds.toml` from `root`.
+/// `topics.toml`, `synonyms.toml`, `discovery.toml`, `thresholds.toml` and
+/// `deprecated.toml` from `root`.
 ///
 /// A missing `entries/` or `judgments/` directory reads as empty. A missing
 /// optional file reads as absent.
@@ -71,10 +72,28 @@ pub fn read_data_dir(root: &Path) -> Result<DataDir, DataDirError> {
         synonyms: read_optional(&root.join("synonyms.toml"))?,
         discovery: read_optional(&root.join("discovery.toml"))?,
         thresholds: read_optional(&root.join("thresholds.toml"))?,
+        deprecated: read_optional(&root.join("deprecated.toml"))?,
     };
     Ok(DataDir {
         sources,
         diagnostics,
+    })
+}
+
+/// Reads and checks the data directory at `root`.
+///
+/// The inner result holds the checked catalogue, or every diagnostic from the
+/// directory listing and the data rules.
+pub fn load_catalogue(root: &Path) -> Result<Result<Catalogue, Diagnostics>, DataDirError> {
+    let dir = read_data_dir(root)?;
+    let mut diagnostics = dir.diagnostics;
+    Ok(match Catalogue::load(dir.sources) {
+        Ok(catalogue) if diagnostics.is_empty() => Ok(catalogue),
+        Ok(_) => Err(diagnostics),
+        Err(found) => {
+            diagnostics.extend(found);
+            Err(diagnostics)
+        }
     })
 }
 

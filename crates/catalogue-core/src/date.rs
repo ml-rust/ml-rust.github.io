@@ -62,6 +62,12 @@ impl Date {
     }
 }
 
+impl From<civil::Date> for Date {
+    fn from(date: civil::Date) -> Self {
+        Self(date)
+    }
+}
+
 impl fmt::Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
@@ -178,6 +184,11 @@ mod tests {
         assert_eq!(day(2025, 1, 1).days_since(day(2024, 1, 1)), 366);
         assert_eq!(day(2026, 1, 1).days_since(day(2025, 1, 1)), 365);
         assert_eq!(day(2026, 11, 2).days_since(day(2026, 11, 3)), -1);
+    }
+
+    #[test]
+    fn converts_from_a_civil_date() {
+        assert_eq!(Date::from(civil::date(2026, 11, 3)), expected().d);
     }
 
     #[test]

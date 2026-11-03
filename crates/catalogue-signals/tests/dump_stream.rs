@@ -44,8 +44,10 @@ fn reads_crates_with_multi_line_readmes_and_null_fields() {
     assert_eq!(numr.homepage, None, "NULL homepage");
     assert_eq!(numr.repository, None, "empty-string repository");
     assert_eq!(numr.deprecation, None);
+    assert!(numr.has_readme);
     let helper = snapshot.crates.get(&3).expect("helper");
     assert_eq!(helper.description, None, "empty-string description");
+    assert!(!helper.has_readme, "NULL readme");
 }
 
 #[test]
