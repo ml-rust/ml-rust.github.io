@@ -1,15 +1,22 @@
 use super::super::diagnostics::Diagnostics;
 use super::Refs;
-use crate::judgment::{Judgment, JudgmentKind};
+use crate::ids::Slug;
+use crate::judgment::JudgmentKind;
 
-/// Checks that the entry, replacement entry and topics a judgment names exist.
-pub(super) fn check(path: &str, judgment: &Judgment, refs: &Refs<'_>, diags: &mut Diagnostics) {
-    if !refs.entries.contains_key(&judgment.entry) {
-        diags.push(path, format!("entry `{}` does not exist", judgment.entry));
+/// Checks that the entry, replacement entry and topics of a `kind` judgment on `entry` exist.
+pub(super) fn check(
+    path: &str,
+    entry: &Slug,
+    kind: &JudgmentKind,
+    refs: &Refs<'_>,
+    diags: &mut Diagnostics,
+) {
+    if !refs.entries.contains_key(entry) {
+        diags.push(path, format!("entry `{entry}` does not exist"));
     }
-    match &judgment.judgment {
+    match kind {
         JudgmentKind::Supersedes { by } => {
-            if *by == judgment.entry {
+            if by == entry {
                 diags.push(path, format!("entry `{by}` cannot supersede itself"));
             } else if !refs.entries.contains_key(by) {
                 diags.push(path, format!("replacing entry `{by}` does not exist"));

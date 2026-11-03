@@ -15,6 +15,14 @@ pub enum Tier {
 }
 
 impl Tier {
+    /// Every tier, from the most to the least prominent.
+    pub const ALL: [Self; 4] = [Self::Featured, Self::Listed, Self::New, Self::Archived];
+
+    /// The tier whose [`Tier::as_str`] name is `name`.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|tier| tier.as_str() == name)
+    }
+
     /// The lowercase name used in data files.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -46,7 +54,9 @@ mod tests {
             let parsed: Wrap = toml::from_str(&format!("tier = \"{text}\"")).expect("tier");
             assert_eq!(parsed.tier, tier);
             assert_eq!(tier.as_str(), text);
+            assert_eq!(Tier::from_name(text), Some(tier));
         }
+        assert_eq!(Tier::from_name("Featured"), None);
     }
 
     #[test]

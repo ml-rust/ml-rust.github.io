@@ -74,6 +74,42 @@ impl JudgmentKind {
     pub fn is_maintainer(&self) -> bool {
         matches!(self, Self::Maintainer { .. })
     }
+
+    /// Lists every rule this decision breaks with `evidence`, without other files.
+    ///
+    /// The rules need no approver, so a judgment still waiting for approval can be checked.
+    pub fn problems(&self, evidence: &[Url]) -> Vec<String> {
+        let mut out = Vec::new();
+        if evidence.is_empty() && !self.is_maintainer() {
+            out.push("evidence needs at least one link".to_owned());
+        }
+        for link in evidence {
+            if link.scheme() != "https" {
+                out.push(format!("evidence link `{link}` must use https"));
+            }
+        }
+        match self {
+            Self::Correctness { finding } if finding.trim().is_empty() => {
+                out.push("finding must not be empty".to_owned());
+            }
+            Self::Category { topics } if topics.is_empty() => {
+                out.push("category needs at least one topic".to_owned());
+            }
+            Self::Demotion { from, to } => {
+                if *from != Tier::Featured {
+                    out.push(format!(
+                        "demotion must start from `featured`, not `{}`",
+                        from.as_str()
+                    ));
+                }
+                if from == to {
+                    out.push("demotion must change the tier".to_owned());
+                }
+            }
+            _ => {}
+        }
+        out
+    }
 }
 
 /// A recorded decision about one entry.
@@ -107,36 +143,7 @@ impl Judgment {
 
     /// Lists every rule this judgment breaks on its own, without other files.
     pub fn problems(&self) -> Vec<String> {
-        let mut out = Vec::new();
-        if self.evidence.is_empty() && !self.judgment.is_maintainer() {
-            out.push("evidence needs at least one link".to_owned());
-        }
-        for link in &self.evidence {
-            if link.scheme() != "https" {
-                out.push(format!("evidence link `{link}` must use https"));
-            }
-        }
-        match &self.judgment {
-            JudgmentKind::Correctness { finding } if finding.trim().is_empty() => {
-                out.push("finding must not be empty".to_owned());
-            }
-            JudgmentKind::Category { topics } if topics.is_empty() => {
-                out.push("category needs at least one topic".to_owned());
-            }
-            JudgmentKind::Demotion { from, to } => {
-                if *from != Tier::Featured {
-                    out.push(format!(
-                        "demotion must start from `featured`, not `{}`",
-                        from.as_str()
-                    ));
-                }
-                if from == to {
-                    out.push("demotion must change the tier".to_owned());
-                }
-            }
-            _ => {}
-        }
-        out
+        self.judgment.problems(&self.evidence)
     }
 }
 

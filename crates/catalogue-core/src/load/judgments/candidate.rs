@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::super::diagnostics::Diagnostics;
+use super::approval::Subject;
 use super::supersedes::Link;
 use super::{Refs, approval, references, supersedes};
 use crate::catalogue::Catalogue;
@@ -28,20 +29,24 @@ fn with_refs<T>(catalogue: &Catalogue, f: impl FnOnce(&Refs<'_>) -> T) -> T {
     })
 }
 
-/// Lists the reference rules that `judgment` breaks against `catalogue`.
+/// Lists the reference rules that a `kind` judgment on `entry` breaks against `catalogue`.
 ///
 /// Covers the entry, the replacing entry, the topics and a replacement cycle.
-pub(crate) fn reference_problems(catalogue: &Catalogue, judgment: &Judgment) -> Vec<String> {
+pub(crate) fn reference_problems(
+    catalogue: &Catalogue,
+    entry: &Slug,
+    kind: &JudgmentKind,
+) -> Vec<String> {
     let mut diags = Diagnostics::new();
     with_refs(catalogue, |refs| {
-        references::check("", judgment, refs, &mut diags);
+        references::check("", entry, kind, refs, &mut diags);
     });
     let mut links: Vec<Link> = catalogue
         .judgments
         .values()
         .filter_map(|existing| Link::of("", existing))
         .collect();
-    links.extend(Link::of("", judgment));
+    links.extend(Link::of_kind("", entry, kind));
     supersedes::check(&links, &mut diags);
     messages(&diags)
 }
@@ -67,6 +72,32 @@ pub(crate) fn eligible_approvers(
             .maintainers
             .iter()
             .filter(|m| approval::problems(entry, kind, reporter, &m.login, refs).is_empty())
+            .map(|m| m.login.clone())
+            .collect()
+    })
+}
+
+/// The maintainers who break no approval rule for a new entry that `reporter` submitted.
+///
+/// The reporter cannot approve. An org member cannot approve an org affiliated entry.
+pub(crate) fn submission_approvers(
+    catalogue: &Catalogue,
+    entry: &str,
+    org_affiliated: bool,
+    reporter: &GithubLogin,
+) -> Vec<GithubLogin> {
+    let subject = Subject {
+        entry,
+        affiliated: org_affiliated,
+        reporter_can_approve: false,
+    };
+    with_refs(catalogue, |refs| {
+        catalogue
+            .maintainers
+            .iter()
+            .filter(|m| {
+                approval::person_problems(&subject, reporter, &m.login, refs.maintainers).is_empty()
+            })
             .map(|m| m.login.clone())
             .collect()
     })

@@ -53,7 +53,7 @@ pub(crate) fn check_judgments(
         for problem in value.problems() {
             diags.push(&path, problem);
         }
-        references::check(&path, &value, refs, diags);
+        references::check(&path, &value.entry, &value.judgment, refs, diags);
         approval::check(&path, &value, refs, diags);
         links.extend(Link::of(&path, &value));
         if let Some(number) = number {

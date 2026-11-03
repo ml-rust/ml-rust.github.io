@@ -4,12 +4,13 @@ use crate::judgment::{Judgment, JudgmentKind};
 use crate::load;
 
 impl Catalogue {
-    /// Lists the reference rules that a candidate `judgment` breaks.
+    /// Lists the reference rules that a candidate `kind` judgment on `entry` breaks.
     ///
     /// Checks that the entry, the replacing entry and the topics exist. Also
-    /// reports a replacement cycle that the judgment would close.
-    pub fn judgment_reference_problems(&self, judgment: &Judgment) -> Vec<String> {
-        load::reference_problems(self, judgment)
+    /// reports a replacement cycle that the judgment closes. The rules
+    /// need no approver, so a judgment still waiting for approval can be checked.
+    pub fn judgment_reference_problems(&self, entry: &Slug, kind: &JudgmentKind) -> Vec<String> {
+        load::reference_problems(self, entry, kind)
     }
 
     /// Lists the approval rules that a candidate `judgment` breaks.
@@ -30,6 +31,19 @@ impl Catalogue {
         kind: &JudgmentKind,
     ) -> Vec<GithubLogin> {
         load::eligible_approvers(self, entry, reporter, kind)
+    }
+
+    /// The maintainers who can approve a new entry that `reporter` submitted.
+    ///
+    /// The reporter cannot approve. An org member cannot approve an entry with
+    /// `org_affiliated` set. `entry` names the entry in messages only.
+    pub fn submission_approvers(
+        &self,
+        entry: &str,
+        org_affiliated: bool,
+        reporter: &GithubLogin,
+    ) -> Vec<GithubLogin> {
+        load::submission_approvers(self, entry, org_affiliated, reporter)
     }
 }
 
@@ -69,7 +83,7 @@ mod tests {
         let candidate = judgment(JUDGMENT);
         assert!(
             catalogue()
-                .judgment_reference_problems(&candidate)
+                .judgment_reference_problems(&candidate.entry, &candidate.judgment)
                 .is_empty()
         );
         assert!(catalogue().approval_problems(&candidate).is_empty());
@@ -78,7 +92,7 @@ mod tests {
     #[test]
     fn unknown_entry_is_a_reference_problem() {
         let candidate = judgment(&JUDGMENT.replace("entry = \"alpha\"", "entry = \"ghost\""));
-        let found = catalogue().judgment_reference_problems(&candidate);
+        let found = catalogue().judgment_reference_problems(&candidate.entry, &candidate.judgment);
         assert_eq!(found, ["entry `ghost` does not exist"]);
     }
 
@@ -92,7 +106,7 @@ mod tests {
         );
         let catalogue = Catalogue::load(src).expect("valid data");
         let candidate = judgment(&supersedes_judgment(9, "beta", "alpha"));
-        let found = catalogue.judgment_reference_problems(&candidate);
+        let found = catalogue.judgment_reference_problems(&candidate.entry, &candidate.judgment);
         assert!(
             found.iter().any(|m| m.contains("forms a cycle")),
             "{found:?}"
@@ -125,5 +139,17 @@ mod tests {
             &JudgmentKind::FeaturedApproval {},
         );
         assert!(found.is_empty());
+    }
+
+    #[test]
+    fn submission_approvers_follow_the_reporter_and_conflict_rules() {
+        let catalogue = catalogue();
+        let approvers = |affiliated: bool, reporter: &str| {
+            logins(catalogue.submission_approvers("new", affiliated, &login(reporter)))
+        };
+        assert_eq!(approvers(false, "dave"), ["carol", "bob"]);
+        assert_eq!(approvers(false, "Carol"), ["bob"]);
+        assert_eq!(approvers(true, "dave"), ["bob"]);
+        assert!(approvers(true, "bob").is_empty());
     }
 }

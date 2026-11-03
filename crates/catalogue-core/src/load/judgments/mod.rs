@@ -6,5 +6,7 @@ mod check;
 mod references;
 mod supersedes;
 
-pub(crate) use candidate::{approval_problems, eligible_approvers, reference_problems};
+pub(crate) use candidate::{
+    approval_problems, eligible_approvers, reference_problems, submission_approvers,
+};
 pub(super) use check::{Refs, check_judgments};

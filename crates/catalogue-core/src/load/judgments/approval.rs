@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use super::super::diagnostics::Diagnostics;
 use super::Refs;
 use crate::ids::{GithubLogin, Slug};
@@ -26,27 +28,57 @@ pub(super) fn problems(
     approver: &GithubLogin,
     refs: &Refs<'_>,
 ) -> Vec<String> {
-    let mut out = Vec::new();
-    let org_member = refs.maintainers.get(&approver.normalized()).copied();
-    if org_member.is_none() {
-        out.push(format!("approver `{approver}` is not a maintainer"));
-    }
-    if reporter.same_account(approver) && !kind.is_maintainer() {
-        out.push(format!(
-            "approver `{approver}` must differ from the reporter"
-        ));
-    }
     let found = refs.entries.get(entry);
     let affiliated = found.is_some_and(|entry| entry.org_affiliated);
+    let subject = Subject {
+        entry: entry.as_str(),
+        affiliated,
+        reporter_can_approve: kind.is_maintainer(),
+    };
+    let mut out = person_problems(&subject, reporter, approver, refs.maintainers);
     let approves_featured = matches!(kind, JudgmentKind::FeaturedApproval {});
     if found.is_some() && !affiliated && approves_featured {
         out.push(format!(
             "featured-approval applies only to an org affiliated entry, and `{entry}` is not"
         ));
     }
-    if affiliated && org_member == Some(true) {
+    out
+}
+
+/// What the approver rules need to know about the record under approval.
+pub(super) struct Subject<'a> {
+    /// The entry name shown in messages.
+    pub entry: &'a str,
+    /// Whether the entry is org affiliated.
+    pub affiliated: bool,
+    /// Whether the reporter can approve the record.
+    pub reporter_can_approve: bool,
+}
+
+/// Lists the rules that `approver` breaks on any record: the maintainer list,
+/// the reporter rule and the org conflict rule.
+///
+/// `maintainers` maps a lowercase login to `org_member`.
+pub(super) fn person_problems(
+    subject: &Subject<'_>,
+    reporter: &GithubLogin,
+    approver: &GithubLogin,
+    maintainers: &BTreeMap<String, bool>,
+) -> Vec<String> {
+    let mut out = Vec::new();
+    let org_member = maintainers.get(&approver.normalized()).copied();
+    if org_member.is_none() {
+        out.push(format!("approver `{approver}` is not a maintainer"));
+    }
+    if reporter.same_account(approver) && !subject.reporter_can_approve {
         out.push(format!(
-            "entry `{entry}` is org affiliated, so approver `{approver}` must not be an org member"
+            "approver `{approver}` must differ from the reporter"
+        ));
+    }
+    if subject.affiliated && org_member == Some(true) {
+        out.push(format!(
+            "entry `{}` is org affiliated, so approver `{approver}` must not be an org member",
+            subject.entry
         ));
     }
     out

@@ -15,6 +15,8 @@ mod thresholds;
 mod topics;
 
 pub use diagnostics::{Diagnostic, Diagnostics};
-pub(crate) use judgments::{approval_problems, eligible_approvers, reference_problems};
+pub(crate) use judgments::{
+    approval_problems, eligible_approvers, reference_problems, submission_approvers,
+};
 pub(crate) use run::load;
 pub use sources::{DataSources, SourceFile};

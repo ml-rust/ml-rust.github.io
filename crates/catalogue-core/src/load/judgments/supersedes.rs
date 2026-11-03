@@ -15,10 +15,15 @@ pub(super) struct Link {
 impl Link {
     /// The link a `supersedes` judgment makes, or `None` for any other judgment.
     pub(super) fn of(path: &str, judgment: &Judgment) -> Option<Self> {
-        match &judgment.judgment {
+        Self::of_kind(path, &judgment.entry, &judgment.judgment)
+    }
+
+    /// The link a `kind` judgment on `entry` makes, or `None` unless it is `supersedes`.
+    pub(super) fn of_kind(path: &str, entry: &Slug, kind: &JudgmentKind) -> Option<Self> {
+        match kind {
             JudgmentKind::Supersedes { by } => Some(Self {
                 path: path.to_owned(),
-                entry: judgment.entry.clone(),
+                entry: entry.clone(),
                 by: by.clone(),
             }),
             _ => None,
