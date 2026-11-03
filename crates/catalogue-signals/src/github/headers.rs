@@ -5,7 +5,7 @@ const API_VERSION: &str = "2022-11-28";
 
 /// The headers of a REST request: `Accept` set to `accept`, the pinned
 /// `X-GitHub-Api-Version` and `Authorization` as a bearer `token`.
-pub(crate) fn rest_headers(token: &str, accept: &str) -> Vec<(&'static str, String)> {
+pub fn rest_headers(token: &str, accept: &str) -> Vec<(&'static str, String)> {
     vec![
         ("Accept", accept.to_owned()),
         ("X-GitHub-Api-Version", API_VERSION.to_owned()),

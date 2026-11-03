@@ -171,6 +171,24 @@ mod tests {
         ) -> Result<Response, HttpError> {
             self.get(url, headers)
         }
+
+        fn patch(
+            &self,
+            url: &str,
+            headers: &[(&str, String)],
+            _body: &[u8],
+        ) -> Result<Response, HttpError> {
+            self.get(url, headers)
+        }
+
+        fn delete(
+            &self,
+            url: &str,
+            headers: &[(&str, String)],
+            _body: &[u8],
+        ) -> Result<Response, HttpError> {
+            self.get(url, headers)
+        }
     }
 
     /// Counts the waits.

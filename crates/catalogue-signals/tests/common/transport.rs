@@ -67,4 +67,22 @@ impl Transport for FakeTransport {
         self.posted.borrow_mut().push(body.to_vec());
         self.reply(url, headers)
     }
+
+    fn patch(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.post(url, headers, body)
+    }
+
+    fn delete(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.post(url, headers, body)
+    }
 }

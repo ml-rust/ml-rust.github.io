@@ -1,7 +1,7 @@
 //! Percent-encoding for URL query values and path segments.
 
 /// Encodes every byte outside the RFC 3986 unreserved set as `%XX`.
-pub(crate) fn percent_encode(text: &str) -> String {
+pub fn percent_encode(text: &str) -> String {
     let mut out = String::with_capacity(text.len() * 2);
     for byte in text.bytes() {
         if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {

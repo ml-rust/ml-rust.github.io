@@ -85,6 +85,30 @@ impl Transport for ReqwestTransport {
     ) -> Result<Response, HttpError> {
         self.send(self.client.post(url).body(body.to_vec()), url, headers)
     }
+
+    fn patch(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.send(self.client.patch(url).body(body.to_vec()), url, headers)
+    }
+
+    fn delete(
+        &self,
+        url: &str,
+        headers: &[(&str, String)],
+        body: &[u8],
+    ) -> Result<Response, HttpError> {
+        let request = self.client.delete(url);
+        let request = if body.is_empty() {
+            request
+        } else {
+            request.body(body.to_vec())
+        };
+        self.send(request, url, headers)
+    }
 }
 
 /// Builds a header value. An `Authorization` value is marked sensitive, so the

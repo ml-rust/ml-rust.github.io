@@ -43,4 +43,22 @@ impl Transport for DockerRouter {
     ) -> Result<Response, HttpError> {
         reply(200, r#"{"data":{"repository":null}}"#)
     }
+
+    fn patch(
+        &self,
+        _url: &str,
+        _headers: &[(&str, String)],
+        _body: &[u8],
+    ) -> Result<Response, HttpError> {
+        reply(404, "")
+    }
+
+    fn delete(
+        &self,
+        _url: &str,
+        _headers: &[(&str, String)],
+        _body: &[u8],
+    ) -> Result<Response, HttpError> {
+        reply(404, "")
+    }
 }

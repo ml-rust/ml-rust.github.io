@@ -30,3 +30,5 @@ pub mod link;
 pub mod rustsec;
 pub mod seed;
 pub mod usage;
+
+pub use agent::USER_AGENT;

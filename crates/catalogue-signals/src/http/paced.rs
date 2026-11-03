@@ -46,9 +46,20 @@ pub enum PacedError {
     },
 }
 
+/// A response whose status the caller accepts, with its body read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Answer {
+    /// The HTTP status code.
+    pub status: u16,
+    /// The response headers.
+    pub headers: Headers,
+    /// The body, up to the size cap.
+    pub body: Vec<u8>,
+}
+
 /// Sends requests one at a time and holds each back until the [`Pacer`]
 /// allows it.
-pub(crate) struct Paced<'a> {
+pub struct Paced<'a> {
     pacer: &'a mut dyn Pacer,
     /// The headers of the last response, until the pacer has seen them.
     previous: Option<Headers>,
@@ -57,7 +68,7 @@ pub(crate) struct Paced<'a> {
 
 impl<'a> Paced<'a> {
     /// A sender that has made no request.
-    pub(crate) fn new(pacer: &'a mut dyn Pacer) -> Self {
+    pub fn new(pacer: &'a mut dyn Pacer) -> Self {
         Self {
             pacer,
             previous: None,
@@ -66,7 +77,7 @@ impl<'a> Paced<'a> {
     }
 
     /// The requests sent, retries included.
-    pub(crate) fn requests(&self) -> u32 {
+    pub fn requests(&self) -> u32 {
         self.requests
     }
 
@@ -79,7 +90,7 @@ impl<'a> Paced<'a> {
     ///
     /// Returns a [`PacedError`] when no response arrives, the status is not
     /// 200, the body breaks off, or the rate limit stays after the retries.
-    pub(crate) fn fetch(
+    pub fn fetch(
         &mut self,
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
@@ -98,7 +109,7 @@ impl<'a> Paced<'a> {
     /// # Errors
     ///
     /// Returns a [`PacedError`] as [`fetch`](Self::fetch) does.
-    pub(crate) fn fetch_optional(
+    pub fn fetch_optional(
         &mut self,
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
@@ -111,7 +122,7 @@ impl<'a> Paced<'a> {
     /// # Errors
     ///
     /// Returns a [`PacedError`] as [`fetch`](Self::fetch) does.
-    pub(crate) fn fetch_absent(
+    pub fn fetch_absent(
         &mut self,
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
@@ -120,12 +131,51 @@ impl<'a> Paced<'a> {
         self.run(url, send, absent)
     }
 
+    /// Sends the request that `send` builds and returns an answer whose status is in `accepted`.
+    ///
+    /// The answer keeps its status and headers, so a caller can read a
+    /// `Link` header or tell 201 from 200. Retries work as in
+    /// [`fetch`](Self::fetch).
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PacedError`] when no response arrives, the status is not in
+    /// `accepted`, the body breaks off, or the rate limit stays after the retries.
+    pub fn send(
+        &mut self,
+        url: &str,
+        send: impl FnMut() -> Result<Response, HttpError>,
+        accepted: &[u16],
+    ) -> Result<Answer, PacedError> {
+        match self.exchange(url, send, accepted, &[])? {
+            Some(answer) => Ok(answer),
+            None => Err(PacedError::Status {
+                url: url.to_owned(),
+                status: 404,
+            }),
+        }
+    }
+
     fn run(
         &mut self,
         url: &str,
-        mut send: impl FnMut() -> Result<Response, HttpError>,
+        send: impl FnMut() -> Result<Response, HttpError>,
         absent: &[u16],
     ) -> Result<Option<Vec<u8>>, PacedError> {
+        Ok(self
+            .exchange(url, send, &[200], absent)?
+            .map(|answer| answer.body))
+    }
+
+    /// Sends until an answer arrives. A status in `accepted` gives the
+    /// answer, a status in `absent` gives `None`.
+    fn exchange(
+        &mut self,
+        url: &str,
+        mut send: impl FnMut() -> Result<Response, HttpError>,
+        accepted: &[u16],
+        absent: &[u16],
+    ) -> Result<Option<Answer>, PacedError> {
         let mut retries = 0;
         loop {
             if let Some(headers) = self.previous.take() {
@@ -134,9 +184,14 @@ impl<'a> Paced<'a> {
             self.requests += 1;
             let response = send()?;
             let headers = response.headers;
-            if response.status == 200 {
-                self.previous = Some(headers);
-                return read_body(url, response.body).map(Some);
+            if accepted.contains(&response.status) {
+                self.previous = Some(headers.clone());
+                let body = read_body(url, response.body)?;
+                return Ok(Some(Answer {
+                    status: response.status,
+                    headers,
+                    body,
+                }));
             }
             if absent.contains(&response.status) {
                 self.previous = Some(headers);
@@ -183,7 +238,65 @@ fn read_body(url: &str, body: Box<dyn Read>) -> Result<Vec<u8>, PacedError> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use super::*;
+
+    /// Counts the waits.
+    #[derive(Default)]
+    struct Counting(u32);
+
+    impl Pacer for Counting {
+        fn wait(&mut self, _response_headers: &Headers) {
+            self.0 += 1;
+        }
+    }
+
+    fn response(status: u16) -> Result<Response, HttpError> {
+        Ok(Response {
+            status,
+            headers: Headers::new([("Link", "<https://x/2>; rel=\"next\"")]),
+            body: Box::new(Cursor::new(b"{}".to_vec())),
+        })
+    }
+
+    #[test]
+    fn send_returns_an_accepted_answer_with_its_status_and_headers() {
+        let mut pacer = Counting::default();
+        let mut paced = Paced::new(&mut pacer);
+        let answer = paced
+            .send("u", || response(201), &[200, 201])
+            .expect("accepted");
+        assert_eq!(answer.status, 201);
+        assert_eq!(
+            answer.headers.get("link"),
+            Some("<https://x/2>; rel=\"next\"")
+        );
+        assert_eq!(answer.body, b"{}");
+        paced.send("u", || response(204), &[204]).expect("accepted");
+        assert_eq!(paced.requests(), 2);
+        drop(paced);
+        assert_eq!(pacer.0, 1);
+    }
+
+    #[test]
+    fn send_rejects_a_status_outside_the_accepted_list() {
+        let mut pacer = Counting::default();
+        let mut paced = Paced::new(&mut pacer);
+        let error = paced
+            .send("u", || response(200), &[201])
+            .expect_err("rejected");
+        assert!(matches!(error, PacedError::Status { status: 200, .. }));
+    }
+
+    #[test]
+    fn fetch_accepts_only_200() {
+        let mut pacer = Counting::default();
+        let mut paced = Paced::new(&mut pacer);
+        assert!(paced.fetch("u", || response(200)).is_ok());
+        let error = paced.fetch("u", || response(201)).expect_err("rejected");
+        assert!(matches!(error, PacedError::Status { status: 201, .. }));
+    }
 
     #[test]
     fn rate_limit_answers_need_a_wait_hint() {

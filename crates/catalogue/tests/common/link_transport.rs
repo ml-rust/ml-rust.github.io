@@ -52,4 +52,22 @@ impl Transport for Router {
     ) -> Result<Response, HttpError> {
         self.answer(url, 200, br#"{"data":{"repository":null}}"#)
     }
+
+    fn patch(
+        &self,
+        url: &str,
+        _headers: &[(&str, String)],
+        _body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.answer(url, 404, b"")
+    }
+
+    fn delete(
+        &self,
+        url: &str,
+        _headers: &[(&str, String)],
+        _body: &[u8],
+    ) -> Result<Response, HttpError> {
+        self.answer(url, 404, b"")
+    }
 }
