@@ -1,6 +1,6 @@
 //! The signals of an app entry.
 
-use catalogue_core::{EntryKind, Signals};
+use catalogue_core::{Date, EntryKind, Signals};
 
 use super::assembled::Assembled;
 use super::facts::apply_facts;
@@ -16,15 +16,20 @@ use crate::github::RepoFacts;
 /// - `last_release`: the newest publish day among the sampled releases.
 /// - `homebrew_on_request_365d`: installs on request over 365 days.
 /// - `repology_families`: the repository families that package the app.
-/// - `docker_pull_growth_90d`: unknown. Growth needs two pull counts 90 days apart.
+/// - `docker_pull_growth_90d`: `docker` minus the pull count of `baseline`, the
+///   [`History::docker_baseline`](crate::history::History::docker_baseline)
+///   snapshot. A count below the baseline reads as `Some(0)` with a note.
+///   Unknown without both counts.
 ///
 /// A `None` source leaves its signals unknown. The caller notes why a source is
-/// missing, so the notes stay empty.
+/// missing, so the notes stay empty. Only a falling pull count adds a note.
 pub fn app_signals(
     facts: Option<&RepoFacts>,
     releases: Option<&ReleaseDownloads>,
     homebrew: Option<&HomebrewInstalls>,
     repology: Option<&RepologyPackaging>,
+    docker: Option<u64>,
+    baseline: Option<(Date, u64)>,
 ) -> Assembled {
     let mut signals = Signals::unknown(EntryKind::App);
     apply_facts(facts, &mut signals);
@@ -37,10 +42,16 @@ pub fn app_signals(
     }
     signals.homebrew_on_request_365d = homebrew.map(|found| found.on_request_365d);
     signals.repology_families = repology.map(|found| found.families);
-    Assembled {
-        signals,
-        notes: Vec::new(),
+    let mut notes = Vec::new();
+    if let (Some(current), Some((date, before))) = (docker, baseline) {
+        signals.docker_pull_growth_90d = Some(current.saturating_sub(before));
+        if current < before {
+            notes.push(format!(
+                "Docker pulls fell from {before} on {date} to {current}: growth reads as 0"
+            ));
+        }
     }
+    Assembled { signals, notes }
 }
 
 #[cfg(test)]
@@ -91,6 +102,8 @@ mod tests {
             Some(&releases),
             Some(&homebrew(640)),
             Some(&packaging),
+            None,
+            None,
         );
         let found = assembled.signals;
         assert_eq!(found.kind, EntryKind::App);
@@ -110,7 +123,7 @@ mod tests {
             releases: Vec::new(),
             total_binary_downloads: 0,
         };
-        let found = app_signals(None, Some(&releases), None, None).signals;
+        let found = app_signals(None, Some(&releases), None, None, None, None).signals;
         assert_eq!(found.binary_downloads_last3, Some(0));
         assert_eq!(found.binary_downloads_per_release, None);
         assert_eq!(found.last_release, None);
@@ -118,8 +131,47 @@ mod tests {
 
     #[test]
     fn missing_sources_stay_unknown() {
-        let assembled = app_signals(None, None, None, None);
+        let assembled = app_signals(None, None, None, None, None, None);
         assert_eq!(assembled.signals, Signals::unknown(EntryKind::App));
         assert!(assembled.notes.is_empty());
+    }
+
+    fn growth(docker: Option<u64>, baseline: Option<(Date, u64)>) -> Assembled {
+        app_signals(None, None, None, None, docker, baseline)
+    }
+
+    #[test]
+    fn growth_is_the_current_count_minus_the_baseline() {
+        let before = Date::from(day(2026, 8, 1));
+        let assembled = growth(Some(1_500), Some((before, 1_000)));
+        assert_eq!(assembled.signals.docker_pull_growth_90d, Some(500));
+        assert!(assembled.notes.is_empty());
+        let flat = growth(Some(1_000), Some((before, 1_000)));
+        assert_eq!(flat.signals.docker_pull_growth_90d, Some(0));
+        assert!(flat.notes.is_empty());
+    }
+
+    #[test]
+    fn a_falling_count_reads_as_zero_growth_with_a_note() {
+        let before = Date::from(day(2026, 8, 1));
+        let assembled = growth(Some(900), Some((before, 1_000)));
+        assert_eq!(assembled.signals.docker_pull_growth_90d, Some(0));
+        assert_eq!(
+            assembled.notes,
+            ["Docker pulls fell from 1000 on 2026-08-01 to 900: growth reads as 0"]
+        );
+    }
+
+    #[test]
+    fn growth_needs_both_counts() {
+        let before = Date::from(day(2026, 8, 1));
+        for assembled in [
+            growth(None, Some((before, 1_000))),
+            growth(Some(1_000), None),
+            growth(None, None),
+        ] {
+            assert_eq!(assembled.signals.docker_pull_growth_90d, None);
+            assert!(assembled.notes.is_empty());
+        }
     }
 }

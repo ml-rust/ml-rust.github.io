@@ -7,17 +7,21 @@ use catalogue_signals::assemble::{
     Assembled, CrateIndex, LibrarySources, app_signals, context, library_signals,
 };
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
+use catalogue_signals::history::{History, Row};
 use catalogue_signals::rustsec::Advisories;
 use catalogue_signals::usage;
 
 use super::collect::Fetched;
-use super::command::{TiersError, required};
+use super::command::required;
+use super::error::TiersError;
 
-/// One entry's verdict and the notes about inputs that stayed unresolved.
+/// One entry's verdict, the row it adds to the history and the notes about
+/// inputs that stayed unresolved.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Assessment {
     pub(crate) slug: Slug,
     pub(crate) verdict: Verdict,
+    pub(crate) row: Row,
     pub(crate) notes: Vec<String>,
 }
 
@@ -25,12 +29,14 @@ pub(crate) struct Assessment {
 ///
 /// Usage comes from one [`usage::compute`] call over every library crate,
 /// evaluated on the dump date. An entry absent from `fetched` reads as having
-/// no network signals. Fetch notes come before assembly notes.
+/// no network signals. Fetch notes come before assembly notes. `history` supplies
+/// each entry's previous tier, its dead run and its Docker baseline.
 pub(crate) fn assess_entries(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
     advisories: &Advisories,
     fetched: &BTreeMap<Slug, Fetched>,
+    history: &History,
     today: Date,
 ) -> Result<Vec<Assessment>, TiersError> {
     let (thresholds, deprecated) = required(catalogue)?;
@@ -67,14 +73,25 @@ pub(crate) fn assess_entries(
                     network.releases.as_ref(),
                     network.homebrew.as_ref(),
                     network.repology.as_ref(),
+                    network.docker_pulls,
+                    history.docker_baseline(slug.as_str(), today),
                 ),
             };
-            let verdict = assess(&signals, &context(slug, catalogue, today), thresholds);
+            let ctx = context(slug, catalogue, history, today);
+            let verdict = assess(&signals, &ctx, thresholds);
+            let row = Row {
+                kind: entry.kind,
+                tier: verdict.tier,
+                dead_now: verdict.dead_now,
+                active_users: signals.active_users,
+                docker_pulls: network.docker_pulls,
+            };
             let mut all = network.notes.clone();
             all.extend(notes);
             Assessment {
                 slug: slug.clone(),
                 verdict,
+                row,
                 notes: all,
             }
         })

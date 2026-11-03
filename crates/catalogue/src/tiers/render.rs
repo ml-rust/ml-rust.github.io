@@ -56,14 +56,23 @@ fn list<T: AsRef<str>>(items: &[T]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::{Reason, Rule, Slug, Tier, Verdict};
+    use catalogue_core::{EntryKind, Reason, Rule, Slug, Tier, Verdict};
+    use catalogue_signals::history::Row;
 
     use super::*;
 
     fn assessment(slug: &str, verdict: Verdict, notes: &[&str]) -> Assessment {
+        let row = Row {
+            kind: EntryKind::Library,
+            tier: verdict.tier,
+            dead_now: verdict.dead_now,
+            active_users: None,
+            docker_pulls: None,
+        };
         Assessment {
             slug: Slug::new(slug).expect("slug"),
             verdict,
+            row,
             notes: notes.iter().map(|note| (*note).to_owned()).collect(),
         }
     }

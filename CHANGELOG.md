@@ -19,4 +19,5 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue ecosystems crates`: ecosyste.ms dependents per crate.
 - `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.
 - `catalogue tiers`: assigns each entry its tier with the reasons.
+- `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

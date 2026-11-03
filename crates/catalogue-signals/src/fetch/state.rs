@@ -8,6 +8,7 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use super::error::FetchError;
+use crate::atomic::write_atomic;
 use crate::http::Headers;
 
 /// What the fetcher knows about a cached file.
@@ -53,17 +54,17 @@ pub(super) fn read(path: &Path) -> Result<Option<DumpState>, FetchError> {
     }
 }
 
-/// Writes the state file atomically: a temporary file, then a rename.
-pub(super) fn write(state: &DumpState, path: &Path, temp: &Path) -> Result<(), FetchError> {
+/// Writes the state file atomically through [`write_atomic`].
+pub(super) fn write(state: &DumpState, path: &Path) -> Result<(), FetchError> {
     let mut json = serde_json::to_vec_pretty(state).map_err(|source| FetchError::State {
         path: path.to_path_buf(),
         source,
     })?;
     json.push(b'\n');
-    let mut file = fs::File::create(temp).map_err(FetchError::io(temp))?;
-    file.write_all(&json).map_err(FetchError::io(temp))?;
-    file.sync_all().map_err(FetchError::io(temp))?;
-    fs::rename(temp, path).map_err(FetchError::io(path))
+    write_atomic(path, |file| file.write_all(&json)).map_err(|error| FetchError::Io {
+        path: error.path,
+        source: error.source,
+    })
 }
 
 #[cfg(test)]

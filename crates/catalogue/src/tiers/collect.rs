@@ -14,7 +14,8 @@ use catalogue_signals::http::{IntervalPacer, Transport};
 use catalogue_signals::link::LinkCheck;
 use jiff::civil;
 
-use super::command::TiersError;
+use super::docker::fetch_docker;
+use super::error::TiersError;
 use super::links::fetch_links;
 use crate::batch;
 
@@ -42,6 +43,7 @@ pub(crate) struct Fetched {
     pub(crate) releases: Option<ReleaseDownloads>,
     pub(crate) homebrew: Option<HomebrewInstalls>,
     pub(crate) repology: Option<RepologyPackaging>,
+    pub(crate) docker_pulls: Option<u64>,
     pub(crate) notes: Vec<String>,
 }
 
@@ -49,8 +51,9 @@ pub(crate) struct Fetched {
 ///
 /// Every entry with a GitHub repo gets its repo facts. Every app with a GitHub
 /// repo gets its release downloads, then the Homebrew and Repology counts its
-/// `distribution` names. Every library gets its repo link check, which
-/// `snapshot` supplies the release for. Each source has its own pacer. A
+/// `distribution` names, then the Docker Hub pulls of its listed images. Every
+/// library gets its repo link check, which `snapshot` supplies the release for.
+/// Each source has its own pacer. A
 /// GraphQL error for one repo becomes a note. So does a missing or unreadable
 /// package, which leaves the repo link unknown. Any other error ends the run.
 pub(crate) fn fetch_all(
@@ -135,6 +138,11 @@ pub(crate) fn fetch_all(
             Some(found) => slot(&mut out, slug).repology = Some(found),
             None => note_on(&mut out, slug, format!("Repology has no project {name}")),
         }
+    }
+    for (slug, count) in fetch_docker(catalogue, transport)? {
+        let fetched = slot(&mut out, &slug);
+        fetched.docker_pulls = count.pulls;
+        fetched.notes.extend(count.notes);
     }
     Ok(out)
 }

@@ -2,6 +2,8 @@
 
 use catalogue_core::{Catalogue, Context, Date, JudgmentKind, Slug};
 
+use crate::history::History;
+
 /// The context of entry `entry_slug` on `today`.
 ///
 /// - `maintainer_statement`: the status of the latest `maintainer` judgment by
@@ -9,10 +11,19 @@ use catalogue_core::{Catalogue, Context, Date, JudgmentKind, Slug};
 /// - `demotion_approved`: any `demotion` judgment exists for the entry.
 /// - `featured_approved`: any `featured-approval` judgment exists for the entry.
 /// - `org_affiliated`: the entry's own flag. False for a slug the catalogue lacks.
-/// - `previous_tier` and `prior_dead_checks`: none and 0. Published history
-///   does not exist yet, so every check reads as a first check.
-pub fn context(entry_slug: &Slug, catalogue: &Catalogue, today: Date) -> Context {
+/// - `previous_tier`: the tier in the newest snapshot of `history` before `today`
+///   that holds the entry.
+/// - `prior_dead_checks`: the run of dead months in `history` before the month
+///   of `today`. An empty history reads as a first check.
+pub fn context(
+    entry_slug: &Slug,
+    catalogue: &Catalogue,
+    history: &History,
+    today: Date,
+) -> Context {
     let mut context = Context::new(today);
+    context.previous_tier = history.previous_tier(entry_slug.as_str(), today);
+    context.prior_dead_checks = history.prior_dead_checks(entry_slug.as_str(), today);
     context.org_affiliated = catalogue
         .entry(entry_slug)
         .is_some_and(|entry| entry.org_affiliated);
@@ -39,9 +50,10 @@ pub fn context(entry_slug: &Slug, catalogue: &Catalogue, today: Date) -> Context
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::{DataSources, MaintainerStatus, SourceFile};
+    use catalogue_core::{DataSources, EntryKind, MaintainerStatus, SourceFile, Tier};
 
     use super::*;
+    use crate::history::{Row, Snapshot};
 
     const ENTRY: &str = r#"name = "Alpha"
 kind = "library"
@@ -115,14 +127,14 @@ source = "human"
             maintainer(2, "2026-05-01", "finished"),
             maintainer(3, "2026-04-01", "maintained"),
         ]);
-        let ctx = context(&slug("alpha"), &found, today());
+        let ctx = context(&slug("alpha"), &found, &History::default(), today());
         assert_eq!(ctx.maintainer_statement, Some(MaintainerStatus::Finished));
         assert_eq!(ctx.today, today());
         let tied = catalogue(vec![
             maintainer(4, "2026-05-01", "maintained"),
             maintainer(5, "2026-05-01", "finished"),
         ]);
-        let ctx = context(&slug("alpha"), &tied, today());
+        let ctx = context(&slug("alpha"), &tied, &History::default(), today());
         assert_eq!(ctx.maintainer_statement, Some(MaintainerStatus::Finished));
     }
 
@@ -136,16 +148,45 @@ source = "human"
             ),
             judgment(2, "2026-03-02", "type = \"featured-approval\"\n"),
         ]);
-        let alpha = context(&slug("alpha"), &found, today());
+        let alpha = context(&slug("alpha"), &found, &History::default(), today());
         assert!(alpha.demotion_approved);
         assert!(alpha.featured_approved);
         assert!(alpha.org_affiliated);
         assert_eq!(alpha.maintainer_statement, None);
         assert_eq!(alpha.previous_tier, None);
         assert_eq!(alpha.prior_dead_checks, 0);
-        let beta = context(&slug("beta"), &found, today());
+        let beta = context(&slug("beta"), &found, &History::default(), today());
         assert!(!beta.demotion_approved && !beta.featured_approved);
         assert!(beta.org_affiliated);
-        assert!(!context(&slug("ghost"), &found, today()).org_affiliated);
+        assert!(!context(&slug("ghost"), &found, &History::default(), today()).org_affiliated);
+    }
+
+    fn snapshot(date: Date, tier: Tier, dead_now: bool) -> Snapshot {
+        let row = Row {
+            kind: EntryKind::Library,
+            tier,
+            dead_now,
+            active_users: None,
+            docker_pulls: None,
+        };
+        Snapshot {
+            date,
+            rows: [("alpha".to_owned(), row)].into_iter().collect(),
+        }
+    }
+
+    #[test]
+    fn history_sets_the_previous_tier_and_the_dead_run() {
+        let found = catalogue(Vec::new());
+        let history = History::new(vec![
+            snapshot(Date::new(2026, 9, 30).expect("date"), Tier::Listed, true),
+            snapshot(Date::new(2026, 10, 31).expect("date"), Tier::Archived, true),
+        ]);
+        let alpha = context(&slug("alpha"), &found, &history, today());
+        assert_eq!(alpha.previous_tier, Some(Tier::Archived));
+        assert_eq!(alpha.prior_dead_checks, 2);
+        let beta = context(&slug("beta"), &found, &history, today());
+        assert_eq!(beta.previous_tier, None);
+        assert_eq!(beta.prior_dead_checks, 0);
     }
 }

@@ -3,8 +3,11 @@
 mod assess;
 mod collect;
 mod command;
+mod docker;
+mod error;
 mod links;
 mod render;
 
 pub use collect::Network;
-pub use command::{TiersArgs, TiersError, run_tiers, tiers_report};
+pub use command::{TiersArgs, run_tiers, tiers_report};
+pub use error::TiersError;

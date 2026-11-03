@@ -10,7 +10,6 @@ use super::state::{self, DumpState};
 use crate::http::{Response, Transport};
 
 const STATE_NAME: &str = "state.json";
-const STATE_TEMP_NAME: &str = "state.json.tmp";
 /// Bytes buffered before a write to disk.
 const WRITE_BUFFER: usize = 1 << 20;
 /// Bytes read from the body per call.
@@ -62,7 +61,6 @@ pub fn cached(
         complete: dir.join(file_name),
         partial: dir.join(format!("{file_name}.partial")),
         state: dir.join(STATE_NAME),
-        state_temp: dir.join(STATE_TEMP_NAME),
     };
     let job = Job {
         transport,
@@ -80,7 +78,6 @@ struct Paths {
     complete: PathBuf,
     partial: PathBuf,
     state: PathBuf,
-    state_temp: PathBuf,
 }
 
 struct Job<'a> {
@@ -188,7 +185,7 @@ impl Job<'_> {
         mut state: DumpState,
     ) -> Result<FetchOutcome, FetchError> {
         state.complete = false;
-        state::write(&state, &self.paths.state, &self.paths.state_temp)?;
+        state::write(&state, &self.paths.state)?;
         let partial = &self.paths.partial;
         let file = if offset == 0 {
             File::create(partial)
@@ -246,7 +243,7 @@ impl Job<'_> {
             .map_err(FetchError::io(partial))?;
         fs::rename(partial, &self.paths.complete).map_err(FetchError::io(&self.paths.complete))?;
         state.complete = true;
-        state::write(state, &self.paths.state, &self.paths.state_temp)
+        state::write(state, &self.paths.state)
     }
 }
 

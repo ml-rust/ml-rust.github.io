@@ -1,29 +1,27 @@
-//! The `catalogue tiers` command and its errors.
+//! The `catalogue tiers` command.
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Catalogue, Date, Deprecated, Diagnostics, Thresholds};
-use catalogue_signals::distribution::DistributionError;
+use catalogue_core::{Catalogue, Date, Deprecated, Thresholds};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
-use catalogue_signals::github::GithubError;
-use catalogue_signals::http::{HttpError, ReqwestTransport};
-use catalogue_signals::link::LinkError;
+use catalogue_signals::history::{History, Snapshot, read_all, write};
+use catalogue_signals::http::ReqwestTransport;
 use catalogue_signals::rustsec::Advisories;
 use clap::Args;
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
-use thiserror::Error;
 
 use super::assess::assess_entries;
 use super::collect::{Network, fetch_all};
+use super::error::TiersError;
 use super::render::render_tiers;
-use crate::cache_dir::{CacheDirError, resolve_cache_dir};
-use crate::data_dir::{DataDirError, load_catalogue};
-use crate::dump::{DumpCommandError, read_cached};
-use crate::exit::{INVALID, IO};
-use crate::rustsec::{RustsecCommandError, read_cached as read_advisories};
+use crate::cache_dir::resolve_cache_dir;
+use crate::data_dir::load_catalogue;
+use crate::dump::read_cached;
+use crate::exit::INVALID;
+use crate::rustsec::read_cached as read_advisories;
 use crate::token::{NoToken, token_from_env};
 
 /// Days of download history read from the dump: the `downloads_per_month` window.
@@ -41,72 +39,12 @@ pub struct TiersArgs {
     /// Send no request. Every repo and distribution signal reads as unknown.
     #[arg(long)]
     pub offline: bool,
-}
-
-/// A `catalogue tiers` run that fails.
-#[derive(Debug, Error)]
-pub enum TiersError {
-    /// The data directory cannot be read.
-    #[error(transparent)]
-    Data(#[from] DataDirError),
-    /// The data files break at least one rule.
-    #[error(transparent)]
-    Invalid(Diagnostics),
-    /// A data file the tier rules need is absent.
-    #[error("no {name} in the data directory. Create the file, then rerun")]
-    MissingFile {
-        /// The file name.
-        name: &'static str,
-    },
-    /// The cache directory cannot be derived.
-    #[error(transparent)]
-    CacheDir(#[from] CacheDirError),
-    /// The cached dump cannot be found or read.
-    #[error(transparent)]
-    Dump(#[from] DumpCommandError),
-    /// The cached advisory archive cannot be found or read.
-    #[error(transparent)]
-    Rustsec(#[from] RustsecCommandError),
-    /// `GITHUB_TOKEN` is unset or empty.
-    #[error(transparent)]
-    Token(#[from] NoToken),
-    /// The HTTP client cannot start.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-    /// A GitHub facts request fails.
-    #[error(transparent)]
-    Github(#[from] GithubError),
-    /// A release, Homebrew or Repology request fails.
-    #[error(transparent)]
-    Distribution(#[from] DistributionError),
-    /// A repo link check fails.
-    #[error(transparent)]
-    Link(#[from] LinkError),
-}
-
-impl TiersError {
-    /// The process exit code.
-    ///
-    /// 1 for data, a missing data file, a missing token and a rejected token. 2
-    /// for IO and network errors. The dump and archive codes for their errors.
-    pub fn exit_code(&self) -> u8 {
-        match self {
-            Self::Invalid(_)
-            | Self::MissingFile { .. }
-            | Self::Token(_)
-            | Self::Github(GithubError::Status { status: 401, .. })
-            | Self::Link(LinkError::Github(GithubError::Status { status: 401, .. }))
-            | Self::Distribution(DistributionError::Status { status: 401, .. }) => INVALID,
-            Self::Dump(error) => error.exit_code(),
-            Self::Rustsec(error) => error.exit_code(),
-            Self::Data(_)
-            | Self::CacheDir(_)
-            | Self::Http(_)
-            | Self::Github(_)
-            | Self::Link(_)
-            | Self::Distribution(_) => IO,
-        }
-    }
+    /// Directory of daily snapshots. The run reads it for the previous tier, the
+    /// dead run and the Docker baseline, then adds today's snapshot. Without it
+    /// the run reads and writes no history. An offline run would record unknown
+    /// signals as history, so `--offline` conflicts with it.
+    #[arg(long, value_name = "DIR", conflicts_with = "offline")]
+    pub history: Option<PathBuf>,
 }
 
 /// Runs `catalogue tiers` and returns the process exit code.
@@ -145,7 +83,14 @@ fn tiers(
     let snapshot = read_cached(&fetch::dump_path(&cache_dir), DOWNLOAD_WINDOW_DAYS)?;
     let advisories = read_advisories(&fetch::rustsec_path(&cache_dir))?;
     match token {
-        None => tiers_report(&catalogue, &snapshot, &advisories, Network::Offline, today),
+        None => tiers_report(
+            &catalogue,
+            &snapshot,
+            &advisories,
+            Network::Offline,
+            args.history.as_deref(),
+            today,
+        ),
         Some(token) => {
             let transport = ReqwestTransport::new()?;
             let network = Network::Online {
@@ -153,7 +98,14 @@ fn tiers(
                 token: &token,
                 cache_dir: &cache_dir,
             };
-            tiers_report(&catalogue, &snapshot, &advisories, network, today)
+            tiers_report(
+                &catalogue,
+                &snapshot,
+                &advisories,
+                network,
+                args.history.as_deref(),
+                today,
+            )
         }
     }
 }
@@ -163,20 +115,37 @@ fn tiers(
 /// Fetches the network signals through `network`, assembles each entry's
 /// signals, applies the tier rules and renders one block per entry, in slug order.
 ///
+/// With `history_dir`, the run reads the snapshots in that directory before it
+/// applies the rules, then writes the snapshot of `today` to it. Without it,
+/// the run reads and writes no history.
+///
 /// # Errors
 ///
 /// Returns [`TiersError::MissingFile`] when the catalogue lacks
-/// `thresholds.toml` or `deprecated.toml`, and the request error that ends an
-/// online run.
+/// `thresholds.toml` or `deprecated.toml`, the request error that ends an
+/// online run, and [`TiersError::History`] when the history directory cannot be
+/// read or written.
 pub fn tiers_report(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
     advisories: &Advisories,
     network: Network<'_>,
+    history_dir: Option<&Path>,
     today: Date,
 ) -> Result<String, TiersError> {
+    let history = match history_dir {
+        Some(dir) => read_all(dir)?,
+        None => History::default(),
+    };
     let fetched = fetch_all(catalogue, snapshot, network, today.civil())?;
-    let assessments = assess_entries(catalogue, snapshot, advisories, &fetched, today)?;
+    let assessments = assess_entries(catalogue, snapshot, advisories, &fetched, &history, today)?;
+    if let Some(dir) = history_dir {
+        let rows = assessments
+            .iter()
+            .map(|assessment| (assessment.slug.to_string(), assessment.row))
+            .collect();
+        write(dir, &Snapshot { date: today, rows })?;
+    }
     Ok(render_tiers(&assessments))
 }
 
@@ -202,6 +171,7 @@ mod tests {
 
     use super::*;
     use crate::cli::{Cli, Command};
+    use crate::exit::IO;
 
     fn parse(arguments: &[&str]) -> TiersArgs {
         let mut full = vec!["catalogue", "tiers"];
@@ -228,6 +198,7 @@ mod tests {
             data,
             cache_dir: Some(PathBuf::from("/nonexistent/cache")),
             offline,
+            history: None,
         }
     }
 
@@ -237,10 +208,19 @@ mod tests {
         assert_eq!(args.data, PathBuf::from("data"));
         assert_eq!(args.cache_dir, None);
         assert!(!args.offline);
+        assert_eq!(args.history, None);
         let args = parse(&["--data", "d", "--cache-dir", "c", "--offline"]);
         assert_eq!(args.data, PathBuf::from("d"));
         assert_eq!(args.cache_dir, Some(PathBuf::from("c")));
         assert!(args.offline);
+        let args = parse(&["--history", "h"]);
+        assert_eq!(args.history, Some(PathBuf::from("h")));
+    }
+
+    #[test]
+    fn history_conflicts_with_offline() {
+        let parsed = Cli::try_parse_from(["catalogue", "tiers", "--offline", "--history", "h"]);
+        assert!(parsed.is_err());
     }
 
     #[test]

@@ -91,7 +91,7 @@ fn check_names(names: &[String]) -> Result<(), DistributionCommandError> {
 }
 
 /// Splits `namespace/repo` into its two parts.
-fn split_docker_name(input: &str) -> Result<(&str, &str), DistributionCommandError> {
+pub(crate) fn split_docker_name(input: &str) -> Result<(&str, &str), DistributionCommandError> {
     input
         .split_once('/')
         .filter(|(namespace, repo)| {

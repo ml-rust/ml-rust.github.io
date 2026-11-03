@@ -7,7 +7,7 @@
 //! older rule, or with no `rule`, reads as a miss.
 
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use catalogue_core::canonical_crate_name;
@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use super::error::LinkError;
 use super::types::{CrateRelease, LinkCheck};
+use crate::atomic::write_atomic;
 
 /// The directory under `cache_dir` that holds the link results.
 pub fn links_dir(cache_dir: &Path) -> PathBuf {
@@ -68,8 +69,8 @@ pub fn cached_check(
 
 /// Stores `result` for `release` and `repo` under `cache_dir`.
 ///
-/// The file is written to a temporary name and renamed over the final name,
-/// so a reader never sees a partial file.
+/// The write goes to a temporary file that is renamed into place, so a reader
+/// never sees a partial file and a failed write leaves no temporary file.
 ///
 /// # Errors
 ///
@@ -81,18 +82,17 @@ pub fn store_check(
     result: &LinkCheck,
 ) -> Result<(), LinkError> {
     let path = file_path(cache_dir, release, repo);
-    let fail = |source: io::Error| LinkError::Cache {
-        path: path.clone(),
-        source,
-    };
     let record = Record {
         rule: RULE,
         repo: repo.to_ascii_lowercase(),
         result: result.clone(),
     };
-    let bytes = serde_json::to_vec(&record).map_err(|error| fail(io::Error::other(error)))?;
-    fs::create_dir_all(links_dir(cache_dir)).map_err(fail)?;
-    let temp = path.with_extension("json.tmp");
-    fs::write(&temp, bytes).map_err(fail)?;
-    fs::rename(&temp, &path).map_err(fail)
+    let bytes = serde_json::to_vec(&record).map_err(|error| LinkError::Cache {
+        path: path.clone(),
+        source: io::Error::other(error),
+    })?;
+    write_atomic(&path, |file| file.write_all(&bytes)).map_err(|error| LinkError::Cache {
+        path: error.path,
+        source: error.source,
+    })
 }
