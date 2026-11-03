@@ -4,6 +4,8 @@ mod facts_responses;
 mod facts_setup;
 #[path = "common/post_bodies.rs"]
 mod post_bodies;
+#[path = "common/recording_pacer.rs"]
+mod recording_pacer;
 #[path = "common/request_headers.rs"]
 mod request_headers;
 #[path = "common/request_urls.rs"]
@@ -17,8 +19,9 @@ mod transport;
 
 use catalogue_signals::github::{CiState, GithubError, RepoFacts, repo_facts};
 use facts_responses::{RepoBody, commit, item};
-use facts_setup::{RecordingPacer, TODAY, TOKEN, found, read, requested};
+use facts_setup::{TODAY, TOKEN, found, read, requested};
 use jiff::civil::date;
+use recording_pacer::RecordingPacer;
 use serde_json::Value;
 use transport::{FakeResponse, FakeTransport};
 

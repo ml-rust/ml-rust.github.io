@@ -1,3 +1,5 @@
+#[path = "common/recording_pacer.rs"]
+mod recording_pacer;
 #[path = "common/request_headers.rs"]
 mod request_headers;
 #[path = "common/request_urls.rs"]
@@ -10,21 +12,8 @@ mod search_responses;
 mod transport;
 
 use catalogue_signals::ecosystems::{CrateDependents, EcosystemsError, crate_dependents};
-use catalogue_signals::http::{Headers, Pacer};
+use recording_pacer::RecordingPacer;
 use transport::{FakeResponse, FakeTransport};
-
-/// A pacer that records the `retry-after` of each response it waits on.
-#[derive(Default)]
-struct RecordingPacer {
-    waits: Vec<Option<String>>,
-}
-
-impl Pacer for RecordingPacer {
-    fn wait(&mut self, response_headers: &Headers) {
-        self.waits
-            .push(response_headers.get("retry-after").map(str::to_owned));
-    }
-}
 
 /// The `candle-core` package fields the lookup reads, as recorded from the API.
 const CANDLE_CORE: &str = r#"{"id":8020688,"name":"candle-core","ecosystem":"cargo",

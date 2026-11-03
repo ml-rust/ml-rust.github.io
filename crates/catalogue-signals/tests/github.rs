@@ -1,3 +1,5 @@
+#[path = "common/recording_pacer.rs"]
+mod recording_pacer;
 #[path = "common/request_headers.rs"]
 mod request_headers;
 #[path = "common/request_urls.rs"]
@@ -9,23 +11,10 @@ mod search_responses;
 #[path = "common/transport.rs"]
 mod transport;
 
-use catalogue_signals::github::{GithubError, GithubRules, Pacer, search_repos_on};
-use catalogue_signals::http::Headers;
+use catalogue_signals::github::{GithubError, GithubRules, search_repos_on};
 use jiff::civil::{Date, date};
+use recording_pacer::RecordingPacer;
 use transport::{FakeResponse, FakeTransport};
-
-/// A pacer that records the `retry-after` of each response it waits on.
-#[derive(Default)]
-struct RecordingPacer {
-    waits: Vec<Option<String>>,
-}
-
-impl Pacer for RecordingPacer {
-    fn wait(&mut self, response_headers: &Headers) {
-        self.waits
-            .push(response_headers.get("retry-after").map(str::to_owned));
-    }
-}
 
 const TODAY: Date = date(2008, 1, 3);
 const TOKEN: &str = "sekret-xyz";

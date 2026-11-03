@@ -2,6 +2,8 @@
 mod facts_responses;
 #[path = "common/facts_setup.rs"]
 mod facts_setup;
+#[path = "common/recording_pacer.rs"]
+mod recording_pacer;
 #[path = "common/search_responses.rs"]
 mod search_responses;
 #[path = "common/transport.rs"]
