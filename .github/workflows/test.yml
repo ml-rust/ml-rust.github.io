@@ -16,13 +16,15 @@
 #   msrv      — the MSRV from `[workspace.package]` in Cargo.toml
 #   audit     — cargo-deny: advisories, licences, sources, banned crates
 #   data      — `catalogue validate` over the committed `data` directory
+#   site      — `catalogue build --no-tiers` into `dist`, with no deploy
 #   workflows — zizmor static analysis of the workflow files
 #
 # The workspace has no features, so no job uses a feature matrix.
 #
-# Every job that builds runs with `--locked`. This repository has no local
-# path patches, so the committed Cargo.lock resolves on a clean runner and a
-# build that needs to change it is an error.
+# Every job that builds runs with `--locked`, so a build that needs to change
+# Cargo.lock is an error. Until `oxidoc-search` is on crates.io the committed
+# lock cannot resolve it, so these jobs fail. The first passing run follows the
+# oxidoc release.
 
 name: Test
 
@@ -199,6 +201,27 @@ jobs:
 
       - name: Validate catalogue data
         run: cargo run --locked -p catalogue -- validate --data data
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Without a report the build needs no network and shows no tier. The pages
+  # workflow runs the build with the report.
+  site:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: site
+
+      - name: Build the site
+        run: cargo run --locked -p catalogue -- build --no-tiers --out dist
 
   # ─────────────────────────────────────────────────────────────────────────
   # zizmor reads the workflow files and dependabot.yml. `advanced-security:

@@ -28,10 +28,7 @@ TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 
 cd "$ROOT"
 
-LOCKED="$(awk '
-    $0 == "name = \"wasm-bindgen\"" { found = 1; next }
-    found && /^version = / { gsub(/^version = "|"$/, ""); print; exit }
-' Cargo.lock)"
+LOCKED="$(bash "$ROOT/scripts/ci/wasm_bindgen_version.sh")"
 if [[ -z "$LOCKED" ]]; then
     echo "::error::Cargo.lock has no wasm-bindgen package. Run cargo build -p catalogue-search-wasm --target $TARGET once to add it."
     exit 1
