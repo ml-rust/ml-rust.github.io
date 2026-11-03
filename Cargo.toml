@@ -23,7 +23,8 @@ url = { version = "2", features = ["serde"] }
 # Argument parsing for the `catalogue` command.
 clap = { version = "4", features = ["derive"] }
 # Gzip decoding of the crates.io database dump, and encoding in its tests.
-flate2 = "1"
+# The zlib-rs backend inflates the dump in fewer instructions than miniz_oxide.
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 # Streams the entries of the crates.io database dump archive.
 tar = "0.4"
 # Reads the psql CSV tables inside the crates.io database dump.
@@ -32,5 +33,11 @@ csv = "1"
 serde_json = "1"
 # Fast hashing for maps keyed by crates.io integer ids.
 rustc-hash = "2"
+# Blocking HTTPS client with rustls for the crates.io database dump download.
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
+# Temporary directories for the download tests, created under the build directory.
+tempfile = "3"
 # Pure data model and validation, shared by the CLI.
 catalogue-core = { path = "crates/catalogue-core" }
+# Raw signals from the crates.io database dump, used by the dump commands.
+catalogue-signals = { path = "crates/catalogue-signals" }

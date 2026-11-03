@@ -3,6 +3,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+use crate::dump::{DumpCommand, run_dump};
 use crate::validate::{Outcome, validate};
 
 /// Exit code when the data has errors.
@@ -28,14 +29,21 @@ pub enum Command {
         #[arg(long, value_name = "DIR", default_value = "data")]
         data: PathBuf,
     },
+    /// Download and inspect the crates.io database dump.
+    Dump {
+        /// The dump action to run.
+        #[command(subcommand)]
+        command: DumpCommand,
+    },
 }
 
 /// Runs the parsed command and returns the process exit code.
 ///
-/// The code is 0 for valid data, 1 for data errors and 2 for a read error.
+/// The code is 0 for success, 1 for data or dump errors and 2 for an IO or network error.
 pub fn run(cli: Cli) -> ExitCode {
     match cli.command {
         Command::Validate { data } => run_validate(&data),
+        Command::Dump { command } => run_dump(command),
     }
 }
 
@@ -65,7 +73,9 @@ mod tests {
     #[test]
     fn validate_defaults_to_the_data_directory() {
         let cli = Cli::try_parse_from(["catalogue", "validate"]).expect("parses");
-        let Command::Validate { data } = cli.command;
+        let Command::Validate { data } = cli.command else {
+            panic!("expected validate");
+        };
         assert_eq!(data, PathBuf::from("data"));
     }
 
@@ -73,8 +83,52 @@ mod tests {
     fn validate_takes_a_data_directory() {
         let cli =
             Cli::try_parse_from(["catalogue", "validate", "--data", "other"]).expect("parses");
-        let Command::Validate { data } = cli.command;
+        let Command::Validate { data } = cli.command else {
+            panic!("expected validate");
+        };
         assert_eq!(data, PathBuf::from("other"));
+    }
+
+    #[test]
+    fn dump_fetch_takes_an_optional_cache_dir() {
+        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch"]).expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected dump fetch");
+        };
+        assert_eq!(cache_dir, None);
+        let cli = Cli::try_parse_from(["catalogue", "dump", "fetch", "--cache-dir", "c"])
+            .expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Fetch { cache_dir },
+        } = cli.command
+        else {
+            panic!("expected dump fetch");
+        };
+        assert_eq!(cache_dir, Some(PathBuf::from("c")));
+    }
+
+    #[test]
+    fn dump_stats_window_defaults_to_90_days() {
+        let cli = Cli::try_parse_from(["catalogue", "dump", "stats"]).expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Stats { window_days, .. },
+        } = cli.command
+        else {
+            panic!("expected dump stats");
+        };
+        assert_eq!(window_days, 90);
+        let cli = Cli::try_parse_from(["catalogue", "dump", "stats", "--window-days", "30"])
+            .expect("parses");
+        let Command::Dump {
+            command: DumpCommand::Stats { window_days, .. },
+        } = cli.command
+        else {
+            panic!("expected dump stats");
+        };
+        assert_eq!(window_days, 30);
     }
 
     #[test]

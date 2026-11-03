@@ -10,5 +10,6 @@ publish = false
 
 [dependencies]
 catalogue-core.workspace = true
+catalogue-signals.workspace = true
 clap.workspace = true
 thiserror.workspace = true
