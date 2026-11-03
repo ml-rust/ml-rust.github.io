@@ -2,6 +2,7 @@
 
 use std::fmt;
 
+use catalogue_core::is_github_repo_name;
 use thiserror::Error;
 
 /// A repo named by owner and name.
@@ -41,13 +42,7 @@ impl RepoRef {
             && owner
                 .bytes()
                 .all(|b| b.is_ascii_alphanumeric() || b == b'-');
-        let name_ok = !name.is_empty()
-            && name != "."
-            && name != ".."
-            && name
-                .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.'));
-        if owner_ok && name_ok {
+        if owner_ok && is_github_repo_name(name) {
             Ok(Self {
                 owner: owner.to_owned(),
                 name: name.to_owned(),

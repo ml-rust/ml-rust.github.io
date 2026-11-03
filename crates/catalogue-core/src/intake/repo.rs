@@ -1,6 +1,6 @@
 use url::Url;
 
-use crate::ids::normalize_repo_url;
+use crate::ids::{is_github_repo_name, normalize_repo_url};
 
 /// The GitHub owner of the ml-rust organization, in lowercase.
 const ORG_OWNER: &str = "ml-rust";
@@ -23,19 +23,12 @@ pub fn repo_link(raw: Option<&str>) -> Result<(Url, bool), String> {
     let [host, owner, name] = parts.as_slice() else {
         return Err(format!("repository `{raw}` has no owner and name"));
     };
-    if !is_repo_name(owner) || !is_repo_name(name) {
+    if !is_github_repo_name(owner) || !is_github_repo_name(name) {
         return Err(format!("repository `{raw}` is not an owner and name"));
     }
     let url = Url::parse(&format!("https://{normalized}"))
         .map_err(|_| format!("repository `{raw}` is not a valid link"))?;
     Ok((url, *host == "github.com" && *owner == ORG_OWNER))
-}
-
-fn is_repo_name(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .bytes()
-            .all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'_' | b'-'))
 }
 
 #[cfg(test)]
