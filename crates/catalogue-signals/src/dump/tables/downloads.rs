@@ -6,10 +6,11 @@ use jiff::{SignedDuration, civil};
 
 use crate::dump::error::DumpError;
 use crate::dump::names::TableName;
+use crate::dump::row::{Col, Row};
 use crate::dump::snapshot::{DailyDownloads, IdMap, VersionRow};
 use crate::dump::table::for_each_row;
 
-const COLUMNS: &[&str] = &["version_id", "downloads", "date"];
+const COLUMNS: &[&str; 3] = &["version_id", "downloads", "date"];
 
 const HOURS_PER_DAY: i64 = 24;
 
@@ -38,6 +39,49 @@ impl Window {
         let days = date.duration_since(self.start).as_hours() / HOURS_PER_DAY;
         usize::try_from(days).ok().filter(|&day| day < self.len)
     }
+
+    /// The date of day offset `day` from the window start.
+    fn date_at(self, day: usize) -> civil::Date {
+        let days = i64::try_from(day).unwrap_or(i64::MAX);
+        self.start
+            .checked_add(SignedDuration::from_hours(
+                HOURS_PER_DAY.saturating_mul(days),
+            ))
+            .unwrap_or(self.start)
+    }
+}
+
+/// The window index of the last date field read.
+///
+/// A row whose date bytes equal the last row's reuses its index without parsing.
+#[derive(Default)]
+struct DayCache {
+    last: Option<(Vec<u8>, Option<usize>)>,
+}
+
+impl DayCache {
+    /// The window index of the row's date, or `None` outside the window.
+    fn index(
+        &mut self,
+        row: &Row<'_>,
+        col: Col,
+        window: Window,
+    ) -> Result<Option<usize>, DumpError> {
+        let raw = row.bytes(col)?;
+        if let Some(&(_, day)) = self
+            .last
+            .as_ref()
+            .filter(|(bytes, _)| bytes.as_slice() == raw)
+        {
+            return Ok(day);
+        }
+        let day = window.index(row.date(col)?);
+        let (bytes, cached) = self.last.get_or_insert_with(|| (Vec::new(), None));
+        bytes.clear();
+        bytes.extend_from_slice(raw);
+        *cached = day;
+        Ok(day)
+    }
 }
 
 /// Reads `version_downloads` into per-crate daily totals over `window`.
@@ -51,27 +95,38 @@ pub(crate) fn read(
     unknown: &mut u64,
 ) -> Result<IdMap<DailyDownloads>, DumpError> {
     let mut out: IdMap<DailyDownloads> = IdMap::default();
-    for_each_row(input, TableName::VersionDownloads, COLUMNS, |row| {
-        let version_id = row.id("version_id")?;
-        let downloads = row.count("downloads")?;
-        let Some(day) = window.index(row.date("date")?) else {
-            return Ok(());
-        };
-        let Some(version) = versions.get(&version_id) else {
-            *unknown = unknown.saturating_add(1);
-            return Ok(());
-        };
-        let totals = out
-            .entry(version.crate_id)
-            .or_insert_with(|| DailyDownloads {
-                start: window.start,
-                days: vec![0; window.len],
-            });
-        if let Some(slot) = totals.days.get_mut(day) {
-            *slot = slot.saturating_add(downloads);
-        }
-        Ok(())
-    })?;
+    let mut cache = DayCache::default();
+    for_each_row(
+        input,
+        TableName::VersionDownloads,
+        COLUMNS,
+        |row, &[version_id, downloads, date]| {
+            let version_id = row.id(version_id)?;
+            let downloads = row.count32(downloads)?;
+            let Some(day) = cache.index(row, date, window)? else {
+                return Ok(());
+            };
+            let Some(version) = versions.get(&version_id) else {
+                *unknown = unknown.saturating_add(1);
+                return Ok(());
+            };
+            let totals = out
+                .entry(version.crate_id)
+                .or_insert_with(|| DailyDownloads {
+                    start: window.start,
+                    days: vec![0; window.len],
+                });
+            if let Some(slot) = totals.days.get_mut(day) {
+                *slot = slot
+                    .checked_add(downloads)
+                    .ok_or_else(|| DumpError::DownloadOverflow {
+                        crate_id: version.crate_id,
+                        date: window.date_at(day),
+                    })?;
+            }
+            Ok(())
+        },
+    )?;
     Ok(out)
 }
 
@@ -146,5 +201,82 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn oversized_row_value_is_a_bad_value() {
+        let csv = "version_id,downloads,date\n10,4294967296,2026-03-02\n";
+        let window = Window::ending(date(2026, 3, 2), 2);
+        let error = read(csv.as_bytes(), &IdMap::default(), window, &mut 0).expect_err("rejects");
+        assert!(matches!(
+            error,
+            DumpError::BadValue {
+                table: "version_downloads",
+                column: "downloads",
+                record: 1,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn day_total_overflow_names_crate_and_date() {
+        let versions: IdMap<VersionRow> =
+            [(10, version(1)), (11, version(1))].into_iter().collect();
+        let csv = "version_id,downloads,date\n\
+            10,3000000000,2026-03-01\n\
+            11,2000000000,2026-03-02\n\
+            11,2000000000,2026-03-01\n";
+        let window = Window::ending(date(2026, 3, 2), 2);
+        let error = read(csv.as_bytes(), &versions, window, &mut 0).expect_err("rejects");
+        match error {
+            DumpError::DownloadOverflow {
+                crate_id,
+                date: day,
+            } => {
+                assert_eq!((crate_id, day), (1, date(2026, 3, 1)));
+            }
+            other => panic!("unexpected error: {other}"),
+        }
+    }
+
+    #[test]
+    fn date_cache_matches_uncached_totals_for_interleaved_dates() {
+        let versions: IdMap<VersionRow> =
+            [(10, version(1)), (11, version(2))].into_iter().collect();
+        let dates = [
+            "2026-03-02",
+            "2026-03-02",
+            "2026-03-01",
+            "2026-03-02",
+            "2026-02-20",
+            "2026-02-20",
+            "2026-03-01",
+            "2026-03-01",
+            "2026-03-02",
+            "2026-03-01",
+        ];
+        let mut csv = String::from("version_id,downloads,date\n");
+        let mut expected: IdMap<Vec<u32>> = IdMap::default();
+        let window = Window::ending(date(2026, 3, 2), 2);
+        for (n, text) in dates.iter().enumerate() {
+            let version_id = 10 + u32::try_from(n % 2).expect("small");
+            let count = u32::try_from(n + 1).expect("small");
+            csv.push_str(&format!("{version_id},{count},{text}\n"));
+            let parsed = parse::date(text).expect("date");
+            if let (Some(day), Some(version)) = (window.index(parsed), versions.get(&version_id)) {
+                let totals = expected
+                    .entry(version.crate_id)
+                    .or_insert_with(|| vec![0; 2]);
+                if let Some(slot) = totals.get_mut(day) {
+                    *slot += count;
+                }
+            }
+        }
+        let totals = read(csv.as_bytes(), &versions, window, &mut 0).expect("reads");
+        assert_eq!(totals.len(), expected.len());
+        for (crate_id, days) in &expected {
+            assert_eq!(totals.get(crate_id).map(|t| &t.days), Some(days));
+        }
     }
 }

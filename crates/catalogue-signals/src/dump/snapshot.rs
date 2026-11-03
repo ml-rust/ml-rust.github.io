@@ -88,8 +88,8 @@ pub struct VersionRow {
     pub yanked: bool,
     /// The declared `rust-version`. An empty value reads as `None`.
     pub rust_version: Option<String>,
-    /// The declared edition. An empty value reads as `None`.
-    pub edition: Option<String>,
+    /// The declared edition year, such as `2021`. An empty value reads as `None`.
+    pub edition: Option<u16>,
 }
 
 /// The `dependencies.kind` code.
@@ -164,7 +164,7 @@ pub struct DailyDownloads {
     /// The first day of the window.
     pub start: civil::Date,
     /// Downloads per day. Index 0 is `start`. The length is the window length.
-    pub days: Vec<u64>,
+    pub days: Vec<u32>,
 }
 
 /// Counts of rows skipped because they reference an unknown id.

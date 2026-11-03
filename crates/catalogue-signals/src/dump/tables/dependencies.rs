@@ -4,10 +4,11 @@ use std::io::Read;
 
 use crate::dump::error::DumpError;
 use crate::dump::names::TableName;
+use crate::dump::row::{Col, Row};
 use crate::dump::snapshot::{DependencyEdge, DependencyKind, IdMap, Requirement};
-use crate::dump::table::{Row, for_each_row};
+use crate::dump::table::for_each_row;
 
-const COLUMNS: &[&str] = &["version_id", "crate_id", "req", "kind", "optional"];
+const COLUMNS: &[&str; 5] = &["version_id", "crate_id", "req", "kind", "optional"];
 
 /// The edges of every row, and the requirements of each default version.
 #[derive(Debug)]
@@ -29,40 +30,45 @@ pub(crate) fn read(
         .collect();
     let mut edges = Vec::new();
     let mut default_requirements: IdMap<Vec<Requirement>> = IdMap::default();
-    for_each_row(input, TableName::Dependencies, COLUMNS, |row| {
-        let edge = DependencyEdge {
-            version_id: row.id("version_id")?,
-            crate_id: row.id("crate_id")?,
-            kind: kind(row)?,
-            optional: row.flag("optional")?,
-        };
-        if let Some(&crate_id) = depender.get(&edge.version_id) {
-            default_requirements
-                .entry(crate_id)
-                .or_default()
-                .push(Requirement {
-                    req: row.text("req")?.to_owned(),
-                    crate_id: edge.crate_id,
-                    kind: edge.kind,
-                    optional: edge.optional,
-                });
-        }
-        edges.push(edge);
-        Ok(())
-    })?;
+    for_each_row(
+        input,
+        TableName::Dependencies,
+        COLUMNS,
+        |row, &[version_id, crate_id, req, kind_col, optional]| {
+            let edge = DependencyEdge {
+                version_id: row.id(version_id)?,
+                crate_id: row.id(crate_id)?,
+                kind: kind(row, kind_col)?,
+                optional: row.flag(optional)?,
+            };
+            if let Some(&crate_id) = depender.get(&edge.version_id) {
+                default_requirements
+                    .entry(crate_id)
+                    .or_default()
+                    .push(Requirement {
+                        req: row.text(req)?.to_owned(),
+                        crate_id: edge.crate_id,
+                        kind: edge.kind,
+                        optional: edge.optional,
+                    });
+            }
+            edges.push(edge);
+            Ok(())
+        },
+    )?;
     Ok(Dependencies {
         edges,
         default_requirements,
     })
 }
 
-fn kind(row: &Row<'_>) -> Result<DependencyKind, DumpError> {
-    let text = row.text("kind")?;
+fn kind(row: &Row<'_>, col: Col) -> Result<DependencyKind, DumpError> {
+    let text = row.text(col)?;
     match text {
         "0" => Ok(DependencyKind::Normal),
         "1" => Ok(DependencyKind::Build),
         "2" => Ok(DependencyKind::Dev),
-        _ => Err(row.bad("kind", text, "`0`, `1` or `2`")),
+        _ => Err(row.bad(col, text, "`0`, `1` or `2`")),
     }
 }
 

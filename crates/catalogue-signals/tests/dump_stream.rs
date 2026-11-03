@@ -65,7 +65,7 @@ fn reads_versions_and_defaults() {
     let first = snapshot.versions.get(&10).expect("10");
     assert_eq!((first.crate_id, first.num.as_str()), (1, "0.1.0"));
     assert_eq!(first.rust_version.as_deref(), Some("1.80"));
-    assert_eq!(first.edition.as_deref(), Some("2021"));
+    assert_eq!(first.edition, Some(2021));
     let second = snapshot.versions.get(&11).expect("11");
     assert_eq!(second.rust_version, None);
     let yanked = snapshot.versions.get(&20).expect("20");

@@ -59,11 +59,10 @@ fn read_links(
     lookup: &IdMap<String>,
     unknown: &mut u64,
 ) -> Result<IdMap<Vec<String>>, DumpError> {
-    let [crate_column, link_column] = *names;
     let mut out: IdMap<Vec<String>> = IdMap::default();
-    for_each_row(input, table, names, |row| {
-        let crate_id = row.id(crate_column)?;
-        match lookup.get(&row.id(link_column)?) {
+    for_each_row(input, table, names, |row, &[crate_col, link_col]| {
+        let crate_id = row.id(crate_col)?;
+        match lookup.get(&row.id(link_col)?) {
             Some(name) => out.entry(crate_id).or_default().push(name.clone()),
             None => *unknown = unknown.saturating_add(1),
         }

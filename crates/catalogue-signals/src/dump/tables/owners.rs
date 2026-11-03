@@ -7,25 +7,30 @@ use crate::dump::names::TableName;
 use crate::dump::snapshot::{IdMap, Owner, OwnerKind};
 use crate::dump::table::{for_each_row, id_names};
 
-const OWNERS: &[&str] = &["crate_id", "owner_id", "owner_kind"];
+const OWNERS: &[&str; 3] = &["crate_id", "owner_id", "owner_kind"];
 
 /// Reads `crate_owners` into a map from crate id to its owners.
 pub(crate) fn read_owners(input: impl Read) -> Result<IdMap<Vec<Owner>>, DumpError> {
     let mut out: IdMap<Vec<Owner>> = IdMap::default();
-    for_each_row(input, TableName::CrateOwners, OWNERS, |row| {
-        let text = row.text("owner_kind")?;
-        let kind = match text {
-            "0" => OwnerKind::User,
-            "1" => OwnerKind::Team,
-            _ => return Err(row.bad("owner_kind", text, "`0` or `1`")),
-        };
-        let owner = Owner {
-            id: row.id("owner_id")?,
-            kind,
-        };
-        out.entry(row.id("crate_id")?).or_default().push(owner);
-        Ok(())
-    })?;
+    for_each_row(
+        input,
+        TableName::CrateOwners,
+        OWNERS,
+        |row, &[crate_id, owner_id, owner_kind]| {
+            let text = row.text(owner_kind)?;
+            let kind = match text {
+                "0" => OwnerKind::User,
+                "1" => OwnerKind::Team,
+                _ => return Err(row.bad(owner_kind, text, "`0` or `1`")),
+            };
+            let owner = Owner {
+                id: row.id(owner_id)?,
+                kind,
+            };
+            out.entry(row.id(crate_id)?).or_default().push(owner);
+            Ok(())
+        },
+    )?;
     Ok(out)
 }
 

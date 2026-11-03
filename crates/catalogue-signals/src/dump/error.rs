@@ -1,5 +1,6 @@
 //! Errors from reading a crates.io database dump.
 
+use jiff::civil;
 use thiserror::Error;
 
 /// A dump the reader rejects.
@@ -15,7 +16,7 @@ pub enum DumpError {
         /// The read error.
         source: std::io::Error,
     },
-    /// A table is not valid CSV or not valid UTF-8.
+    /// A table is not valid CSV.
     #[error(
         "table `{table}` in the dump archive is not valid CSV: {source}. Fetch db-dump.tar.gz again and retry"
     )]
@@ -70,6 +71,16 @@ pub enum DumpError {
         record: u64,
         /// The id.
         value: u64,
+    },
+    /// A crate's downloads on one day overflow the `u32` day counter.
+    #[error(
+        "crate {crate_id} has more downloads on {date} than the `u32` day counter holds. Widen `DailyDownloads::days` in catalogue-signals"
+    )]
+    DownloadOverflow {
+        /// The crate id.
+        crate_id: u32,
+        /// The day whose total overflows.
+        date: civil::Date,
     },
     /// A needed table is absent from the archive.
     #[error(

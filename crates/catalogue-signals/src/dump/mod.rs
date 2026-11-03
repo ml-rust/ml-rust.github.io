@@ -7,6 +7,7 @@ mod error;
 mod names;
 mod parse;
 mod read;
+mod row;
 mod snapshot;
 mod table;
 mod tables;

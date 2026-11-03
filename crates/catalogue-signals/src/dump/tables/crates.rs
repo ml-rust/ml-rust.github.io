@@ -9,7 +9,7 @@ use crate::dump::names::TableName;
 use crate::dump::snapshot::{CrateRow, DeletedCrate, IdMap};
 use crate::dump::table::for_each_row;
 
-const CRATES: &[&str] = &[
+const CRATES: &[&str; 8] = &[
     "id",
     "name",
     "created_at",
@@ -20,39 +20,59 @@ const CRATES: &[&str] = &[
     "readme",
 ];
 
-const DELETED: &[&str] = &["name", "deleted_at"];
+const DELETED: &[&str; 2] = &["name", "deleted_at"];
 
 /// Reads `crates`. The README feeds the deprecation scan and is then dropped.
 pub(crate) fn read_crates(input: impl Read) -> Result<IdMap<CrateRow>, DumpError> {
     let mut out = IdMap::default();
-    for_each_row(input, TableName::Crates, CRATES, |row| {
-        let description = row.optional_text("description")?;
-        let readme = row.optional_text("readme")?;
-        let crate_row = CrateRow {
-            name: row.text("name")?.to_owned(),
-            created_at: row.timestamp("created_at")?,
-            updated_at: row.timestamp("updated_at")?,
-            description: description.map(str::to_owned),
-            homepage: row.optional_string("homepage")?,
-            repository: row.optional_string("repository")?,
-            deprecation: deprecation::scan(description, readme),
-        };
-        out.insert(row.id("id")?, crate_row);
-        Ok(())
-    })?;
+    for_each_row(
+        input,
+        TableName::Crates,
+        CRATES,
+        |row,
+         &[
+            id,
+            name,
+            created_at,
+            updated_at,
+            description,
+            homepage,
+            repository,
+            readme,
+        ]| {
+            let description = row.optional_text(description)?;
+            let readme = row.optional_text(readme)?;
+            let crate_row = CrateRow {
+                name: row.text(name)?.to_owned(),
+                created_at: row.timestamp(created_at)?,
+                updated_at: row.timestamp(updated_at)?,
+                description: description.map(str::to_owned),
+                homepage: row.optional_string(homepage)?,
+                repository: row.optional_string(repository)?,
+                deprecation: deprecation::scan(description, readme),
+            };
+            out.insert(row.id(id)?, crate_row);
+            Ok(())
+        },
+    )?;
     Ok(out)
 }
 
 /// Reads `deleted_crates`.
 pub(crate) fn read_deleted(input: impl Read) -> Result<Vec<DeletedCrate>, DumpError> {
     let mut out = Vec::new();
-    for_each_row(input, TableName::DeletedCrates, DELETED, |row| {
-        out.push(DeletedCrate {
-            name: row.text("name")?.to_owned(),
-            deleted_at: row.timestamp("deleted_at")?,
-        });
-        Ok(())
-    })?;
+    for_each_row(
+        input,
+        TableName::DeletedCrates,
+        DELETED,
+        |row, &[name, deleted_at]| {
+            out.push(DeletedCrate {
+                name: row.text(name)?.to_owned(),
+                deleted_at: row.timestamp(deleted_at)?,
+            });
+            Ok(())
+        },
+    )?;
     Ok(out)
 }
 
