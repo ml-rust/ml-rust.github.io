@@ -1,0 +1,11 @@
+name = "Alpha"
+kind = "library"
+repo = "https://github.com/ml-rust/alpha"
+crates = ["alpha-crate"]
+topics = ["ml"]
+added = 2026-11-03
+
+[description]
+text = "The Alpha project."
+source = "crate"
+source_url = "https://crates.io/crates/other-crate"

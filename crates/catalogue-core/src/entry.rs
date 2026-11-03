@@ -4,8 +4,11 @@ use url::Url;
 use crate::date::Date;
 use crate::ids::{CrateName, Slug};
 
+/// The start of a crate page on crates.io.
+pub const CRATES_IO_PAGE: &str = "https://crates.io/crates/";
+
 /// Longest allowed description, in characters.
-const MAX_DESCRIPTION_CHARS: usize = 300;
+pub const MAX_DESCRIPTION_CHARS: usize = 300;
 
 /// Whether an entry is a library or an application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -23,6 +26,8 @@ pub enum EntryKind {
 pub enum DescriptionSource {
     /// Taken from the project README. Requires `source_url`.
     Readme,
+    /// The crate's own crates.io description. Requires `source_url`, the crate page.
+    Crate,
     /// Written by a person.
     Human,
 }
@@ -35,7 +40,7 @@ pub struct Description {
     pub text: String,
     /// Where the text comes from.
     pub source: DescriptionSource,
-    /// The page the text was taken from. Required for `readme`.
+    /// The page the text was taken from. Required for `readme` and `crate`.
     pub source_url: Option<Url>,
 }
 
@@ -54,7 +59,33 @@ impl Description {
         if self.source == DescriptionSource::Readme && self.source_url.is_none() {
             out.push("a `readme` description requires `source_url`".to_owned());
         }
+        if self.source == DescriptionSource::Crate && self.source_url.is_none() {
+            out.push("a `crate` description requires `source_url`".to_owned());
+        }
         out
+    }
+
+    /// Lists the rules a `crate` description breaks against the crates of its entry.
+    ///
+    /// The `source_url` must be `https://crates.io/crates/<name>` for one of `crates`.
+    fn crate_source_problems(&self, crates: &[CrateName]) -> Vec<String> {
+        let Some(url) = self
+            .source_url
+            .as_ref()
+            .filter(|_| self.source == DescriptionSource::Crate)
+        else {
+            return Vec::new();
+        };
+        let matches = crates
+            .iter()
+            .any(|name| url.as_str() == format!("{CRATES_IO_PAGE}{name}"));
+        if matches {
+            Vec::new()
+        } else {
+            vec![format!(
+                "a `crate` description needs `source_url` `{CRATES_IO_PAGE}<crate>` for one of the entry's crates, found `{url}`"
+            )]
+        }
     }
 }
 
@@ -122,6 +153,7 @@ impl Entry {
             }
         }
         out.extend(self.description.problems());
+        out.extend(self.description.crate_source_problems(&self.crates));
         out
     }
 }
@@ -210,6 +242,42 @@ mod tests {
         assert!(has(&problems(&text), "requires `source_url`"));
         let with_url = format!("{text}source_url = \"https://github.com/ml-rust/alpha#readme\"\n");
         assert!(problems(&with_url).is_empty());
+    }
+
+    fn crate_source(crates: &str, name: &str) -> String {
+        let text = ALPHA
+            .replace("crates = [\"alpha-crate\"]", crates)
+            .replace("source = \"human\"", "source = \"crate\"");
+        format!("{text}source_url = \"{name}\"\n")
+    }
+
+    #[test]
+    fn crate_description_needs_a_crate_page_of_the_entry() {
+        let crates = "crates = [\"alpha-crate\"]";
+        let missing = ALPHA.replace("source = \"human\"", "source = \"crate\"");
+        assert!(has(
+            &problems(&missing),
+            "`crate` description requires `source_url`"
+        ));
+        let page = crate_source(crates, "https://crates.io/crates/alpha-crate");
+        assert!(problems(&page).is_empty());
+        for bad in [
+            "https://crates.io/crates/other-crate",
+            "https://github.com/ml-rust/alpha",
+            "http://crates.io/crates/alpha-crate",
+        ] {
+            let found = problems(&crate_source(crates, bad));
+            assert!(has(&found, "needs `source_url`"), "{bad}: {found:?}");
+        }
+    }
+
+    #[test]
+    fn crate_page_may_name_any_listed_crate() {
+        let crates = "crates = [\"alpha-crate\", \"alpha-extra\"]";
+        let extra = crate_source(crates, "https://crates.io/crates/alpha-extra");
+        assert!(problems(&extra).is_empty());
+        let unlisted = crate_source(crates, "https://crates.io/crates/alpha");
+        assert!(!problems(&unlisted).is_empty());
     }
 
     #[test]

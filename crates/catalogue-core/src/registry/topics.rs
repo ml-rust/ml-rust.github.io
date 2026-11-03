@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+use super::discovery::{is_category_slug, keyword_problem};
 use crate::ids::Slug;
 
 /// Contents of `data/topics.toml`.
@@ -24,6 +25,12 @@ pub struct Topic {
     pub parent: Option<Slug>,
     /// Short sourced overview of the topic.
     pub summary: Option<TopicSummary>,
+    /// crates.io keywords that map a crate to this topic. Lowercase and trimmed.
+    #[serde(default)]
+    pub keywords: Vec<String>,
+    /// crates.io category slugs that map a crate to this topic. A slug also matches its sub-categories.
+    #[serde(default)]
+    pub categories: Vec<String>,
 }
 
 /// A sourced overview of a topic.
@@ -49,6 +56,18 @@ impl Topic {
             }
             if summary.evidence.is_empty() {
                 out.push("summary needs at least one evidence link".to_owned());
+            }
+        }
+        for keyword in &self.keywords {
+            if let Some(problem) = keyword_problem(keyword) {
+                out.push(problem);
+            }
+        }
+        for category in &self.categories {
+            if !is_category_slug(category) {
+                out.push(format!(
+                    "category `{category}` must match `[a-z0-9_-]+(::[a-z0-9_-]+)*`"
+                ));
             }
         }
         out
@@ -82,6 +101,39 @@ mod tests {
         let t =
             topic("id = \"ml\"\nname = \"ML\"\n[summary]\ntext = \"Overview.\"\nevidence = []\n");
         assert!(t.problems().iter().any(|p| p.contains("evidence")));
+    }
+
+    #[test]
+    fn keywords_and_categories_default_to_empty() {
+        let t = topic("id = \"ml\"\nname = \"ML\"\n");
+        assert!(t.keywords.is_empty() && t.categories.is_empty());
+        let t = topic(
+            "id = \"ml\"\nname = \"ML\"\nkeywords = [\"llm\"]\ncategories = [\"science::ml\"]\n",
+        );
+        assert_eq!(t.keywords, ["llm"]);
+        assert_eq!(t.categories, ["science::ml"]);
+        assert!(t.problems().is_empty());
+    }
+
+    #[test]
+    fn bad_keywords_and_categories_are_reported() {
+        for (field, value, needle) in [
+            ("keywords", "\"LLM\"", "must be lowercase"),
+            ("keywords", "\" llm\"", "surrounding whitespace"),
+            ("keywords", "\"\"", "must not be empty"),
+            ("categories", "\"Science::ML\"", "must match"),
+            ("categories", "\"science::\"", "must match"),
+            ("categories", "\"\"", "must match"),
+        ] {
+            let t = topic(&format!(
+                "id = \"ml\"\nname = \"ML\"\n{field} = [{value}]\n"
+            ));
+            assert!(
+                t.problems().iter().any(|p| p.contains(needle)),
+                "{field} {value}: {:?}",
+                t.problems()
+            );
+        }
     }
 
     #[test]

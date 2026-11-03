@@ -20,7 +20,10 @@ mod testing;
 
 pub use catalogue::Catalogue;
 pub use date::{Date, DateError};
-pub use entry::{Description, DescriptionSource, Distribution, Entry, EntryKind};
+pub use entry::{
+    CRATES_IO_PAGE, Description, DescriptionSource, Distribution, Entry, EntryKind,
+    MAX_DESCRIPTION_CHARS,
+};
 pub use ids::{
     CrateName, GithubLogin, IdError, Slug, canonical_crate_name, normalize_repo_url,
     push_canonical_crate_name,

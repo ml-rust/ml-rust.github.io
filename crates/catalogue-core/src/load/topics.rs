@@ -4,7 +4,7 @@ use super::diagnostics::Diagnostics;
 use super::graph::reaches;
 use super::parse::Parsed;
 use crate::ids::Slug;
-use crate::registry::Topics;
+use crate::registry::{Topic, Topics};
 
 /// Checks the topic list and returns the set of topic ids.
 pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BTreeSet<Slug> {
@@ -18,6 +18,7 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
             diags.push(&file.path, format!("topic `{}` is defined twice", topic.id));
         }
     }
+    check_mappings(topics, file, diags);
     let mut parents: BTreeMap<Slug, Vec<Slug>> = BTreeMap::new();
     for topic in topics {
         let Some(parent) = &topic.parent else {
@@ -47,6 +48,56 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
         }
     }
     ids
+}
+
+/// Reports a keyword or category that two topics claim, or that one topic lists twice.
+fn check_mappings(topics: &[Topic], file: &Parsed<Topics>, diags: &mut Diagnostics) {
+    let mut keywords: BTreeMap<&str, &Slug> = BTreeMap::new();
+    let mut categories: BTreeMap<&str, &Slug> = BTreeMap::new();
+    for topic in topics {
+        claim(
+            "keyword",
+            &topic.keywords,
+            topic,
+            &mut keywords,
+            file,
+            diags,
+        );
+        claim(
+            "category",
+            &topic.categories,
+            topic,
+            &mut categories,
+            file,
+            diags,
+        );
+    }
+}
+
+fn claim<'a>(
+    what: &str,
+    values: &'a [String],
+    topic: &'a Topic,
+    owners: &mut BTreeMap<&'a str, &'a Slug>,
+    file: &Parsed<Topics>,
+    diags: &mut Diagnostics,
+) {
+    for value in values {
+        match owners.insert(value.as_str(), &topic.id) {
+            Some(first) if *first == topic.id => diags.push(
+                &file.path,
+                format!("topic `{}`: {what} `{value}` is listed twice", topic.id),
+            ),
+            Some(first) => diags.push(
+                &file.path,
+                format!(
+                    "{what} `{value}` maps to topics `{first}` and `{}`; a {what} maps to one topic",
+                    topic.id
+                ),
+            ),
+            None => {}
+        }
+    }
 }
 
 #[cfg(test)]
@@ -107,6 +158,53 @@ mod tests {
         assert!(
             found.iter().any(|m| m.contains("forms a cycle")),
             "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_keyword_maps_to_one_topic() {
+        let found = with_topics(
+            "keywords = [\"llm\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nkeywords = [\"llm\"]\n",
+        );
+        assert!(
+            found
+                .iter()
+                .any(|m| m.contains("keyword `llm` maps to topics `tensors` and `gpu`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_category_maps_to_one_topic() {
+        let found = with_topics(
+            "categories = [\"science::ml\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\ncategories = [\"science::ml\"]\n",
+        );
+        assert!(
+            found
+                .iter()
+                .any(|m| m.contains("category `science::ml` maps to topics `tensors` and `gpu`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_repeated_keyword_in_one_topic_is_reported() {
+        let found = with_topics("keywords = [\"llm\", \"llm\"]\n");
+        assert!(
+            found
+                .iter()
+                .any(|m| m.contains("keyword `llm` is listed twice")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn distinct_mappings_pass() {
+        assert!(
+            with_topics(
+                "keywords = [\"llm\"]\ncategories = [\"science\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nkeywords = [\"cuda\"]\ncategories = [\"science::ml\"]\n"
+            )
+            .is_empty()
         );
     }
 

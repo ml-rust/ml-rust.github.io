@@ -8,4 +8,5 @@ added = 2026-11-03
 
 [description]
 text = "The Beta project."
-source = "human"
+source = "crate"
+source_url = "https://crates.io/crates/beta-crate"

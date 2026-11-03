@@ -1,0 +1,55 @@
+# Catalogue topics.
+#
+# Each topic is a shelf on the site. `parent` nests a topic under another.
+# `keywords` and `categories` map crates.io keywords and category slugs to the
+# topic when `catalogue seed` drafts entries. A human reviews every drafted entry.
+# A topic `summary` is a published claim: it needs evidence links.
+#
+# Generic markers such as the `machine-learning` and `ml` keywords and the
+# `science::ml` category map to no topic: nearly every candidate carries them,
+# so they say nothing about the shelf.
+
+[[topic]]
+id = "foundations"
+name = "Foundations"
+keywords = ["tensor", "autograd", "ndarray", "linear-algebra", "gpu", "cuda"]
+categories = ["science::math"]
+
+[[topic]]
+id = "deep-learning"
+name = "Deep learning frameworks"
+keywords = ["deep-learning", "neural-network", "neural-networks"]
+
+[[topic]]
+id = "inference"
+name = "Inference and serving"
+keywords = ["inference", "onnx", "gguf", "llm", "transformer", "transformers"]
+
+[[topic]]
+id = "classical-ml"
+name = "Classical machine learning"
+keywords = ["clustering", "classification", "regression", "random-forest", "svm", "decision-tree", "gradient-boosting"]
+
+[[topic]]
+id = "nlp"
+name = "Language and text"
+keywords = ["nlp", "tokenizer", "tokenizers", "embeddings", "text"]
+
+[[topic]]
+id = "vision"
+name = "Computer vision"
+keywords = ["computer-vision", "image-processing", "vision"]
+
+[[topic]]
+id = "reinforcement-learning"
+name = "Reinforcement learning"
+keywords = ["reinforcement-learning"]
+
+[[topic]]
+id = "data"
+name = "Data and formats"
+keywords = ["safetensors", "dataframe", "dataset", "datasets", "arrow"]
+
+[[topic]]
+id = "applications"
+name = "Applications and tools"

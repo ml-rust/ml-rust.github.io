@@ -94,7 +94,7 @@ impl Discovery {
 }
 
 /// Whether `value` is `segment(::segment)*` with segments of `[a-z0-9_-]`.
-fn is_category_slug(value: &str) -> bool {
+pub(super) fn is_category_slug(value: &str) -> bool {
     value.split("::").all(|segment| {
         !segment.is_empty()
             && segment
@@ -114,7 +114,7 @@ fn is_github_topic(value: &str) -> bool {
         && bytes.all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'-'))
 }
 
-fn keyword_problem(keyword: &str) -> Option<String> {
+pub(super) fn keyword_problem(keyword: &str) -> Option<String> {
     if keyword.trim().is_empty() {
         Some("a keyword must not be empty".to_owned())
     } else if keyword != keyword.trim() {

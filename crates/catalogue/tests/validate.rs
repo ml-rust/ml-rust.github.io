@@ -48,6 +48,24 @@ fn topic_parent_cycle_is_reported() {
 }
 
 #[test]
+fn keyword_claimed_by_two_topics_is_reported() {
+    expect_invalid(
+        "topic-keyword-collision",
+        "keyword `tensor` maps to topics `ml` and `tensors`",
+        1,
+    );
+}
+
+#[test]
+fn crate_description_for_another_crate_is_reported() {
+    expect_invalid(
+        "crate-source-mismatch",
+        "a `crate` description needs `source_url`",
+        1,
+    );
+}
+
+#[test]
 fn judgment_for_unknown_entry_is_reported() {
     expect_invalid("unknown-entry", "entry `ghost` does not exist", 1);
 }

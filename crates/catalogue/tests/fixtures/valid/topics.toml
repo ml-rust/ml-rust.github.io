@@ -1,11 +1,14 @@
 [[topic]]
 id = "ml"
 name = "Machine learning"
+keywords = ["machine-learning"]
+categories = ["science::ml"]
 
 [[topic]]
 id = "tensors"
 name = "Tensors"
 parent = "ml"
+keywords = ["tensor"]
 
 [topic.summary]
 text = "Array types and the operations on them."
