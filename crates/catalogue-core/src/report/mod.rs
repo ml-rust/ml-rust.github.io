@@ -5,5 +5,5 @@ mod fact;
 mod tier_report;
 
 pub use entry::{EntryReport, ReasonRecord};
-pub use fact::{SignalFact, SourceRef};
+pub use fact::{STARS_SIGNAL, SignalFact, SourceRef};
 pub use tier_report::{REPORT_SCHEMA, ReportMismatch, TierReport};

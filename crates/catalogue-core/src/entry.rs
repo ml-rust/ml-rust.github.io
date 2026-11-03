@@ -3,6 +3,7 @@ use url::Url;
 
 use crate::date::Date;
 use crate::ids::{CrateName, Slug};
+use crate::project_pages::crate_page;
 
 /// The start of a crate page on crates.io.
 pub const CRATES_IO_PAGE: &str = "https://crates.io/crates/";
@@ -78,7 +79,7 @@ impl Description {
         };
         let matches = crates
             .iter()
-            .any(|name| url.as_str() == format!("{CRATES_IO_PAGE}{name}"));
+            .any(|name| crate_page(name.as_str()).as_ref() == Some(url));
         if matches {
             Vec::new()
         } else {
@@ -141,6 +142,9 @@ impl Entry {
         if self.repo.scheme() != "https" {
             out.push(format!("repo `{}` must use https", self.repo));
         }
+        if let Some(homepage) = self.homepage.as_ref().filter(|url| url.scheme() != "https") {
+            out.push(format!("homepage `{homepage}` must use https"));
+        }
         if self.topics.is_empty() {
             out.push("an entry needs at least one topic".to_owned());
         }
@@ -201,6 +205,15 @@ mod tests {
     fn empty_name_is_reported() {
         let text = ALPHA.replace("name = \"Alpha\"", "name = \" \"");
         assert!(has(&problems(&text), "name must not be empty"));
+    }
+
+    #[test]
+    fn non_https_homepage_is_reported() {
+        let text = format!("homepage = \"javascript:alert(1)\"\n{ALPHA}");
+        assert!(has(
+            &problems(&text),
+            "homepage `javascript:alert(1)` must use https"
+        ));
     }
 
     #[test]

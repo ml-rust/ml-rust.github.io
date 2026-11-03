@@ -2,16 +2,13 @@
 
 use std::fmt::Display;
 
-use catalogue_core::{Date, EntryKind, SignalFact, Signals, SourceRef};
+use catalogue_core::{Date, EntryKind, STARS_SIGNAL, SignalFact, Signals, SourceRef};
 use url::Url;
 
 use super::sources::{BUILD_CHECK_PAGE, DUMP_PAGE, DUMP_SOURCE, FactSources};
 
 /// The value text of a finding that the check looked for and did not find.
 const NONE_FOUND: &str = "none";
-
-/// The id of the star count row, the one display-only fact.
-const STARS: &str = "stars";
 
 /// One row before citing: id, label, value text and the origin of its source.
 type Row = (&'static str, &'static str, Option<String>, Origin);
@@ -401,7 +398,7 @@ pub fn signal_facts(
     rows.extend(github_rows(signals));
     rows.extend(publication_rows(signals));
     rows.extend(distribution_rows(signals, sources));
-    rows.push((STARS, "GitHub stars", text(stars), Origin::Repo));
+    rows.push((STARS_SIGNAL, "GitHub stars", text(stars), Origin::Repo));
     rows.into_iter()
         .map(|(name, label, value, origin)| {
             let (source, fetched) = match value {
@@ -414,7 +411,7 @@ pub fn signal_facts(
                 value,
                 source,
                 fetched,
-                counts_toward_tier: name != STARS,
+                counts_toward_tier: name != STARS_SIGNAL,
             }
         })
         .collect()

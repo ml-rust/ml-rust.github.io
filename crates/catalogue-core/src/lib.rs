@@ -18,6 +18,7 @@ mod intake;
 mod judgment;
 mod judgment_checks;
 mod load;
+mod project_pages;
 mod registry;
 mod report;
 mod tier;
@@ -39,6 +40,7 @@ pub use ids::{
 pub use intake::{description_text, entry_name, repo_link};
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
+pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
     AppFeaturedThresholds, Deprecated, DeprecatedRequirement, Discovery, DormancyThresholds,
     FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers,
@@ -46,6 +48,7 @@ pub use registry::{
     TopicSummary, Topics,
 };
 pub use report::{
-    EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, SignalFact, SourceRef, TierReport,
+    EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef,
+    TierReport,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

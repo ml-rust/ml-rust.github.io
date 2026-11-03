@@ -6,6 +6,9 @@ use url::Url;
 use crate::date::Date;
 use crate::date_text::plain_option;
 
+/// The id of the GitHub star count fact. Stars never count toward a tier.
+pub const STARS_SIGNAL: &str = "stars";
+
 /// Where a signal value comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

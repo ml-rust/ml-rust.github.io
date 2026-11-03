@@ -1,6 +1,8 @@
 //! The pages and data dates that back each cited signal.
 
-use catalogue_core::{CRATES_IO_PAGE, Date, Entry};
+use catalogue_core::{
+    Date, Entry, crate_page, docker_page, homebrew_page, page_url, repology_page,
+};
 use url::Url;
 
 use crate::github::RepoRef;
@@ -75,9 +77,9 @@ impl FactSources {
     pub fn new(entry: &Entry, repo: Option<&RepoRef>, dump: Date, dates: FetchDates) -> Self {
         let primary = entry.crates.first().map(|name| name.as_str());
         let repo_page =
-            repo.and_then(|repo| page(GITHUB, &[repo.owner.as_str(), repo.name.as_str()]));
+            repo.and_then(|repo| page_url(GITHUB, &[repo.owner.as_str(), repo.name.as_str()]));
         let releases_page = repo.and_then(|repo| {
-            page(
+            page_url(
                 GITHUB,
                 &[repo.owner.as_str(), repo.name.as_str(), "releases"],
             )
@@ -85,36 +87,22 @@ impl FactSources {
         let distribution = entry.distribution.as_ref();
         let homebrew = distribution.and_then(|found| found.homebrew.as_deref());
         let repology = distribution.and_then(|found| found.repology.as_deref());
-        let docker = distribution.and_then(|found| found.docker.first());
+        let docker = distribution
+            .and_then(|found| found.docker.first())
+            .map(String::as_str);
         Self {
             dump,
-            crate_page: primary
-                .and_then(|name| Url::parse(&format!("{CRATES_IO_PAGE}{name}")).ok()),
+            crate_page: primary.and_then(crate_page),
             advisory_page: primary
                 .and_then(|name| Url::parse(&format!("{ADVISORY_PAGE}{name}.html")).ok()),
             repo_page,
             releases_page,
-            homebrew_page: homebrew
-                .and_then(|name| page("https://formulae.brew.sh/formula", &[name])),
-            repology_page: repology
-                .and_then(|name| page("https://repology.org/project", &[name, "versions"])),
-            docker_page: docker.and_then(|image| {
-                let parts: Vec<&str> = image.split('/').collect();
-                page("https://hub.docker.com/r", &parts)
-            }),
+            homebrew_page: homebrew.and_then(homebrew_page),
+            repology_page: repology.and_then(repology_page),
+            docker_page: docker.and_then(docker_page),
             dates,
         }
     }
-}
-
-/// `base` with each of `segments` appended as one encoded path segment.
-fn page(base: &str, segments: &[&str]) -> Option<Url> {
-    let mut url = Url::parse(base).ok()?;
-    url.path_segments_mut()
-        .ok()?
-        .pop_if_empty()
-        .extend(segments);
-    Some(url)
 }
 
 #[cfg(test)]

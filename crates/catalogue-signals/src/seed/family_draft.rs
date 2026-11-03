@@ -3,10 +3,9 @@
 use std::collections::BTreeSet;
 
 use catalogue_core::{
-    CRATES_IO_PAGE, CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug,
-    Topics, entry_name, repo_link,
+    CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug, Topics, crate_page,
+    entry_name, repo_link,
 };
-use url::Url;
 
 use super::family::Family;
 use super::fields::{https_link, matching_topics};
@@ -56,8 +55,8 @@ pub(super) fn draft_family(
             CrateName::new(member).map_err(|error| format!("the crate name is not valid: {error}"))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    let source_url = Url::parse(&format!("{CRATES_IO_PAGE}{described_by}"))
-        .map_err(|_| "the crates.io page is not a valid link".to_owned())?;
+    let source_url = crate_page(described_by)
+        .ok_or_else(|| "the crates.io page is not a valid link".to_owned())?;
     let entry = Entry {
         name,
         kind: EntryKind::Library,

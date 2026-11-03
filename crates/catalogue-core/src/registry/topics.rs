@@ -57,6 +57,13 @@ impl Topic {
             if summary.evidence.is_empty() {
                 out.push("summary needs at least one evidence link".to_owned());
             }
+            for link in summary
+                .evidence
+                .iter()
+                .filter(|link| link.scheme() != "https")
+            {
+                out.push(format!("summary evidence link `{link}` must use https"));
+            }
         }
         for keyword in &self.keywords {
             if let Some(problem) = keyword_problem(keyword) {
@@ -101,6 +108,19 @@ mod tests {
         let t =
             topic("id = \"ml\"\nname = \"ML\"\n[summary]\ntext = \"Overview.\"\nevidence = []\n");
         assert!(t.problems().iter().any(|p| p.contains("evidence")));
+    }
+
+    #[test]
+    fn summary_evidence_must_use_https() {
+        let t = topic(
+            "id = \"ml\"\nname = \"ML\"\n[summary]\ntext = \"Overview.\"\nevidence = [\"javascript:alert(1)\", \"http://example.com/a\"]\n",
+        );
+        let found = t.problems();
+        assert_eq!(found.len(), 2, "{found:?}");
+        assert!(
+            found.iter().all(|p| p.contains("must use https")),
+            "{found:?}"
+        );
     }
 
     #[test]
