@@ -5,11 +5,13 @@
 //! [`Catalogue`] or the full list of [`Diagnostics`]. [`assess`] applies the
 //! tier rules to one entry's [`Signals`] and [`Context`]. A [`TierReport`]
 //! holds every entry's tier with the source of each signal.
+//! [`Catalogue::effective`] applies an entry's merged judgments.
 
 mod catalogue;
 mod date;
 pub mod date_text;
 pub mod deprecation;
+mod effective;
 mod entry;
 mod ids;
 mod intake;
@@ -25,6 +27,7 @@ mod testing;
 
 pub use catalogue::Catalogue;
 pub use date::{Date, DateError};
+pub use effective::{Correction, EffectiveEntry};
 pub use entry::{
     CRATES_IO_PAGE, Description, DescriptionSource, Distribution, Entry, EntryKind,
     MAX_DESCRIPTION_CHARS,

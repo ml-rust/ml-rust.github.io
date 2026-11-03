@@ -64,6 +64,12 @@ pub(crate) fn category_judgment(topics: &str) -> String {
     )
 }
 
+/// Judgment `number` on `entry` approved on `date`, with `body` as its `[judgment]` table.
+pub(crate) fn dated_judgment(number: u32, entry: &str, date: &str, body: &str) -> String {
+    let head = judgment_head(number, entry).replace("date = 2026-11-03", &format!("date = {date}"));
+    format!("{head}[judgment]\n{body}")
+}
+
 fn judgment_head(number: u32, entry: &str) -> String {
     let head = JUDGMENT.split("[judgment]").next().unwrap_or_default();
     head.replace("entry = \"alpha\"", &format!("entry = \"{entry}\""))
