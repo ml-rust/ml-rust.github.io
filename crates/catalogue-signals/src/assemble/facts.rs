@@ -1,42 +1,49 @@
 //! Repository signals from the GitHub facts of an entry's repo.
 
-use catalogue_core::{Date, Signals};
+use catalogue_core::Signals;
 
-use crate::github::RepoFacts;
+use crate::history::RepoValues;
 
 /// Sets the repository signals from `facts`.
 ///
-/// - [`RepoFacts::Found`]: `repo_archived`, `repo_gone = false`,
+/// - [`RepoValues::Found`]: `repo_archived`, `repo_gone = false`,
 ///   `last_human_commit`, `oldest_unanswered_days` and `maintainer_replies_365`.
 ///   A repo with no unanswered outside item has an oldest unanswered age of 0.
 ///   A newest human commit that lies beyond the sampled commits stays unknown.
-/// - [`RepoFacts::Gone`]: `repo_gone = true`. The other repository signals stay unknown.
+/// - [`RepoValues::Gone`]: `repo_gone = true`. The other repository signals stay unknown.
 /// - `None`: every repository signal stays unknown.
-pub(super) fn apply_facts(facts: Option<&RepoFacts>, signals: &mut Signals) {
+pub(super) fn apply_facts(facts: Option<&RepoValues>, signals: &mut Signals) {
     match facts {
-        Some(RepoFacts::Found(found)) => {
-            signals.repo_archived = Some(found.archived);
+        Some(RepoValues::Found {
+            archived,
+            last_human_commit,
+            oldest_unanswered_days,
+            maintainer_replies_365,
+            ..
+        }) => {
+            signals.repo_archived = Some(*archived);
             signals.repo_gone = Some(false);
-            signals.last_human_commit = found.last_human_commit.map(Date::from);
-            signals.oldest_unanswered_days = Some(found.oldest_unanswered_days.unwrap_or(0));
-            signals.maintainer_replies_365 = Some(found.maintainer_replies_365);
+            signals.last_human_commit = *last_human_commit;
+            signals.oldest_unanswered_days = Some(oldest_unanswered_days.unwrap_or(0));
+            signals.maintainer_replies_365 = Some(*maintainer_replies_365);
         }
-        Some(RepoFacts::Gone { .. }) => signals.repo_gone = Some(true),
+        Some(RepoValues::Gone) => signals.repo_gone = Some(true),
         None => {}
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::EntryKind;
+    use catalogue_core::{Date, EntryKind};
 
     use super::*;
     use crate::assemble::fixtures::{day, found_facts};
-    use crate::github::{Facts, RepoRef};
+    use crate::github::{Facts, RepoFacts, RepoRef};
 
     fn applied(facts: Option<&RepoFacts>) -> Signals {
         let mut signals = Signals::unknown(EntryKind::Library);
-        apply_facts(facts, &mut signals);
+        let values = facts.map(RepoValues::from);
+        apply_facts(values.as_ref(), &mut signals);
         signals
     }
 

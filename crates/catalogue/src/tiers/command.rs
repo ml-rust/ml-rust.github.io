@@ -5,6 +5,7 @@ use std::process::ExitCode;
 
 use catalogue_core::{Catalogue, Date, Deprecated, Thresholds, TierReport};
 use catalogue_signals::dump::DumpSnapshot;
+use catalogue_signals::fallback::FetchSummary;
 use catalogue_signals::fetch;
 use catalogue_signals::history::{History, Snapshot, read_all, write};
 use catalogue_signals::http::ReqwestTransport;
@@ -17,6 +18,7 @@ use super::collect::{Network, fetch_all};
 use super::error::TiersError;
 use super::render::render_tiers;
 use super::report::{tier_report, write_report};
+use super::step_summary::{STEP_SUMMARY_VAR, append_step_summary};
 use crate::cache_dir::resolve_cache_dir;
 use crate::clock::today_utc;
 use crate::data_dir::load_catalogue;
@@ -42,9 +44,10 @@ pub struct TiersArgs {
     #[arg(long)]
     pub offline: bool,
     /// Directory of daily snapshots. The run reads it for the previous tier, the
-    /// dead run and the Docker baseline, then adds today's snapshot. Without it
-    /// the run reads and writes no history. An offline run would record unknown
-    /// signals as history, so `--offline` conflicts with it.
+    /// dead run, the Docker baseline and the values a failed fetch falls back to,
+    /// then adds today's snapshot. Without it the run reads and writes no history,
+    /// so a failed fetch leaves its signal unknown. An offline run holds only
+    /// unknown network signals, so `--offline` conflicts with it.
     #[arg(long, value_name = "DIR", conflicts_with = "offline")]
     pub history: Option<PathBuf>,
     /// Result file of `catalogue sandbox check`, for rot signal R6. A result
@@ -65,14 +68,17 @@ pub struct TiersRun {
     pub text: String,
     /// The tier report, with the source and data date of each signal.
     pub report: TierReport,
+    /// The network fetches of the run and the ones that failed. Empty offline.
+    pub summary: FetchSummary,
 }
 
 /// Runs `catalogue tiers` and returns the process exit code.
 pub fn run_tiers(args: TiersArgs) -> ExitCode {
     let today = Date::from(today_utc());
     match tiers(&args, token_from_env, today) {
-        Ok(text) => {
-            println!("{text}");
+        Ok(run) => {
+            println!("{}", run.text);
+            write_step_summary(&run.summary);
             ExitCode::SUCCESS
         }
         Err(TiersError::Invalid(diagnostics)) => {
@@ -88,6 +94,25 @@ pub fn run_tiers(args: TiersArgs) -> ExitCode {
     }
 }
 
+/// Appends `summary` to the job summary file when the environment names one.
+///
+/// A write error is a warning. The run itself already holds true dates.
+fn write_step_summary(summary: &FetchSummary) {
+    if summary.fetches == 0 {
+        return;
+    }
+    let Some(path) = std::env::var_os(STEP_SUMMARY_VAR) else {
+        return;
+    };
+    let path = Path::new(&path);
+    if let Err(error) = append_step_summary(path, summary) {
+        eprintln!(
+            "warning: cannot append the fallback list to {}: {error}. The run goes on",
+            path.display()
+        );
+    }
+}
+
 /// Checks the data, reads the caches, fetches the network signals and renders the report.
 ///
 /// The token is read only for an online run, after the data checks and before the dump read.
@@ -96,7 +121,7 @@ fn tiers(
     args: &TiersArgs,
     token: impl FnOnce() -> Result<String, NoToken>,
     today: Date,
-) -> Result<String, TiersError> {
+) -> Result<TiersRun, TiersError> {
     let catalogue = load(&args.data)?;
     required(&catalogue)?;
     let token = if args.offline { None } else { Some(token()?) };
@@ -138,7 +163,7 @@ fn tiers(
     if let Some(path) = &args.json {
         write_report(path, &run.report)?;
     }
-    Ok(run.text)
+    Ok(run)
 }
 
 /// The `catalogue tiers` report for a checked catalogue on `today`.
@@ -152,12 +177,16 @@ fn tiers(
 /// applies the rules, then writes the snapshot of `today` to it. Without it,
 /// the run reads and writes no history.
 ///
+/// A network fetch that fails falls back to the previous snapshot, and an online
+/// run ends its text with the `fallbacks:` block. The exit stays successful when
+/// most fetches fail: the block warns, and every value keeps the date of its data.
+///
 /// # Errors
 ///
 /// Returns [`TiersError::MissingFile`] when the catalogue lacks
-/// `thresholds.toml` or `deprecated.toml`, the request error that ends an
-/// online run, and [`TiersError::History`] when the history directory cannot be
-/// read or written.
+/// `thresholds.toml` or `deprecated.toml`, the fatal request error that ends an
+/// online run, such as a rejected token, and [`TiersError::History`] when the
+/// history directory cannot be read or written.
 pub fn tiers_report(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
@@ -172,26 +201,40 @@ pub fn tiers_report(
         Some(dir) => read_all(dir)?,
         None => History::default(),
     };
-    let fetched = fetch_all(catalogue, snapshot, network, today)?;
+    let online = matches!(network, Network::Online { .. });
+    let fetched = fetch_all(
+        catalogue,
+        snapshot,
+        network,
+        &history,
+        thresholds.fallback.max_age_days,
+        today,
+    )?;
     let assessments = assess_entries(
         catalogue,
         snapshot,
         advisories,
         build_checks,
-        &fetched,
+        &fetched.entries,
         &history,
         today,
     )?;
     if let Some(dir) = history_dir {
         let rows = assessments
             .iter()
-            .map(|assessment| (assessment.slug.to_string(), assessment.row))
+            .map(|assessment| (assessment.slug.to_string(), assessment.row.clone()))
             .collect();
         write(dir, &Snapshot { date: today, rows })?;
     }
+    let mut text = render_tiers(&assessments);
+    if online {
+        text.push_str("\n\n");
+        text.push_str(&fetched.summary.text());
+    }
     Ok(TiersRun {
-        text: render_tiers(&assessments),
+        text,
         report: tier_report(&assessments, thresholds, today),
+        summary: fetched.summary,
     })
 }
 

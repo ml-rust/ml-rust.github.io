@@ -66,6 +66,7 @@ mod tests {
             dormant: None,
             active_users: None,
             docker_pulls: None,
+            network: None,
         };
         Snapshot {
             date: date(day),

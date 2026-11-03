@@ -14,6 +14,7 @@ use crate::dump::{
     Requirement, VersionRow,
 };
 use crate::github::{Facts, RepoFacts};
+use crate::history::RepoValues;
 use crate::link::LinkCheck;
 use crate::rustsec::{Advisories, Advisory, AdvisoryKind};
 use crate::sandbox::BuildChecks;
@@ -248,7 +249,8 @@ impl World {
             thresholds: &thresholds,
             build_checks: &self.build_checks,
         };
-        library_signals(&library(crates), &sources, facts, link, today())
+        let values = facts.map(RepoValues::from);
+        library_signals(&library(crates), &sources, values.as_ref(), link, today())
     }
 
     pub(crate) fn users(&mut self, id: u32, current: f64) {

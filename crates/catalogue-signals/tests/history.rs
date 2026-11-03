@@ -6,7 +6,10 @@ use std::fs;
 
 use cache::cache;
 use catalogue_core::{Date, EntryKind, Tier};
-use catalogue_signals::history::{HistoryError, Row, Snapshot, read_all, write};
+use catalogue_signals::history::{
+    Dated, HistoryError, NetworkValues, RepoValues, Row, Snapshot, read_all, write,
+};
+use catalogue_signals::link::LinkCheck;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use std::io::Write;
@@ -23,6 +26,7 @@ fn row(tier: Tier, docker_pulls: Option<u64>) -> Row {
         dormant: Some(tier == Tier::Archived),
         active_users: Some(2.5),
         docker_pulls,
+        network: None,
     }
 }
 
@@ -31,7 +35,7 @@ fn snapshot(on: Date, rows: &[(&str, Row)]) -> Snapshot {
         date: on,
         rows: rows
             .iter()
-            .map(|(slug, row)| ((*slug).to_owned(), *row))
+            .map(|(slug, row)| ((*slug).to_owned(), row.clone()))
             .collect::<BTreeMap<_, _>>(),
     }
 }
@@ -196,4 +200,79 @@ fn a_bad_line_names_its_number() {
         assert!(line.is_some(), "{name}: {error}");
         fs::remove_file(&path).expect("remove");
     }
+}
+
+fn with_network() -> Row {
+    let on = date(2026, 10, 30);
+    Row {
+        network: Some(NetworkValues {
+            facts: Some(Dated {
+                date: on,
+                of: "ml-rust/alpha".to_owned(),
+                value: RepoValues::Found {
+                    archived: false,
+                    stars: 12,
+                    last_human_commit: Some(date(2026, 9, 1)),
+                    oldest_unanswered_days: None,
+                    maintainer_replies_365: 7,
+                },
+            }),
+            link: Some(Dated {
+                date: on,
+                of: "alpha 1.0.0 in ml-rust/alpha".to_owned(),
+                value: LinkCheck::NoVcsInfo,
+            }),
+            docker: Some(Dated {
+                date: on,
+                of: "ml-rust/alpha".to_owned(),
+                value: 5_000,
+            }),
+            ..NetworkValues::default()
+        }),
+        ..row(Tier::Listed, None)
+    }
+}
+
+#[test]
+fn network_values_round_trip_through_the_file() {
+    let (_guard, dir) = cache();
+    let written = snapshot(date(2026, 11, 3), &[("alpha", with_network())]);
+    write(&dir, &written).expect("write");
+    assert_eq!(
+        read_all(&dir).expect("read"),
+        catalogue_signals::history::History::new(vec![written])
+    );
+}
+
+#[test]
+fn a_line_without_network_values_reads_as_none_and_writes_back_the_same() {
+    let (_guard, dir) = cache();
+    let line = r#"{"slug":"alpha","kind":"app","tier":"listed","dead_now":false,"dormant":null,"active_users":null,"docker_pulls":null}"#;
+    fs::write(dir.join("2026-11-02.jsonl.gz"), gzip(&format!("{line}\n"))).expect("write");
+    let history = read_all(&dir).expect("read");
+    let [old] = history.snapshots() else {
+        panic!("expected one snapshot");
+    };
+    assert_eq!(
+        old.rows.get("alpha").map(|row| row.network.is_none()),
+        Some(true)
+    );
+    let path = write(&dir, old).expect("write");
+    assert_eq!(lines(&path), [line]);
+}
+
+#[test]
+fn the_same_rows_give_the_same_bytes() {
+    let (_guard, first) = cache();
+    let (_other, second) = cache();
+    let rows = [
+        ("zeta", with_network()),
+        ("alpha", with_network()),
+        ("mid", row(Tier::New, Some(3))),
+    ];
+    let reversed: Vec<(&str, Row)> = rows.iter().rev().cloned().collect();
+    let on = date(2026, 11, 3);
+    let a = write(&first, &snapshot(on, &rows)).expect("write");
+    let b = write(&second, &snapshot(on, &reversed)).expect("write");
+    assert_eq!(fs::read(a).expect("read"), fs::read(b).expect("read"));
 }

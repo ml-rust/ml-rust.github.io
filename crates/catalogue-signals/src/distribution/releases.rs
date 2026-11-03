@@ -11,7 +11,7 @@ use crate::github::{RepoRef, rest_headers};
 use crate::http::{Paced, Pacer, Transport, percent_encode};
 
 /// The API name used in errors.
-const API: &str = "GitHub Releases";
+pub(super) const API: &str = "GitHub Releases";
 
 /// The repos endpoint of the GitHub API.
 const ENDPOINT: &str = "https://api.github.com/repos";

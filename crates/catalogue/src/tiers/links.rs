@@ -6,7 +6,9 @@ use std::path::Path;
 use catalogue_core::{Catalogue, Date, EntryKind, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
-use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoRef};
+use catalogue_signals::fallback::{Failed, attempt, link_failure};
+use catalogue_signals::github::{GITHUB_INTERVAL, RepoRef};
+use catalogue_signals::history::Dated;
 use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
 use catalogue_signals::link::{
     CrateRelease, LinkCheck, LinkError, LinkOutcome, cached_link, check_link,
@@ -22,9 +24,36 @@ type Target = (Slug, RepoRef, CrateRelease);
 #[derive(Debug, Default)]
 pub(super) struct Links {
     /// The result of each library that has one, with its check date.
-    pub(super) checks: BTreeMap<Slug, LinkOutcome>,
-    /// Why a library has no result, when its check fails on that library alone.
+    pub(super) checks: BTreeMap<Slug, Dated<LinkCheck>>,
+    /// Why a library has no result, when the answer is final.
     pub(super) notes: BTreeMap<Slug, String>,
+    /// The checks that failed and fall back to the previous snapshot.
+    pub(super) failures: BTreeMap<Slug, LinkFailure>,
+    /// The checks that sent a request. A cache hit is no fetch.
+    pub(super) fetches: usize,
+}
+
+/// A link check that failed and falls back.
+#[derive(Debug)]
+pub(super) struct LinkFailure {
+    /// What the check asked about.
+    pub(super) of: String,
+    /// The error text.
+    pub(super) error: String,
+}
+
+/// What a link result describes: the crate release and the repo.
+fn subject(repo: &RepoRef, release: &CrateRelease) -> String {
+    let CrateRelease { name, version } = release;
+    format!("{name} {version} in {repo}")
+}
+
+fn dated(of: String, outcome: LinkOutcome) -> Dated<LinkCheck> {
+    Dated {
+        date: outcome.checked,
+        of,
+        value: outcome.check,
+    }
 }
 
 /// Checks the repo link of every library entry.
@@ -34,8 +63,9 @@ pub(super) struct Links {
 /// [`check_link`] on its latest unyanked version, which reads and writes the
 /// link cache under `cache_dir`. A new check is dated `today`, a cached one
 /// keeps its stored date. A library with no such release gets no result.
-/// A library whose package is missing or unreadable gets a note and no result.
-/// Token errors, rate-limit errors, transport errors and cache errors end the run.
+/// [`link_failure`] sorts every error. A missing package gets a note and no
+/// result. A failed fetch lands in [`Links::failures`]. A rejected token and a
+/// cache error end the run.
 pub(super) fn fetch_links(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
@@ -53,12 +83,12 @@ pub(super) fn fetch_links(
         }
         match github_repo(entry) {
             Err(_) => {
-                let outcome = LinkOutcome {
-                    check: LinkCheck::UnsupportedHost,
-                    cached: false,
-                    checked: today,
+                let check = Dated {
+                    date: today,
+                    of: entry.repo.to_string(),
+                    value: LinkCheck::UnsupportedHost,
                 };
-                links.checks.insert(slug.clone(), outcome);
+                links.checks.insert(slug.clone(), check);
             }
             Ok(repo) => {
                 if let Some(release) = primary_release(entry, snapshot, &index) {
@@ -90,58 +120,50 @@ fn check_targets(
     let mut misses: Vec<&Target> = Vec::new();
     for target in targets {
         let (slug, repo, release) = target;
-        match cached_link(cache_dir, repo, release) {
+        match attempt(cached_link(cache_dir, repo, release), link_failure)? {
             Ok(Some(outcome)) => {
-                links.checks.insert(slug.clone(), outcome);
+                let check = dated(subject(repo, release), outcome);
+                links.checks.insert(slug.clone(), check);
             }
             Ok(None) => misses.push(target),
-            Err(error) => {
-                links.notes.insert(slug.clone(), entry_note(error)?);
-            }
+            Err(failed) => settle_failure(target, failed, links),
         }
     }
     let checked = batch::each(&misses, pacer, |target, pacer| {
         let (_, repo, release) = &**target;
-        match check_link(transport, token, repo, release, cache_dir, today, pacer) {
-            Ok(outcome) => Ok(Ok(outcome)),
-            Err(error) => entry_note(error).map(Err),
-        }
+        attempt(
+            check_link(transport, token, repo, release, cache_dir, today, pacer),
+            link_failure,
+        )
     })?;
+    links.fetches += misses.len();
     for (target, result) in misses.iter().zip(checked) {
-        let (slug, ..) = target;
+        let (slug, repo, release) = target;
         match result {
             Ok(outcome) => {
-                links.checks.insert(slug.clone(), outcome);
+                let check = dated(subject(repo, release), outcome);
+                links.checks.insert(slug.clone(), check);
             }
-            Err(note) => {
-                links.notes.insert(slug.clone(), note);
-            }
+            Err(failed) => settle_failure(target, failed, links),
         }
     }
     Ok(())
 }
 
-/// The note for `error` when it concerns one library alone, so the other
-/// libraries still run. Any other error returns as is and ends the run.
-fn entry_note(error: LinkError) -> Result<String, LinkError> {
-    if fails_one_entry(&error) {
-        Ok(format!("repo link unchecked: {error}"))
-    } else {
-        Err(error)
-    }
-}
-
-/// Whether `error` concerns one library alone, so the other libraries still run.
-fn fails_one_entry(error: &LinkError) -> bool {
-    match error {
-        LinkError::Download { .. } | LinkError::Package { .. } | LinkError::UnsafeName { .. } => {
-            true
+/// Files the check of `target` that ended without a result.
+fn settle_failure(target: &Target, failed: Failed, links: &mut Links) {
+    let (slug, repo, release) = target;
+    match failed {
+        Failed::Definitive(error) => {
+            let note = format!("repo link unchecked: {error}");
+            links.notes.insert(slug.clone(), note);
         }
-        LinkError::Github(GithubError::Status { status, .. }) => {
-            !matches!(*status, 401 | 403 | 429)
+        Failed::Fallback(error) => {
+            let of = subject(repo, release);
+            links
+                .failures
+                .insert(slug.clone(), LinkFailure { of, error });
         }
-        LinkError::Github(GithubError::Body { .. } | GithubError::Json { .. }) => true,
-        LinkError::Http(_) | LinkError::Github(_) | LinkError::Cache { .. } => false,
     }
 }
 
@@ -277,12 +299,7 @@ mod tests {
         assert!(urls.is_empty());
         assert_eq!(waits, 0);
         assert_eq!(links.checks.len(), 3);
-        assert!(
-            links
-                .checks
-                .values()
-                .all(|outcome| outcome.checked == stored())
-        );
+        assert!(links.checks.values().all(|check| check.date == stored()));
     }
 
     #[test]
@@ -308,33 +325,23 @@ mod tests {
     }
 
     #[test]
-    fn a_server_error_on_the_package_is_a_note_too() {
-        let (links, _, _, result) = run(500, &[target("aa")], &[]);
+    fn a_server_error_on_the_package_falls_back() {
+        let (links, urls, _, result) = run(500, &[target("aa")], &[]);
         result.expect("a 500 on one package does not end the run");
-        assert_eq!(links.notes.len(), 1);
+        assert_eq!(urls.len(), 1);
+        assert!(links.notes.is_empty());
+        assert_eq!(links.fetches, 1);
+        let failure = links.failures.values().next().expect("failure");
+        assert_eq!(failure.of, "aa 1.0.0 in o/aa");
+        assert!(failure.error.contains("status 500"), "{}", failure.error);
     }
 
     #[test]
-    fn errors_for_one_library_are_notes_and_token_errors_end_the_run() {
-        let download = LinkError::Download {
-            url: "u".to_owned(),
-            status: 404,
-        };
-        assert!(entry_note(download).is_ok());
-        let github = |status| {
-            LinkError::Github(GithubError::Status {
-                url: "u".to_owned(),
-                status,
-                action: "rerun later",
-            })
-        };
-        for status in [401, 403, 429] {
-            assert!(entry_note(github(status)).is_err(), "{status}");
-        }
-        assert!(entry_note(github(500)).is_ok());
-        let transport = LinkError::Http(HttpError::Client {
-            reason: "down".to_owned(),
-        });
-        assert!(entry_note(transport).is_err());
+    fn a_cache_hit_is_no_fetch() {
+        let (links, _, _, result) = run(404, &[target("aa"), target("bb")], &["aa"]);
+        result.expect("runs");
+        assert_eq!(links.fetches, 1);
+        let check = links.checks.values().next().expect("hit");
+        assert_eq!(check.of, "aa 1.0.0 in o/aa");
     }
 }

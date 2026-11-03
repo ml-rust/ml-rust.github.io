@@ -11,7 +11,7 @@ use super::requirements::deprecated_requirement;
 use super::sources::LibrarySources;
 use super::versions::{family_span, primary_releases};
 use crate::dump::DumpSnapshot;
-use crate::github::RepoFacts;
+use crate::history::RepoValues;
 use crate::link::LinkCheck;
 
 /// Days of downloads that `downloads_per_month` sums.
@@ -52,7 +52,7 @@ const MONTH_DAYS: usize = 30;
 pub fn library_signals(
     entry: &Entry,
     sources: &LibrarySources<'_>,
-    facts: Option<&RepoFacts>,
+    facts: Option<&RepoValues>,
     link: Option<&LinkCheck>,
     today: Date,
 ) -> Assembled {
@@ -142,6 +142,7 @@ mod tests {
     use super::*;
     use crate::assemble::fixtures::{World, day, found_facts};
     use crate::dump::DependencyKind;
+    use crate::github::RepoFacts;
     use crate::rustsec::AdvisoryKind;
 
     #[test]

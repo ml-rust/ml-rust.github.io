@@ -1,8 +1,8 @@
 //! Test data shared by the rules page tests.
 
 use catalogue_core::{
-    AppFeaturedThresholds, Date, DormancyThresholds, FinishedThresholds, IntervalThresholds,
-    LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
+    AppFeaturedThresholds, Date, DormancyThresholds, FallbackThresholds, FinishedThresholds,
+    IntervalThresholds, LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
 };
 
 /// A thresholds file at version 3, calibrated on `calibrated`.
@@ -54,5 +54,6 @@ pub(super) fn thresholds(calibrated: Option<Date>) -> Thresholds {
             min_new_adopters: 1.0,
             min_binary_downloads_per_release: 200,
         },
+        fallback: FallbackThresholds { max_age_days: 14 },
     }
 }

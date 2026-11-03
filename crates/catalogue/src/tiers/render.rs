@@ -70,6 +70,7 @@ mod tests {
             dormant: verdict.dormant,
             active_users: None,
             docker_pulls: None,
+            network: None,
         };
         let sources = FactSources {
             dump: Date::new(2026, 11, 2).expect("date"),

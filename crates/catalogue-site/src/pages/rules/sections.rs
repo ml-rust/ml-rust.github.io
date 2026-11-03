@@ -3,8 +3,8 @@
 use catalogue_core::Thresholds;
 
 use super::rows::{
-    ThresholdRow, app_rows, dead_rows, finished_rows, interval_rows, library_rows, new_rows,
-    rot_rows,
+    ThresholdRow, app_rows, dead_rows, fallback_rows, finished_rows, interval_rows, library_rows,
+    new_rows, rot_rows,
 };
 
 /// One rule with its text and thresholds.
@@ -161,6 +161,21 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
                 "A finished entry carries a stable label. It counts as active for Featured.",
             ],
             rows: rows(finished_rows),
+        },
+        RuleSection {
+            id: "fallback",
+            title: "Failed fetches",
+            lead: &[
+                "A network signal that fails to fetch keeps its value from the previous snapshot.",
+                "That value keeps its original fetch date, and the entry notes name the source.",
+                "A value past the age limit counts as unknown.",
+            ],
+            items: &[],
+            notes: &[
+                "An answer that a repo or a name does not exist counts as a signal. It never falls back.",
+                "Values from the crates.io dump and the RustSec archive never fall back. A run without them stops.",
+            ],
+            rows: rows(fallback_rows),
         },
         RuleSection {
             id: "new",

@@ -6,7 +6,7 @@
 # recalibration. Any change to the file raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 3
+version = 4
 calibrated = 2026-11-03
 
 [new]
@@ -58,3 +58,7 @@ build_check_max_age_days = 45
 min_former_glory = 0.8
 min_new_adopters = 1.0
 min_binary_downloads_per_release = 200
+
+[fallback]
+# Not calibrated: two weeks of daily runs. A source down longer reads as unknown.
+max_age_days = 14

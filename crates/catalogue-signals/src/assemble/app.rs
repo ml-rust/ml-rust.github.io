@@ -4,8 +4,7 @@ use catalogue_core::{Date, EntryKind, Signals};
 
 use super::assembled::Assembled;
 use super::facts::apply_facts;
-use crate::distribution::{HomebrewInstalls, ReleaseDownloads, RepologyPackaging};
-use crate::github::RepoFacts;
+use crate::history::{ReleaseValues, RepoValues};
 
 /// The signals of an app from its fetched sources.
 ///
@@ -24,24 +23,23 @@ use crate::github::RepoFacts;
 /// A `None` source leaves its signals unknown. The caller notes why a source is
 /// missing, so the notes stay empty. Only a falling pull count adds a note.
 pub fn app_signals(
-    facts: Option<&RepoFacts>,
-    releases: Option<&ReleaseDownloads>,
-    homebrew: Option<&HomebrewInstalls>,
-    repology: Option<&RepologyPackaging>,
+    facts: Option<&RepoValues>,
+    releases: Option<&ReleaseValues>,
+    homebrew: Option<u64>,
+    repology: Option<u32>,
     docker: Option<u64>,
     baseline: Option<(Date, u64)>,
 ) -> Assembled {
     let mut signals = Signals::unknown(EntryKind::App);
     apply_facts(facts, &mut signals);
     if let Some(found) = releases {
-        let total = found.total_binary_downloads;
+        let total = found.binary_downloads;
         signals.binary_downloads_last3 = Some(total);
-        let count = u64::try_from(found.releases.len()).unwrap_or(u64::MAX);
-        signals.binary_downloads_per_release = total.checked_div(count);
-        signals.last_release = found.releases.iter().filter_map(|r| r.published).max();
+        signals.binary_downloads_per_release = total.checked_div(u64::from(found.releases));
+        signals.last_release = found.last_release;
     }
-    signals.homebrew_on_request_365d = homebrew.map(|found| found.on_request_365d);
-    signals.repology_families = repology.map(|found| found.families);
+    signals.homebrew_on_request_365d = homebrew;
+    signals.repology_families = repology;
     let mut notes = Vec::new();
     if let (Some(current), Some((date, before))) = (docker, baseline) {
         signals.docker_pull_growth_90d = Some(current.saturating_sub(before));
@@ -60,7 +58,8 @@ mod tests {
 
     use super::*;
     use crate::assemble::fixtures::{day, found_facts};
-    use crate::distribution::ReleaseSummary;
+    use crate::distribution::{ReleaseDownloads, ReleaseSummary};
+    use crate::github::RepoFacts;
 
     fn release(published: Option<Date>, downloads: u64) -> ReleaseSummary {
         ReleaseSummary {
@@ -68,17 +67,6 @@ mod tests {
             published,
             prerelease: false,
             binary_downloads: downloads,
-        }
-    }
-
-    fn homebrew(on_request_365d: u64) -> HomebrewInstalls {
-        HomebrewInstalls {
-            install_30d: 0,
-            install_90d: 0,
-            install_365d: 0,
-            on_request_30d: 0,
-            on_request_90d: 0,
-            on_request_365d,
         }
     }
 
@@ -92,16 +80,12 @@ mod tests {
             ],
             total_binary_downloads: 900,
         };
-        let packaging = RepologyPackaging {
-            repos: vec!["arch".to_owned(), "debian_12".to_owned()],
-            families: 2,
-        };
-        let facts = RepoFacts::Found(found_facts());
+        let facts = RepoValues::from(&RepoFacts::Found(found_facts()));
         let assembled = app_signals(
             Some(&facts),
-            Some(&releases),
-            Some(&homebrew(640)),
-            Some(&packaging),
+            Some(&ReleaseValues::from(&releases)),
+            Some(640),
+            Some(2),
             None,
             None,
         );
@@ -123,7 +107,8 @@ mod tests {
             releases: Vec::new(),
             total_binary_downloads: 0,
         };
-        let found = app_signals(None, Some(&releases), None, None, None, None).signals;
+        let values = ReleaseValues::from(&releases);
+        let found = app_signals(None, Some(&values), None, None, None, None).signals;
         assert_eq!(found.binary_downloads_last3, Some(0));
         assert_eq!(found.binary_downloads_per_release, None);
         assert_eq!(found.last_release, None);

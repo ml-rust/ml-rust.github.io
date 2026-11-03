@@ -9,6 +9,7 @@ mod error;
 mod links;
 mod render;
 mod report;
+mod step_summary;
 
 pub use collect::Network;
 pub use command::{TiersArgs, TiersRun, run_tiers, tiers_report};

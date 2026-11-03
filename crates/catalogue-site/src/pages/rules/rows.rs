@@ -152,6 +152,15 @@ pub(super) fn finished_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     ]
 }
 
+/// The age limit of a value that stands in for a failed fetch.
+pub(super) fn fallback_rows(t: &Thresholds) -> Vec<ThresholdRow> {
+    vec![row(
+        "fallback.max_age_days",
+        t.fallback.max_age_days,
+        "Most days a value stands in for a failed fetch.",
+    )]
+}
+
 /// The New gates.
 pub(super) fn new_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     let n = &t.new;

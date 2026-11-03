@@ -162,6 +162,23 @@
 </table>
 </section>
 
+<section aria-labelledby="fallback">
+<h2 id="fallback">Failed fetches</h2>
+<p>A network signal that fails to fetch keeps its value from the previous snapshot.</p>
+<p>That value keeps its original fetch date, and the entry notes name the source.</p>
+<p>A value past the age limit counts as unknown.</p>
+<p>An answer that a repo or a name does not exist counts as a signal. It never falls back.</p>
+<p>Values from the crates.io dump and the RustSec archive never fall back. A run without them stops.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>fallback.max_age_days</code></th><td class="number">14</td><td>Most days a value stands in for a failed fetch.</td></tr>
+</tbody>
+</table>
+</section>
+
 <section aria-labelledby="new">
 <h2 id="new">New</h2>
 <p>An entry is New when any one of these holds.</p>

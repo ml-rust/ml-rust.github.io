@@ -2,6 +2,7 @@
 
 use thiserror::Error;
 
+use super::releases::API as RELEASES_API;
 use crate::http::{HttpError, PacedError};
 
 /// A lookup the fetcher cannot finish.
@@ -90,7 +91,7 @@ impl DistributionError {
     /// The error for a response with a status other than 200 and 404.
     fn status(api: &'static str, url: &str, status: u16) -> Self {
         let action = match status {
-            401 => "set GITHUB_TOKEN to a valid token",
+            401 if api == RELEASES_API => "set GITHUB_TOKEN to a valid token",
             403 | 429 => "wait for the rate limit to reset, then rerun",
             _ => "rerun later",
         };
@@ -123,6 +124,12 @@ mod tests {
             message.ends_with("set GITHUB_TOKEN to a valid token"),
             "{message}"
         );
+    }
+
+    #[test]
+    fn a_401_from_an_api_with_no_token_does_not_name_the_token() {
+        let message = DistributionError::status("Docker Hub", "u", 401).to_string();
+        assert!(message.ends_with("status 401. rerun later"), "{message}");
     }
 
     #[test]

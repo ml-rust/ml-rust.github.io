@@ -43,9 +43,9 @@ pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
     AppFeaturedThresholds, Deprecated, DeprecatedRequirement, Discovery, DormancyThresholds,
-    FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers,
-    NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic,
-    TopicSummary, Topics,
+    FallbackThresholds, FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds,
+    Maintainer, Maintainers, NewThresholds, RequirementCheck, RotThresholds, SynonymGroup,
+    Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
     EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef,

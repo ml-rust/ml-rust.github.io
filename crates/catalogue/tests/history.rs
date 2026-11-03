@@ -39,11 +39,14 @@ fn row(kind: EntryKind, tier: Tier, docker_pulls: Option<u64>) -> Row {
         dormant: None,
         active_users: None,
         docker_pulls,
+        network: None,
     }
 }
 
 fn seed(dir: &Path, on: Date, rows: &[(&str, Row)]) {
-    let rows = rows.iter().map(|(slug, row)| ((*slug).to_owned(), *row));
+    let rows = rows
+        .iter()
+        .map(|(slug, row)| ((*slug).to_owned(), row.clone()));
     write(
         dir,
         &Snapshot {

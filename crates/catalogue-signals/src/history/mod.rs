@@ -6,10 +6,13 @@
 //! `History` answers the questions the tier rules ask about earlier checks:
 //! the previous tier, the run of dead months and the Docker pull baseline.
 //! [`History::tier_changes`] lists every [`TierChange`] the snapshots record.
+//! [`NetworkValues`] holds what a row keeps of each network fetch, for the next
+//! check to fall back on.
 
 mod changes;
 mod error;
 mod model;
+mod network;
 mod query;
 mod read;
 mod write;
@@ -17,6 +20,7 @@ mod write;
 pub use changes::TierChange;
 pub use error::HistoryError;
 pub use model::{Row, Snapshot};
+pub use network::{Dated, NetworkValues, ReleaseValues, RepoValues};
 pub use query::{GROWTH_MAX_AGE_DAYS, GROWTH_WINDOW_DAYS, History};
 pub use read::{read_all, read_snapshot, snapshot_date};
 pub use write::write;

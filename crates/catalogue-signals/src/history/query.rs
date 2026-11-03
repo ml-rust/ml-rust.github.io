@@ -4,7 +4,8 @@ use std::collections::BTreeMap;
 
 use catalogue_core::{Date, Tier};
 
-use super::model::Snapshot;
+use super::model::{Row, Snapshot};
+use super::network::NetworkValues;
 
 /// The fewest days between the Docker baseline snapshot and today.
 ///
@@ -52,9 +53,21 @@ impl History {
 
     /// The tier of `slug` in the newest snapshot before `today` that holds it.
     pub fn previous_tier(&self, slug: &str, today: Date) -> Option<Tier> {
+        self.previous_row(slug, today).map(|row| row.tier)
+    }
+
+    /// The network values of `slug` in the newest snapshot before `today` that holds it.
+    ///
+    /// Only that snapshot counts. An older one holds a value the newest check
+    /// already replaced or dropped.
+    pub fn previous_network(&self, slug: &str, today: Date) -> Option<&NetworkValues> {
+        self.previous_row(slug, today)?.network.as_ref()
+    }
+
+    /// The row of `slug` in the newest snapshot before `today` that holds it.
+    fn previous_row(&self, slug: &str, today: Date) -> Option<&Row> {
         self.earlier(today)
             .find_map(|snapshot| snapshot.rows.get(slug))
-            .map(|row| row.tier)
     }
 
     /// The count of consecutive calendar months, before the month of `today`,
@@ -119,7 +132,7 @@ mod tests {
     use jiff::Span;
 
     use super::*;
-    use crate::history::Row;
+    use crate::history::Dated;
 
     fn date(year: i16, month: i8, day: i8) -> Date {
         Date::new(year, month, day).expect("date")
@@ -133,6 +146,7 @@ mod tests {
             dormant: None,
             active_users: None,
             docker_pulls,
+            network: None,
         }
     }
 
@@ -141,7 +155,7 @@ mod tests {
             date: on,
             rows: rows
                 .iter()
-                .map(|(slug, row)| ((*slug).to_owned(), *row))
+                .map(|(slug, row)| ((*slug).to_owned(), row.clone()))
                 .collect(),
         }
     }
@@ -250,6 +264,43 @@ mod tests {
 
     fn pulls(on: Date, count: Option<u64>) -> Snapshot {
         snapshot(on, &[("a", row(Tier::Listed, false, count))])
+    }
+
+    fn with_homebrew(on: Date, count: Option<u64>) -> Snapshot {
+        let network = count.map(|value| NetworkValues {
+            homebrew: Some(Dated {
+                date: on,
+                of: "tool".to_owned(),
+                value,
+            }),
+            ..NetworkValues::default()
+        });
+        let row = Row {
+            network,
+            ..row(Tier::Listed, false, None)
+        };
+        snapshot(on, &[("a", row)])
+    }
+
+    fn previous_homebrew(history: &History, on: Date) -> Option<u64> {
+        let network = history.previous_network("a", on)?;
+        network.homebrew.as_ref().map(|found| found.value)
+    }
+
+    #[test]
+    fn network_values_come_from_the_newest_earlier_snapshot_only() {
+        let history = History::new(vec![
+            with_homebrew(date(2026, 10, 30), Some(1)),
+            with_homebrew(date(2026, 11, 1), Some(2)),
+            with_homebrew(date(2026, 11, 3), Some(3)),
+        ]);
+        assert_eq!(previous_homebrew(&history, today()), Some(2));
+        let dropped = History::new(vec![
+            with_homebrew(date(2026, 10, 30), Some(1)),
+            with_homebrew(date(2026, 11, 1), None),
+        ]);
+        assert_eq!(previous_homebrew(&dropped, today()), None);
+        assert_eq!(History::default().previous_network("a", today()), None);
     }
 
     #[test]

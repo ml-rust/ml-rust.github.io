@@ -51,7 +51,8 @@ pub struct FactSources {
 
 /// The date of the data each source supplied on one check.
 ///
-/// A fresh fetch carries the run date. A cached result carries the date it was read.
+/// A fresh fetch carries the run date. A cached result carries the date it was
+/// read. A value that fell back to the previous snapshot carries its original date.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct FetchDates {
     /// The date of the RustSec advisory archive.

@@ -32,6 +32,7 @@ fn row(dormant: Option<bool>) -> Row {
         dormant,
         active_users: None,
         docker_pulls: None,
+        network: None,
     }
 }
 

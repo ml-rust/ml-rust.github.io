@@ -238,6 +238,7 @@ fn snapshot(slug: &str, tier: Tier) -> Vec<u8> {
         dormant: None,
         active_users: None,
         docker_pulls: None,
+        network: None,
     };
     let snapshot = Snapshot {
         date: Date::new(2026, 11, 3).expect("date"),

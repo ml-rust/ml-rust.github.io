@@ -10,8 +10,9 @@
 //! [`rustsec`] reads the advisory archive. [`seed`] drafts entries from the
 //! candidates. [`link`] checks that a crate was published from its repo.
 //! [`history`] keeps the daily snapshots that the two-check dead rule and
-//! Docker growth read. [`assemble`] turns all of them into the tier signals of
-//! one entry. [`sandbox`] classifies the sandbox `cargo check` and holds its
+//! Docker growth read. [`fallback`] decides what a failed fetch does and reads
+//! the previous value from the snapshots. [`assemble`] turns all of them into
+//! the tier signals of one entry. [`sandbox`] classifies the sandbox `cargo check` and holds its
 //! results. [`calibrate`] reads percentiles of the tier signals, for setting
 //! thresholds. [`repo_archive`] reads the data files from a repo archive.
 //! [`atomic`] replaces a file so a reader never sees a partial one.
@@ -26,6 +27,7 @@ pub mod discover;
 pub mod distribution;
 pub mod dump;
 pub mod ecosystems;
+pub mod fallback;
 pub mod fetch;
 pub mod github;
 pub mod history;

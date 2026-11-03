@@ -27,6 +27,8 @@ pub struct Thresholds {
     pub rot: RotThresholds,
     /// Adoption that keeps a dormant entry `stable`.
     pub finished: FinishedThresholds,
+    /// How long a value stands in for a failed fetch.
+    pub fallback: FallbackThresholds,
 }
 
 /// Gates for the `new` tier.
@@ -131,6 +133,15 @@ pub struct FinishedThresholds {
     pub min_binary_downloads_per_release: u64,
 }
 
+/// How long a value stands in for a failed fetch.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FallbackThresholds {
+    /// Most days between a value's fetch and the check that reuses it. An older
+    /// value reads as unknown.
+    pub max_age_days: u32,
+}
+
 impl Thresholds {
     /// Lists every rule this file breaks.
     pub fn problems(&self) -> Vec<String> {
@@ -179,6 +190,9 @@ impl Thresholds {
         if self.rot.build_check_max_age_days == 0 {
             out.push("rot.build_check_max_age_days = 0 must be at least 1".to_owned());
         }
+        if self.fallback.max_age_days == 0 {
+            out.push("fallback.max_age_days = 0 must be at least 1".to_owned());
+        }
         in_range(
             "app_featured.min_signals",
             self.app_featured.min_signals,
@@ -223,14 +237,16 @@ mod tests {
         assert_eq!(t.interval.patch_gt3_major_ge1, 700);
         assert_eq!(t.app_featured.docker_pull_growth_90d, 10_000);
         assert_eq!(t.rot.build_check_max_age_days, 45);
+        assert_eq!(t.fallback.max_age_days, 14);
     }
 
     #[test]
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 3);
+        assert_eq!(t.version, 4);
         assert_eq!(t.rot.build_check_max_age_days, 45);
+        assert_eq!(t.fallback.max_age_days, 14);
     }
 
     #[test]
@@ -248,6 +264,22 @@ mod tests {
             "build_check_max_age_days = -1",
         );
         assert!(toml::from_str::<Thresholds>(&text).is_err());
+    }
+
+    #[test]
+    fn fallback_age_must_be_at_least_one_day() {
+        let found = problems_with(
+            "[fallback]\nmax_age_days = 14",
+            "[fallback]\nmax_age_days = 0",
+        );
+        assert!(has(&found, "fallback.max_age_days = 0 must be at least 1"));
+        let text = THRESHOLDS.replace(
+            "[fallback]\nmax_age_days = 14",
+            "[fallback]\nmax_age_days = -1",
+        );
+        assert!(toml::from_str::<Thresholds>(&text).is_err());
+        let absent = THRESHOLDS.replace("[fallback]\nmax_age_days = 14\n", "");
+        assert!(toml::from_str::<Thresholds>(&absent).is_err());
     }
 
     #[test]

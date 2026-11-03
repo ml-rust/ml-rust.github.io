@@ -13,7 +13,10 @@
 # `tiers` builds the catalogue binary, fetches the crates.io dump and the
 # RustSec archive into $RUNNER_TEMP, downloads the newest `build-checks`
 # artifact when one exists, and runs `catalogue tiers`. No `build-checks`
-# artifact leaves rot signal R6 unknown.
+# artifact leaves rot signal R6 unknown. A missing dump or RustSec archive ends
+# the job. A network signal that fails to fetch falls back to the previous
+# snapshot instead, and `catalogue tiers` lists each fallback in its output and in
+# the job summary. A rejected token still ends the job.
 #
 # `commit` stages the snapshot and pushes it. A run repeated on one day replaces
 # that day's file. Unchanged rows give identical bytes, so that run pushes

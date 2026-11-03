@@ -13,7 +13,7 @@ pub use discovery::Discovery;
 pub use maintainers::{Maintainer, Maintainers};
 pub use synonyms::{SynonymGroup, Synonyms};
 pub use thresholds::{
-    AppFeaturedThresholds, DormancyThresholds, FinishedThresholds, IntervalThresholds,
-    LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
+    AppFeaturedThresholds, DormancyThresholds, FallbackThresholds, FinishedThresholds,
+    IntervalThresholds, LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
 };
 pub use topics::{Topic, TopicSummary, Topics};

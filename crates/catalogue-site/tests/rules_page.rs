@@ -64,6 +64,7 @@ fn every_threshold_appears_with_its_value() {
         ("finished.min_former_glory", "0.8"),
         ("finished.min_new_adopters", "1"),
         ("finished.min_binary_downloads_per_release", "200"),
+        ("fallback.max_age_days", "14"),
     ] {
         let cells =
             format!("<th scope=\"row\"><code>{key}</code></th><td class=\"number\">{value}</td>");
