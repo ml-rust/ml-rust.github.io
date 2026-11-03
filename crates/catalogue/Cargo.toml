@@ -13,6 +13,7 @@ catalogue-bot.workspace = true
 catalogue-core.workspace = true
 catalogue-github.workspace = true
 catalogue-signals.workspace = true
+catalogue-site.workspace = true
 catalogue-triage.workspace = true
 clap.workspace = true
 jiff.workspace = true

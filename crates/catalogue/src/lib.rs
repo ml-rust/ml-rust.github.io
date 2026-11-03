@@ -2,6 +2,7 @@
 
 mod batch;
 pub mod bot;
+pub mod build;
 pub mod cache_dir;
 pub mod calibrate;
 pub mod cli;
@@ -28,6 +29,7 @@ pub use bot::{
     LabelsArgs, LabelsCommandError, LabelsReport, bot_check, config_path, load_config, run_bot,
     sync_labels,
 };
+pub use build::{BuildArgs, BuildError, BuildSummary, build, run_build};
 pub use cache_dir::{CacheDirError, default_cache_dir, resolve_cache_dir};
 pub use calibrate::{CalibrateCommand, CalibrateError, build_crates_report, run_calibrate};
 pub use cli::{Cli, Command, run};

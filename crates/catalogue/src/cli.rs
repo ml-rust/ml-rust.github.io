@@ -4,6 +4,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 use crate::bot::{BotCommand, run_bot};
+use crate::build::{BuildArgs, run_build};
 use crate::calibrate::{CalibrateCommand, run_calibrate};
 use crate::discover::{DiscoverCommand, run_discover};
 use crate::distribution::{DistributionCommand, run_distribution};
@@ -35,6 +36,13 @@ pub enum Command {
         #[arg(long, value_name = "DIR", default_value = "data")]
         data: PathBuf,
     },
+    /// Build the static site from the data files.
+    ///
+    /// Writes pages, stylesheet, search page, script and search index into
+    /// `--out`, replacing it whole. Does not write `search/oxidoc_search.js`
+    /// or `search/oxidoc_search_bg.wasm`: the deploy adds both with
+    /// `scripts/ci/build_search_wasm.sh`.
+    Build(BuildArgs),
     /// Download and inspect the crates.io database dump.
     Dump {
         /// The dump action to run.
@@ -113,6 +121,7 @@ pub enum Command {
 pub fn run(cli: Cli) -> ExitCode {
     match cli.command {
         Command::Validate { data } => run_validate(&data),
+        Command::Build(args) => run_build(&args),
         Command::Dump { command } => run_dump(command),
         Command::Discover { command } => run_discover(command),
         Command::Distribution { command } => run_distribution(command),
