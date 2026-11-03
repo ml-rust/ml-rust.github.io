@@ -1,24 +1,31 @@
 # Tier thresholds. Every number a tier rule compares a signal against.
 #
-# These are the starting values, set before calibration. The calibration
-# step measures them against real data, sets `calibrated` to that date and
-# raises `version`. Values then stay frozen until the yearly recalibration.
+# `catalogue calibrate` measured the marked values at p90 of their population.
+# `calibrated` is the date of the crates.io dump it read. Unmarked values keep
+# their pre-calibration research numbers. Values stay frozen until the yearly
+# recalibration, which raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 1
+version = 2
+calibrated = 2026-11-03
 
 [new]
 max_age_days = 180
 min_active_users = 2.0
 
 [library_featured]
-min_active_users = 10.0
-min_new_adopters = 5.0
+# Calibrated: p90 over discovery candidates with at least 1 active user.
+min_active_users = 11.0
+# Calibrated: p90 over the same population.
+min_new_adopters = 9.0
+# Not calibrated: every candidate measured 1.0, so the lib.rs cutoff stays.
 min_former_glory = 0.5
 
 [app_featured]
 min_signals = 2
-binary_downloads = 1000
+# Calibrated: p90 of latest-3-release binary downloads over GitHub leads.
+binary_downloads = 884
+# Not calibrated: the three values below keep research numbers.
 homebrew_on_request_365d = 500
 repology_families = 2
 docker_pull_growth_90d = 10000
