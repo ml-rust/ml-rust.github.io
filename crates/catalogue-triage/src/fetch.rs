@@ -2,6 +2,8 @@
 //!
 //! The bot host never sends a request to the host of an evidence link.
 
+use std::time::Duration;
+
 use catalogue_bot::triage::{GithubRepo, GithubTarget};
 use catalogue_github::{ApiError, RepoClient, Secret};
 use catalogue_signals::github::RepoRef;
@@ -15,6 +17,9 @@ use crate::headers::json_bearer;
 
 /// The Ollama `web_fetch` endpoint.
 pub const WEB_FETCH_URL: &str = "https://ollama.com/api/web_fetch";
+
+/// The least time between two `web_fetch` requests.
+pub const WEB_FETCH_INTERVAL: Duration = Duration::from_secs(1);
 
 /// Why the text of one page is missing. Each message is fixed bot text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
@@ -54,6 +59,9 @@ pub enum PageError {
     /// The page has no text.
     #[error("the page holds no text")]
     Empty,
+    /// No `web_fetch` key is set, so only GitHub pages are read.
+    #[error("no web_fetch key is set, so the bot reads only GitHub pages")]
+    NoFetchKey,
 }
 
 /// A `web_fetch` endpoint or key that cannot be used. No variant holds the key.
@@ -81,6 +89,27 @@ struct Fetched {
     content: Option<String>,
 }
 
+/// Checks that `endpoint` is plain https: no user part and no fragment.
+///
+/// A config loader calls it before any key is read.
+///
+/// # Errors
+///
+/// Returns [`WebFetchError::Endpoint`] when the check fails.
+pub fn check_endpoint(endpoint: &Url) -> Result<(), WebFetchError> {
+    if endpoint.scheme() != "https"
+        || !endpoint.username().is_empty()
+        || endpoint.password().is_some()
+        || endpoint.host_str().is_none()
+        || endpoint.fragment().is_some()
+    {
+        return Err(WebFetchError::Endpoint {
+            url: endpoint.to_string(),
+        });
+    }
+    Ok(())
+}
+
 /// Reads other pages through Ollama `web_fetch`. The service fetches the page.
 pub struct WebFetch<'a> {
     transport: &'a dyn Transport,
@@ -101,16 +130,7 @@ impl<'a> WebFetch<'a> {
         endpoint: &Url,
         api_key: Secret,
     ) -> Result<Self, WebFetchError> {
-        if endpoint.scheme() != "https"
-            || !endpoint.username().is_empty()
-            || endpoint.password().is_some()
-            || endpoint.host_str().is_none()
-            || endpoint.fragment().is_some()
-        {
-            return Err(WebFetchError::Endpoint {
-                url: endpoint.to_string(),
-            });
-        }
+        check_endpoint(endpoint)?;
         if api_key.expose().trim().is_empty() {
             return Err(WebFetchError::EmptyKey);
         }

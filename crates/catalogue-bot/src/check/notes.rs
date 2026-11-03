@@ -128,7 +128,25 @@ pub(super) fn not_checked_section(kind: FormKind) -> Section {
             "- Ownership of the crate on crates.io or the repository on GitHub. It needs the network.",
         );
     }
-    lines.push("- LLM triage of the evidence links. It needs the network.");
     lines.push("- The approval rules for the approver. They run when a maintainer approves.");
     text_section("Not checked", &lines.join("\n"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_skipped_checks_leave_out_the_link_check() {
+        for kind in FormKind::ALL {
+            let section = not_checked_section(kind);
+            for block in &section.blocks {
+                let Block::Text(text) = block else {
+                    panic!("{kind:?}: the section holds only bot text");
+                };
+                assert!(!text.contains("evidence links"), "{kind:?}: {text}");
+                assert!(text.contains("The approval rules for the approver."));
+            }
+        }
+    }
 }

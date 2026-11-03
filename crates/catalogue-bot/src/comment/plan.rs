@@ -7,7 +7,7 @@ use super::names::{APPROVED, BOT_CHECKED, NEEDS_FIX};
 /// The check the bot wants on an issue now.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Desired {
-    /// The marker of the check: body, report and `main`.
+    /// The marker of the check: body, report, `main` and the link check digest.
     pub marker: Marker,
     /// Whether the report blocks the issue.
     pub blocking: bool,
@@ -63,8 +63,8 @@ pub fn approval_stale(
 ///
 /// - Labels: `needs-fix` when the report blocks, else `bot-checked`. The other one goes.
 /// - Comment: post one when `previous` is `None`. Rewrite it when its marker
-///   differs from the desired one in the body, the report or `main`, or when
-///   the desired comment carries a note. Skip otherwise.
+///   differs from the desired one in the body, the report, `main` or the
+///   link check digest, or when the desired comment carries a note. Skip otherwise.
 /// - Approval: drop `approved` when [`approval_stale`] holds. A maintainer
 ///   approved text the bot has not checked.
 pub fn plan(desired: &Desired, previous: Option<&Previous>, current_labels: &[String]) -> Actions {
@@ -109,6 +109,7 @@ mod tests {
             body: Sha256::of(body.as_bytes()),
             report: Sha256::of(report.as_bytes()),
             main: main.map(|sha| CommitSha::new(sha.repeat(40)).expect("sha")),
+            triage: None,
         }
     }
 
@@ -168,6 +169,10 @@ mod tests {
             marker("b", "old", Some("a")),
             marker("b", "r", Some("c")),
             marker("b", "r", None),
+            Marker {
+                triage: Some(Sha256::of(b"t")),
+                ..marker("b", "r", Some("a"))
+            },
         ] {
             let actions = plan(
                 &desired(false),

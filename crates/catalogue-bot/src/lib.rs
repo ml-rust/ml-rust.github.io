@@ -8,6 +8,7 @@
 //! repo labels file and [`plan_sync`] plans the label sync. [`plan`] decides the
 //! comment and label writes for one issue from the [`Marker`] of the last bot
 //! comment, and [`comment_body`] builds the comment text within GitHub's cap.
+//! [`posted_section`] gives the link check section that text shows.
 //! [`approval_event`] reads the approval from the issue events, [`decide`]
 //! applies the ownership rules, and [`pr_decision`] turns an approved issue
 //! into the data PR it becomes. [`triage`] holds the pure parts of the
@@ -24,7 +25,8 @@ pub mod triage;
 pub use check::{Block, CheckInput, CheckReport, Section, check_submission, label_report};
 pub use comment::{
     APPROVED, Actions, BOT_CHECKED, CommentAction, Desired, MAX_COMMENT_BYTES, Marker, NEEDS_FIX,
-    Note, PR_OPEN, PrStatus, Previous, Sha256, approval_stale, comment_body, plan, report_digest,
+    Note, PR_OPEN, PrStatus, Previous, Sha256, approval_stale, comment_body, plan, posted_section,
+    report_digest,
 };
 pub use convert::{
     Affiliation, Approval, ENTRIES_DIR, IssueMeta, JUDGMENTS_DIR, JudgmentDraft, PrNotes,

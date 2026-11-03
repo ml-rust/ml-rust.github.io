@@ -127,6 +127,42 @@ impl Provider {
         headers: Vec<(String, String)>,
         extra: Map<String, Value>,
     ) -> Result<Self, ProviderError> {
+        Self::check(name, base_url, &models, &headers, &extra)?;
+        if api_key.expose().trim().is_empty() {
+            return Err(ProviderError::EmptyKey {
+                name: name.to_owned(),
+            });
+        }
+        let endpoint = format!(
+            "{}/chat/completions",
+            base_url.as_str().trim_end_matches('/')
+        );
+        Ok(Self {
+            name: name.to_owned(),
+            endpoint,
+            models,
+            api_key,
+            headers,
+            extra,
+        })
+    }
+
+    /// Checks every value [`new`](Self::new) checks except the key.
+    ///
+    /// A config loader calls it before any key is read.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`ProviderError`] for a bad name, a base URL that is not plain
+    /// https, an empty model list or id, a bad or reserved header, or a
+    /// reserved request field.
+    pub fn check(
+        name: &str,
+        base_url: &Url,
+        models: &[String],
+        headers: &[(String, String)],
+        extra: &Map<String, Value>,
+    ) -> Result<(), ProviderError> {
         let named = || name.to_owned();
         if name.is_empty()
             || !name
@@ -147,13 +183,10 @@ impl Provider {
                 url: base_url.to_string(),
             });
         }
-        if api_key.expose().trim().is_empty() {
-            return Err(ProviderError::EmptyKey { name: named() });
-        }
         if models.is_empty() || models.iter().any(|model| model.trim().is_empty()) {
             return Err(ProviderError::Models { name: named() });
         }
-        for (header, value) in &headers {
+        for (header, value) in headers {
             check_header(name, header, value)?;
         }
         if let Some(field) = extra
@@ -165,18 +198,7 @@ impl Provider {
                 field: field.clone(),
             });
         }
-        let endpoint = format!(
-            "{}/chat/completions",
-            base_url.as_str().trim_end_matches('/')
-        );
-        Ok(Self {
-            name: named(),
-            endpoint,
-            models,
-            api_key,
-            headers,
-            extra,
-        })
+        Ok(())
     }
 
     /// The provider name.

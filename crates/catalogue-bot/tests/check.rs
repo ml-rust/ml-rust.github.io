@@ -122,6 +122,7 @@ fn a_valid_submission_passes() {
     ] {
         assert!(text.contains(needle), "missing {needle:?} in:\n{text}");
     }
+    assert!(!text.contains("LLM triage"), "{text}");
 }
 
 #[test]

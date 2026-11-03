@@ -20,10 +20,13 @@ mod provider;
 mod run;
 
 pub use client::{
-    Asked, AttemptFailure, BACKOFF_STEP, Backoff, Failure, Llm, MAX_ANSWER_TOKENS, SleepBackoff,
-    TEMPERATURE,
+    Asked, AttemptFailure, BACKOFF_STEP, Backoff, Failure, Llm, MAX_ANSWER_TOKENS, MODEL_INTERVAL,
+    SleepBackoff, TEMPERATURE,
 };
 pub use error::TriageError;
-pub use fetch::{PageError, WEB_FETCH_URL, WebFetch, WebFetchError, github_page};
+pub use fetch::{
+    PageError, WEB_FETCH_INTERVAL, WEB_FETCH_URL, WebFetch, WebFetchError, check_endpoint,
+    github_page,
+};
 pub use provider::{Provider, ProviderError, Retry};
 pub use run::{Checkers, TriageResult, triage};

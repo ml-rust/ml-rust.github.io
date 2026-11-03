@@ -2,18 +2,18 @@ use std::fmt;
 
 use super::error::IdError;
 
-/// The length of a full git commit SHA in hex digits.
-const LEN: usize = 40;
-
 /// A full git commit SHA: 40 lowercase hex digits.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CommitSha(String);
 
 impl CommitSha {
+    /// The length of a full git commit SHA in hex digits.
+    pub const LEN: usize = 40;
+
     /// Checks `value` and wraps it. Uppercase digits are rejected, never folded.
     pub fn new(value: impl Into<String>) -> Result<Self, IdError> {
         let value = value.into();
-        let valid = value.len() == LEN
+        let valid = value.len() == Self::LEN
             && value
                 .bytes()
                 .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));

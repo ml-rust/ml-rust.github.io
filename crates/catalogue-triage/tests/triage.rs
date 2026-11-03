@@ -104,6 +104,17 @@ fn run(
     max_links: usize,
     providers: &[Provider],
 ) -> Result<TriageResult, TriageError> {
+    run_with(transport, links, max_links, providers, true)
+}
+
+/// Runs the whole check, with a `web_fetch` reader only when `fetch` holds.
+fn run_with(
+    transport: &ScriptedTransport,
+    links: &[Url],
+    max_links: usize,
+    providers: &[Provider],
+    fetch: bool,
+) -> Result<TriageResult, TriageError> {
     with_client(transport, |github| {
         let mut web_pacer = NoWait::default();
         let mut llm_pacer = NoWait::default();
@@ -124,7 +135,7 @@ fn run(
         );
         let mut checkers = Checkers {
             github,
-            web: &mut web,
+            web: fetch.then_some(&mut web),
             llm: &mut llm,
         };
         triage(&claim(), links, max_links, &mut checkers)
@@ -303,7 +314,7 @@ fn a_readme_comes_from_the_api_as_raw_text_and_its_quote_is_checked() {
         }))
     );
     assert!(!found.all_failed);
-    assert_eq!(found.digest, triage_digest(&claim(), &links));
+    assert_eq!(found.digest, triage_digest(&claim(), &links, true));
     let reads = transport.requests_with(Method::Get);
     let [read] = reads.as_slice() else {
         panic!("one GitHub read");
@@ -504,4 +515,45 @@ fn no_answer_for_any_page_marks_the_run_failed() {
     )
     .expect("ran");
     assert!(!unreachable.all_failed, "no page reached a model");
+}
+
+#[test]
+fn without_a_fetch_key_other_pages_are_unreachable_and_github_pages_are_read() {
+    let transport = ScriptedTransport::new()
+        .route(Method::Post, TOKEN_URL, token_reply())
+        .route(
+            Method::Get,
+            "https://api.github.com/repos/o/s/readme",
+            Reply::new(200, "s is used by Acme."),
+        )
+        .route(
+            Method::Post,
+            OLLAMA_CHAT,
+            verdict("supports", "used by Acme"),
+        );
+    let links = [
+        link("https://example.com/uses"),
+        link("https://github.com/o/s"),
+    ];
+    let found = run_with(&transport, &links, 5, &providers(), false).expect("checked");
+    assert_eq!(found.digest, triage_digest(&claim(), &links, false));
+    let outcomes: Vec<Outcome> = found.lines.into_iter().map(|line| line.outcome).collect();
+    assert_eq!(
+        outcomes,
+        [
+            Outcome::Unreachable(
+                "no web_fetch key is set, so the bot reads only GitHub pages".to_owned()
+            ),
+            Outcome::Checked(Checked {
+                verdict: Verdict::Supports,
+                quote: Some("used by Acme".to_owned()),
+            }),
+        ]
+    );
+    assert!(
+        transport
+            .requests()
+            .iter()
+            .all(|request| request.url != WEB_FETCH_URL)
+    );
 }

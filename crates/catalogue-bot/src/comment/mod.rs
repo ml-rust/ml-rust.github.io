@@ -7,7 +7,7 @@ mod names;
 mod plan;
 mod status;
 
-pub use body::{MAX_COMMENT_BYTES, comment_body, report_digest};
+pub use body::{MAX_COMMENT_BYTES, comment_body, posted_section, report_digest};
 pub use digest::Sha256;
 pub use marker::Marker;
 pub use names::{APPROVED, BOT_CHECKED, NEEDS_FIX, PR_OPEN};

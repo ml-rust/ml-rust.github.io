@@ -8,6 +8,15 @@ use crate::check::fenced;
 /// The summary line of the collapsed section.
 pub const SECTION_SUMMARY: &str = "Automated link check (LLM, advisory)";
 
+/// The line that closes the section.
+const CLOSE: &str = "</details>";
+
+/// The gap between two parts of the section.
+const SEPARATOR: &str = "\n\n";
+
+/// The last part of a section cut to fit a comment.
+const SECTION_CUT: &str = "**Link check cut.** The other results do not fit in a GitHub comment.";
+
 /// The fixed notice under the summary.
 const NOTICE: &str = "This check is advisory. A language model reads each page, and it can be wrong. \
 No label, tier or approval reads this section.";
@@ -27,10 +36,7 @@ pub struct LinkResult {
 /// is fixed bot text. A quote renders in a fence longer than any backtick run
 /// inside it, with control characters removed. No model text appears outside a fence.
 pub fn triage_section(results: &[LinkResult]) -> String {
-    let mut parts = vec![
-        format!("<details>\n<summary>{SECTION_SUMMARY}</summary>"),
-        NOTICE.to_owned(),
-    ];
+    let mut parts = vec![open(), NOTICE.to_owned()];
     if results.is_empty() {
         parts.push("The issue lists no evidence link.".to_owned());
     }
@@ -43,10 +49,78 @@ pub fn triage_section(results: &[LinkResult]) -> String {
             parts.push(fenced("text", &strip_controls(quote)));
         }
     }
-    parts.push("</details>".to_owned());
-    let mut out = parts.join("\n\n");
+    parts.push(CLOSE.to_owned());
+    let mut out = parts.join(SEPARATOR);
     out.push('\n');
     out
+}
+
+/// The opening part of the section: the `<details>` tag and the summary line.
+fn open() -> String {
+    format!("<details>\n<summary>{SECTION_SUMMARY}</summary>")
+}
+
+/// The text after the last kept part of a cut section.
+fn cut_tail() -> String {
+    format!("{SEPARATOR}{SECTION_CUT}{SEPARATOR}{CLOSE}\n")
+}
+
+/// The length of the shortest cut section: the opening part, the cut notice and the close.
+pub(crate) fn section_floor() -> usize {
+    open().len().saturating_add(cut_tail().len())
+}
+
+/// `section`, a text [`triage_section`] gave, in at most `max` bytes.
+///
+/// A section that fits comes out unchanged. A longer one keeps its parts in
+/// order while they fit, then ends with a fixed notice and the close. A part
+/// is never cut, so no fence opens without its close. A `max` below the
+/// shortest cut section gives the empty string.
+pub fn section_within(section: &str, max: usize) -> String {
+    if section.len() <= max {
+        return section.to_owned();
+    }
+    let open = open();
+    let tail = cut_tail();
+    if max < open.len().saturating_add(tail.len()) {
+        return String::new();
+    }
+    let parts = section
+        .strip_prefix(open.as_str())
+        .and_then(|rest| rest.strip_prefix(SEPARATOR))
+        .and_then(|rest| rest.strip_suffix(&format!("{SEPARATOR}{CLOSE}\n")))
+        .unwrap_or_default();
+    let mut out = open;
+    for part in parts.split(SEPARATOR).filter(|part| !part.is_empty()) {
+        let need = out
+            .len()
+            .saturating_add(SEPARATOR.len())
+            .saturating_add(part.len())
+            .saturating_add(tail.len());
+        if need > max {
+            break;
+        }
+        out.push_str(SEPARATOR);
+        out.push_str(part);
+    }
+    out.push_str(&tail);
+    out
+}
+
+/// The section at the end of bot comment `text`, or `None` when it ends without one.
+///
+/// The section is always the last part of a bot comment. It starts at the
+/// last opening part and runs to the end of the text. No issue text or model
+/// text can hold the opening part, since a quote or a link in the section
+/// holds no line break. A `\r\n` line end reads as `\n`.
+pub fn section_of_comment(text: &str) -> Option<String> {
+    let text = text.replace("\r\n", "\n");
+    let start = text.rfind(&open())?;
+    let before = text.get(..start)?;
+    let section = text.get(start..)?;
+    let close = format!("{SEPARATOR}{CLOSE}\n");
+    ((before.is_empty() || before.ends_with(SEPARATOR)) && section.ends_with(&close))
+        .then(|| section.to_owned())
 }
 
 /// The fixed label of `outcome` and its quote, when it has one.
@@ -200,6 +274,76 @@ mod tests {
         }
         assert_eq!(text.matches("</details>").count(), 2);
         assert!(text.ends_with("`````\n\n</details>\n"));
+    }
+
+    fn long_section() -> String {
+        let results: Vec<LinkResult> = (0..40)
+            .map(|index| LinkResult {
+                url: url(&format!("https://example.com/{index}")),
+                outcome: checked(Verdict::Supports, Some(&"quote ```` x ".repeat(20))),
+            })
+            .collect();
+        triage_section(&results)
+    }
+
+    #[test]
+    fn a_section_that_fits_is_unchanged() {
+        let text = long_section();
+        assert_eq!(section_within(&text, text.len()), text);
+    }
+
+    #[test]
+    fn a_long_section_is_cut_between_parts() {
+        let text = long_section();
+        let max = text.len() / 3;
+        let cut = section_within(&text, max);
+        assert!(cut.len() <= max, "{} > {max}", cut.len());
+        assert!(cut.starts_with(&open()));
+        assert!(
+            cut.ends_with(&format!("{SECTION_CUT}\n\n</details>\n")),
+            "{cut}"
+        );
+        assert!(cut.contains("**Link 1:**"));
+        assert!(!cut.contains("**Link 40:**"));
+        for part in cut.split(SEPARATOR) {
+            assert!(
+                text.contains(part) || part.starts_with(SECTION_CUT),
+                "{part}"
+            );
+        }
+        let opens = cut.lines().filter(|line| *line == "`````text").count();
+        let closes = cut.lines().filter(|line| *line == "`````").count();
+        assert!(opens > 0);
+        assert_eq!(opens, closes);
+        assert_eq!(
+            section_within(&text, section_floor()).len(),
+            section_floor()
+        );
+        assert_eq!(section_within(&text, section_floor() - 1), "");
+        assert_eq!(section_of_comment(&format!("x\n\n{cut}")), Some(cut));
+    }
+
+    #[test]
+    fn the_section_is_found_only_at_the_end_of_a_comment() {
+        let section = triage_section(&[LinkResult {
+            url: url("https://example.com/a"),
+            outcome: checked(Verdict::Supports, Some("q")),
+        }]);
+        let comment = format!("<!-- m -->\n\n## Catalogue check\n\n{section}");
+        assert_eq!(section_of_comment(&comment), Some(section.clone()));
+        assert_eq!(
+            section_of_comment(&comment.replace('\n', "\r\n")),
+            Some(section.clone())
+        );
+        assert_eq!(section_of_comment("## Catalogue check\n"), None);
+        assert_eq!(section_of_comment(&format!("{comment}more\n")), None);
+        let forged = format!(
+            "## Catalogue check\n\n```text\n{}\n```\n",
+            section.trim_end()
+        );
+        assert_eq!(section_of_comment(&forged), None);
+        let glued = format!("x{section}");
+        assert_eq!(section_of_comment(&glued), None);
     }
 
     #[test]

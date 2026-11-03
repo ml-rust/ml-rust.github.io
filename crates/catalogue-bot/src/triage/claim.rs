@@ -1,5 +1,7 @@
 //! The claim that the evidence links of one issue must back.
 
+use url::Url;
+
 use crate::form::{Form, FormKind, JudgmentAnswers, JudgmentForm, SubmitForm};
 
 /// One named value of a claim. The value is untrusted issue text.
@@ -46,6 +48,21 @@ impl Claim {
         }
         out
     }
+}
+
+/// The evidence links of `form`, in form order: `evidence_of_use` of a
+/// submission, `evidence` of a judgment.
+///
+/// An item that is not a valid link is left out. The check report already names it.
+pub fn evidence_links(form: &Form) -> Vec<Url> {
+    let items = match form {
+        Form::Submit(submit) => &submit.evidence_of_use,
+        Form::Judgment(judgment) => &judgment.evidence,
+    };
+    items
+        .iter()
+        .filter_map(|item| Url::parse(item).ok())
+        .collect()
 }
 
 fn field(label: &'static str, value: impl Into<String>) -> ClaimField {
@@ -148,6 +165,27 @@ mod tests {
              Name: Gizmo\nKind: library\nDescription: Runs models.\nCrates: gizmo, gizmo-core\n\
              Repository: https://github.com/o/gizmo\n"
         );
+    }
+
+    #[test]
+    fn evidence_links_come_from_the_form_and_skip_invalid_items() {
+        let mut found = submit();
+        found.evidence_of_use = vec![
+            "https://example.com/a".to_owned(),
+            "not a link".to_owned(),
+            "https://example.com/b".to_owned(),
+        ];
+        let links: Vec<String> = evidence_links(&Form::Submit(Box::new(found)))
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        assert_eq!(links, ["https://example.com/a", "https://example.com/b"]);
+        let judgment = Form::Judgment(JudgmentForm {
+            entry: "gizmo".to_owned(),
+            evidence: vec!["https://example.com/proof".to_owned()],
+            answers: JudgmentAnswers::FeaturedApproval,
+        });
+        assert_eq!(evidence_links(&judgment).len(), 1);
     }
 
     #[test]

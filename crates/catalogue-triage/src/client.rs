@@ -11,6 +11,9 @@ use crate::error::TriageError;
 use crate::headers::json_bearer;
 use crate::provider::{Provider, Retry};
 
+/// The least time between two model requests.
+pub const MODEL_INTERVAL: Duration = Duration::from_secs(1);
+
 /// The wait after a failed attempt, times the attempt number.
 pub const BACKOFF_STEP: Duration = Duration::from_millis(500);
 

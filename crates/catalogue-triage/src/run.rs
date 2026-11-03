@@ -15,7 +15,7 @@ use crate::fetch::{PageError, WebFetch, github_page};
 /// The result of checking every link of one issue.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TriageResult {
-    /// The digest of the claim and the links, from [`triage_digest`].
+    /// The digest of the claim, the links and the page sources, from [`triage_digest`].
     pub digest: Sha256,
     /// One result per link, in link order.
     pub lines: Vec<LinkResult>,
@@ -29,8 +29,9 @@ pub struct TriageResult {
 pub struct Checkers<'c, 'g, 'w, 'l> {
     /// Reads GitHub pages with the bot's installation token.
     pub github: &'c mut RepoClient<'g>,
-    /// Reads every other page through Ollama `web_fetch`.
-    pub web: &'c mut WebFetch<'w>,
+    /// Reads every other page through Ollama `web_fetch`. `None` when no key
+    /// is set: every other page is then [`PageError::NoFetchKey`].
+    pub web: Option<&'c mut WebFetch<'w>>,
     /// Asks the models.
     pub llm: &'c mut Llm<'l>,
 }
@@ -81,7 +82,7 @@ pub fn triage(
         });
     }
     Ok(TriageResult {
-        digest: triage_digest(claim, links),
+        digest: triage_digest(claim, links, checkers.web.is_some()),
         lines,
         all_failed: asked > 0 && answered == 0,
     })
@@ -91,7 +92,10 @@ pub fn triage(
 fn page_text(url: &Url, checkers: &mut Checkers<'_, '_, '_, '_>) -> Result<String, PageError> {
     let text = match classify(url) {
         LinkClass::GitHub(target) => github_page(checkers.github, &target)?,
-        LinkClass::Other => checkers.web.page(url)?,
+        LinkClass::Other => match checkers.web.as_deref_mut() {
+            Some(web) => web.page(url)?,
+            None => return Err(PageError::NoFetchKey),
+        },
         LinkClass::Unsupported => return Err(PageError::Link),
     };
     if text.trim().is_empty() {
