@@ -137,6 +137,7 @@ mod tests {
         let plain = candidate(
             "plain",
             vec![
+                Reason::Core,
                 Reason::Category("science::ml".to_owned()),
                 Reason::Keyword("llm".to_owned()),
                 Reason::DependsOn("burn".to_owned()),
@@ -161,7 +162,7 @@ mod tests {
         assert_eq!(
             render(&mut rows),
             "candidates: 2\n\
-             plain\t3.00\t0.46\tcategory:science::ml,keyword:llm,depends-on:burn\tlisted:plain-entry\n\
+             plain\t3.00\t0.46\tcore,category:science::ml,keyword:llm,depends-on:burn\tlisted:plain-entry\n\
              old\t0.00\t0.00\tkeyword:llm,deprecated"
         );
     }

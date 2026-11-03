@@ -29,8 +29,8 @@ keywords = [
     "transformers",
 ]
 
-# Core ML crates. A crate whose latest version depends on one of these
-# (normal or build dependency) is a candidate.
+# Core ML crates. Each is a candidate itself, and so is a crate whose latest
+# version depends on one of these (normal or build dependency).
 core_crates = [
     "burn",
     "candle-core",

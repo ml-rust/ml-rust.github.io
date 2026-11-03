@@ -20,5 +20,6 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.
 - `catalogue tiers`: assigns each entry its tier with the reasons.
 - `catalogue calibrate`: percentiles of the tier signals, for setting thresholds.
+- `catalogue seed`: drafts entries from discovery for human review.
 - `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

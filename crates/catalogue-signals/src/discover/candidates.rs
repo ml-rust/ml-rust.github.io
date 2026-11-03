@@ -9,15 +9,20 @@ use crate::dump::{DependencyKind, DumpSnapshot, IdMap};
 
 /// Selects the crates of `snapshot` that match `rules`.
 ///
-/// A crate matches when one of its category slugs equals or extends a rule
-/// category, when one of its keywords equals a rule keyword, or when its
-/// default version has a normal or build dependency on a core crate. A crate
+/// A crate matches when it is a core crate, when one of its category slugs
+/// equals or extends a rule category, when one of its keywords equals a rule
+/// keyword, or when its default version has a normal or build dependency on a
+/// core crate. A core crate in the snapshot is a candidate with the reason
+/// `core` even when no other rule matches it, and keeps its other reasons. A crate
 /// whose default version is missing or yanked is skipped. A crate with a
 /// deprecation notice stays and is flagged. The run reads the category, keyword
 /// and default-requirement tables once each and never reads the dependency edges.
 pub fn candidates(snapshot: &DumpSnapshot, rules: &Rules) -> Discovered {
     let core = core_crates::resolve(snapshot, &rules.core_crates);
     let mut reasons: IdMap<Vec<Reason>> = IdMap::default();
+    for &id in core.by_id.keys() {
+        reasons.entry(id).or_default().push(Reason::Core);
+    }
 
     let categories: HashSet<&str> = rules.categories.iter().map(String::as_str).collect();
     for (&id, slugs) in &snapshot.categories {
@@ -255,9 +260,9 @@ mod tests {
         snap.default_requirements
             .insert(APP, vec![requirement(CORE, DependencyKind::Build)]);
         let found = candidates(&snap, &rules(&[], &[], &["candle-core"]));
-        assert_eq!(names(&found), ["app", "ml-thing"]);
+        assert_eq!(names(&found), ["Candle_Core", "app", "ml-thing"]);
         assert_eq!(
-            found.candidates[0].reasons,
+            found.candidates[1].reasons,
             [Reason::DependsOn("candle-core".to_owned())]
         );
     }
@@ -268,7 +273,7 @@ mod tests {
         snap.default_requirements
             .insert(ML, vec![requirement(CORE, DependencyKind::Dev)]);
         let found = candidates(&snap, &rules(&[], &[], &["candle-core"]));
-        assert!(found.candidates.is_empty());
+        assert_eq!(names(&found), ["Candle_Core"]);
         assert!(found.unknown_core_crates.is_empty());
     }
 
@@ -279,9 +284,9 @@ mod tests {
             .insert(ML, vec![requirement(CORE, DependencyKind::Normal)]);
         for spelling in ["candle-core", "CANDLE_CORE", "Candle_Core"] {
             let found = candidates(&snap, &rules(&[], &[], &[spelling]));
-            assert_eq!(names(&found), ["ml-thing"], "{spelling}");
+            assert_eq!(names(&found), ["Candle_Core", "ml-thing"], "{spelling}");
             assert_eq!(
-                found.candidates[0].reasons,
+                found.candidates[1].reasons,
                 [Reason::DependsOn(spelling.to_owned())]
             );
             assert!(found.unknown_core_crates.is_empty());
@@ -296,6 +301,33 @@ mod tests {
             &rules(&[], &[], &["zeta", "candle-core", "Alpha", "ZETA"]),
         );
         assert_eq!(found.unknown_core_crates, ["zeta", "Alpha"]);
+        assert_eq!(names(&found), ["Candle_Core"]);
+    }
+
+    #[test]
+    fn a_core_crate_without_another_match_is_a_candidate() {
+        let snap = snapshot();
+        let found = candidates(&snap, &rules(&[], &[], &["candle-core"]));
+        assert_eq!(names(&found), ["Candle_Core"]);
+        assert_eq!(found.candidates[0].reasons, [Reason::Core]);
+    }
+
+    #[test]
+    fn a_core_crate_keeps_its_other_reasons() {
+        let mut snap = snapshot();
+        snap.keywords.insert(CORE, vec!["tensor".to_owned()]);
+        let found = candidates(&snap, &rules(&[], &["tensor"], &["candle-core"]));
+        assert_eq!(
+            found.candidates[0].reasons,
+            [Reason::Core, Reason::Keyword("tensor".to_owned())]
+        );
+    }
+
+    #[test]
+    fn a_yanked_core_crate_is_skipped() {
+        let mut snap = snapshot();
+        add_crate(&mut snap, CORE, "Candle_Core", true);
+        let found = candidates(&snap, &rules(&[], &[], &["candle-core"]));
         assert!(found.candidates.is_empty());
     }
 
@@ -310,7 +342,7 @@ mod tests {
     #[test]
     fn crate_without_a_match_is_not_a_candidate() {
         let snap = snapshot();
-        let found = candidates(&snap, &rules(&["science::ml"], &["llm"], &["candle-core"]));
+        let found = candidates(&snap, &rules(&["science::ml"], &["llm"], &["missing"]));
         assert!(found.candidates.is_empty());
     }
 
@@ -372,8 +404,9 @@ mod tests {
             &snap,
             &rules(&["science"], &["llm", "tensor"], &["candle-core"]),
         );
+        assert_eq!(names(&found), ["Candle_Core", "ml-thing"]);
         assert_eq!(
-            found.candidates[0].reasons,
+            found.candidates[1].reasons,
             [
                 Reason::Category("science::ml".to_owned()),
                 Reason::Keyword("llm".to_owned()),
@@ -395,6 +428,7 @@ mod tests {
 
     #[test]
     fn reasons_display_with_their_prefix() {
+        assert_eq!(Reason::Core.to_string(), "core");
         assert_eq!(
             Reason::Category("a::b".to_owned()).to_string(),
             "category:a::b"

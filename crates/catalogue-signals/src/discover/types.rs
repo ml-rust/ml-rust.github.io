@@ -9,7 +9,7 @@ pub struct Rules {
     pub categories: Vec<String>,
     /// Keywords, compared in lowercase.
     pub keywords: Vec<String>,
-    /// Crate names whose dependents become candidates.
+    /// Crate names that are candidates themselves and whose dependents become candidates.
     ///
     /// Names resolve the way crates.io resolves them: ASCII case and `-`
     /// against `_` do not matter.
@@ -21,6 +21,8 @@ pub struct Rules {
 /// The variants sort in declaration order, then by text.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Reason {
+    /// The crate is one of the rules' core crates.
+    Core,
     /// The crate lists this category slug, which equals or extends a rule category.
     Category(String),
     /// The crate lists this lowercase keyword, which equals a rule keyword.
@@ -30,9 +32,10 @@ pub enum Reason {
 }
 
 impl fmt::Display for Reason {
-    /// Writes `category:<slug>`, `keyword:<kw>` or `depends-on:<crate>`.
+    /// Writes `core`, `category:<slug>`, `keyword:<kw>` or `depends-on:<crate>`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Core => f.write_str("core"),
             Self::Category(slug) => write!(f, "category:{slug}"),
             Self::Keyword(keyword) => write!(f, "keyword:{keyword}"),
             Self::DependsOn(name) => write!(f, "depends-on:{name}"),

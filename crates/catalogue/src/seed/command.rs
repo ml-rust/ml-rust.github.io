@@ -1,0 +1,180 @@
+//! The `catalogue seed` command.
+
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use catalogue_core::{Catalogue, Diagnostics, Topics};
+use catalogue_signals::fetch;
+use catalogue_signals::seed::ExistingIndex;
+use clap::Args;
+
+use super::build::build_seed;
+use super::error::SeedError;
+use super::write::write_drafts;
+use crate::cache_dir::resolve_cache_dir;
+use crate::discover::{DiscoverError, crate_rules, load_catalogue};
+use crate::dump::{DumpCommandError, read_cached};
+
+/// Days of download history read from the dump. The signals need none.
+const WINDOW_DAYS: u16 = 1;
+
+/// The arguments of `catalogue seed`.
+///
+/// Reads the cached crates.io dump. Run `catalogue dump fetch` first.
+#[derive(Debug, Args)]
+pub struct SeedArgs {
+    /// Directory that holds the data files.
+    #[arg(long, value_name = "DIR", default_value = "data")]
+    pub data: PathBuf,
+    /// Directory that holds the cache. Default: the user cache directory.
+    #[arg(long, value_name = "DIR")]
+    pub cache_dir: Option<PathBuf>,
+    /// Fewest active users a crate has to draft. Default: `new.min_active_users` in `thresholds.toml`.
+    #[arg(long, value_name = "N", value_parser = parse_min_users)]
+    pub min_users: Option<f64>,
+    /// Write `entries/<slug>.toml` for each draft. Without it the run prints only.
+    #[arg(long)]
+    pub write: bool,
+}
+
+fn parse_min_users(text: &str) -> Result<f64, String> {
+    match text.parse::<f64>() {
+        Ok(value) if value.is_finite() && value >= 0.0 => Ok(value),
+        _ => Err(format!("`{text}` is not a number of 0 or more")),
+    }
+}
+
+/// Runs `catalogue seed` and returns the process exit code.
+pub fn run_seed(args: SeedArgs) -> ExitCode {
+    match seed(&args) {
+        Ok(text) => {
+            println!("{text}");
+            ExitCode::SUCCESS
+        }
+        Err(SeedError::Discover(DiscoverError::Invalid(diagnostics))) => {
+            print_diagnostics(&diagnostics);
+            ExitCode::from(crate::exit::INVALID)
+        }
+        Err(error) => {
+            eprintln!("error: {error}");
+            ExitCode::from(error.exit_code())
+        }
+    }
+}
+
+fn print_diagnostics(diagnostics: &Diagnostics) {
+    for diagnostic in diagnostics {
+        eprintln!("{diagnostic}");
+    }
+}
+
+/// Checks the data, reads the cached dump, drafts the entries and returns the report.
+///
+/// With `--write` the report ends with `written: <n>` and the file paths.
+fn seed(args: &SeedArgs) -> Result<String, SeedError> {
+    let catalogue = load_catalogue(&args.data)?;
+    let rules = crate_rules(&catalogue, &args.data)?;
+    let min_users = min_users(args, &catalogue)?;
+    let cache_dir = resolve_cache_dir(args.cache_dir.clone()).map_err(DumpCommandError::from)?;
+    let snapshot = read_cached(&fetch::dump_path(&cache_dir), WINDOW_DAYS)?;
+    let topics = Topics {
+        topic: catalogue.topics().to_vec(),
+    };
+    let existing = ExistingIndex::from_catalogue(&catalogue);
+    let seeded = build_seed(&snapshot, &rules, &topics, &existing, min_users);
+    if !args.write {
+        return Ok(seeded.text);
+    }
+    let paths = write_drafts(&args.data, &seeded.drafts)?;
+    let mut lines = vec![seeded.text, format!("written: {}", paths.len())];
+    lines.extend(paths.iter().map(|path| path.display().to_string()));
+    Ok(lines.join("\n"))
+}
+
+/// The fewest active users: `--min-users`, else `new.min_active_users`.
+fn min_users(args: &SeedArgs, catalogue: &Catalogue) -> Result<f64, SeedError> {
+    if let Some(value) = args.min_users {
+        return Ok(value);
+    }
+    catalogue
+        .thresholds()
+        .map(|thresholds| thresholds.new.min_active_users)
+        .ok_or_else(|| SeedError::NoThresholds {
+            path: args.data.join("thresholds.toml"),
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use super::*;
+    use crate::cli::{Cli, Command};
+
+    fn args(extra: &[&str]) -> Result<SeedArgs, clap::Error> {
+        let mut argv = vec!["catalogue", "seed"];
+        argv.extend_from_slice(extra);
+        Cli::try_parse_from(argv).map(|cli| match cli.command {
+            Command::Seed(args) => args,
+            other => panic!("expected seed, got {other:?}"),
+        })
+    }
+
+    #[test]
+    fn defaults_print_only() {
+        let args = args(&[]).expect("parses");
+        assert_eq!(args.data, PathBuf::from("data"));
+        assert_eq!(args.cache_dir, None);
+        assert_eq!(args.min_users, None);
+        assert!(!args.write);
+    }
+
+    #[test]
+    fn options_are_read() {
+        let args = args(&[
+            "--data",
+            "d",
+            "--cache-dir",
+            "c",
+            "--min-users",
+            "3.5",
+            "--write",
+        ])
+        .expect("parses");
+        assert_eq!(args.data, PathBuf::from("d"));
+        assert_eq!(args.cache_dir, Some(PathBuf::from("c")));
+        assert_eq!(args.min_users, Some(3.5));
+        assert!(args.write);
+    }
+
+    #[test]
+    fn min_users_must_be_a_non_negative_number() {
+        for bad in ["-1", "nan", "inf", "x", ""] {
+            assert!(args(&["--min-users", bad]).is_err(), "{bad}");
+        }
+        assert_eq!(
+            args(&["--min-users", "0"]).expect("zero").min_users,
+            Some(0.0)
+        );
+    }
+
+    #[test]
+    fn min_users_defaults_to_the_new_tier_gate() {
+        let thresholds = include_str!("../../../../data/thresholds.toml");
+        let catalogue = Catalogue::load(catalogue_core::DataSources {
+            thresholds: Some(catalogue_core::SourceFile {
+                path: "thresholds.toml".to_owned(),
+                contents: thresholds.to_owned(),
+            }),
+            ..Default::default()
+        })
+        .expect("loads");
+        let default = args(&[]).expect("parses");
+        assert_eq!(min_users(&default, &catalogue).expect("gate"), 2.0);
+        let given = args(&["--min-users", "7"]).expect("parses");
+        assert_eq!(min_users(&given, &catalogue).expect("given"), 7.0);
+        let none = Catalogue::load(Default::default()).expect("empty");
+        let error = min_users(&default, &none).expect_err("no thresholds");
+        assert!(error.to_string().contains("thresholds.toml"), "{error}");
+    }
+}

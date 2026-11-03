@@ -6,11 +6,12 @@
 //! candidate crates from it. [`github`] searches GitHub for candidate repos.
 //! [`ecosystems`] reads dependent counts from ecosyste.ms. [`distribution`]
 //! reads release, Homebrew, Docker Hub and Repology counts for apps.
-//! [`rustsec`] reads the advisory archive. [`link`] checks that a crate was
-//! published from its repo. [`history`] keeps the daily snapshots that the
-//! two-check dead rule and Docker growth read. [`assemble`] turns all of them
-//! into the tier signals of one entry. [`calibrate`] reads percentiles of the
-//! tier signals, for setting thresholds.
+//! [`rustsec`] reads the advisory archive. [`seed`] drafts entries from the
+//! candidates. [`link`] checks that a crate was published from its repo.
+//! [`history`] keeps the daily snapshots that the two-check dead rule and
+//! Docker growth read. [`assemble`] turns all of them into the tier signals of
+//! one entry. [`calibrate`] reads percentiles of the tier signals, for setting
+//! thresholds.
 
 mod agent;
 mod archive;
@@ -27,4 +28,5 @@ pub mod history;
 pub mod http;
 pub mod link;
 pub mod rustsec;
+pub mod seed;
 pub mod usage;

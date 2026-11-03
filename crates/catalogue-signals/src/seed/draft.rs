@@ -1,0 +1,299 @@
+//! The drafting of one entry per eligible repository.
+
+use std::collections::BTreeMap;
+
+use catalogue_core::{Date, Slug, Topics};
+
+use super::family::families;
+use super::family_draft::draft_family;
+use super::types::{Drafts, ExistingIndex};
+use crate::discover::Candidate;
+use crate::dump::{DumpSnapshot, IdMap};
+use crate::usage::Usage;
+
+/// Drafts one entry for each family of eligible crates.
+///
+/// A crate is eligible when its active users reach `min_active_users`, no
+/// existing entry lists it, its default version is not yanked and it carries no
+/// deprecation notice. A crate without usage counts as having no users.
+/// Eligible crates whose repository links normalise to the same
+/// `host/owner/repo` form one family. The primary crate is the top of the
+/// family's own dependency tree: the root that no other member depends on, with
+/// ties broken by the repository name, the most family dependencies, the most
+/// current active users, the shortest name and the name (see `families`). A
+/// family is eligible when it has a primary. A family member that
+/// is yanked or deprecated is left out of the entry and appears in
+/// [`Drafts::skipped`] with the reason. A crate that fails the user count or is
+/// already listed is dropped without a report.
+///
+/// Each draft is a library. Its name and slug come from the last segment of the
+/// repository link, the project name, when that differs from the primary
+/// crate's name and canonicalises to a valid slug. Otherwise they come from the
+/// primary crate. Its
+/// crates are the primary, then the other members sorted by name. Its
+/// repository is the normalised `https://<host>/<owner>/<repo>` of the
+/// primary. Its description is the crates.io description of the primary, or of
+/// the next member with one of at most 300 characters. Its topics are the
+/// union of the topics whose keywords or categories match any member.
+///
+/// Any https host is accepted. GitHub-only signals stay unknown for other
+/// hosts, so such entries can be Listed but not Featured. A family whose
+/// primary lacks an https repository with an owner and a name, whose members
+/// all lack a usable description, that matches no topic or that has an
+/// invalid or taken slug appears in [`Drafts::skipped`] under the primary's
+/// name with the reason.
+pub fn draft_entries(
+    snapshot: &DumpSnapshot,
+    candidates: &[Candidate],
+    usage: &IdMap<Usage>,
+    topics: &Topics,
+    existing: &ExistingIndex,
+    min_active_users: f64,
+    today: Date,
+) -> Drafts {
+    let mut drafts = Drafts::default();
+    let mut taken: BTreeMap<Slug, &str> = BTreeMap::new();
+    for family in families(snapshot, candidates, usage, existing, min_active_users) {
+        drafts.skipped.extend(family.left_out.iter().cloned());
+        let outcome = draft_family(snapshot, &family, topics, today).and_then(|(slug, entry)| {
+            if existing.has_slug(&slug) {
+                return Err(format!("slug `{slug}` is already an entry"));
+            }
+            match taken.get(&slug) {
+                Some(first) => Err(format!("slug `{slug}` is already drafted for `{first}`")),
+                None => Ok((slug, entry)),
+            }
+        });
+        match outcome {
+            Ok((slug, entry)) => {
+                let primary: &Candidate = family.primary;
+                taken.insert(slug.clone(), &primary.name);
+                drafts.entries.push((slug, entry));
+            }
+            Err(reason) => drafts.skipped.push((family.primary.name.clone(), reason)),
+        }
+    }
+    drafts.entries.sort_by(|a, b| a.0.cmp(&b.0));
+    drafts.skipped.sort();
+    drafts
+}
+
+#[cfg(test)]
+mod tests {
+    use catalogue_core::{CrateName, DescriptionSource, EntryKind};
+    use url::Url;
+
+    use super::super::fixtures::{Spec, World, today, topics};
+    use super::*;
+
+    fn run(world: &World, existing: &ExistingIndex, min: f64) -> Drafts {
+        draft_entries(
+            &world.snapshot,
+            &world.candidates,
+            &world.usage,
+            &topics(),
+            existing,
+            min,
+            today(),
+        )
+    }
+
+    fn plain(world: &World) -> Drafts {
+        run(world, &ExistingIndex::default(), 2.0)
+    }
+
+    fn skipped(drafts: &Drafts) -> Vec<(&str, &str)> {
+        drafts
+            .skipped
+            .iter()
+            .map(|(name, reason)| (name.as_str(), reason.as_str()))
+            .collect()
+    }
+
+    fn slugs(drafts: &Drafts) -> Vec<&str> {
+        drafts
+            .entries
+            .iter()
+            .map(|(slug, _)| slug.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn a_draft_fills_every_field() {
+        let mut spec = Spec::new(1, "Tok_Lib");
+        spec.homepage = Some("https://tok.example.com");
+        spec.repository = Some("https://github.com/ML-Rust/tok-lib.git".to_owned());
+        spec.keywords = vec!["NLP", "tensor"];
+        spec.description = Some("  Fast\n tokenizer. ".to_owned());
+        let drafts = plain(&World::new(vec![spec]));
+        assert!(drafts.skipped.is_empty(), "{:?}", drafts.skipped);
+        let [(slug, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected");
+        };
+        assert_eq!(slug.as_str(), "tok-lib");
+        assert_eq!(entry.name, "Tok_Lib");
+        assert_eq!(entry.kind, EntryKind::Library);
+        assert_eq!(entry.repo.as_str(), "https://github.com/ml-rust/tok-lib");
+        assert_eq!(
+            entry.homepage.as_ref().map(Url::as_str),
+            Some("https://tok.example.com/")
+        );
+        let crates: Vec<&str> = entry.crates.iter().map(CrateName::as_str).collect();
+        assert_eq!(crates, ["Tok_Lib"]);
+        let found: Vec<&str> = entry.topics.iter().map(Slug::as_str).collect();
+        assert_eq!(found, ["foundations", "nlp"]);
+        assert_eq!(entry.description.text, "Fast tokenizer.");
+        assert_eq!(entry.description.source, DescriptionSource::Crate);
+        assert_eq!(
+            entry.description.source_url.as_ref().map(Url::as_str),
+            Some("https://crates.io/crates/Tok_Lib")
+        );
+        assert!(entry.org_affiliated);
+        assert_eq!(entry.distribution, None);
+        assert_eq!(entry.added, today());
+        assert_eq!(entry.problems(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn users_below_the_minimum_are_dropped_silently() {
+        let mut low = Spec::new(1, "low");
+        low.users = 1.99;
+        let mut edge = Spec::new(2, "edge");
+        edge.users = 2.0;
+        let drafts = plain(&World::new(vec![low, edge]));
+        assert_eq!(slugs(&drafts), ["edge"]);
+        assert!(drafts.skipped.is_empty());
+    }
+
+    #[test]
+    fn a_candidate_without_usage_has_no_users() {
+        let mut world = World::new(vec![Spec::new(1, "tool")]);
+        world.usage.clear();
+        assert!(plain(&world).entries.is_empty());
+        assert_eq!(run(&world, &ExistingIndex::default(), 0.0).entries.len(), 1);
+    }
+
+    #[test]
+    fn listed_crates_are_dropped_in_any_spelling() {
+        let world = World::new(vec![Spec::new(1, "foo_bar"), Spec::new(2, "baz")]);
+        let existing = ExistingIndex::new(["Foo-Bar"], []);
+        let drafts = run(&world, &existing, 2.0);
+        assert_eq!(slugs(&drafts), ["baz"]);
+        assert!(drafts.skipped.is_empty());
+    }
+
+    #[test]
+    fn yanked_deprecated_and_missing_default_are_dropped() {
+        let mut yanked = Spec::new(1, "yanked");
+        yanked.yanked = true;
+        let mut deprecated = Spec::new(2, "deprecated");
+        deprecated.deprecated = true;
+        let mut world = World::new(vec![yanked, deprecated, Spec::new(3, "nodefault")]);
+        world.snapshot.default_version.remove(&3);
+        let drafts = plain(&world);
+        assert!(drafts.entries.is_empty());
+        assert!(drafts.skipped.is_empty());
+    }
+
+    #[test]
+    fn repositories_that_do_not_fit_are_skipped_with_a_reason() {
+        let repo = |id, name, repository: Option<&str>| {
+            let mut spec = Spec::new(id, name);
+            spec.repository = repository.map(str::to_owned);
+            spec
+        };
+        let world = World::new(vec![
+            repo(1, "a-none", None),
+            repo(2, "b-http", Some("http://github.com/o/r")),
+            repo(3, "c-ssh", Some("git@github.com:o/r.git")),
+            repo(4, "d-short", Some("https://github.com/o")),
+        ]);
+        let drafts = plain(&world);
+        assert!(drafts.entries.is_empty());
+        let found = skipped(&drafts);
+        assert_eq!(found[0], ("a-none", "no repository"));
+        assert!(found[1].1.contains("not an https link"), "{found:?}");
+        assert!(found[2].1.contains("not an https link"), "{found:?}");
+        assert!(found[3].1.contains("no owner and name"), "{found:?}");
+    }
+
+    #[test]
+    fn descriptions_that_do_not_fit_are_skipped_with_a_reason() {
+        let mut none = Spec::new(1, "a-none");
+        none.description = None;
+        let mut blank = Spec::new(2, "b-blank");
+        blank.description = Some("  ".to_owned());
+        let mut over = Spec::new(3, "c-long");
+        over.description = Some("x".repeat(301));
+        let drafts = plain(&World::new(vec![none, blank, over]));
+        assert_eq!(
+            skipped(&drafts),
+            [
+                ("a-none", "no description"),
+                ("b-blank", "no description"),
+                ("c-long", "description is longer than 300 characters"),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_crate_without_a_matching_topic_is_skipped() {
+        let mut spec = Spec::new(1, "tool");
+        spec.keywords = vec!["zip"];
+        let drafts = plain(&World::new(vec![spec]));
+        assert_eq!(skipped(&drafts), [("tool", "no topic matches")]);
+    }
+
+    #[test]
+    fn an_existing_slug_blocks_the_draft() {
+        let world = World::new(vec![Spec::new(1, "tool")]);
+        let existing = ExistingIndex::new([], ["tool"]);
+        let drafts = run(&world, &existing, 2.0);
+        assert!(drafts.entries.is_empty());
+        assert_eq!(
+            skipped(&drafts),
+            [("tool", "slug `tool` is already an entry")]
+        );
+    }
+
+    #[test]
+    fn two_drafts_with_one_slug_keep_the_first_by_name() {
+        let world = World::new(vec![Spec::new(2, "foo_bar"), Spec::new(1, "foo-bar")]);
+        let drafts = plain(&world);
+        assert_eq!(slugs(&drafts), ["foo-bar"]);
+        assert_eq!(
+            skipped(&drafts),
+            [("foo_bar", "slug `foo-bar` is already drafted for `foo-bar`")]
+        );
+    }
+
+    #[test]
+    fn a_name_that_is_not_a_slug_is_skipped() {
+        let world = World::new(vec![Spec::new(1, "a__b")]);
+        let drafts = plain(&world);
+        assert!(drafts.entries.is_empty());
+        let found = skipped(&drafts);
+        assert!(found[0].1.contains("not a slug"), "{found:?}");
+    }
+
+    #[test]
+    fn entries_sort_by_slug_regardless_of_candidate_order() {
+        let mut world = World::new(vec![
+            Spec::new(1, "zeta"),
+            Spec::new(2, "alpha"),
+            Spec::new(3, "mid_dle"),
+        ]);
+        world.candidates.reverse();
+        assert_eq!(slugs(&plain(&world)), ["alpha", "mid-dle", "zeta"]);
+    }
+
+    #[test]
+    fn a_repeated_candidate_drafts_once() {
+        let mut world = World::new(vec![Spec::new(1, "tool")]);
+        let again = world.candidates.clone();
+        world.candidates.extend(again);
+        let drafts = plain(&world);
+        assert_eq!(slugs(&drafts), ["tool"]);
+        assert!(drafts.skipped.is_empty());
+    }
+}

@@ -11,6 +11,7 @@ use crate::ecosystems::{EcosystemsCommand, run_ecosystems};
 use crate::exit::{INVALID, IO};
 use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
+use crate::seed::{SeedArgs, run_seed};
 use crate::tiers::{TiersArgs, run_tiers};
 use crate::validate::{Outcome, validate};
 
@@ -80,6 +81,13 @@ pub enum Command {
     /// reads the token from the `GITHUB_TOKEN` environment variable and fetches
     /// repo facts and app distribution counts.
     Tiers(TiersArgs),
+    /// Draft entries from discovery for human review.
+    ///
+    /// Drafts one library entry per crate that matches `discovery.toml`, has
+    /// enough active users, is not listed yet, and maps to a topic in
+    /// `topics.toml`. A reviewer merges crate families and checks every draft.
+    /// Without `--write` the command prints the drafts and the skipped crates.
+    Seed(SeedArgs),
 }
 
 /// Runs the parsed command and returns the process exit code.
@@ -96,6 +104,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Rustsec { command } => run_rustsec(command),
         Command::Calibrate { command } => run_calibrate(command),
         Command::Tiers(args) => run_tiers(args),
+        Command::Seed(args) => run_seed(args),
     }
 }
 

@@ -13,6 +13,7 @@ mod exit;
 pub mod github;
 mod render;
 pub mod rustsec;
+pub mod seed;
 pub mod tiers;
 mod token;
 pub mod usage;
@@ -36,6 +37,7 @@ pub use github::{
     GithubCommand, GithubCommandError, render_all, render_facts, render_link, run_github,
 };
 pub use rustsec::{RustsecCommand, RustsecCommandError, render_crate, run_rustsec};
+pub use seed::{Seed, SeedArgs, SeedError, build_seed, run_seed, write_drafts};
 pub use tiers::{Network, TiersArgs, TiersError, run_tiers, tiers_report};
 pub use token::NoToken;
 pub use usage::{render_usage, resolve_names};
