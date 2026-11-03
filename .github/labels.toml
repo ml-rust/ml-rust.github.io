@@ -1,0 +1,57 @@
+# The bot syncs these labels to the repository. Edit this file, not the label page.
+# Run `catalogue bot labels` to apply it. The sync never deletes a label.
+
+[[label]]
+name = "submit"
+color = "0e8a16"
+description = "Propose a new project for the catalogue"
+
+[[label]]
+name = "judgment:correctness"
+color = "d93f0b"
+description = "Report a wrong fact on an entry"
+
+[[label]]
+name = "judgment:supersedes"
+color = "5319e7"
+description = "Report that one entry replaces another"
+
+[[label]]
+name = "judgment:kind"
+color = "1d76db"
+description = "Set an entry as a product or a demo"
+
+[[label]]
+name = "judgment:category"
+color = "0052cc"
+description = "Change the topics of an entry"
+
+[[label]]
+name = "judgment:demotion"
+color = "b60205"
+description = "Approve moving a Featured entry to a lower tier"
+
+[[label]]
+name = "judgment:featured-approval"
+color = "fbca04"
+description = "Outside approval of Featured for an org-affiliated entry"
+
+[[label]]
+name = "judgment:maintainer"
+color = "006b75"
+description = "Owner statement that a project is maintained or finished"
+
+[[label]]
+name = "approved"
+color = "2ea44f"
+description = "A maintainer approves the judgment; the bot opens the data PR"
+
+[[label]]
+name = "bot-checked"
+color = "c5def5"
+description = "The bot checked the issue and found no error"
+
+[[label]]
+name = "needs-fix"
+color = "e11d21"
+description = "The bot check found errors to fix"

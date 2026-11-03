@@ -16,6 +16,9 @@
 !.env.example
 *.pem
 *.key
+# A throwaway RSA key pair for the App client tests. It signs nothing real.
+!/crates/catalogue-github/tests/fixtures/test-app-key.pem
+!/crates/catalogue-github/tests/fixtures/test-app-key.pub.pem
 
 # Per-machine bot config (bot.example.toml is committed)
 /bot.toml

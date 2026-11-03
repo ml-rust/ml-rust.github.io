@@ -23,4 +23,5 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue seed`: drafts entries from discovery for human review.
 - `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
 - `catalogue bot check`: checks an issue form and prints the would-be data file and a report.
+- `catalogue bot labels`: syncs the repo labels to `.github/labels.toml` as the GitHub App. It never deletes a label.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

@@ -20,7 +20,11 @@ mod token;
 pub mod usage;
 pub mod validate;
 
-pub use bot::{BotCommand, BotError, CheckArgs, bot_check, run_bot};
+pub use bot::{
+    BotCommand, BotConfig, BotError, CONFIG_VAR, CheckArgs, ConfigError, DEFAULT_CONFIG,
+    LabelsArgs, LabelsCommandError, LabelsReport, bot_check, config_path, load_config, run_bot,
+    sync_labels,
+};
 pub use cache_dir::{CacheDirError, default_cache_dir, resolve_cache_dir};
 pub use calibrate::{CalibrateCommand, CalibrateError, build_crates_report, run_calibrate};
 pub use cli::{Cli, Command, run};

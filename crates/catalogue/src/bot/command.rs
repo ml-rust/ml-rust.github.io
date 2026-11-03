@@ -13,6 +13,7 @@ use jiff::Timestamp;
 use jiff::tz::TimeZone;
 use thiserror::Error;
 
+use super::labels::{LabelsArgs, run_labels};
 use crate::data_dir::{DataDirError, read_data_dir};
 use crate::exit::{INVALID, IO};
 
@@ -25,6 +26,12 @@ pub enum BotCommand {
     /// Opens no connection. The issue number and author come from the caller,
     /// never from the body.
     Check(CheckArgs),
+    /// Sync the repo labels to the labels file.
+    ///
+    /// Signs in as the GitHub App from the bot config. Creates missing labels
+    /// and updates ones whose color or description differ. Never deletes a
+    /// label: each label the file lacks is listed. `--dry-run` changes nothing.
+    Labels(LabelsArgs),
 }
 
 /// The arguments of `catalogue bot check`.
@@ -115,10 +122,13 @@ pub fn bot_check(args: &CheckArgs, today: Date) -> Result<CheckReport, BotError>
 
 /// Runs a bot action and returns the process exit code.
 ///
-/// Prints the report on stdout. The code is 0 for a report with no blocking
-/// error, 1 for a blocking report and 2 for a read error.
+/// `check` prints the report on stdout. Its code is 0 for a report with no
+/// blocking error, 1 for a blocking report and 2 for a read error. `labels`
+/// prints the plan. Its code is 1 for a file or key to fix and 2 for a read
+/// or network error.
 pub fn run_bot(command: BotCommand) -> ExitCode {
     match command {
+        BotCommand::Labels(args) => run_labels(&args),
         BotCommand::Check(args) => {
             let today = args
                 .today

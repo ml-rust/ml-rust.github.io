@@ -89,7 +89,7 @@ pub enum Command {
     /// `topics.toml`. A reviewer merges crate families and checks every draft.
     /// Without `--write` the command prints the drafts and the skipped crates.
     Seed(SeedArgs),
-    /// Check issue forms for the catalogue bot.
+    /// Check issue forms and sync repo labels for the catalogue bot.
     Bot {
         /// The bot action to run.
         #[command(subcommand)]

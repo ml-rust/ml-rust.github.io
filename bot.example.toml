@@ -1,0 +1,22 @@
+# Config of the catalogue bot. Copy it to bot.toml, which git ignores, and fill it in.
+# `catalogue bot` reads --config, else $CATALOGUE_BOT_CONFIG, else ./bot.toml.
+# A relative path below resolves against the directory of this file.
+# The file holds no secret. Keep the private key in its own file.
+
+# The repo the bot works on.
+owner = "ml-rust"
+repo = "ml-rust.github.io"
+
+# From the GitHub App settings page.
+app_id = 123456
+# From the URL of the App installation on the owner: .../installations/<id>.
+installation_id = 12345678
+
+# The App private key in PEM form. Run `chmod 600` on it: the bot refuses a key
+# that group or other can read. Under systemd `LoadCredential=app.pem:...`,
+# write the credentials directory path here, such as
+# /run/credentials/catalogue-bot.service/app.pem. The bot expands no variable.
+private_key_path = "/etc/catalogue-bot/app.pem"
+
+# Optional. The directory for bot state.
+# state_dir = "/var/lib/catalogue-bot"

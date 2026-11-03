@@ -7,7 +7,8 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 
 - `crates/catalogue-core`: schema, validation, signal types, tier rules. Pure: no file IO, no network.
 - `crates/catalogue-signals`: the crates.io dump, API fetchers, signal history, discovery, seed drafts.
-- `crates/catalogue-bot`: issue form parsing, data file drafts, check reports. Pure: no IO, network, clock or env.
+- `crates/catalogue-bot`: issue form parsing, data file drafts, check reports, the labels file and its sync plan. Pure: no IO, network, clock or env.
+- `crates/catalogue-github`: the bot's GitHub App client: private key, App JWT, installation tokens, REST calls. Keys and tokens never reach logs, errors or disk.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `data/`: entries, judgments, maintainers, topics, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.
