@@ -6,6 +6,7 @@
 
 mod catalogue;
 mod date;
+pub mod deprecation;
 mod entry;
 mod ids;
 mod judgment;
