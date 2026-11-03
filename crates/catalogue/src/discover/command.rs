@@ -7,9 +7,11 @@ use std::process::ExitCode;
 use catalogue_core::{Catalogue, Diagnostics};
 use catalogue_signals::discover::Rules;
 use catalogue_signals::fetch;
+use catalogue_signals::github::GithubError;
 use clap::Subcommand;
 use thiserror::Error;
 
+use super::github::run_github;
 use super::report::{Report, build_report};
 use crate::cache_dir::resolve_cache_dir;
 use crate::data_dir::{DataDirError, read_data_dir};
@@ -31,6 +33,18 @@ pub enum DiscoverCommand {
         #[arg(long, value_name = "N", default_value_t = 90)]
         window_days: u16,
     },
+    /// List GitHub repos that match `discovery.toml` and that no crates.io crate links to.
+    ///
+    /// Reads the token from the `GITHUB_TOKEN` environment variable and the
+    /// cached crates.io dump. Run `catalogue dump fetch` first.
+    Github {
+        /// Directory that holds the data files.
+        #[arg(long, value_name = "DIR", default_value = "data")]
+        data: PathBuf,
+        /// Directory that holds the cache. Default: the user cache directory.
+        #[arg(long, value_name = "DIR")]
+        cache_dir: Option<PathBuf>,
+    },
 }
 
 /// A `catalogue discover` action that fails.
@@ -48,30 +62,71 @@ pub enum DiscoverError {
         /// The expected rules file.
         path: PathBuf,
     },
+    /// `discovery.toml` lists no GitHub topic.
+    #[error("no github_topics in {}. Add at least one topic, then rerun", .path.display())]
+    NoTopics {
+        /// The rules file.
+        path: PathBuf,
+    },
+    /// `GITHUB_TOKEN` is unset or empty.
+    #[error(
+        "set GITHUB_TOKEN; `GITHUB_TOKEN=$(gh auth token) catalogue discover github` works locally"
+    )]
+    NoToken,
     /// The cached dump cannot be found or read.
     #[error(transparent)]
     Dump(#[from] DumpCommandError),
+    /// The GitHub search fails.
+    #[error(transparent)]
+    Github(#[from] GithubError),
 }
 
 impl DiscoverError {
-    /// The process exit code: 1 for data and rules, 2 for IO, the dump code for dump errors.
+    /// The process exit code.
+    ///
+    /// 1 for data, rules, a missing token and a rejected token or query. 2 for
+    /// IO and network errors. The dump code for dump errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Data(_) => IO,
-            Self::Invalid(_) | Self::NoRules { .. } => INVALID,
+            Self::Invalid(_) | Self::NoRules { .. } | Self::NoTopics { .. } | Self::NoToken => {
+                INVALID
+            }
             Self::Dump(error) => error.exit_code(),
+            Self::Github(GithubError::Status {
+                status: 401 | 422, ..
+            }) => INVALID,
+            Self::Github(_) => IO,
         }
     }
 }
 
 /// Runs a discover action and returns the process exit code.
 pub fn run_discover(command: DiscoverCommand) -> ExitCode {
-    let DiscoverCommand::Crates {
-        data,
-        cache_dir,
-        window_days,
-    } = command;
-    match discover_crates(&data, cache_dir, window_days) {
+    match command {
+        DiscoverCommand::Crates {
+            data,
+            cache_dir,
+            window_days,
+        } => run_crates(&data, cache_dir, window_days),
+        DiscoverCommand::Github { data, cache_dir } => run_github(&data, cache_dir),
+    }
+}
+
+/// Prints the outcome of an action that fails and returns its exit code.
+pub(super) fn report_error(error: DiscoverError) -> ExitCode {
+    if let DiscoverError::Invalid(diagnostics) = &error {
+        for diagnostic in diagnostics {
+            eprintln!("{diagnostic}");
+        }
+        return ExitCode::from(INVALID);
+    }
+    eprintln!("error: {error}");
+    ExitCode::from(error.exit_code())
+}
+
+fn run_crates(data: &Path, cache_dir: Option<PathBuf>, window_days: u16) -> ExitCode {
+    match discover_crates(data, cache_dir, window_days) {
         Ok(report) => {
             for name in &report.unknown_core_crates {
                 eprintln!("warning: core crate {name} is not in the dump");
@@ -79,15 +134,20 @@ pub fn run_discover(command: DiscoverCommand) -> ExitCode {
             println!("{}", report.text);
             ExitCode::SUCCESS
         }
-        Err(DiscoverError::Invalid(diagnostics)) => {
-            for diagnostic in &diagnostics {
-                eprintln!("{diagnostic}");
-            }
-            ExitCode::from(INVALID)
-        }
-        Err(error) => {
-            eprintln!("error: {error}");
-            ExitCode::from(error.exit_code())
+        Err(error) => report_error(error),
+    }
+}
+
+/// Reads and checks the data directory, and returns the catalogue.
+pub(super) fn load_catalogue(data: &Path) -> Result<Catalogue, DiscoverError> {
+    let dir = read_data_dir(data)?;
+    let mut diagnostics = dir.diagnostics;
+    match Catalogue::load(dir.sources) {
+        Ok(catalogue) if diagnostics.is_empty() => Ok(catalogue),
+        Ok(_) => Err(DiscoverError::Invalid(diagnostics)),
+        Err(found) => {
+            diagnostics.extend(found);
+            Err(DiscoverError::Invalid(diagnostics))
         }
     }
 }
@@ -98,16 +158,7 @@ fn discover_crates(
     cache_dir: Option<PathBuf>,
     window_days: u16,
 ) -> Result<Report, DiscoverError> {
-    let dir = read_data_dir(data)?;
-    let mut diagnostics = dir.diagnostics;
-    let catalogue = match Catalogue::load(dir.sources) {
-        Ok(catalogue) if diagnostics.is_empty() => catalogue,
-        Ok(_) => return Err(DiscoverError::Invalid(diagnostics)),
-        Err(found) => {
-            diagnostics.extend(found);
-            return Err(DiscoverError::Invalid(diagnostics));
-        }
-    };
+    let catalogue = load_catalogue(data)?;
     let Some(discovery) = catalogue.discovery() else {
         return Err(DiscoverError::NoRules {
             path: data.join("discovery.toml"),
@@ -150,5 +201,27 @@ mod tests {
             path: PathBuf::from("data"),
         });
         assert_eq!(missing.exit_code(), IO);
+    }
+
+    #[test]
+    fn github_errors_carry_their_exit_codes() {
+        let topics = DiscoverError::NoTopics {
+            path: PathBuf::from("data/discovery.toml"),
+        };
+        assert_eq!(topics.exit_code(), INVALID);
+        assert!(topics.to_string().contains("discovery.toml"));
+        assert_eq!(DiscoverError::NoToken.exit_code(), INVALID);
+        let message = DiscoverError::NoToken.to_string();
+        assert!(message.contains("set GITHUB_TOKEN"), "{message}");
+        assert!(message.contains("gh auth token"), "{message}");
+        let status = |status| {
+            DiscoverError::Github(GithubError::Status {
+                url: "u".to_owned(),
+                status,
+                action: "x",
+            })
+        };
+        assert_eq!(status(401).exit_code(), INVALID);
+        assert_eq!(status(500).exit_code(), IO);
     }
 }

@@ -5,9 +5,9 @@ use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 
 use super::error::FetchError;
-use super::http::ReqwestTransport;
+use super::range::parse_content_range;
 use super::state::{self, DumpState};
-use super::transport::{Response, Transport, parse_content_range};
+use crate::http::{ReqwestTransport, Response, Transport};
 
 /// Where crates.io publishes the database dump.
 const DUMP_URL: &str = "https://static.crates.io/db-dump.tar.gz";
@@ -113,7 +113,9 @@ struct Job<'a> {
 
 impl Job<'_> {
     fn get(&self, headers: &[(&str, String)]) -> Result<Response, FetchError> {
-        self.transport.get(self.url, headers)
+        self.transport
+            .get(self.url, headers)
+            .map_err(FetchError::from)
     }
 
     fn status_error(&self, status: u16) -> FetchError {

@@ -203,6 +203,38 @@ mod tests {
     }
 
     #[test]
+    fn discover_github_has_defaults_and_takes_options() {
+        let cli = Cli::try_parse_from(["catalogue", "discover", "github"]).expect("parses");
+        let Command::Discover {
+            command: DiscoverCommand::Github { data, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected discover github");
+        };
+        assert_eq!((data, cache_dir), (PathBuf::from("data"), None));
+        let cli = Cli::try_parse_from([
+            "catalogue",
+            "discover",
+            "github",
+            "--data",
+            "d",
+            "--cache-dir",
+            "c",
+        ])
+        .expect("parses");
+        let Command::Discover {
+            command: DiscoverCommand::Github { data, cache_dir },
+        } = cli.command
+        else {
+            panic!("expected discover github");
+        };
+        assert_eq!(
+            (data, cache_dir),
+            (PathBuf::from("d"), Some(PathBuf::from("c")))
+        );
+    }
+
+    #[test]
     fn a_subcommand_is_required() {
         assert!(Cli::try_parse_from(["catalogue"]).is_err());
     }

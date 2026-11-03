@@ -45,3 +45,18 @@ core_crates = [
     "tokenizers",
     "tract-core",
 ]
+
+# GitHub topics, searched together with `language:Rust`. This finds apps and
+# tools that publish no crate. Repos that a crates.io crate already links to
+# are left to the rules above.
+github_topics = [
+    "deep-learning",
+    "inference",
+    "llm",
+    "machine-learning",
+    "neural-network",
+]
+
+# The star floor for a GitHub lead. It cuts abandoned experiments, not
+# unknown projects: a lead still needs review.
+github_min_stars = 10

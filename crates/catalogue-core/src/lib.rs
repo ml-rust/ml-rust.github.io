@@ -21,7 +21,8 @@ pub use catalogue::Catalogue;
 pub use date::{Date, DateError};
 pub use entry::{Description, DescriptionSource, Distribution, Entry, EntryKind};
 pub use ids::{
-    CrateName, GithubLogin, IdError, Slug, canonical_crate_name, push_canonical_crate_name,
+    CrateName, GithubLogin, IdError, Slug, canonical_crate_name, normalize_repo_url,
+    push_canonical_crate_name,
 };
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataSources, Diagnostic, Diagnostics, SourceFile};

@@ -1,11 +1,16 @@
-#[path = "common/fake.rs"]
-mod fake;
+#[path = "common/cache.rs"]
+mod cache;
+#[path = "common/dump_responses.rs"]
+mod dump_responses;
+#[path = "common/transport.rs"]
+mod transport;
 
 use std::fs;
 use std::path::Path;
 
+use cache::cache;
 use catalogue_signals::fetch::{DumpState, FetchError, FetchOutcome, dump_dir, dump_with};
-use fake::{FakeResponse, FakeTransport, cache};
+use transport::{FakeResponse, FakeTransport};
 
 const URL: &str = "https://example.test/db-dump.tar.gz";
 const BODY: &[u8] = b"0123456789";

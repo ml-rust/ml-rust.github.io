@@ -98,6 +98,11 @@ fn discovery_rule_break_is_reported() {
 }
 
 #[test]
+fn github_topic_rule_breaks_are_reported() {
+    expect_invalid("discovery-github-invalid", "GitHub topic", 2);
+}
+
+#[test]
 fn duplicate_maintainer_is_reported() {
     expect_invalid(
         "duplicate-maintainer",

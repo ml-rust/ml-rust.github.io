@@ -46,7 +46,10 @@ mod tests {
     fn empty_file_is_reported() {
         let mut src = valid();
         put(&mut src, "discovery.toml", "");
-        expect_error(src, "discovery.toml: categories, keywords and core_crates");
+        expect_error(
+            src,
+            "discovery.toml: categories, keywords, core_crates and github_topics",
+        );
     }
 
     #[test]

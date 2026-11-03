@@ -8,7 +8,7 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use super::error::FetchError;
-use super::transport::Headers;
+use crate::http::Headers;
 
 /// What the fetcher knows about the dump file in the cache.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -4,25 +4,14 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
+use crate::http::HttpError;
+
 /// A download the fetcher cannot finish.
 #[derive(Debug, Error)]
 pub enum FetchError {
-    /// The HTTP client cannot be built.
-    #[error(
-        "cannot build the HTTP client: {reason}. Check the TLS and proxy environment and retry"
-    )]
-    Client {
-        /// What the client builder reports.
-        reason: String,
-    },
-    /// A request fails before the server answers.
-    #[error("request to {url} failed: {source}. Check the network and rerun to retry or resume")]
-    Request {
-        /// The requested URL.
-        url: String,
-        /// The transport error.
-        source: Box<dyn std::error::Error + Send + Sync>,
-    },
+    /// The HTTP layer fails before the server answers.
+    #[error(transparent)]
+    Http(#[from] HttpError),
     /// The server answers with a status the fetcher does not handle.
     #[error(
         "{url} answered with status {status}, expected 200, 206 or 304. Rerun later. If the error persists, remove the `dump` directory under the cache directory"
