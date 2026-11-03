@@ -16,6 +16,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - No LLM decides a tier, writes a published claim, or merges anything. LLM output becomes comment text only.
 - Every published claim links its source.
 - A tier comes from published thresholds over raw signals. NEVER add a composite score.
+- Stars NEVER count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.
 - Each entry page shows every signal: raw value, source link, fetch date.
 - Entries with `org_affiliated = true` pass the same rules. An org member NEVER approves a judgment on them.
 - Human judgments enter only through an approved issue, then a bot PR into `data/judgments/`. NEVER hand-edit a tier.
