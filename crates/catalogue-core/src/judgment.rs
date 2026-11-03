@@ -111,6 +111,11 @@ impl Judgment {
         if self.evidence.is_empty() && !self.judgment.is_maintainer() {
             out.push("evidence needs at least one link".to_owned());
         }
+        for link in &self.evidence {
+            if link.scheme() != "https" {
+                out.push(format!("evidence link `{link}` must use https"));
+            }
+        }
         match &self.judgment {
             JudgmentKind::Correctness { finding } if finding.trim().is_empty() => {
                 out.push("finding must not be empty".to_owned());
@@ -219,6 +224,17 @@ date = 2026-11-03
         assert!(has(&problems(&doc(false, kind)), "evidence"));
         let maintainer = "type = \"maintainer\"\nstatus = \"maintained\"\n";
         assert!(problems(&doc(false, maintainer)).is_empty());
+    }
+
+    #[test]
+    fn evidence_must_use_https() {
+        let text = doc(true, "type = \"kind\"\nvalue = \"demo\"\n")
+            .replace("https://example.com/proof", "http://example.com/proof");
+        let found = problems(&text);
+        assert!(
+            has(&found, "`http://example.com/proof` must use https"),
+            "{found:?}"
+        );
     }
 
     #[test]

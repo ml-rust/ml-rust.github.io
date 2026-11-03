@@ -2,54 +2,8 @@
 
 use std::collections::BTreeSet;
 
-use catalogue_core::{MAX_DESCRIPTION_CHARS, Slug, Topics, normalize_repo_url};
+use catalogue_core::{Slug, Topics, repo_link};
 use url::Url;
-
-/// The GitHub owner of the ml-rust organization, in lowercase.
-const ORG_OWNER: &str = "ml-rust";
-
-/// The description text: trimmed, with every run of whitespace collapsed to one space.
-///
-/// Errors with the skip reason for a missing, blank or over-long description.
-pub(super) fn description_text(raw: Option<&str>) -> Result<String, String> {
-    let words: Vec<&str> = raw.unwrap_or_default().split_whitespace().collect();
-    let text = words.join(" ");
-    if text.is_empty() {
-        return Err("no description".to_owned());
-    }
-    if text.chars().count() > MAX_DESCRIPTION_CHARS {
-        return Err(format!(
-            "description is longer than {MAX_DESCRIPTION_CHARS} characters"
-        ));
-    }
-    Ok(text)
-}
-
-/// The repository link as `https://<host>/<owner>/<repo>`, and whether it is a GitHub repository of `ml-rust`.
-///
-/// Any https host is accepted. Errors with the skip reason for a missing
-/// repository, a link that is not https, or a path that is not an owner and a name.
-pub(super) fn repo_link(raw: Option<&str>) -> Result<(Url, bool), String> {
-    let raw = raw
-        .map(str::trim)
-        .filter(|link| !link.is_empty())
-        .ok_or_else(|| "no repository".to_owned())?;
-    if !raw.to_ascii_lowercase().starts_with("https://") {
-        return Err(format!("repository `{raw}` is not an https link"));
-    }
-    let normalized = normalize_repo_url(raw)
-        .ok_or_else(|| format!("repository `{raw}` has no owner and name"))?;
-    let parts: Vec<&str> = normalized.split('/').collect();
-    let [host, owner, name] = parts.as_slice() else {
-        return Err(format!("repository `{raw}` has no owner and name"));
-    };
-    if !is_repo_name(owner) || !is_repo_name(name) {
-        return Err(format!("repository `{raw}` is not an owner and name"));
-    }
-    let url = Url::parse(&format!("https://{normalized}"))
-        .map_err(|_| format!("repository `{raw}` is not a valid link"))?;
-    Ok((url, *host == "github.com" && *owner == ORG_OWNER))
-}
 
 /// The key that groups the crates of one repository: the normalised `host/owner/repo`.
 ///
@@ -98,13 +52,6 @@ fn in_category(category: &str, slug: &str) -> bool {
             .is_some_and(|rest| rest.starts_with("::"))
 }
 
-fn is_repo_name(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .bytes()
-            .all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'_' | b'-'))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,85 +65,19 @@ mod tests {
     }
 
     #[test]
-    fn description_collapses_whitespace() {
-        assert_eq!(
-            description_text(Some("  A  tensor\n\tlibrary. ")),
-            Ok("A tensor library.".to_owned())
-        );
-    }
-
-    #[test]
-    fn description_limit_is_300_characters() {
-        let limit = "é".repeat(300);
-        assert_eq!(description_text(Some(&limit)), Ok(limit.clone()));
-        let over = "x".repeat(301);
-        let error = description_text(Some(&over)).expect_err("over the limit");
-        assert!(error.contains("longer than 300"), "{error}");
-    }
-
-    #[test]
-    fn missing_or_blank_description_is_an_error() {
-        assert_eq!(description_text(None), Err("no description".to_owned()));
-        assert_eq!(
-            description_text(Some(" \n ")),
-            Err("no description".to_owned())
-        );
-    }
-
-    #[test]
-    fn repo_links_normalise() {
+    fn repo_key_is_the_normalised_host_owner_and_name() {
         for raw in [
             "https://github.com/Foo/Bar",
             "https://github.com/foo/bar.git",
             "https://www.github.com/foo/bar/tree/main/sub",
             " https://github.com/foo/bar/ ",
         ] {
-            let (url, org) = repo_link(Some(raw)).expect(raw);
-            assert_eq!(url.as_str(), "https://github.com/foo/bar", "{raw}");
-            assert!(!org);
             assert_eq!(repo_key(Some(raw)).as_deref(), Some("github.com/foo/bar"));
         }
     }
 
     #[test]
-    fn other_hosts_are_accepted_and_never_org_affiliated() {
-        let (url, org) = repo_link(Some("https://GitLab.com/ML-Rust/X.git")).expect("gitlab");
-        assert_eq!(url.as_str(), "https://gitlab.com/ml-rust/x");
-        assert!(!org);
-        assert_eq!(
-            repo_link(Some("https://github.com.evil.io/a/b"))
-                .expect("other host")
-                .0
-                .as_str(),
-            "https://github.com.evil.io/a/b"
-        );
-    }
-
-    #[test]
-    fn org_owner_is_affiliated_in_any_case() {
-        for raw in [
-            "https://github.com/ml-rust/x",
-            "https://github.com/ML-Rust/x",
-        ] {
-            assert!(repo_link(Some(raw)).expect(raw).1, "{raw}");
-        }
-        assert!(
-            !repo_link(Some("https://github.com/ml-rust-fork/x"))
-                .expect("fork")
-                .1
-        );
-    }
-
-    #[test]
-    fn unusable_repositories_give_a_reason() {
-        let reason = |raw: Option<&str>| repo_link(raw).expect_err("skipped");
-        assert_eq!(reason(None), "no repository");
-        assert_eq!(reason(Some("  ")), "no repository");
-        assert!(reason(Some("http://github.com/a/b")).contains("not an https link"));
-        assert!(reason(Some("git://github.com/a/b")).contains("not an https link"));
-        assert!(reason(Some("git@github.com:a/b.git")).contains("not an https link"));
-        assert!(reason(Some("https://github.com/a")).contains("no owner and name"));
-        assert!(reason(Some("https://github.com/a/b c")).contains("owner and name"));
+    fn unusable_repositories_have_no_key() {
         assert_eq!(repo_key(Some("http://github.com/a/b")), None);
         assert_eq!(repo_key(None), None);
     }

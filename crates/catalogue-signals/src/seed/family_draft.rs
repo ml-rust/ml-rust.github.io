@@ -3,13 +3,14 @@
 use std::collections::BTreeSet;
 
 use catalogue_core::{
-    CRATES_IO_PAGE, CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug, Topics,
+    CRATES_IO_PAGE, CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug,
+    Topics, entry_name, repo_link,
 };
 use url::Url;
 
 use super::family::Family;
-use super::fields::{https_link, matching_topics, repo_link};
-use super::names::{description_of, entry_name};
+use super::fields::{https_link, matching_topics};
+use super::names::description_of;
 use crate::dump::DumpSnapshot;
 
 /// Builds the draft of one family, or the reason it yields none.

@@ -7,7 +7,7 @@ use super::supersedes::Link;
 use super::{approval, references, supersedes};
 use crate::entry::Entry;
 use crate::ids::Slug;
-use crate::judgment::{Judgment, JudgmentKind};
+use crate::judgment::Judgment;
 
 /// Data that judgments point at.
 pub(crate) struct Refs<'a> {
@@ -55,13 +55,7 @@ pub(crate) fn check_judgments(
         }
         references::check(&path, &value, refs, diags);
         approval::check(&path, &value, refs, diags);
-        if let JudgmentKind::Supersedes { by } = &value.judgment {
-            links.push(Link {
-                path: path.clone(),
-                entry: value.entry.clone(),
-                by: by.clone(),
-            });
-        }
+        links.extend(Link::of(&path, &value));
         if let Some(number) = number {
             match accepted.entry(number) {
                 Slot::Vacant(slot) => {

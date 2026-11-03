@@ -3,12 +3,27 @@ use std::collections::BTreeMap;
 use super::super::diagnostics::Diagnostics;
 use super::super::graph::reaches;
 use crate::ids::Slug;
+use crate::judgment::{Judgment, JudgmentKind};
 
 /// One `supersedes` judgment: `entry` is replaced by `by`.
 pub(super) struct Link {
     pub path: String,
     pub entry: Slug,
     pub by: Slug,
+}
+
+impl Link {
+    /// The link a `supersedes` judgment makes, or `None` for any other judgment.
+    pub(super) fn of(path: &str, judgment: &Judgment) -> Option<Self> {
+        match &judgment.judgment {
+            JudgmentKind::Supersedes { by } => Some(Self {
+                path: path.to_owned(),
+                entry: judgment.entry.clone(),
+                by: by.clone(),
+            }),
+            _ => None,
+        }
+    }
 }
 
 /// Reports every link that closes a loop of replacements.

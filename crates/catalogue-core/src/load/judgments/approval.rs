@@ -1,50 +1,55 @@
 use super::super::diagnostics::Diagnostics;
 use super::Refs;
+use crate::ids::{GithubLogin, Slug};
 use crate::judgment::{Judgment, JudgmentKind};
 
 /// Checks the approver against the maintainer list and the conflict rules,
 /// and that a featured approval names an org affiliated entry.
 pub(super) fn check(path: &str, judgment: &Judgment, refs: &Refs<'_>, diags: &mut Diagnostics) {
-    let org_member = refs
-        .maintainers
-        .get(&judgment.approver.normalized())
-        .copied();
+    let found = problems(
+        &judgment.entry,
+        &judgment.judgment,
+        &judgment.reporter,
+        &judgment.approver,
+        refs,
+    );
+    for message in found {
+        diags.push(path, message);
+    }
+}
+
+/// Lists the rules that `approver` breaks when approving `kind` on `entry` for `reporter`.
+pub(super) fn problems(
+    entry: &Slug,
+    kind: &JudgmentKind,
+    reporter: &GithubLogin,
+    approver: &GithubLogin,
+    refs: &Refs<'_>,
+) -> Vec<String> {
+    let mut out = Vec::new();
+    let org_member = refs.maintainers.get(&approver.normalized()).copied();
     if org_member.is_none() {
-        diags.push(
-            path,
-            format!("approver `{}` is not a maintainer", judgment.approver),
-        );
+        out.push(format!("approver `{approver}` is not a maintainer"));
     }
-    if judgment.reporter.same_account(&judgment.approver) && !judgment.judgment.is_maintainer() {
-        diags.push(
-            path,
-            format!(
-                "approver `{}` must differ from the reporter",
-                judgment.approver
-            ),
-        );
+    if reporter.same_account(approver) && !kind.is_maintainer() {
+        out.push(format!(
+            "approver `{approver}` must differ from the reporter"
+        ));
     }
-    let entry = refs.entries.get(&judgment.entry);
-    let affiliated = entry.is_some_and(|entry| entry.org_affiliated);
-    let approves_featured = matches!(judgment.judgment, JudgmentKind::FeaturedApproval {});
-    if entry.is_some() && !affiliated && approves_featured {
-        diags.push(
-            path,
-            format!(
-                "featured-approval applies only to an org affiliated entry, and `{}` is not",
-                judgment.entry
-            ),
-        );
+    let found = refs.entries.get(entry);
+    let affiliated = found.is_some_and(|entry| entry.org_affiliated);
+    let approves_featured = matches!(kind, JudgmentKind::FeaturedApproval {});
+    if found.is_some() && !affiliated && approves_featured {
+        out.push(format!(
+            "featured-approval applies only to an org affiliated entry, and `{entry}` is not"
+        ));
     }
     if affiliated && org_member == Some(true) {
-        diags.push(
-            path,
-            format!(
-                "entry `{}` is org affiliated, so approver `{}` must not be an org member",
-                judgment.entry, judgment.approver
-            ),
-        );
+        out.push(format!(
+            "entry `{entry}` is org affiliated, so approver `{approver}` must not be an org member"
+        ));
     }
+    out
 }
 
 #[cfg(test)]
