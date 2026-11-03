@@ -13,8 +13,9 @@ mod table;
 mod tables;
 
 pub use error::DumpError;
+pub use parse::utc_date;
 pub use read::read;
 pub use snapshot::{
     CrateRow, DailyDownloads, DeletedCrate, DependencyEdge, DependencyKind, DumpMeta, DumpSnapshot,
-    DumpWarnings, IdMap, Owner, OwnerKind, Requirement, VersionRow,
+    DumpWarnings, IdMap, IdSet, Owner, OwnerKind, Requirement, VersionRow,
 };

@@ -145,6 +145,7 @@ mod tests {
             yanked: false,
             rust_version: None,
             edition: None,
+            published_by: None,
         }
     }
 

@@ -72,6 +72,9 @@ fn reads_versions_and_defaults() {
     assert!(yanked.yanked);
     assert!(!first.yanked);
     assert_eq!(yanked.edition, None);
+    assert_eq!(first.published_by, Some(7));
+    let helper = snapshot.versions.get(&30).expect("30");
+    assert_eq!(helper.published_by, None, "NULL publisher");
     assert_eq!(snapshot.default_version.get(&1), Some(&11));
     assert_eq!(snapshot.default_version.len(), 3);
 }
@@ -242,9 +245,9 @@ fn missing_metadata_is_an_error() {
 
 #[test]
 fn bad_boolean_names_table_column_and_record() {
-    let versions = "id,crate_id,num,created_at,yanked,rust_version,edition\n\
-        10,1,0.1.0,2025-01-01 10:00:00+00,f,,\n\
-        11,1,0.2.0,2026-02-01 00:00:00+00,maybe,,\n";
+    let versions = "id,crate_id,num,created_at,yanked,rust_version,edition,published_by\n\
+        10,1,0.1.0,2025-01-01 10:00:00+00,f,,,\n\
+        11,1,0.2.0,2026-02-01 00:00:00+00,maybe,,,\n";
     let error = error_of(valid().table("versions", versions));
     match &error {
         DumpError::BadValue {

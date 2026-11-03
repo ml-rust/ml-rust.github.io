@@ -4,11 +4,11 @@ use std::io::{self, Read};
 use std::path::{Component, Path};
 
 use flate2::read::MultiGzDecoder;
-use jiff::tz::Offset;
 use tar::EntryType;
 
 use super::error::DumpError;
 use super::names::{Seen, TableName};
+use super::parse::utc_date;
 use super::snapshot::{
     CrateRow, DailyDownloads, DeletedCrate, DependencyEdge, DumpMeta, DumpSnapshot, DumpWarnings,
     IdMap, Owner, Requirement, VersionRow,
@@ -195,7 +195,7 @@ impl State {
                     table: name,
                     needs: "metadata.json",
                 })?;
-                let end = Offset::UTC.to_datetime(meta.timestamp).date();
+                let end = utc_date(meta.timestamp);
                 self.downloads = downloads::read(
                     input,
                     &self.versions,

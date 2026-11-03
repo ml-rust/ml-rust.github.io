@@ -1,7 +1,12 @@
 //! Parsers for the psql CSV field forms in the dump.
 
-use jiff::tz::Offset;
+use jiff::tz::{Offset, TimeZone};
 use jiff::{Timestamp, civil};
+
+/// The UTC calendar date of `timestamp`.
+pub fn utc_date(timestamp: Timestamp) -> civil::Date {
+    TimeZone::UTC.to_datetime(timestamp).date()
+}
 
 /// Parses a psql `timestamptz` such as `2026-05-27 05:23:25.60157+00`.
 ///
@@ -117,6 +122,14 @@ mod tests {
 
     fn ts(text: &str) -> Timestamp {
         text.parse().expect("RFC 3339 timestamp")
+    }
+
+    #[test]
+    fn utc_date_ignores_the_local_zone() {
+        assert_eq!(
+            utc_date(ts("2026-03-01T23:59:59Z")),
+            civil::date(2026, 3, 1)
+        );
     }
 
     #[test]

@@ -1,6 +1,6 @@
 //! The data kept from one crates.io database dump.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use catalogue_core::deprecation::DeprecationNotice;
 use jiff::{Timestamp, civil};
@@ -11,6 +11,9 @@ use rustc_hash::FxBuildHasher;
 /// The ids come from crates.io's own sequences, so the map uses the fast
 /// non-keyed Fx hash.
 pub type IdMap<V> = HashMap<u32, V, FxBuildHasher>;
+
+/// A set of crates.io integer ids, hashed like [`IdMap`].
+pub type IdSet = HashSet<u32, FxBuildHasher>;
 
 /// Everything the reader keeps from one dump.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,6 +93,8 @@ pub struct VersionRow {
     pub rust_version: Option<String>,
     /// The declared edition year, such as `2021`. An empty value reads as `None`.
     pub edition: Option<u16>,
+    /// The user id that published the version. A NULL value reads as `None`.
+    pub published_by: Option<u32>,
 }
 
 /// The `dependencies.kind` code.

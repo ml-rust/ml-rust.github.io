@@ -8,7 +8,7 @@ use crate::dump::row::{Col, Row};
 use crate::dump::snapshot::{IdMap, VersionRow};
 use crate::dump::table::for_each_row;
 
-const VERSIONS: &[&str; 7] = &[
+const VERSIONS: &[&str; 8] = &[
     "id",
     "crate_id",
     "num",
@@ -16,6 +16,7 @@ const VERSIONS: &[&str; 7] = &[
     "yanked",
     "rust_version",
     "edition",
+    "published_by",
 ];
 
 const DEFAULT_VERSIONS: &[&str; 2] = &["crate_id", "version_id"];
@@ -27,7 +28,17 @@ pub(crate) fn read_versions(input: impl Read) -> Result<IdMap<VersionRow>, DumpE
         input,
         TableName::Versions,
         VERSIONS,
-        |row, &[id, crate_id, num, created_at, yanked, rust_version, edition]| {
+        |row,
+         &[
+            id,
+            crate_id,
+            num,
+            created_at,
+            yanked,
+            rust_version,
+            edition,
+            published_by,
+        ]| {
             let version = VersionRow {
                 crate_id: row.id(crate_id)?,
                 num: row.text(num)?.to_owned(),
@@ -35,6 +46,7 @@ pub(crate) fn read_versions(input: impl Read) -> Result<IdMap<VersionRow>, DumpE
                 yanked: row.flag(yanked)?,
                 rust_version: row.optional_string(rust_version)?,
                 edition: year(row, edition)?,
+                published_by: row.optional_id(published_by)?,
             };
             out.insert(row.id(id)?, version);
             Ok(())
@@ -77,9 +89,9 @@ mod tests {
 
     #[test]
     fn reads_versions() {
-        let csv = "checksum,crate_id,created_at,edition,id,num,rust_version,yanked\n\
-            ab,1,2026-01-01 00:00:00+00,2021,10,1.0.0,1.70,f\n\
-            cd,1,2026-02-01 00:00:00.123+00,,11,1.1.0,\"\",t\n";
+        let csv = "checksum,crate_id,created_at,edition,id,num,published_by,rust_version,yanked\n\
+            ab,1,2026-01-01 00:00:00+00,2021,10,1.0.0,7,1.70,f\n\
+            cd,1,2026-02-01 00:00:00.123+00,,11,1.1.0,,\"\",t\n";
         let versions = read_versions(csv.as_bytes()).expect("reads");
         let first = versions.get(&10).expect("10");
         assert_eq!(
@@ -94,12 +106,43 @@ mod tests {
             (second.edition, second.rust_version.as_deref()),
             (None, None)
         );
+        assert_eq!(first.published_by, Some(7));
+        assert_eq!(second.published_by, None, "NULL publisher");
+    }
+
+    #[test]
+    fn bad_publisher_is_rejected() {
+        let csv = "id,crate_id,num,created_at,yanked,rust_version,edition,published_by\n\
+            10,1,1.0.0,2026-01-01 00:00:00+00,f,,,alice\n";
+        let error = read_versions(csv.as_bytes()).expect_err("rejects");
+        assert!(matches!(
+            error,
+            DumpError::BadValue {
+                table: "versions",
+                column: "published_by",
+                record: 1,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn missing_publisher_column_is_rejected() {
+        let csv = "id,crate_id,num,created_at,yanked,rust_version,edition\n";
+        let error = read_versions(csv.as_bytes()).expect_err("rejects");
+        assert!(matches!(
+            error,
+            DumpError::MissingColumn {
+                table: "versions",
+                column: "published_by"
+            }
+        ));
     }
 
     #[test]
     fn bad_boolean_is_rejected() {
-        let csv = "id,crate_id,num,created_at,yanked,rust_version,edition\n\
-            10,1,1.0.0,2026-01-01 00:00:00+00,,,\n";
+        let csv = "id,crate_id,num,created_at,yanked,rust_version,edition,published_by\n\
+            10,1,1.0.0,2026-01-01 00:00:00+00,,,,\n";
         let error = read_versions(csv.as_bytes()).expect_err("rejects");
         assert!(matches!(
             error,
@@ -116,8 +159,8 @@ mod tests {
     fn bad_edition_is_rejected() {
         for bad in ["21", "20211", "20x1", "-021", " 2021", "2021 "] {
             let csv = format!(
-                "id,crate_id,num,created_at,yanked,rust_version,edition\n\
-                10,1,1.0.0,2026-01-01 00:00:00+00,f,,{bad}\n"
+                "id,crate_id,num,created_at,yanked,rust_version,edition,published_by\n\
+                10,1,1.0.0,2026-01-01 00:00:00+00,f,,{bad},\n"
             );
             let error = read_versions(csv.as_bytes()).expect_err(bad);
             assert!(

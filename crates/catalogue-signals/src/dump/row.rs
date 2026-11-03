@@ -72,6 +72,14 @@ impl<'a> Row<'a> {
         })
     }
 
+    /// A crates.io integer id, or `None` when the field is NULL or empty.
+    pub(crate) fn optional_id(&self, col: Col) -> Result<Option<u32>, DumpError> {
+        if self.bytes(col)?.is_empty() {
+            return Ok(None);
+        }
+        self.id(col).map(Some)
+    }
+
     /// A non-negative integer.
     pub(crate) fn count(&self, col: Col) -> Result<u64, DumpError> {
         let text = self.text(col)?;
@@ -175,6 +183,25 @@ mod tests {
         let record = ByteRecord::new();
         let error = Row::new("crates", &record, 1)
             .bytes(COL)
+            .expect_err("rejects");
+        assert!(matches!(error, DumpError::BadValue { .. }));
+    }
+
+    #[test]
+    fn optional_id_reads_null_as_none() {
+        let null = record(b"");
+        assert_eq!(
+            Row::new("t", &null, 1).optional_id(COL).expect("null"),
+            None
+        );
+        let id = record(b"42");
+        assert_eq!(
+            Row::new("t", &id, 1).optional_id(COL).expect("id"),
+            Some(42)
+        );
+        let bad = record(b"x");
+        let error = Row::new("t", &bad, 1)
+            .optional_id(COL)
             .expect_err("rejects");
         assert!(matches!(error, DumpError::BadValue { .. }));
     }
