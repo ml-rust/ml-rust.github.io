@@ -132,6 +132,26 @@ mod tests {
     }
 
     #[test]
+    fn dump_usage_takes_crate_names() {
+        let cli =
+            Cli::try_parse_from(["catalogue", "dump", "usage", "numr", "blazr"]).expect("parses");
+        let Command::Dump {
+            command:
+                DumpCommand::Usage {
+                    names,
+                    cache_dir,
+                    window_days,
+                },
+        } = cli.command
+        else {
+            panic!("expected dump usage");
+        };
+        assert_eq!(names, ["numr", "blazr"]);
+        assert_eq!((cache_dir, window_days), (None, 90));
+        assert!(Cli::try_parse_from(["catalogue", "dump", "usage"]).is_err());
+    }
+
+    #[test]
     fn a_subcommand_is_required() {
         assert!(Cli::try_parse_from(["catalogue"]).is_err());
     }
