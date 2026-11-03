@@ -96,7 +96,12 @@ source = "human"
         let sources = DataSources {
             entries: vec![
                 file("entries/alpha.toml", ENTRY),
-                file("entries/beta.toml", &ENTRY.replace("\"alpha\"", "\"beta\"")),
+                file(
+                    "entries/beta.toml",
+                    &ENTRY
+                        .replace("\"alpha\"", "\"beta\"")
+                        .replace("ml-rust/alpha", "ml-rust/beta"),
+                ),
             ],
             judgments,
             maintainers: Some(file(

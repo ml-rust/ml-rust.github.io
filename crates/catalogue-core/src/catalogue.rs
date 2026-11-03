@@ -105,7 +105,9 @@ mod tests {
         put(
             &mut src,
             "entries/aardvark.toml",
-            &BETA.replace("Beta", "Aardvark"),
+            &BETA
+                .replace("Beta", "Aardvark")
+                .replace("ml-rust/beta", "ml-rust/aardvark"),
         );
         let catalogue = Catalogue::load(src).expect("valid data");
         let slugs: Vec<&str> = catalogue.entries().keys().map(Slug::as_str).collect();

@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::diagnostics::Diagnostics;
 use super::parse::Parsed;
 use crate::entry::Entry;
-use crate::ids::{CrateName, Slug};
+use crate::ids::{CrateName, Slug, normalize_repo_url};
 
 /// Checks entries against each other and against the topic list.
 ///
@@ -15,6 +15,7 @@ pub(crate) fn check_entries(
 ) -> BTreeMap<Slug, Entry> {
     let mut entries: BTreeMap<Slug, Entry> = BTreeMap::new();
     let mut crate_owners: BTreeMap<CrateName, String> = BTreeMap::new();
+    let mut repo_owners: BTreeMap<String, String> = BTreeMap::new();
     for Parsed { path, stem, value } in files {
         for problem in value.problems() {
             diags.push(&path, problem);
@@ -37,7 +38,24 @@ pub(crate) fn check_entries(
                 }
             }
         }
-        match Slug::new(stem) {
+        let slug = Slug::new(stem);
+        if let Some(repo) = normalize_repo_url(value.repo.as_str()) {
+            match (repo_owners.get(&repo), &slug) {
+                (Some(first), Ok(slug)) => diags.push(
+                    &path,
+                    format!("entry `{slug}` has the same repository `{repo}` as entry `{first}`"),
+                ),
+                (Some(first), Err(_)) => diags.push(
+                    &path,
+                    format!("repository `{repo}` is already used by entry `{first}`"),
+                ),
+                (None, Ok(slug)) => {
+                    repo_owners.insert(repo, slug.to_string());
+                }
+                (None, Err(_)) => {}
+            }
+        }
+        match slug {
             Ok(slug) if entries.contains_key(&slug) => {
                 diags.push(&path, format!("entry `{slug}` is defined twice"));
             }
@@ -75,6 +93,20 @@ mod tests {
             &BETA.replace("beta-crate", "other-crate"),
         );
         expect_error(src, "defined twice");
+    }
+
+    #[test]
+    fn repositories_must_be_unique() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/gamma.toml",
+            &BETA.replace("name = \"Beta\"", "name = \"Gamma\""),
+        );
+        expect_error(
+            src,
+            "entry `gamma` has the same repository `github.com/ml-rust/beta` as entry `beta`",
+        );
     }
 
     #[test]

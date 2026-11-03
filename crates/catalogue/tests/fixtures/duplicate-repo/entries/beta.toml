@@ -1,0 +1,11 @@
+name = "Beta"
+kind = "library"
+repo = "https://github.com/ml-rust/Alpha.git"
+crates = ["beta-crate"]
+topics = ["ml"]
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The Beta project."
+source = "human"

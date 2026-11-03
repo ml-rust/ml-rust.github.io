@@ -38,6 +38,15 @@ fn duplicate_crate_is_reported() {
 }
 
 #[test]
+fn duplicate_repository_is_reported() {
+    expect_invalid(
+        "duplicate-repo",
+        "entry `beta` has the same repository `github.com/ml-rust/alpha` as entry `alpha`",
+        1,
+    );
+}
+
+#[test]
 fn unknown_entry_topic_is_reported() {
     expect_invalid("unknown-topic", "topic `missing` does not exist", 1);
 }
