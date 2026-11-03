@@ -8,7 +8,7 @@ body:
       value: |
         Use this form when a newer entry replaces an older one, such as a fork or a successor.
 
-        Read the [rules](/rules) first. A maintainer listed in `data/maintainers.toml` must approve this issue before it takes effect. Every judgment is public: the issue, your login, the evidence, and the approver appear on the entry page.
+        Read the [rules](https://ml-rust.github.io/rules/) first. A maintainer listed in `data/maintainers.toml` must approve this issue before it takes effect. Every judgment is public: the issue, your login, the evidence, and the approver appear on the entry page.
   - type: input
     id: entry
     attributes:
