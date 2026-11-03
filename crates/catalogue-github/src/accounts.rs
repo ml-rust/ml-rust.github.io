@@ -5,7 +5,7 @@ use catalogue_signals::http::percent_encode;
 use serde::Deserialize;
 
 use crate::api::{API_URL, Verb, parse_json};
-use crate::client::RepoClient;
+use crate::client::{RepoClient, repo_api_url};
 use crate::error::ApiError;
 use crate::issues::Author;
 
@@ -22,11 +22,7 @@ impl RepoClient<'_> {
     ///
     /// Returns an [`ApiError`] when the call fails or the answer is not the expected JSON.
     pub fn repo_owner(&mut self, repo: &RepoRef) -> Result<Option<Author>, ApiError> {
-        let url = format!(
-            "{API_URL}/repos/{}/{}",
-            percent_encode(&repo.owner),
-            percent_encode(&repo.name)
-        );
+        let url = repo_api_url(repo, "");
         let answer = self.call(Verb::Get, &url, None, &[200, 404])?;
         if answer.status == 404 {
             return Ok(None);

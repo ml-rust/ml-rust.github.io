@@ -1,5 +1,6 @@
 //! Issues, issue comments and issue labels.
 
+use catalogue_signals::github::RepoRef;
 use catalogue_signals::http::percent_encode;
 use jiff::Timestamp;
 use serde::Deserialize;
@@ -7,7 +8,7 @@ use serde::de::IgnoredAny;
 use serde_json::{Map, Value};
 
 use crate::api::{PER_PAGE, Verb, parse_json};
-use crate::client::RepoClient;
+use crate::client::{RepoClient, repo_api_url};
 use crate::error::ApiError;
 
 /// The account that wrote an issue or a comment, as the API reports it.
@@ -205,6 +206,31 @@ impl RepoClient<'_> {
             });
         }
         Ok(raw.into_issue(false))
+    }
+
+    /// Issue or pull request `number` of `repo`, or `None` when it is not found.
+    ///
+    /// `repo` can be a repo outside the installation, as for
+    /// [`readme_of`](Self::readme_of).
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when the call fails, GitHub answers with a
+    /// status other than 200 or 404, or the answer is not the expected JSON.
+    pub fn issue_of(&mut self, repo: &RepoRef, number: u64) -> Result<Option<Issue>, ApiError> {
+        let url = repo_api_url(repo, &format!("/issues/{number}"));
+        let answer = self.call(Verb::Get, &url, None, &[200, 404])?;
+        if answer.status == 404 {
+            return Ok(None);
+        }
+        let raw: RawIssue = parse_json(&url, &answer.body)?;
+        if raw.number != number {
+            return Err(ApiError::Content {
+                url,
+                reason: format!("the answer is not issue {number}. Report it"),
+            });
+        }
+        Ok(Some(raw.into_issue(false)))
     }
 
     /// Every event of issue `number`, in API order.

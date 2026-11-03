@@ -4,7 +4,7 @@ use std::fmt;
 
 use zeroize::Zeroizing;
 
-/// A credential: an App JWT or an installation token.
+/// A credential: an App JWT, an installation token or an API key.
 ///
 /// `Debug` prints `[redacted]`. The type has no `Display`. The memory is
 /// zeroed when the value drops.
@@ -13,12 +13,12 @@ pub struct Secret(Zeroizing<String>);
 
 impl Secret {
     /// Wraps `value`. The string moves in without a copy.
-    pub(crate) fn new(value: String) -> Self {
+    pub fn new(value: String) -> Self {
         Self(Zeroizing::new(value))
     }
 
     /// The credential text, for an `Authorization` header only.
-    pub(crate) fn expose(&self) -> &str {
+    pub fn expose(&self) -> &str {
         &self.0
     }
 }

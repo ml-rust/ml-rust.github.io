@@ -7,12 +7,14 @@
 //! and comments, writes comments and issue labels, reads the data files of a
 //! commit and the newest tier snapshot on a branch. It reads issue events
 //! and PRs, builds one commit on a bot branch and opens the data PR. It reads
-//! the owner of a repo and public org membership. Every request
+//! the owner of a repo and public org membership. It reads the README, an
+//! issue or PR and a file of another public repo. Every request
 //! goes through a [`Transport`](catalogue_signals::http::Transport) and a
 //! [`Pacer`](catalogue_signals::http::Pacer), so tests run without a network.
 //!
 //! The key, the JWT and the token never appear in `Debug` output, errors or
-//! files. Requests send the catalogue `User-Agent` and no personal identifier.
+//! files. [`Secret`] holds each of them. Requests send the catalogue
+//! `User-Agent` and no personal identifier.
 
 mod accounts;
 mod api;
@@ -35,3 +37,4 @@ pub use error::ApiError;
 pub use issues::{Author, Comment, CommentUpdate, Issue, IssueEvent};
 pub use labels::{Label, LabelFields};
 pub use pulls::{BranchWrite, NewPull, Pull};
+pub use secret::Secret;

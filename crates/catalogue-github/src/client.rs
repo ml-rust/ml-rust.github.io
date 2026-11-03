@@ -107,6 +107,15 @@ impl<'a> GithubApp<'a> {
     }
 }
 
+/// The API URL of `tail` under `repo`, such as `/labels`.
+pub(crate) fn repo_api_url(repo: &RepoRef, tail: &str) -> String {
+    format!(
+        "{API_URL}/repos/{}/{}{tail}",
+        percent_encode(&repo.owner),
+        percent_encode(&repo.name)
+    )
+}
+
 /// Calls the REST API for one repo with an installation token.
 ///
 /// The client mints the token on the first call. It mints a new one when
@@ -132,11 +141,7 @@ impl<'a> RepoClient<'a> {
 
     /// The URL of `tail` under the repo, such as `/labels`.
     pub(crate) fn repo_url(&self, tail: &str) -> String {
-        format!(
-            "{API_URL}/repos/{}/{}{tail}",
-            percent_encode(&self.repo.owner),
-            percent_encode(&self.repo.name)
-        )
+        repo_api_url(&self.repo, tail)
     }
 
     /// Sends one call with the installation token.

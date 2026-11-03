@@ -1,15 +1,17 @@
-//! Repo contents: a branch head, the data files of a commit and the newest tier snapshot.
+//! Repo contents: a branch head, the data files of a commit, the newest tier
+//! snapshot, and the README or a file of another public repo.
 
 use std::path::PathBuf;
 
 use catalogue_core::{CommitSha, DataSources};
+use catalogue_signals::github::RepoRef;
 use catalogue_signals::history::{Snapshot, read_snapshot, snapshot_date};
 use catalogue_signals::http::percent_encode;
 use catalogue_signals::repo_archive::read_repo_data;
 use serde::Deserialize;
 
 use crate::api::{Verb, parse_json};
-use crate::client::RepoClient;
+use crate::client::{RepoClient, repo_api_url};
 use crate::error::ApiError;
 
 /// The media type that asks for a commit SHA as plain text.
@@ -143,6 +145,52 @@ impl RepoClient<'_> {
         let snapshot = read_snapshot(answer.body.as_slice(), &label, date)
             .map_err(|source| ApiError::Snapshot { url, source })?;
         Ok(Some(BranchSnapshot { name, snapshot }))
+    }
+
+    /// The raw README of `repo` on its default branch, or `None` when the repo
+    /// or the README is not found.
+    ///
+    /// `repo` can be a repo outside the installation. A repo the token cannot
+    /// read answers 404, which gives `None`, or 403, which is an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when the call fails or GitHub answers with a
+    /// status other than 200 or 404.
+    pub fn readme_of(&mut self, repo: &RepoRef) -> Result<Option<Vec<u8>>, ApiError> {
+        let url = repo_api_url(repo, "/readme");
+        let answer = self.get_accept(&url, ACCEPT_RAW, &[200, 404])?;
+        Ok((answer.status == 200).then_some(answer.body))
+    }
+
+    /// The raw bytes of the file at `path` in `repo` at `git_ref`, or `None`
+    /// when the repo, the ref or the file is not found.
+    ///
+    /// `path` holds the decoded path segments. Each one is percent-encoded on
+    /// its own, so a segment never adds a path level. `repo` can be a repo
+    /// outside the installation, as for [`readme_of`](Self::readme_of).
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when the call fails or GitHub answers with a
+    /// status other than 200 or 404.
+    pub fn file_of(
+        &mut self,
+        repo: &RepoRef,
+        git_ref: &str,
+        path: &[String],
+    ) -> Result<Option<Vec<u8>>, ApiError> {
+        let segments: Vec<String> = path.iter().map(|segment| percent_encode(segment)).collect();
+        let url = repo_api_url(
+            repo,
+            &format!(
+                "/contents/{}?ref={}",
+                segments.join("/"),
+                percent_encode(git_ref)
+            ),
+        );
+        let answer = self.get_accept(&url, ACCEPT_RAW, &[200, 404])?;
+        Ok((answer.status == 200).then_some(answer.body))
     }
 }
 
