@@ -1,4 +1,4 @@
-//! The `state.json` record beside the downloaded dump.
+//! The `state.json` record beside a cached download.
 
 use std::fs;
 use std::io::{self, Write};
@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use super::error::FetchError;
 use crate::http::Headers;
 
-/// What the fetcher knows about the dump file in the cache.
+/// What the fetcher knows about a cached file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DumpState {
     /// The `ETag` of the response that supplies the file.
@@ -21,7 +21,7 @@ pub struct DumpState {
     pub content_length: Option<u64>,
     /// When the fetcher began the download, as an RFC 3339 timestamp.
     pub fetched_at: String,
-    /// Whether `db-dump.tar.gz` holds the whole body described above. A
+    /// Whether the complete file holds the whole body described above. A
     /// `false` value means the body is still in the `.partial` file.
     pub complete: bool,
 }

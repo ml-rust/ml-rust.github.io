@@ -1,10 +1,9 @@
 //! The single pass over the archive entries.
 
 use std::io::{self, Read};
-use std::path::{Component, Path};
+use std::path::Path;
 
 use flate2::read::MultiGzDecoder;
-use tar::EntryType;
 
 use super::error::DumpError;
 use super::names::{Seen, TableName};
@@ -15,6 +14,7 @@ use super::snapshot::{
 };
 use super::tables::downloads::Window;
 use super::tables::{crates, dependencies, downloads, metadata, owners, taxonomy, versions};
+use crate::archive::{is_file, name_parts};
 
 /// Reads a crates.io database dump from its gzip-compressed tar stream.
 ///
@@ -35,10 +35,7 @@ pub fn read(reader: impl Read, window_days: u16) -> Result<DumpSnapshot, DumpErr
     let mut state = State::new(window_days);
     for entry in archive.entries().map_err(archive_error)? {
         let entry = entry.map_err(archive_error)?;
-        if !matches!(
-            entry.header().entry_type(),
-            EntryType::Regular | EntryType::Continuous
-        ) {
+        if !is_file(entry.header().entry_type()) {
             continue;
         }
         let kind = classify(&entry.path().map_err(archive_error)?);
@@ -68,15 +65,7 @@ enum EntryKind {
 }
 
 fn classify(path: &Path) -> Option<EntryKind> {
-    let mut parts = Vec::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::Normal(part) => parts.push(part.to_str()?),
-            _ => return None,
-        }
-    }
-    match parts.as_slice() {
+    match name_parts(path)?.as_slice() {
         [directory, "metadata.json"] => Some(EntryKind::Metadata((*directory).to_owned())),
         [_, "data", file] => file
             .strip_suffix(".csv")

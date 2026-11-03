@@ -7,13 +7,8 @@ use std::path::{Path, PathBuf};
 use super::error::FetchError;
 use super::range::parse_content_range;
 use super::state::{self, DumpState};
-use crate::http::{ReqwestTransport, Response, Transport};
+use crate::http::{Response, Transport};
 
-/// Where crates.io publishes the database dump.
-const DUMP_URL: &str = "https://static.crates.io/db-dump.tar.gz";
-
-const COMPLETE_NAME: &str = "db-dump.tar.gz";
-const PARTIAL_NAME: &str = "db-dump.tar.gz.partial";
 const STATE_NAME: &str = "state.json";
 const STATE_TEMP_NAME: &str = "state.json.tmp";
 /// Bytes buffered before a write to disk.
@@ -21,68 +16,51 @@ const WRITE_BUFFER: usize = 1 << 20;
 /// Bytes read from the body per call.
 const READ_CHUNK: usize = 64 << 10;
 
-/// What a call to [`dump`] did.
+/// What a call to [`cached`] did.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FetchOutcome {
     /// The server confirmed that the cached file is current.
     Unchanged {
-        /// The cached dump file.
+        /// The cached file.
         path: PathBuf,
     },
-    /// The dump file is new or completed.
+    /// The file is new or completed.
     Downloaded {
-        /// The cached dump file.
+        /// The cached file.
         path: PathBuf,
         /// The size of the file in bytes.
         bytes: u64,
     },
 }
 
-/// The directory under `cache_dir` that holds the dump files.
-pub fn dump_dir(cache_dir: &Path) -> PathBuf {
-    cache_dir.join("dump")
-}
-
-/// The path of the complete dump file under `cache_dir`.
-pub fn dump_path(cache_dir: &Path) -> PathBuf {
-    dump_dir(cache_dir).join(COMPLETE_NAME)
-}
-
-/// Downloads the crates.io database dump into `cache_dir`.
+/// Downloads `url` into `dir` as `file_name` through `transport`.
 ///
-/// A complete cached file is revalidated with `If-None-Match`. An interrupted
-/// download resumes with `Range` and `If-Range`. See [`dump_with`].
-///
-/// # Errors
-///
-/// Returns a [`FetchError`] when the client cannot start, a request fails, the
-/// server answers with another status than 200, 206 or 304, the body ends
-/// early, or a cache file cannot be written.
-pub fn dump(cache_dir: &Path) -> Result<FetchOutcome, FetchError> {
-    dump_with(&ReqwestTransport::new()?, DUMP_URL, cache_dir)
-}
-
-/// Downloads `url` into `cache_dir` through `transport`.
-///
-/// The directory `<cache_dir>/dump/` holds `db-dump.tar.gz` (complete),
-/// `db-dump.tar.gz.partial` (in progress) and `state.json`. The body streams
+/// The directory `dir` holds `file_name` (complete), `<file_name>.partial` (in
+/// progress) and `state.json`. A complete file is revalidated with
+/// `If-None-Match`, or `If-Modified-Since` when the server sent no `ETag`. An
+/// interrupted download resumes with `Range` and `If-Range`. The body streams
 /// to the partial file in chunks. After the body ends, the byte count must
 /// equal the announced total. Then the partial file is synced and renamed over
 /// the complete file, and `state.json` is replaced atomically.
 ///
+/// A server that sends no `Content-Length` skips the length check, and the
+/// next run restarts the download instead of resuming it.
+///
 /// # Errors
 ///
-/// Returns a [`FetchError`] as [`dump`] does.
-pub fn dump_with(
+/// Returns a [`FetchError`] when a request fails, the server answers with
+/// another status than 200, 206 or 304, the body ends early, or a cache file
+/// cannot be written.
+pub fn cached(
     transport: &dyn Transport,
     url: &str,
-    cache_dir: &Path,
+    dir: &Path,
+    file_name: &str,
 ) -> Result<FetchOutcome, FetchError> {
-    let dir = dump_dir(cache_dir);
-    fs::create_dir_all(&dir).map_err(FetchError::io(&dir))?;
+    fs::create_dir_all(dir).map_err(FetchError::io(dir))?;
     let paths = Paths {
-        complete: dir.join(COMPLETE_NAME),
-        partial: dir.join(PARTIAL_NAME),
+        complete: dir.join(file_name),
+        partial: dir.join(format!("{file_name}.partial")),
         state: dir.join(STATE_NAME),
         state_temp: dir.join(STATE_TEMP_NAME),
     };

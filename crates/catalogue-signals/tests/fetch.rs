@@ -9,7 +9,9 @@ use std::fs;
 use std::path::Path;
 
 use cache::cache;
-use catalogue_signals::fetch::{DumpState, FetchError, FetchOutcome, dump_dir, dump_with};
+use catalogue_signals::fetch::{
+    DumpState, FetchError, FetchOutcome, cached, dump_dir, dump_with, rustsec_dir, rustsec_with,
+};
 use transport::{FakeResponse, FakeTransport};
 
 const URL: &str = "https://example.test/db-dump.tar.gz";
@@ -210,4 +212,72 @@ fn range_start_that_differs_from_the_offset_is_an_error() {
     let transport = FakeTransport::new([FakeResponse::partial(&BODY[2..], "bytes 2-9/10")]);
     let error = dump_with(&transport, URL, &dir).expect_err("bad range");
     assert!(matches!(error, FetchError::ContentRange { offset: 4, .. }));
+}
+
+#[test]
+fn cached_keeps_each_directory_and_file_name_apart() {
+    let (_guard, dir) = cache();
+    let other = dir.join("other");
+    let transport = FakeTransport::new([FakeResponse::ok(BODY, "\"a1\"")]);
+    let outcome = cached(&transport, URL, &other, "thing.bin").expect("downloads");
+    assert_eq!(
+        outcome,
+        FetchOutcome::Downloaded {
+            path: other.join("thing.bin"),
+            bytes: 10
+        }
+    );
+    assert_eq!(fs::read(other.join("thing.bin")).expect("file"), BODY);
+    assert!(other.join("state.json").exists());
+    assert!(!other.join("thing.bin.partial").exists());
+    assert!(!dump_dir(&dir).exists());
+
+    let transport = FakeTransport::new([FakeResponse::status(304)]);
+    let outcome = cached(&transport, URL, &other, "thing.bin").expect("revalidates");
+    assert_eq!(
+        outcome,
+        FetchOutcome::Unchanged {
+            path: other.join("thing.bin")
+        }
+    );
+    assert_eq!(
+        transport.requests()[0],
+        [("If-None-Match".to_owned(), "\"a1\"".to_owned())]
+    );
+}
+
+#[test]
+fn rustsec_download_lands_under_its_own_directory() {
+    let (_guard, dir) = cache();
+    let transport = FakeTransport::new([FakeResponse::ok(BODY, "\"r1\"")]);
+    rustsec_with(&transport, URL, &dir).expect("downloads");
+    assert_eq!(
+        fs::read(rustsec_dir(&dir).join("advisory-db.tar.gz")).expect("file"),
+        BODY
+    );
+    assert!(!dump_dir(&dir).exists());
+}
+
+#[test]
+fn a_body_without_content_length_downloads_and_is_not_resumed() {
+    let (_guard, dir) = cache();
+    let mut response = FakeResponse::ok(BODY, "\"v1\"");
+    response
+        .headers
+        .retain(|(name, _)| !name.eq_ignore_ascii_case("content-length"));
+    let transport = FakeTransport::new([response]);
+    let outcome = dump_with(&transport, URL, &dir).expect("downloads");
+    assert!(matches!(
+        outcome,
+        FetchOutcome::Downloaded { bytes: 10, .. }
+    ));
+    assert_eq!(read_state(&dir).content_length, Some(10));
+
+    prepare(&dir, "db-dump.tar.gz.partial", &BODY[..4]);
+    let mut interrupted = state("\"v1\"", false);
+    interrupted.content_length = None;
+    write_state(&dir, &interrupted);
+    let transport = FakeTransport::new([FakeResponse::ok(BODY, "\"v2\"")]);
+    dump_with(&transport, URL, &dir).expect("restarts");
+    assert!(transport.requests()[0].is_empty());
 }

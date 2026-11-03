@@ -1,4 +1,4 @@
-//! Errors from downloading the crates.io database dump.
+//! Errors from a cached download.
 
 use std::path::{Path, PathBuf};
 
@@ -14,7 +14,7 @@ pub enum FetchError {
     Http(#[from] HttpError),
     /// The server answers with a status the fetcher does not handle.
     #[error(
-        "{url} answered with status {status}, expected 200, 206 or 304. Rerun later. If the error persists, remove the `dump` directory under the cache directory"
+        "{url} answered with status {status}, expected 200, 206 or 304. Rerun later. If the error persists, remove the directory that holds the download and its `state.json`"
     )]
     Status {
         /// The requested URL.
