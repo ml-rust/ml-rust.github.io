@@ -1,0 +1,30 @@
+{%- if topics.is_empty() %}
+<p>No topic exists yet.</p>
+{%- else %}
+<ul class="topic-grid">
+{%- for card in topics %}
+<li class="topic-card">
+<h3><a href="{{ card.href }}">{{ card.name }}</a></h3>
+{%- if let Some(summary) = card.summary %}
+<p>{{ summary }}</p>
+{%- if !card.evidence.is_empty() %}
+<p class="sources">Sources:{% for link in card.evidence %} <a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
+{%- endif %}
+{%- endif %}
+{%- if let Some(entries) = card.entries %}
+<p class="topic-count">{{ entries }}</p>
+{%- else %}
+<ul class="tier-counts" aria-label="Entries per tier">
+{%- for count in card.counts %}
+<li>{{ count.name }}: {{ count.count }}</li>
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if !card.subtopics.is_empty() %}
+<p class="subtopics">Subtopics:{% for link in card.subtopics %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
+{%- endif %}
+</li>
+{%- endfor %}
+</ul>
+<p>A count covers the topic and every subtopic. Each entry counts once.</p>
+{%- endif %}

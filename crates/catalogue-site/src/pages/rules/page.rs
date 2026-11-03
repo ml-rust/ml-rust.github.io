@@ -5,6 +5,7 @@ use catalogue_core::{Thresholds, Tier};
 
 use super::sections::{RuleSection, sections};
 use crate::pages::layout::Layout;
+use crate::pages::shared::tier_name;
 
 /// The rules page.
 #[derive(Debug, Template)]
@@ -60,16 +61,16 @@ fn status(thresholds: Option<&Thresholds>) -> Vec<String> {
 
 /// The display name and meaning of `tier`.
 fn tier_line(tier: Tier) -> TierLine {
-    let (name, meaning) = match tier {
-        Tier::Featured => ("Featured", "Shown first. It passes every Featured gate."),
-        Tier::Listed => (
-            "Listed",
-            "Shown in the normal listing. No other tier applies.",
-        ),
-        Tier::New => ("New", "A young, prerelease or barely used project."),
-        Tier::Archived => ("Archived", "No longer maintained, or ended by its author."),
+    let meaning = match tier {
+        Tier::Featured => "Shown first. It passes every Featured gate.",
+        Tier::Listed => "Shown in the normal listing. No other tier applies.",
+        Tier::New => "A young, prerelease or barely used project.",
+        Tier::Archived => "No longer maintained, or ended by its author.",
     };
-    TierLine { name, meaning }
+    TierLine {
+        name: tier_name(tier),
+        meaning,
+    }
 }
 
 #[cfg(test)]

@@ -2,13 +2,17 @@
 
 use std::collections::BTreeMap;
 
+#[path = "common/build.rs"]
+mod build;
 mod common;
+#[path = "common/fixture.rs"]
+mod fixture;
 
 use common::{TOPICS, catalogue, pages, thresholds};
 
 /// Pages the site links to that this crate does not emit.
 /// An entry that ends in `/` also covers every page below it.
-const PENDING: [&str; 5] = ["/", "/topics/", "/projects/", "/changes/", "/search/"];
+const PENDING: [&str; 1] = ["/search/"];
 
 /// The value of every `href`, `src` and `action` attribute in `html`.
 fn targets(html: &str) -> Vec<&str> {
@@ -78,6 +82,32 @@ fn every_internal_link_resolves() {
 }
 
 #[test]
+fn every_link_of_the_fixture_resolves_with_and_without_a_report() {
+    for tiered in [true, false] {
+        let site = fixture::site(&fixture::files(), tiered);
+        let found = broken(&site);
+        assert!(found.is_empty(), "tiered {tiered}: broken links: {found:?}");
+        let all: Vec<&str> = site.values().flat_map(|html| targets(html)).collect();
+        for target in [
+            "/",
+            "/topics/",
+            "/topics/ml/",
+            "/topics/tensors/",
+            "/projects/alpha/",
+            "/projects/beta/",
+            "/projects/gamma/",
+            "/projects/delta/",
+            "/changes/",
+        ] {
+            assert!(
+                all.contains(&target),
+                "tiered {tiered}: no link to {target}"
+            );
+        }
+    }
+}
+
+#[test]
 fn the_check_rejects_links_to_missing_emitted_pages() {
     let mut site = BTreeMap::new();
     site.insert(
@@ -91,6 +121,7 @@ fn the_check_rejects_links_to_missing_emitted_pages() {
         [
             "a.html: /rules",
             "a.html: /nowhere/",
+            "a.html: /topics/x/",
             "a.html: javascript:x"
         ]
     );

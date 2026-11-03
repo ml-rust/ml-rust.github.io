@@ -1,0 +1,14 @@
+{%- if changes.is_empty() %}
+<p>No tier change is recorded.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Date</th><th scope="col">Project</th><th scope="col">From</th><th scope="col">To</th></tr>
+</thead>
+<tbody>
+{%- for change in changes %}
+<tr><td><time datetime="{{ change.date }}">{{ change.date }}</time></td><td>{% if let Some(href) = change.href %}<a href="{{ href }}">{{ change.name }}</a>{% else %}{{ change.name }}{% endif %}</td><td>{{ change.from }}</td><td>{{ change.to }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}

@@ -1,5 +1,7 @@
 //! The rules page states the tier principles, every threshold and the calibration state.
 
+#[path = "common/build.rs"]
+mod build;
 mod common;
 
 use common::{TOPICS, catalogue, pages, thresholds};

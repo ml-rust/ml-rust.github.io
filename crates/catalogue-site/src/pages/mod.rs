@@ -1,12 +1,22 @@
 //! Page data and the templates that render it.
 
+mod changes;
+mod home;
 mod layout;
 mod not_found;
+mod project;
 mod rules;
+mod shared;
 mod submit;
+mod topics;
 
+pub(crate) use changes::ChangesPage;
+pub(crate) use home::HomePage;
 pub use layout::SITE_NAME;
 pub(crate) use layout::{Layout, NavItem};
 pub(crate) use not_found::NotFoundPage;
+pub(crate) use project::ProjectPage;
 pub(crate) use rules::RulesPage;
+pub(crate) use shared::{project_file, topic_file};
 pub(crate) use submit::SubmitPage;
+pub(crate) use topics::{TopicPage, TopicsPage};

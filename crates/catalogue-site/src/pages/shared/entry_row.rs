@@ -1,0 +1,57 @@
+//! One entry as a list row: name link, kind, tier badge and description.
+
+use catalogue_core::{Entry, Slug, Tier, TierReport};
+
+use super::badge::TierBadge;
+use super::labels::kind_name;
+use super::paths::project_href;
+use crate::href::SafeHref;
+
+/// The data `entry_row.html` reads.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EntryRow<'a> {
+    /// The entry name.
+    pub name: &'a str,
+    /// The link to the entry page.
+    pub href: SafeHref,
+    /// The entry kind.
+    pub kind: &'static str,
+    /// The tier badge. `None` without a report.
+    pub badge: Option<TierBadge>,
+    /// The date the entry joined the catalogue, for lists that show it.
+    pub added: Option<String>,
+    /// The description text.
+    pub description: &'a str,
+}
+
+impl<'a> EntryRow<'a> {
+    /// The row of entry `slug`, with a badge for `tier` when given.
+    pub(crate) fn new(slug: &Slug, entry: &'a Entry, tier: Option<Tier>) -> Self {
+        Self {
+            name: &entry.name,
+            href: project_href(slug),
+            kind: kind_name(entry.kind),
+            badge: tier.map(TierBadge::of),
+            added: None,
+            description: &entry.description.text,
+        }
+    }
+
+    /// The row with the date the entry joined the catalogue.
+    pub(crate) fn with_added(mut self, entry: &Entry) -> Self {
+        self.added = Some(entry.added.to_string());
+        self
+    }
+}
+
+/// The tier of `slug` in `report`. `None` without a report or without a record.
+pub(crate) fn tier_of(report: Option<&TierReport>, slug: &Slug) -> Option<Tier> {
+    report
+        .and_then(|report| report.entries.get(slug))
+        .map(|record| record.tier)
+}
+
+/// Sorts `rows` by name, ignoring case, then by link.
+pub(crate) fn sort_by_name(rows: &mut [EntryRow<'_>]) {
+    rows.sort_by_cached_key(|row| (row.name.to_lowercase(), row.href.as_str().to_owned()));
+}

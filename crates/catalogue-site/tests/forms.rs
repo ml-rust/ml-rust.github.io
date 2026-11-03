@@ -3,6 +3,8 @@
 use std::fs;
 use std::path::PathBuf;
 
+#[path = "common/build.rs"]
+mod build;
 mod common;
 
 use catalogue_site::ISSUE_FORMS;

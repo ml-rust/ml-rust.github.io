@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Tier changes{% endblock %}
+{% block content %}
+<h1>Tier changes</h1>
+{%- if tiered %}
+<p>Each row is one entry whose tier changed on a check. The newest change comes first.</p>
+<p>The <a href="/rules/">rules</a> say how a check sets a tier.</p>
+{% include "change_table.html" %}
+{%- else %}
+<p>Tiers are not published, so this page lists no tier change.</p>
+{%- endif %}
+{% endblock %}

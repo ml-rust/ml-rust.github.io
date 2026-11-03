@@ -4,6 +4,7 @@ use askama::Template;
 use catalogue_core::Topic;
 
 use super::layout::Layout;
+use super::shared::topic_href;
 use crate::forms::ISSUE_FORMS;
 use crate::href::SafeHref;
 
@@ -60,7 +61,7 @@ impl<'a> SubmitPage<'a> {
                 id: topic.id.as_str(),
                 name: &topic.name,
                 parent: topic.parent.as_ref().map_or("", |parent| parent.as_str()),
-                href: SafeHref::new(&format!("/topics/{}/", topic.id)),
+                href: topic_href(&topic.id),
             })
             .collect();
         Self {

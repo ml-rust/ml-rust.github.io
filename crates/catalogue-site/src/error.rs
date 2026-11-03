@@ -43,7 +43,7 @@ pub enum SiteError {
     #[error("rendering {path} failed: {source}")]
     Render {
         /// The output path of the page.
-        path: &'static str,
+        path: String,
         /// The template error.
         #[source]
         source: askama::Error,

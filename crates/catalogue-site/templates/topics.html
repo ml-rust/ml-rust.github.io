@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Topics{% endblock %}
+{% block content %}
+<h1>Topics</h1>
+<p>A topic groups entries by subject. A subtopic sits under a broader topic.</p>
+
+<h2 id="all-topics">All topics</h2>
+{% include "topic_grid.html" %}
+{% endblock %}

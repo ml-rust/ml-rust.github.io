@@ -1,5 +1,7 @@
 //! A build with a tier report refuses data that cannot publish tiers.
 
+#[path = "common/build.rs"]
+mod build;
 mod common;
 #[path = "common/report.rs"]
 mod report;

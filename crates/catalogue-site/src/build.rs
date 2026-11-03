@@ -5,7 +5,10 @@ use askama::Template;
 use crate::asset::Stylesheet;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
-use crate::pages::{Layout, NavItem, NotFoundPage, RulesPage, SubmitPage};
+use crate::pages::{
+    ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage, SubmitPage,
+    TopicPage, TopicsPage, project_file, topic_file,
+};
 use crate::refusal;
 
 /// One file of the built site.
@@ -31,29 +34,52 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let stylesheet = Stylesheet::site();
     let layout = |current| Layout::new(stylesheet.href(), current);
     let catalogue = inputs.catalogue;
+    let report = inputs.report;
     let mut files = vec![
         stylesheet.file(),
         render(
-            "rules/index.html",
+            "index.html".to_owned(),
+            &HomePage::new(layout(None), inputs),
+        )?,
+        render(
+            "topics/index.html".to_owned(),
+            &TopicsPage::new(layout(Some(NavItem::Topics)), catalogue, report),
+        )?,
+        render(
+            "changes/index.html".to_owned(),
+            &ChangesPage::new(layout(Some(NavItem::Changes)), inputs),
+        )?,
+        render(
+            "rules/index.html".to_owned(),
             &RulesPage::new(layout(Some(NavItem::Rules)), catalogue.thresholds()),
         )?,
         render(
-            "submit/index.html",
+            "submit/index.html".to_owned(),
             &SubmitPage::new(layout(Some(NavItem::Submit)), catalogue.topics()),
         )?,
-        render("404.html", &NotFoundPage::new(layout(None)))?,
+        render("404.html".to_owned(), &NotFoundPage::new(layout(None)))?,
     ];
+    for topic in catalogue.topics() {
+        let page = TopicPage::new(layout(Some(NavItem::Topics)), catalogue, report, topic);
+        files.push(render(topic_file(&topic.id), &page)?);
+    }
+    for slug in catalogue.entries().keys() {
+        if let Some(effective) = catalogue.effective(slug) {
+            let page = ProjectPage::new(layout(None), catalogue, report, &effective);
+            files.push(render(project_file(slug), &page)?);
+        }
+    }
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
 }
 
 /// `page` rendered to the file at `path`.
-fn render(path: &'static str, page: &impl Template) -> Result<OutputFile, SiteError> {
-    let html = page
-        .render()
-        .map_err(|source| SiteError::Render { path, source })?;
-    Ok(OutputFile {
-        path: path.to_owned(),
-        bytes: html.into_bytes(),
-    })
+fn render(path: String, page: &impl Template) -> Result<OutputFile, SiteError> {
+    match page.render() {
+        Ok(html) => Ok(OutputFile {
+            path,
+            bytes: html.into_bytes(),
+        }),
+        Err(source) => Err(SiteError::Render { path, source }),
+    }
 }

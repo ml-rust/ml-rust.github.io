@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1>{{ layout.site_name }}</h1>
+<p>The catalogue lists Rust projects for machine learning: libraries on crates.io, and apps.</p>
+<p>Each entry has a tier: Featured, Listed, New or Archived. Tiers come from <a href="/rules/">published rules</a> over raw signals. Stars never count toward a tier.</p>
+{%- if let Some(date) = checked %}
+<p>The tiers on this site come from the check on <time datetime="{{ date }}">{{ date }}</time>.</p>
+{%- else %}
+<p>Tiers are not published.</p>
+{%- endif %}
+
+<h2 id="topics">Topics</h2>
+{% include "topic_grid.html" %}
+{%- if checked.is_some() %}
+
+<h2 id="featured">Featured</h2>
+{%- if featured.is_empty() %}
+<p>No entry is Featured.</p>
+{%- else %}
+<ul class="entry-list">
+{%- for row in featured %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- endif %}
+
+<h2 id="recent">Recently added</h2>
+{%- if recent.is_empty() %}
+<p>No entry exists yet.</p>
+{%- else %}
+<ul class="entry-list">
+{%- for row in recent %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if checked.is_some() %}
+
+<h2 id="changes">Recent tier changes</h2>
+{% include "change_table.html" %}
+<p><a href="/changes/">All tier changes</a></p>
+{%- endif %}
+{% endblock %}

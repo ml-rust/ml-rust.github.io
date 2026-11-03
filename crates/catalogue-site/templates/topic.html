@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<h1>{{ name }}</h1>
+{%- if let Some(link) = parent %}
+<p>Part of <a href="{{ link.href }}">{{ link.name }}</a>.</p>
+{%- endif %}
+{%- if let Some(text) = summary %}
+<p>{{ text }}</p>
+{%- if !evidence.is_empty() %}
+<p class="sources">Sources:{% for link in evidence %} <a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
+{%- endif %}
+{%- endif %}
+{%- if !children.is_empty() %}
+
+<h2 id="subtopics">Subtopics</h2>
+<p>A subtopic page lists the entries of that subtopic.</p>
+<ul>
+{%- for link in children %}
+<li><a href="{{ link.href }}">{{ link.name }}</a></li>
+{%- endfor %}
+</ul>
+{%- endif %}
+
+<h2 id="entries">Entries</h2>
+{%- if groups.is_empty() %}
+<p>No entry lists this topic.</p>
+{%- else %}
+{%- if tiered %}
+<p>Entries are grouped by tier, then sorted by name.</p>
+{%- else %}
+<p>Entries are sorted by name.</p>
+{%- endif %}
+{%- for group in groups %}
+{%- if let Some(heading) = group.heading %}
+<h3>{{ heading }}</h3>
+{%- endif %}
+<ul class="entry-list">
+{%- for row in group.rows %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</ul>
+{%- endfor %}
+{%- endif %}
+{% endblock %}

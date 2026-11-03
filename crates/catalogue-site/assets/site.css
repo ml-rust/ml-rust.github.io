@@ -314,6 +314,143 @@ td.number {
   color: var(--tier-archived-text);
 }
 
+/* Topic grid on the home and topic list pages. */
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+
+.topic-card {
+  padding: var(--space-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.topic-card h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.125rem;
+}
+
+.topic-card p {
+  margin: 0 0 var(--space-2);
+}
+
+.tier-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sources,
+.subtopics,
+.topic-count,
+.entry-added {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* Entry lists: one row per entry, name first. */
+.entry-list {
+  list-style: none;
+  padding: 0;
+}
+
+.entry-row {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-row:last-child {
+  border-bottom: none;
+}
+
+.entry-name {
+  font-weight: 700;
+}
+
+.entry-description {
+  margin: var(--space-1) 0 0;
+}
+
+/* Kind and label tags print their text. The border only frames it. */
+.entry-kind,
+.entry-label,
+.stable-label {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.stable-label {
+  border: 2px solid var(--text);
+  font-weight: 700;
+}
+
+/* Entry page. */
+.entry-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.banner {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-raised);
+  color: var(--text);
+  border-left: 4px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.banner-org {
+  border-left-color: var(--link);
+}
+
+.banner-superseded {
+  border-left-color: var(--focus);
+  font-weight: 700;
+}
+
+.link-list li,
+.reason-list li,
+.note-list li {
+  margin-bottom: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.correction-list li {
+  margin-bottom: var(--space-3);
+}
+
+.correction-list p {
+  margin: 0 0 var(--space-1);
+}
+
+.signal-table td,
+.judgment-table td {
+  overflow-wrap: anywhere;
+}
+
+td.not-measured {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto;
@@ -322,7 +459,15 @@ td.number {
 }
 
 @media (forced-colors: active) {
-  .tier-badge {
+  .tier-badge,
+  .entry-kind,
+  .entry-label,
+  .stable-label,
+  .topic-card {
     border-color: CanvasText;
+  }
+
+  .banner {
+    border-left-color: CanvasText;
   }
 }

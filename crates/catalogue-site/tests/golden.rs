@@ -1,23 +1,37 @@
-//! The rules, submit and not-found pages match the files in `tests/golden/` byte for byte.
+//! Built pages match the files in `tests/golden/` byte for byte.
 //!
 //! Set `CATALOGUE_UPDATE_GOLDEN=1` to write the current output to those files.
 
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 
+#[path = "common/build.rs"]
+mod build;
 mod common;
+#[path = "common/fixture.rs"]
+mod fixture;
 
 use common::{TOPICS, catalogue, pages, thresholds};
 
 /// The environment variable that rewrites the golden files.
 const UPDATE: &str = "CATALOGUE_UPDATE_GOLDEN";
 
-/// Each built page and its golden file name.
-const GOLDEN: [(&str, &str); 3] = [
+/// The pages of the one-entry build and their golden file names.
+const STATIC_PAGES: [(&str, &str); 3] = [
     ("rules/index.html", "rules.html"),
     ("submit/index.html", "submit.html"),
     ("404.html", "404.html"),
+];
+
+/// The pages of the fixture build with a report and their golden file names.
+const CONTENT_PAGES: [(&str, &str); 5] = [
+    ("index.html", "index.html"),
+    ("topics/tensors/index.html", "topic-tensors.html"),
+    ("projects/alpha/index.html", "project-alpha.html"),
+    ("projects/beta/index.html", "project-beta.html"),
+    ("changes/index.html", "changes.html"),
 ];
 
 fn golden_dir() -> PathBuf {
@@ -26,11 +40,10 @@ fn golden_dir() -> PathBuf {
         .join("golden")
 }
 
-#[test]
-fn pages_match_the_golden_files() {
-    let site = pages(&catalogue(TOPICS, Some(&thresholds(Some("2026-11-03")))));
+/// Checks each page of `golden` in `site` against its golden file, or rewrites the file.
+fn check(site: &BTreeMap<String, String>, golden: &[(&str, &str)]) {
     let update = env::var(UPDATE).is_ok_and(|value| value == "1");
-    for (page, name) in GOLDEN {
+    for &(page, name) in golden {
         let built = site
             .get(page)
             .unwrap_or_else(|| panic!("the build has no {page}"));
@@ -52,4 +65,15 @@ fn pages_match_the_golden_files() {
             path.display()
         );
     }
+}
+
+#[test]
+fn static_pages_match_the_golden_files() {
+    let site = pages(&catalogue(TOPICS, Some(&thresholds(Some("2026-11-03")))));
+    check(&site, &STATIC_PAGES);
+}
+
+#[test]
+fn content_pages_match_the_golden_files() {
+    check(&fixture::site(&fixture::files(), true), &CONTENT_PAGES);
 }
