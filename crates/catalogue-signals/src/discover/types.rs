@@ -14,6 +14,10 @@ pub struct Rules {
     /// Names resolve the way crates.io resolves them: ASCII case and `-`
     /// against `_` do not matter.
     pub core_crates: Vec<String>,
+    /// Crate names that are candidates themselves. Their dependents are not.
+    ///
+    /// Names resolve the way [`core_crates`](Self::core_crates) names do.
+    pub named_crates: Vec<String>,
     /// Terms: lowercase words separated by one space. A crate matches when its name or
     /// description holds a term as whole words in order.
     pub terms: Vec<String>,
@@ -26,6 +30,8 @@ pub struct Rules {
 pub enum Reason {
     /// The crate is one of the rules' core crates.
     Core,
+    /// The crate is one of the rules' named crates.
+    Named,
     /// The crate lists this category slug, which equals or extends a rule category.
     Category(String),
     /// The crate lists this lowercase keyword, which equals a rule keyword.
@@ -37,10 +43,12 @@ pub enum Reason {
 }
 
 impl fmt::Display for Reason {
-    /// Writes `core`, `category:<slug>`, `keyword:<kw>`, `term:<term>` or `depends-on:<crate>`.
+    /// Writes `core`, `named`, `category:<slug>`, `keyword:<kw>`, `term:<term>` or
+    /// `depends-on:<crate>`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Core => f.write_str("core"),
+            Self::Named => f.write_str("named"),
             Self::Category(slug) => write!(f, "category:{slug}"),
             Self::Keyword(keyword) => write!(f, "keyword:{keyword}"),
             Self::Term(term) => write!(f, "term:{term}"),
@@ -69,4 +77,6 @@ pub struct Discovered {
     pub candidates: Vec<Candidate>,
     /// Rule core crates with no crate of that name in the snapshot, in rule order.
     pub unknown_core_crates: Vec<String>,
+    /// Rule named crates with no crate of that name in the snapshot, in rule order.
+    pub unknown_named_crates: Vec<String>,
 }

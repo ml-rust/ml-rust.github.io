@@ -28,6 +28,9 @@ pub struct Discovery {
     /// Crates whose dependents become candidates.
     #[serde(default)]
     pub core_crates: Vec<CrateName>,
+    /// Crates that are candidates themselves. Their dependents are not.
+    #[serde(default)]
+    pub named_crates: Vec<CrateName>,
     /// GitHub topics searched together with `language:Rust`.
     #[serde(default)]
     pub github_topics: Vec<String>,
@@ -43,10 +46,11 @@ impl Discovery {
         if self.categories.is_empty()
             && self.keywords.is_empty()
             && self.core_crates.is_empty()
+            && self.named_crates.is_empty()
             && self.github_topics.is_empty()
         {
             out.push(
-                "categories, keywords, core_crates and github_topics must not all be empty"
+                "categories, keywords, core_crates, named_crates and github_topics must not all be empty"
                     .to_owned(),
             );
         }
@@ -92,6 +96,22 @@ impl Discovery {
                 .map(|c| (c.normalized(), c.as_str())),
             &mut out,
         );
+        duplicates(
+            "named crate",
+            self.named_crates
+                .iter()
+                .map(|c| (c.normalized(), c.as_str())),
+            &mut out,
+        );
+        for named in &self.named_crates {
+            let key = named.normalized();
+            if self.core_crates.iter().any(|c| c.normalized() == key) {
+                out.push(format!(
+                    "crate `{}` is in core_crates and named_crates: remove it from one",
+                    named.as_str()
+                ));
+            }
+        }
         out
     }
 }
@@ -176,13 +196,14 @@ mod tests {
         assert!(parse("keywords = [\"llm\"]").problems().is_empty());
         assert!(parse("categories = [\"science\"]").problems().is_empty());
         assert!(parse("core_crates = [\"burn\"]").problems().is_empty());
+        assert!(parse("named_crates = [\"faer\"]").problems().is_empty());
     }
 
     #[test]
     fn all_lists_empty_is_reported() {
         assert!(found("", "must not all be empty"));
         assert!(found(
-            "categories = []\nkeywords = []\ncore_crates = []\ngithub_topics = []\n",
+            "categories = []\nkeywords = []\ncore_crates = []\nnamed_crates = []\ngithub_topics = []\n",
             "must not all be empty"
         ));
     }
@@ -269,6 +290,18 @@ mod tests {
         assert!(found(
             "core_crates = [\"candle-core\", \"Candle_Core\"]",
             "core crate `Candle_Core` is listed twice"
+        ));
+        assert!(found(
+            "named_crates = [\"num-traits\", \"num_traits\"]",
+            "named crate `num_traits` is listed twice"
+        ));
+    }
+
+    #[test]
+    fn a_crate_in_both_crate_lists_is_reported() {
+        assert!(found(
+            "core_crates = [\"candle-core\"]\nnamed_crates = [\"candle_core\"]",
+            "crate `candle_core` is in core_crates and named_crates"
         ));
     }
 

@@ -1,6 +1,6 @@
 //! The `catalogue discover` actions and their errors.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -131,6 +131,9 @@ fn run_crates(data: &Path, cache_dir: Option<PathBuf>, window_days: u16) -> Exit
             for name in &report.unknown_core_crates {
                 eprintln!("warning: core crate {name} is not in the dump");
             }
+            for name in &report.unknown_named_crates {
+                eprintln!("warning: named crate {name} is not in the dump");
+            }
             println!("{}", report.text);
             ExitCode::SUCCESS
         }
@@ -166,14 +169,14 @@ pub(crate) fn crate_rules(catalogue: &Catalogue, data: &Path) -> Result<Rules, D
         keywords.extend_from_slice(&category.keywords);
         terms.extend_from_slice(&category.terms);
     }
-    let own: Vec<String> = discovery
+    let own: HashSet<&String> = discovery
         .keywords
         .iter()
         .chain(&discovery.categories)
-        .cloned()
         .collect();
+    let sort_only: HashSet<&String> = discovery.sort_only.iter().collect();
     for list in [&mut categories, &mut keywords, &mut terms] {
-        list.retain(|word| own.contains(word) || !discovery.sort_only.contains(word));
+        list.retain(|word| own.contains(word) || !sort_only.contains(word));
         list.sort_unstable();
         list.dedup();
     }
@@ -182,6 +185,11 @@ pub(crate) fn crate_rules(catalogue: &Catalogue, data: &Path) -> Result<Rules, D
         keywords,
         core_crates: discovery
             .core_crates
+            .iter()
+            .map(ToString::to_string)
+            .collect(),
+        named_crates: discovery
+            .named_crates
             .iter()
             .map(ToString::to_string)
             .collect(),

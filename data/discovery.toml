@@ -72,6 +72,10 @@ core_crates = [
     "tract-core",
 ]
 
+# Crates that are candidates themselves. A crate that depends on one is not. This admits
+# a crate that `sort_only` keeps out and whose repo a lead cannot reach.
+named_crates = ["faer"]
+
 # GitHub topics, searched together with `language:Rust`. This finds apps and
 # tools that publish no crate. Repos that a crates.io crate already links to
 # are left to the rules above.

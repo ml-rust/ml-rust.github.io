@@ -48,7 +48,7 @@ mod tests {
         put(&mut src, "discovery.toml", "");
         expect_error(
             src,
-            "discovery.toml: categories, keywords, core_crates and github_topics",
+            "discovery.toml: categories, keywords, core_crates, named_crates and github_topics",
         );
     }
 

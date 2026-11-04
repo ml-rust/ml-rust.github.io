@@ -14,6 +14,8 @@ pub struct Report {
     pub text: String,
     /// Core crates absent from the dump.
     pub unknown_core_crates: Vec<String>,
+    /// Named crates absent from the dump.
+    pub unknown_named_crates: Vec<String>,
 }
 
 /// Finds the candidates in `snapshot` and renders them with their signals.
@@ -45,6 +47,7 @@ pub fn build_report(
     Report {
         text: render(&mut rows),
         unknown_core_crates: found.unknown_core_crates,
+        unknown_named_crates: found.unknown_named_crates,
     }
 }
 
@@ -236,6 +239,7 @@ mod tests {
             categories: vec!["science".to_owned()],
             keywords: vec!["llm".to_owned()],
             core_crates: vec!["ghost".to_owned()],
+            named_crates: vec!["phantom".to_owned()],
             terms: Vec::new(),
         };
         let listed: HashMap<String, &str> = [("blazr-core".to_owned(), "blazr")].into();
@@ -247,5 +251,6 @@ mod tests {
              numr\t0.00\t0.00\tcategory:science::ml"
         );
         assert_eq!(found.unknown_core_crates, ["ghost"]);
+        assert_eq!(found.unknown_named_crates, ["phantom"]);
     }
 }

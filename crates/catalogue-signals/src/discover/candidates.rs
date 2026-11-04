@@ -3,27 +3,32 @@
 use std::borrow::Cow;
 use std::collections::HashSet;
 
-use super::core_crates;
+use super::rule_crates;
 use super::terms::TermIndex;
 use super::types::{Candidate, Discovered, Reason, Rules};
 use crate::dump::{DependencyKind, DumpSnapshot, IdMap};
 
 /// Selects the crates of `snapshot` that match `rules`.
 ///
-/// A crate matches when it is a core crate, when one of its category slugs
+/// A crate matches when it is a core crate or a named crate, when one of its category slugs
 /// equals or extends a rule category, when one of its keywords equals a rule
 /// keyword, when its name or description holds a rule term, or when its default
 /// version has a normal or build dependency on a core crate. A core crate in the snapshot is a candidate with the reason
-/// `core` even when no other rule matches it, and keeps its other reasons. A crate
+/// `core` even when no other rule matches it, and keeps its other reasons. A named crate gets
+/// the reason `named` the same way, and a dependency on it matches nothing. A crate
 /// whose default version is missing or yanked is skipped. A crate with a
 /// deprecation notice stays and is flagged. The run reads the crate, category,
 /// keyword and default-requirement tables once each and never reads the dependency edges.
 /// A term scan allocates only for a crate that matches.
 pub fn candidates(snapshot: &DumpSnapshot, rules: &Rules) -> Discovered {
-    let core = core_crates::resolve(snapshot, &rules.core_crates);
+    let core = rule_crates::resolve(snapshot, &rules.core_crates);
+    let named = rule_crates::resolve(snapshot, &rules.named_crates);
     let mut reasons: IdMap<Vec<Reason>> = IdMap::default();
     for &id in core.by_id.keys() {
         reasons.entry(id).or_default().push(Reason::Core);
+    }
+    for &id in named.by_id.keys() {
+        reasons.entry(id).or_default().push(Reason::Named);
     }
 
     let categories: HashSet<&str> = rules.categories.iter().map(String::as_str).collect();
@@ -88,6 +93,7 @@ pub fn candidates(snapshot: &DumpSnapshot, rules: &Rules) -> Discovered {
     Discovered {
         candidates: found,
         unknown_core_crates: core.unknown,
+        unknown_named_crates: named.unknown,
     }
 }
 
@@ -147,6 +153,7 @@ mod tests {
             categories: own(categories),
             keywords: own(keywords),
             core_crates: own(core),
+            named_crates: Vec::new(),
             terms: Vec::new(),
         }
     }
@@ -543,6 +550,40 @@ mod tests {
     }
 
     #[test]
+    fn a_named_crate_is_a_candidate_and_its_dependents_are_not() {
+        let mut snap = snapshot();
+        snap.default_requirements
+            .insert(ML, vec![requirement(CORE, DependencyKind::Normal)]);
+        snap.default_requirements
+            .insert(APP, vec![requirement(CORE, DependencyKind::Build)]);
+        let rules = Rules {
+            named_crates: vec!["candle-core".to_owned()],
+            ..Rules::default()
+        };
+        let found = candidates(&snap, &rules);
+        assert_eq!(names(&found), ["Candle_Core"]);
+        assert_eq!(found.candidates[0].reasons, [Reason::Named]);
+    }
+
+    #[test]
+    fn a_named_crate_keeps_its_other_reasons_and_an_unknown_one_is_reported() {
+        let mut snap = snapshot();
+        snap.keywords.insert(CORE, vec!["tensor".to_owned()]);
+        let rules = Rules {
+            keywords: vec!["tensor".to_owned()],
+            named_crates: vec!["CANDLE_CORE".to_owned(), "ghost".to_owned()],
+            ..Rules::default()
+        };
+        let found = candidates(&snap, &rules);
+        assert_eq!(
+            found.candidates[0].reasons,
+            [Reason::Named, Reason::Keyword("tensor".to_owned())]
+        );
+        assert_eq!(found.unknown_named_crates, ["ghost"]);
+        assert!(found.unknown_core_crates.is_empty());
+    }
+
+    #[test]
     fn a_yanked_core_crate_is_skipped() {
         let mut snap = snapshot();
         add_crate(&mut snap, CORE, "Candle_Core", true);
@@ -648,6 +689,7 @@ mod tests {
     #[test]
     fn reasons_display_with_their_prefix() {
         assert_eq!(Reason::Core.to_string(), "core");
+        assert_eq!(Reason::Named.to_string(), "named");
         assert_eq!(
             Reason::Category("a::b".to_owned()).to_string(),
             "category:a::b"

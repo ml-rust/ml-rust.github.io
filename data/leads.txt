@@ -20,7 +20,6 @@ ml-rust/vidr
 ml-rust/voxr
 
 # General math that machine learning depends on, which `sort_only` keeps out of discovery.
-sarah-quinones/faer-rs
 dimforge/nalgebra
 statrs-dev/statrs
 argmin-rs/argmin
