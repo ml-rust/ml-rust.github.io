@@ -29,6 +29,8 @@ pub struct Thresholds {
     pub finished: FinishedThresholds,
     /// How long a value stands in for a failed fetch.
     pub fallback: FallbackThresholds,
+    /// What counts as movement. No tier rule reads these values.
+    pub movement: MovementThresholds,
 }
 
 /// Gates for the `new` tier.
@@ -142,6 +144,18 @@ pub struct FallbackThresholds {
     pub max_age_days: u32,
 }
 
+/// What counts as movement in active users. No tier rule reads these values.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MovementThresholds {
+    /// Days between the newest snapshot and the window start.
+    pub window_days: u32,
+    /// Smallest change, as a share of the value at the window start.
+    pub min_share: f64,
+    /// Smallest change in active users.
+    pub min_users: f64,
+}
+
 impl Thresholds {
     /// Lists every rule this file breaks.
     pub fn problems(&self) -> Vec<String> {
@@ -192,6 +206,21 @@ impl Thresholds {
         }
         if self.fallback.max_age_days == 0 {
             out.push("fallback.max_age_days = 0 must be at least 1".to_owned());
+        }
+        if self.movement.window_days == 0 {
+            out.push("movement.window_days = 0 must be at least 1".to_owned());
+        }
+        let share = self.movement.min_share;
+        if !(share > 0.0 && share <= 1.0) {
+            out.push(format!(
+                "movement.min_share = {share} must be a share above 0 and at most 1"
+            ));
+        }
+        let users = self.movement.min_users;
+        if !(users.is_finite() && users > 0.0) {
+            out.push(format!(
+                "movement.min_users = {users} must be a finite number above 0"
+            ));
         }
         in_range(
             "app_featured.min_signals",
@@ -244,9 +273,27 @@ mod tests {
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 4);
+        assert_eq!(t.version, 5);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
+        assert_eq!(t.movement.window_days, 30);
+    }
+
+    #[test]
+    fn movement_values_must_be_able_to_measure_a_change() {
+        let found = problems_with("window_days = 30", "window_days = 0");
+        assert!(has(&found, "movement.window_days = 0 must be at least 1"));
+        for bad in ["0.0", "1.5", "nan"] {
+            let found = problems_with("min_share = 0.25", &format!("min_share = {bad}"));
+            assert!(has(&found, "movement.min_share = "), "{bad}: {found:?}");
+        }
+        assert!(problems_with("min_share = 0.25", "min_share = 1.0").is_empty());
+        for bad in ["0.0", "-1.0", "inf", "nan"] {
+            let found = problems_with("min_users = 5.0", &format!("min_users = {bad}"));
+            assert!(has(&found, "movement.min_users = "), "{bad}: {found:?}");
+        }
+        let absent = THRESHOLDS.replace("min_users = 5.0\n", "");
+        assert!(toml::from_str::<Thresholds>(&absent).is_err());
     }
 
     #[test]

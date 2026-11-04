@@ -1,6 +1,6 @@
 //! What one site build reads.
 
-use catalogue_core::{Catalogue, Date, Slug, Tier, TierReport};
+use catalogue_core::{Catalogue, Date, Movement, Slug, Tier, TierReport};
 
 /// Everything one site build reads.
 ///
@@ -14,6 +14,12 @@ pub struct SiteInputs<'a> {
     pub report: Option<&'a TierReport>,
     /// Tier changes, newest first. Pages show them only when `report` is given.
     pub changes: &'a [TierChangeRow],
+    /// The date of the oldest snapshot. Every entry appears on it, so pages and the feed
+    /// summarize its rows. `None` without a history.
+    pub first_check: Option<Date>,
+    /// The movement the history measures. Pages show it only when `report` is given.
+    /// No tier reads it.
+    pub movement: &'a Movement,
 }
 
 /// One tier change of one entry.

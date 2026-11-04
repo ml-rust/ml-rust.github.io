@@ -161,6 +161,28 @@ pub(super) fn fallback_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     )]
 }
 
+/// What counts as movement.
+pub(super) fn movement_rows(t: &Thresholds) -> Vec<ThresholdRow> {
+    let m = &t.movement;
+    vec![
+        row(
+            "movement.window_days",
+            m.window_days,
+            "Days between the newest snapshot and the window start.",
+        ),
+        row(
+            "movement.min_share",
+            m.min_share,
+            "Smallest change, as a share of the value at the window start.",
+        ),
+        row(
+            "movement.min_users",
+            m.min_users,
+            "Smallest change in active users.",
+        ),
+    ]
+}
+
 /// The New gates.
 pub(super) fn new_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     let n = &t.new;

@@ -28,6 +28,34 @@ pub(crate) struct EntryRow<'a> {
     pub description: &'a str,
     /// The facts a person reads to choose, for lists that compare projects.
     pub choice: Option<ChoiceText>,
+    /// The plain word for how the entry moved.
+    pub movement: Option<&'static str>,
+    /// The link that stands for the related projects this row hides.
+    pub related: Option<RelatedLink>,
+}
+
+/// The link from a family row to the parent page, which lists every related project.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RelatedLink {
+    /// `and N related projects`.
+    pub text: String,
+    /// The link to the parent page.
+    pub href: SafeHref,
+}
+
+impl RelatedLink {
+    /// The link for `count` related projects of entry `slug`. `None` for zero.
+    pub(crate) fn of(slug: &Slug, count: usize) -> Option<Self> {
+        let text = match count {
+            0 => return None,
+            1 => "and 1 related project".to_owned(),
+            more => format!("and {more} related projects"),
+        };
+        Some(Self {
+            text,
+            href: project_href(slug),
+        })
+    }
 }
 
 impl<'a> EntryRow<'a> {
@@ -42,7 +70,20 @@ impl<'a> EntryRow<'a> {
             added: None,
             description: &entry.description.text,
             choice: None,
+            movement: None,
+            related: None,
         }
+    }
+
+    /// The row with how the entry moved and the link to its related projects.
+    pub(crate) fn with_family(
+        mut self,
+        movement: Option<&'static str>,
+        related: Option<RelatedLink>,
+    ) -> Self {
+        self.movement = movement;
+        self.related = related;
+        self
     }
 
     /// The row with the facts of `record`. Without a record, each fact reads as not measured.
@@ -71,7 +112,18 @@ pub(crate) fn tier_of(report: Option<&TierReport>, slug: &Slug) -> Option<Tier> 
         .map(|record| record.tier)
 }
 
-/// Sorts `rows` by name, ignoring case, then by link.
-pub(crate) fn sort_by_name(rows: &mut [EntryRow<'_>]) {
-    rows.sort_by_cached_key(|row| (row.name.to_lowercase(), row.href.as_str().to_owned()));
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_related_text_counts_the_projects() {
+        let slug = Slug::new("core").expect("slug");
+        assert_eq!(RelatedLink::of(&slug, 0), None);
+        let one = RelatedLink::of(&slug, 1).expect("link");
+        assert_eq!(one.text, "and 1 related project");
+        assert_eq!(one.href.as_str(), "/projects/core/");
+        let two = RelatedLink::of(&slug, 2).expect("link");
+        assert_eq!(two.text, "and 2 related projects");
+    }
 }

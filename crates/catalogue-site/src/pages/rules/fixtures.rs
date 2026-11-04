@@ -2,7 +2,8 @@
 
 use catalogue_core::{
     AppFeaturedThresholds, Date, DormancyThresholds, FallbackThresholds, FinishedThresholds,
-    IntervalThresholds, LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
+    IntervalThresholds, LibraryFeaturedThresholds, MovementThresholds, NewThresholds,
+    RotThresholds, Thresholds,
 };
 
 /// A thresholds file at version 3, calibrated on `calibrated`.
@@ -55,5 +56,10 @@ pub(super) fn thresholds(calibrated: Option<Date>) -> Thresholds {
             min_binary_downloads_per_release: 200,
         },
         fallback: FallbackThresholds { max_age_days: 14 },
+        movement: MovementThresholds {
+            window_days: 30,
+            min_share: 0.25,
+            min_users: 5.0,
+        },
     }
 }

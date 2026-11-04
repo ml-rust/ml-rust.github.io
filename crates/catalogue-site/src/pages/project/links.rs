@@ -107,6 +107,7 @@ mod tests {
             crates: Vec::new(),
             topics: vec![Slug::new("topic").expect("slug")],
             category: None,
+            part_of: None,
             description: Description {
                 text: "A tool.".to_owned(),
                 source: DescriptionSource::Repo,

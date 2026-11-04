@@ -17,6 +17,7 @@ pub(crate) fn check_entries(
     let mut entries: BTreeMap<Slug, Entry> = BTreeMap::new();
     let mut crate_owners: BTreeMap<CrateName, String> = BTreeMap::new();
     let mut repo_owners: BTreeMap<String, String> = BTreeMap::new();
+    let mut paths: BTreeMap<Slug, String> = BTreeMap::new();
     for Parsed { path, stem, value } in files {
         for problem in value.problems() {
             diags.push(&path, problem);
@@ -73,21 +74,122 @@ pub(crate) fn check_entries(
                 diags.push(&path, format!("entry `{slug}` is defined twice"));
             }
             Ok(slug) => {
+                paths.insert(slug.clone(), path);
                 entries.insert(slug, value);
             }
             Err(error) => diags.push(&path, format!("file name is not a slug: {error}")),
         }
     }
+    check_part_of(&entries, &paths, diags);
     entries
+}
+
+/// Checks each `part_of`: it names another entry, and that entry names no parent of its own.
+fn check_part_of(
+    entries: &BTreeMap<Slug, Entry>,
+    paths: &BTreeMap<Slug, String>,
+    diags: &mut Diagnostics,
+) {
+    for (slug, entry) in entries {
+        let Some(parent) = &entry.part_of else {
+            continue;
+        };
+        let path = paths.get(slug).map_or(slug.as_str(), String::as_str);
+        if parent == slug {
+            diags.push(
+                path,
+                format!(
+                    "part_of `{parent}` names the entry itself. Name another entry, or remove the field"
+                ),
+            );
+            continue;
+        }
+        match entries.get(parent).map(|found| found.part_of.as_ref()) {
+            None => diags.push(
+                path,
+                format!(
+                    "part_of `{parent}` does not exist. Use the slug of an entry, or remove the field"
+                ),
+            ),
+            Some(Some(grandparent)) => diags.push(
+                path,
+                format!(
+                    "part_of `{parent}` names an entry that is part of `{grandparent}`. Name `{grandparent}`, or remove the field"
+                ),
+            ),
+            Some(None) => {}
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::{BETA, errors, expect_error, put, valid};
+    use crate::testing::{ALPHA, BETA, errors, expect_error, put, valid};
 
     #[test]
     fn valid_data_passes() {
         assert!(errors(valid()).is_empty());
+    }
+
+    #[test]
+    fn part_of_can_name_another_entry() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/beta.toml",
+            &format!("part_of = \"alpha\"\n{BETA}"),
+        );
+        assert!(errors(src).is_empty());
+    }
+
+    #[test]
+    fn part_of_must_name_an_entry_that_exists() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/beta.toml",
+            &format!("part_of = \"ghost\"\n{BETA}"),
+        );
+        expect_error(
+            src,
+            "entries/beta.toml: part_of `ghost` does not exist. Use the slug of an entry, or remove the field",
+        );
+    }
+
+    #[test]
+    fn part_of_cannot_name_the_entry_itself() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/beta.toml",
+            &format!("part_of = \"beta\"\n{BETA}"),
+        );
+        expect_error(
+            src,
+            "entries/beta.toml: part_of `beta` names the entry itself. Name another entry, or remove the field",
+        );
+    }
+
+    #[test]
+    fn a_parent_cannot_have_a_parent() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/alpha.toml",
+            &format!("part_of = \"beta\"\n{ALPHA}"),
+        );
+        put(
+            &mut src,
+            "entries/gamma.toml",
+            &format!(
+                "part_of = \"alpha\"\n{}",
+                BETA.replace("ml-rust/beta\"", "ml-rust/gamma\"")
+            ),
+        );
+        expect_error(
+            src,
+            "entries/gamma.toml: part_of `alpha` names an entry that is part of `beta`. Name `beta`, or remove the field",
+        );
     }
 
     #[test]

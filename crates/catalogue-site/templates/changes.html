@@ -1,8 +1,68 @@
 {% extends "base.html" %}
-{% block title %}Tier changes{% endblock %}
+{% block title %}Changes{% endblock %}
 {% block content %}
-<h1>Tier changes</h1>
+<h1>Changes</h1>
 {%- if tiered %}
+<p><a href="/changes/feed.xml">Atom feed</a> of tier changes and new entries.</p>
+
+<h2 id="movement">Movement</h2>
+{%- if let Some(note) = movement_note %}
+<p>{{ note }}</p>
+{%- endif %}
+{%- if let Some(section) = movement %}
+<p>Movement compares the check on <time datetime="{{ section.newest }}">{{ section.newest }}</time> with the check on <time datetime="{{ section.baseline }}">{{ section.baseline }}</time>. It never affects a tier. The <a href="/rules/#movement">rules</a> set the limits.</p>
+<p>{{ section.order }}</p>
+
+<h3 id="new-this-month">New this month</h3>
+{%- if section.new.is_empty() %}
+<p>No entry is new.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Project</th><th scope="col">First seen</th></tr>
+</thead>
+<tbody>
+{%- for row in section.new %}
+<tr><td><a href="{{ row.entry.href }}">{{ row.entry.name }}</a></td><td><time datetime="{{ row.date }}">{{ row.date }}</time></td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
+
+<h3 id="rising">Rising</h3>
+{%- if section.rising.is_empty() %}
+<p>No entry is rising.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Project</th><th scope="col">Active users before</th><th scope="col">Active users now</th></tr>
+</thead>
+<tbody>
+{%- for row in section.rising %}
+<tr><td><a href="{{ row.entry.href }}">{{ row.entry.name }}</a></td><td>{{ row.from }}</td><td>{{ row.to }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
+
+<h3 id="falling">Falling</h3>
+{%- if section.falling.is_empty() %}
+<p>No entry is falling.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Project</th><th scope="col">Active users before</th><th scope="col">Active users now</th></tr>
+</thead>
+<tbody>
+{%- for row in section.falling %}
+<tr><td><a href="{{ row.entry.href }}">{{ row.entry.name }}</a></td><td>{{ row.from }}</td><td>{{ row.to }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
+{%- endif %}
+
+<h2 id="tier-changes">Tier changes</h2>
 <p>Each row is one entry whose tier changed on a check. The newest change comes first.</p>
 <p>The <a href="/rules/">rules</a> say how a check sets a tier.</p>
 {% include "change_table.html" %}

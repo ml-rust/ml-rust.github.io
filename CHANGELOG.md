@@ -37,4 +37,10 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `data/synonyms.toml`: search synonyms. A human reviews every group.
 - `data/categories.toml`: browse by what a project is, on the site, in search, in seed drafts and in the submit form.
 - `data/backends.toml` and entry pages: license, backends, native code, dependents, contributors and install line, none of which counts toward a tier.
+- Entry lists: one shared order, strongest tier first, with no score.
+- Entry `part_of`: lists show one row per project family, and `/featured/` holds the full Featured list.
+- `catalogue seed`: sets `part_of` from a crate name match and a shared crate owner.
+- `[movement]` in `data/thresholds.toml`: New, Rising and Falling from daily snapshots, on the changes page and list rows. It never affects a tier.
+- `/changes/feed.xml`: Atom feed of tier changes and new entries.
+- `/data/catalogue.json`, `/llms.txt`, `sitemap.xml` and `robots.txt` for scripts and AI agents.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

@@ -6,7 +6,7 @@ mod common;
 #[path = "common/report.rs"]
 mod report;
 
-use catalogue_core::{Catalogue, REPORT_SCHEMA, Slug, TierReport};
+use catalogue_core::{Catalogue, Movement, REPORT_SCHEMA, Slug, TierReport};
 use catalogue_site::{OutputFile, SiteError, SiteInputs, build_site};
 use common::{TOPICS, catalogue, pages, thresholds};
 use report::report;
@@ -19,6 +19,8 @@ fn build(catalogue: &Catalogue, report: &TierReport) -> Result<Vec<OutputFile>, 
         catalogue,
         report: Some(report),
         changes: &[],
+        first_check: None,
+        movement: &Movement::NeedsHistory,
     })
 }
 

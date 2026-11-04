@@ -2,7 +2,7 @@
 {% block title %}{{ header.name }}{% endblock %}
 {% block content %}
 <h1>{{ header.name }}</h1>
-<p class="entry-facts"><span class="entry-kind">{{ header.kind }}</span>{% if let Some(label) = header.label %} <span class="entry-label">{{ label }}</span>{% endif %}{% if let Some(badge) = header.badge %} {% include "tier_badge.html" %}{% endif %}{% if header.stable %} <span class="stable-label">Stable</span>{% endif %}</p>
+<p class="entry-facts"><span class="entry-kind">{{ header.kind }}</span>{% if let Some(label) = header.label %} <span class="entry-label">{{ label }}</span>{% endif %}{% if let Some(badge) = header.badge %} {% include "tier_badge.html" %}{% endif %}{% if header.stable %} <span class="stable-label">Stable</span>{% endif %}{% if let Some(word) = header.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}</p>
 {%- if header.stable %}
 <p>Stable means the project is finished: dormant by design, not decayed.</p>
 {%- endif %}
@@ -20,6 +20,12 @@
 {%- endif %}
 {%- if let Some(link) = header.category %}
 <p>Category: <a href="{{ link.href }}">{{ link.name }}</a></p>
+{%- endif %}
+{%- if let Some(link) = header.part_of %}
+<p>Part of <a href="{{ link.href }}">{{ link.name }}</a>.</p>
+{%- endif %}
+{%- if let Some(note) = movement_note %}
+<p>{{ note }}</p>
 {%- endif %}
 
 <h2 id="at-a-glance">At a glance</h2>
@@ -125,12 +131,23 @@
 </tbody>
 </table>
 {%- endif %}
+{%- if !related.is_empty() %}
+
+<h2 id="related">Related projects</h2>
+<p>{{ order }}</p>
+<ul class="link-list">
+{%- for link in related %}
+<li><a href="{{ link.href }}">{{ link.name }}</a></li>
+{%- endfor %}
+</ul>
+{%- endif %}
 {%- if !also_in.is_empty() %}
 
 <h2 id="also-in">Also in these topics</h2>
+<p>{{ order }}</p>
 <ul class="also-in-list">
 {%- for row in also_in %}
-<li><a href="{{ row.entry.href }}">{{ row.entry.name }}</a>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}. Also in <a href="{{ row.topic.href }}">{{ row.topic.name }}</a>.</li>
+<li><a href="{{ row.entry.href }}">{{ row.entry.name }}</a>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}{% if let Some(word) = row.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}. Also in <a href="{{ row.topic.href }}">{{ row.topic.name }}</a>.{% if let Some(related) = row.related %} <a class="entry-related" href="{{ related.href }}">{{ related.text }}</a>.{% endif %}</li>
 {%- endfor %}
 </ul>
 {%- endif %}

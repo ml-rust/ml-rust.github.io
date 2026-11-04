@@ -19,6 +19,7 @@ pub use maintainers::{Maintainer, Maintainers};
 pub use synonyms::{SynonymGroup, Synonyms};
 pub use thresholds::{
     AppFeaturedThresholds, DormancyThresholds, FallbackThresholds, FinishedThresholds,
-    IntervalThresholds, LibraryFeaturedThresholds, NewThresholds, RotThresholds, Thresholds,
+    IntervalThresholds, LibraryFeaturedThresholds, MovementThresholds, NewThresholds,
+    RotThresholds, Thresholds,
 };
 pub use topics::{Topic, TopicSummary, Topics};

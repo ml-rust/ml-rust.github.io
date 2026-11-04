@@ -1,11 +1,13 @@
 //! `/topics/<id>/`: one topic with its summary, subtopics and entries.
 
 use askama::Template;
-use catalogue_core::{Catalogue, TierReport, Topic};
+use catalogue_core::Topic;
 
+use crate::inputs::SiteInputs;
 use crate::pages::layout::Layout;
 use crate::pages::shared::{
-    EntryGroup, EvidenceLink, NamedLink, group_entries, topic_href, topic_link,
+    EntryGroup, EvidenceLink, NamedLink, group_entries, movement_note, order_text, topic_href,
+    topic_link,
 };
 
 /// The page of one topic.
@@ -26,18 +28,16 @@ pub(crate) struct TopicPage<'a> {
     pub children: Vec<NamedLink<'a>>,
     /// The entries of the topic, grouped by tier with a report.
     pub groups: Vec<EntryGroup<'a>>,
-    /// Whether a report gives the tiers.
-    pub tiered: bool,
+    /// The sentence that states the order of the list.
+    pub order: &'static str,
+    /// The line shown when the history cannot measure movement.
+    pub movement_note: Option<&'static str>,
 }
 
 impl<'a> TopicPage<'a> {
-    /// The page of `topic` in `layout`, with tiers from `report` when given.
-    pub(crate) fn new(
-        layout: Layout,
-        catalogue: &'a Catalogue,
-        report: Option<&TierReport>,
-        topic: &'a Topic,
-    ) -> Self {
+    /// The page of `topic` in `layout`.
+    pub(crate) fn new(layout: Layout, inputs: &SiteInputs<'a>, topic: &'a Topic) -> Self {
+        let catalogue = inputs.catalogue;
         let slugs = catalogue.entries_in_topic(&topic.id);
         let children = catalogue
             .topics()
@@ -58,8 +58,9 @@ impl<'a> TopicPage<'a> {
             summary: topic.summary.as_ref().map(|summary| summary.text.as_str()),
             evidence: EvidenceLink::of_summary(topic),
             children,
-            groups: group_entries(catalogue, report, &slugs),
-            tiered: report.is_some(),
+            groups: group_entries(inputs, &slugs),
+            order: order_text(inputs.report),
+            movement_note: movement_note(inputs),
         }
     }
 }

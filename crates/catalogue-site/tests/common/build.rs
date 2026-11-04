@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Catalogue, SourceFile, TierReport};
-use catalogue_site::{SEARCH_DIR, SiteInputs, TierChangeRow, build_site};
+use catalogue_core::SourceFile;
+use catalogue_site::{SEARCH_DIR, SiteInputs, build_site};
 
 /// The values of every threshold after `version` and `calibrated`.
 const THRESHOLD_TABLES: &str = include_str!("thresholds.toml");
@@ -22,20 +22,11 @@ pub fn source(path: &str, contents: &str) -> SourceFile {
     }
 }
 
-/// Every page and asset of a build over `catalogue`, keyed by path, as UTF-8 text.
+/// Every page and asset of a build over `inputs`, keyed by path, as UTF-8 text.
 ///
 /// The binary index files under [`SEARCH_DIR`] are left out.
-pub fn render(
-    catalogue: &Catalogue,
-    report: Option<&TierReport>,
-    changes: &[TierChangeRow],
-) -> BTreeMap<String, String> {
-    let inputs = SiteInputs {
-        catalogue,
-        report,
-        changes,
-    };
-    let files = build_site(&inputs).unwrap_or_else(|error| panic!("build fails: {error}"));
+pub fn render(inputs: &SiteInputs<'_>) -> BTreeMap<String, String> {
+    let files = build_site(inputs).unwrap_or_else(|error| panic!("build fails: {error}"));
     let search = format!("{SEARCH_DIR}/");
     files
         .into_iter()

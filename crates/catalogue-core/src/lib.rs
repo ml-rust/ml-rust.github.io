@@ -19,6 +19,7 @@ mod intake;
 mod judgment;
 mod judgment_checks;
 mod load;
+mod movement;
 mod project_pages;
 mod registry;
 mod report;
@@ -41,13 +42,14 @@ pub use ids::{
 pub use intake::{description_text, entry_name, is_generic_repo_name, repo_entry_name, repo_link};
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
+pub use movement::{FirstSeen, MeasuredMovement, Movement, MovementKind, UsersChange};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
     AppFeaturedThresholds, Backend, Backends, CPU_ONLY_ID, Categories, Category, Deprecated,
     DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
-    IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, NOT_MEASURED_ID,
-    NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic,
-    TopicSummary, Topics,
+    IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, MovementThresholds,
+    NOT_MEASURED_ID, NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms,
+    Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
     ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, CPU_ONLY, DEPENDENTS_SIGNAL, EntryReport,

@@ -6,12 +6,14 @@
 //! `History` answers the questions the tier rules ask about earlier checks:
 //! the previous tier, the run of dead months and the Docker pull baseline.
 //! [`History::tier_changes`] lists every [`TierChange`] the snapshots record.
+//! [`History::movement`] measures new entries and changes in active users.
 //! [`NetworkValues`] holds what a row keeps of each network fetch, for the next
 //! check to fall back on.
 
 mod changes;
 mod error;
 mod model;
+mod movement;
 mod network;
 mod query;
 mod read;

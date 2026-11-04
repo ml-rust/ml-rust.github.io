@@ -1,5 +1,7 @@
 {%- if changes.is_empty() %}
+{%- if first_check.is_none() %}
 <p>No tier change is recorded.</p>
+{%- endif %}
 {%- else %}
 <table>
 <thead>
@@ -11,4 +13,7 @@
 {%- endfor %}
 </tbody>
 </table>
+{%- endif %}
+{%- if let Some(first) = first_check %}
+<p>The first check on <time datetime="{{ first.date }}">{{ first.date }}</time> placed {{ first.text }}.</p>
 {%- endif %}

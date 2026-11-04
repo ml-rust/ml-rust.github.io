@@ -2,7 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Catalogue, DataSources};
+use catalogue_core::{Catalogue, DataSources, Movement};
+use catalogue_site::SiteInputs;
 
 pub use crate::build::thresholds;
 use crate::build::{render, source};
@@ -53,5 +54,11 @@ pub fn catalogue(topics: &str, thresholds: Option<&str>) -> Catalogue {
 
 /// Every file of a build without a tier report, keyed by path, as UTF-8 text.
 pub fn pages(catalogue: &Catalogue) -> BTreeMap<String, String> {
-    render(catalogue, None, &[])
+    render(&SiteInputs {
+        catalogue,
+        report: None,
+        changes: &[],
+        first_check: None,
+        movement: &Movement::NeedsHistory,
+    })
 }

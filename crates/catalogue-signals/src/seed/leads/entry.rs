@@ -67,6 +67,7 @@ pub(super) fn build_entry(
         crates,
         topics: matched,
         category,
+        part_of: None,
         description,
         org_affiliated,
         distribution: None,

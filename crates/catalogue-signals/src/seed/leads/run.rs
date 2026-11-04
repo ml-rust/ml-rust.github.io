@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use catalogue_core::{Date, EntryKind, Slug};
 
+use super::super::related::set_part_of;
 use super::channels::lookup_channels;
 use super::claims::Claims;
 use super::decide::{Context, Drafted, Outcome, decide, github_key};
@@ -95,6 +96,7 @@ pub fn seed_leads(
         }
     }
     finish(&mut out, pending, transport, pacers);
+    set_part_of(inputs.snapshot, inputs.existing, &mut out.drafts.entries);
     out.drafts.entries.sort_by(|a, b| a.0.cmp(&b.0));
     out.drafts.skipped.sort();
     out.listed.sort();

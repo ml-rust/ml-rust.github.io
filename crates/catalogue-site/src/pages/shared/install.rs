@@ -109,6 +109,7 @@ mod tests {
                 .collect(),
             topics: vec![Slug::new("topic").expect("slug")],
             category: None,
+            part_of: None,
             description: Description {
                 text: "A tool.".to_owned(),
                 source: DescriptionSource::Human,

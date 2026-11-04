@@ -29,11 +29,13 @@
 {%- if featured.is_empty() %}
 <p>No entry is Featured.</p>
 {%- else %}
+<p>{{ order }}</p>
 <ul class="entry-list">
 {%- for row in featured %}
 {% include "entry_row.html" %}
 {%- endfor %}
 </ul>
+<p><a href="/featured/">All Featured projects</a></p>
 {%- endif %}
 {%- endif %}
 

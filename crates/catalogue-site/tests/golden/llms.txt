@@ -1,0 +1,20 @@
+# Rust ML catalogue
+
+Rust projects for machine learning: libraries on crates.io, and apps.
+Tiers come from published rules over raw signals. Each published claim links its source.
+
+## Data
+- Every entry as JSON: https://ml-rust.github.io/data/catalogue.json
+- What the JSON fields mean: https://ml-rust.github.io/data/README.txt
+- Tier rules: https://ml-rust.github.io/rules/
+- Atom feed of changes: https://ml-rust.github.io/changes/feed.xml
+- License of the data: CC-BY-4.0
+
+## Topics
+- Machine learning: https://ml-rust.github.io/topics/ml/
+- Tensors: https://ml-rust.github.io/topics/tensors/
+
+## Categories
+- Inference runtimes: https://ml-rust.github.io/categories/inference-runtimes/
+- Tensor libraries: https://ml-rust.github.io/categories/tensor-libraries/
+- Vector databases: https://ml-rust.github.io/categories/vector-databases/

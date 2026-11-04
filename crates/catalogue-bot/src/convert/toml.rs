@@ -123,6 +123,7 @@ mod tests {
             crates: Vec::new(),
             topics: vec![slug("ml")],
             category: Some(slug("vector-databases")),
+            part_of: None,
             description: Description {
                 text: "Runs models.".to_owned(),
                 source: DescriptionSource::Readme,

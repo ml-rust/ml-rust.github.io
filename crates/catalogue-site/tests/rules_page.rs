@@ -18,7 +18,9 @@ fn the_page_states_the_tier_principles_and_the_rot_signals() {
         "Tiers come from fixed thresholds over raw signals. There is no composite score.",
         "Stars never count toward a tier.",
         "Thresholds version 3.",
-        "Calibrated on 2026-11-03.",
+        "Calibrated on <time datetime=\"2026-11-03\">2026-11-03</time>.",
+        "Movement comes from the daily snapshots. It never affects a tier.",
+        "This is an order and never a score.",
     ] {
         assert!(page.contains(text), "missing {text:?}");
     }
@@ -65,6 +67,9 @@ fn every_threshold_appears_with_its_value() {
         ("finished.min_new_adopters", "1"),
         ("finished.min_binary_downloads_per_release", "200"),
         ("fallback.max_age_days", "14"),
+        ("movement.window_days", "30"),
+        ("movement.min_share", "0.25"),
+        ("movement.min_users", "5"),
     ] {
         let cells =
             format!("<th scope=\"row\"><code>{key}</code></th><td class=\"number\">{value}</td>");

@@ -26,7 +26,7 @@ const STATIC_PAGES: [(&str, &str); 3] = [
 ];
 
 /// The pages of the fixture build with a report and their golden file names.
-const CONTENT_PAGES: [(&str, &str); 7] = [
+const CONTENT_PAGES: [(&str, &str); 12] = [
     ("index.html", "index.html"),
     ("search/index.html", "search.html"),
     ("topics/tensors/index.html", "topic-tensors.html"),
@@ -37,6 +37,11 @@ const CONTENT_PAGES: [(&str, &str); 7] = [
     ("projects/alpha/index.html", "project-alpha.html"),
     ("projects/beta/index.html", "project-beta.html"),
     ("changes/index.html", "changes.html"),
+    ("featured/index.html", "featured.html"),
+    ("changes/feed.xml", "feed.xml"),
+    ("data/catalogue.json", "catalogue.json"),
+    ("llms.txt", "llms.txt"),
+    ("sitemap.xml", "sitemap.xml"),
 ];
 
 fn golden_dir() -> PathBuf {

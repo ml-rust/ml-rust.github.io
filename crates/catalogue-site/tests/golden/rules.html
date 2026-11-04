@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
 <link rel="stylesheet" href="/assets/site.13d19258.css">
+<link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -32,7 +33,7 @@
 <p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
 <div class="threshold-status">
 <p>Thresholds version 3.</p>
-<p>Calibrated on 2026-11-03.</p>
+<p>Calibrated on <time datetime="2026-11-03">2026-11-03</time>.</p>
 <p>The values stay frozen until the yearly recalibration. Any change raises the version.</p>
 </div>
 
@@ -276,6 +277,34 @@
 <li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
 </ul>
 <p>An unknown value reads as not measured.</p>
+</section>
+
+<section aria-labelledby="list-order">
+<h2 id="list-order">List order</h2>
+<p>Lists show the strongest tier first, then the most active users, then the name. A value not measured sorts last.</p>
+<p>This is an order and never a score. No page prints a rank.</p>
+<p>A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.</p>
+</section>
+
+<section aria-labelledby="movement">
+<h2 id="movement">Movement</h2>
+<p>Movement comes from the daily snapshots. It never affects a tier.</p>
+<ul>
+<li><strong>New</strong> The entry first appears in the history inside the window. The first day of history does not count, because every entry appears then.</li>
+<li><strong>Rising</strong> Active users rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.</li>
+<li><strong>Falling</strong> Active users fell by at least the set share and the set number, over the same two snapshots.</li>
+</ul>
+<p>A value missing at either end gives no movement. History shorter than the window gives none, and pages say movement needs more history.</p>
+<table>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>movement.window_days</code></th><td class="number">30</td><td>Days between the newest snapshot and the window start.</td></tr>
+<tr><th scope="row"><code>movement.min_share</code></th><td class="number">0.25</td><td>Smallest change, as a share of the value at the window start.</td></tr>
+<tr><th scope="row"><code>movement.min_users</code></th><td class="number">5</td><td>Smallest change in active users.</td></tr>
+</tbody>
+</table>
 </section>
 
 </main>

@@ -4,17 +4,19 @@
 use std::cmp::Reverse;
 
 use askama::Template;
-use catalogue_core::Tier;
 
 use super::layout::Layout;
 use super::shared::{
-    ChangeRow, EntryRow, NamedLink, TopicCard, category_links, change_rows, sort_by_name, tier_of,
-    topic_cards,
+    ChangeRow, EntryRow, FirstCheckLine, NamedLink, TopicCard, category_links, change_rows,
+    featured_rows, first_check_line, order_text, tier_of, topic_cards,
 };
 use crate::inputs::SiteInputs;
 
 /// How many recently added entries and recent tier changes the home page lists.
 const RECENT: usize = 10;
+
+/// How many project families the Featured list of the home page shows.
+const FEATURED_FAMILIES: usize = 8;
 
 /// The home page.
 #[derive(Debug, Template)]
@@ -28,12 +30,16 @@ pub(crate) struct HomePage<'a> {
     pub topics: Vec<TopicCard<'a>>,
     /// The link to every category, in file order.
     pub categories: Vec<NamedLink<'a>>,
-    /// Every Featured entry, in name order. Empty without a report.
+    /// The first Featured project families. Empty without a report.
     pub featured: Vec<EntryRow<'a>>,
+    /// The sentence that states the order of the Featured list.
+    pub order: &'static str,
     /// The entries added last, newest first.
     pub recent: Vec<EntryRow<'a>>,
     /// The latest tier changes, newest first. Empty without a report.
     pub changes: Vec<ChangeRow<'a>>,
+    /// The line that stands for the first check. `None` without a report.
+    pub first_check: Option<FirstCheckLine>,
 }
 
 impl<'a> HomePage<'a> {
@@ -41,13 +47,8 @@ impl<'a> HomePage<'a> {
     pub(crate) fn new(layout: Layout, inputs: &SiteInputs<'a>) -> Self {
         let catalogue = inputs.catalogue;
         let report = inputs.report;
-        let mut featured: Vec<EntryRow<'a>> = catalogue
-            .entries()
-            .iter()
-            .filter(|(slug, _)| tier_of(report, slug) == Some(Tier::Featured))
-            .map(|(slug, entry)| EntryRow::new(slug, entry, Some(Tier::Featured)))
-            .collect();
-        sort_by_name(&mut featured);
+        let mut featured = featured_rows(inputs, EntryRow::new);
+        featured.truncate(FEATURED_FAMILIES);
         let mut added: Vec<_> = catalogue.entries().iter().collect();
         added.sort_by_cached_key(|(slug, entry)| {
             (Reverse(entry.added), entry.name.to_lowercase(), *slug)
@@ -65,10 +66,12 @@ impl<'a> HomePage<'a> {
             topics: topic_cards(catalogue, report),
             categories: category_links(catalogue),
             featured,
+            order: order_text(report),
             recent,
             changes: report
-                .map(|_| change_rows(catalogue, inputs.changes, RECENT))
+                .map(|_| change_rows(catalogue, inputs.changes, inputs.first_check, RECENT))
                 .unwrap_or_default(),
+            first_check: report.and_then(|_| first_check_line(inputs.changes, inputs.first_check)),
         }
     }
 }

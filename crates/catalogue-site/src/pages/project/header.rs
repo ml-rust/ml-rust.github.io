@@ -1,9 +1,11 @@
 //! The top of an entry page: name, kind, tier, and the notices about the entry.
 
-use catalogue_core::{Catalogue, EffectiveEntry, EntryReport};
+use catalogue_core::{EffectiveEntry, EntryReport};
 
+use crate::inputs::SiteInputs;
 use crate::pages::shared::{
-    NamedLink, TierBadge, category_link, entry_link, kind_name, project_kind_name, topic_link,
+    NamedLink, TierBadge, category_link, entry_link, kind_name, movement_word, project_kind_name,
+    topic_link,
 };
 
 /// The data the top of `project.html` reads.
@@ -29,15 +31,20 @@ pub(crate) struct Header<'a> {
     pub topics: Vec<NamedLink<'a>>,
     /// The category of the entry.
     pub category: Option<NamedLink<'a>>,
+    /// The bigger project this entry belongs to.
+    pub part_of: Option<NamedLink<'a>>,
+    /// The plain word for how the entry moved.
+    pub movement: Option<&'static str>,
 }
 
 impl<'a> Header<'a> {
     /// The header of `effective`, with the tier of `record` when given.
     pub(crate) fn new(
-        catalogue: &'a Catalogue,
+        inputs: &SiteInputs<'a>,
         effective: &EffectiveEntry<'a>,
         record: Option<&EntryReport>,
     ) -> Self {
+        let catalogue = inputs.catalogue;
         let entry = effective.entry;
         Self {
             name: &entry.name,
@@ -63,6 +70,11 @@ impl<'a> Header<'a> {
                 .category
                 .as_ref()
                 .and_then(|id| category_link(catalogue, id)),
+            part_of: entry
+                .part_of
+                .as_ref()
+                .and_then(|parent| entry_link(catalogue, parent)),
+            movement: movement_word(inputs, effective.slug),
         }
     }
 }

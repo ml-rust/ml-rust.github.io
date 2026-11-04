@@ -153,6 +153,9 @@ pub struct Entry {
     pub topics: Vec<Slug>,
     /// Category id: what the project is. At most one.
     pub category: Option<Slug>,
+    /// The entry this one belongs to: a bigger project in another repo. Lists show
+    /// the parent's row in place of this one. It plays no part in a tier.
+    pub part_of: Option<Slug>,
     /// Short description.
     pub description: Description,
     /// Whether the ml-rust organization maintains the project.

@@ -1,10 +1,13 @@
 #[path = "common/build_site.rs"]
 mod build_site;
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::process::Command;
 
 use build_site::{calibrated_data, fixture, golden, scratch, site, stderr};
+use catalogue_core::{Date, EntryKind, Tier};
+use catalogue_signals::history::{Row, Snapshot, write};
 
 #[test]
 fn no_tiers_writes_every_page_and_the_search_files() {
@@ -27,6 +30,13 @@ fn no_tiers_writes_every_page_and_the_search_files() {
         "topics/index.html",
         "changes/index.html",
         "search/index.html",
+        "featured/index.html",
+        "changes/feed.xml",
+        "data/catalogue.json",
+        "data/README.txt",
+        "llms.txt",
+        "sitemap.xml",
+        "robots.txt",
     ] {
         assert!(out.join(page).is_file(), "{page}");
     }
@@ -94,6 +104,8 @@ fn a_second_build_replaces_the_directory() {
         assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
         assert!(!out.join("stale.html").exists());
         assert!(out.join("index.html").is_file());
+        assert!(out.join("data/catalogue.json").is_file());
+        assert!(out.join("changes/feed.xml").is_file());
         fs::write(out.join("stale.html"), "old").expect("stale");
     }
     assert!(!dir.path().join(".site.staging").exists());
@@ -159,6 +171,66 @@ fn an_out_directory_that_holds_the_data_is_refused() {
     let output = site(&["--no-tiers"], &data, dir.path());
     assert_eq!(output.status.code(), Some(1), "{}", stderr(&output));
     assert!(data.join("thresholds.toml").is_file());
+}
+
+#[test]
+fn data_inside_the_out_directory_data_folder_is_refused() {
+    let dir = scratch();
+    let out = dir.path().join("site");
+    let data = out.join("data");
+    fs::create_dir_all(data.parent().expect("parent")).expect("dir");
+    let copied = calibrated_data(&out);
+    assert_eq!(copied, data);
+    let output = site(&["--no-tiers"], &data, &out);
+    assert_eq!(output.status.code(), Some(1), "{}", stderr(&output));
+    assert!(data.join("thresholds.toml").is_file());
+}
+
+#[test]
+fn a_history_shorter_than_the_window_says_movement_needs_more_history() {
+    let dir = scratch();
+    let data = calibrated_data(dir.path());
+    let history = dir.path().join("history");
+    let row = Row {
+        kind: EntryKind::Library,
+        tier: Tier::Listed,
+        dead_now: false,
+        dormant: None,
+        active_users: Some(3.0),
+        docker_pulls: None,
+        network: None,
+    };
+    write(
+        &history,
+        &Snapshot {
+            date: Date::new(2026, 11, 1).expect("date"),
+            rows: BTreeMap::from([("alpha".to_owned(), row)]),
+        },
+    )
+    .expect("snapshot");
+    let out = dir.path().join("site");
+    let report = golden();
+    let args = [
+        "--report",
+        report.to_str().expect("path"),
+        "--history",
+        history.to_str().expect("path"),
+    ];
+    let output = site(&args, &data, &out);
+    assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+    let changes = fs::read_to_string(out.join("changes/index.html")).expect("changes");
+    assert!(
+        changes.contains("Movement needs more history."),
+        "{changes}"
+    );
+    assert!(
+        changes.contains("The first check on <time datetime=\"2026-11-01\">"),
+        "{changes}"
+    );
+    let feed = fs::read_to_string(out.join("changes/feed.xml")).expect("feed");
+    assert!(feed.contains("2026-11-01:first-check"), "{feed}");
+    let json = fs::read_to_string(out.join("data/catalogue.json")).expect("data file");
+    assert!(json.contains("\"schema\": 1"), "{json}");
 }
 
 #[test]

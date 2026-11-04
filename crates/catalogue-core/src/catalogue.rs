@@ -63,6 +63,15 @@ impl Catalogue {
         &self.backends
     }
 
+    /// The slugs of the entries that name `slug` in `part_of`, sorted by slug.
+    pub fn related_to(&self, slug: &Slug) -> Vec<&Slug> {
+        self.entries
+            .iter()
+            .filter(|(_, entry)| entry.part_of.as_ref() == Some(slug))
+            .map(|(child, _)| child)
+            .collect()
+    }
+
     /// The slugs of the entries in category `id`, sorted by slug.
     pub fn entries_in_category(&self, id: &Slug) -> Vec<&Slug> {
         self.entries
@@ -161,6 +170,21 @@ mod tests {
         };
         assert_eq!(found("tensor-libraries"), ["beta"]);
         assert!(found("vector-databases").is_empty());
+    }
+
+    #[test]
+    fn related_to_lists_the_entries_that_name_the_parent() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/beta.toml",
+            &format!("part_of = \"alpha\"\n{BETA}"),
+        );
+        let catalogue = Catalogue::load(src).expect("valid data");
+        let alpha = Slug::new("alpha").expect("slug");
+        let beta = Slug::new("beta").expect("slug");
+        assert_eq!(catalogue.related_to(&alpha), [&beta]);
+        assert!(catalogue.related_to(&beta).is_empty());
     }
 
     #[test]

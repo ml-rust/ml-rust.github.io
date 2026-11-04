@@ -7,7 +7,7 @@
 <p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
 <div class="threshold-status">
 {%- for line in status %}
-<p>{{ line }}</p>
+<p>{{ line.text }}{% if let Some(date) = line.date %}<time datetime="{{ date }}">{{ date }}</time>.{% endif %}</p>
 {%- endfor %}
 </div>
 

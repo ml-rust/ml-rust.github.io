@@ -5,9 +5,13 @@ use askama::Template;
 use crate::asset::HashedAsset;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
+use crate::machine::{
+    catalogue_file, data_readme_file, feed_file, llms_file, robots_file, sitemap_file,
+};
 use crate::pages::{
-    CategoryPage, ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage,
-    SearchPage, SubmitPage, TopicPage, TopicsPage, category_file, project_file, topic_file,
+    CategoryPage, ChangesPage, FeaturedPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage,
+    RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage, category_file, project_file,
+    topic_file,
 };
 use crate::refusal;
 use crate::search::{search_files, search_records};
@@ -32,8 +36,9 @@ pub struct OutputFile {
 /// # Errors
 ///
 /// Returns the first refusal from the checks on `inputs`. Returns
-/// [`SiteError::Render`] when a template fails, and [`SiteError::Search`] when
-/// the search index fails to encode.
+/// [`SiteError::Render`] when a template fails, [`SiteError::Search`] when the
+/// search index fails to encode, and [`SiteError::Encode`] when the data file
+/// fails to encode.
 pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError> {
     refusal::check(inputs)?;
     let stylesheet = HashedAsset::stylesheet();
@@ -42,11 +47,20 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let catalogue = inputs.catalogue;
     let report = inputs.report;
     let mut files = vec![
+        catalogue_file(inputs)?,
+        data_readme_file(),
+        feed_file(inputs)?,
+        llms_file(catalogue),
+        robots_file(),
         stylesheet.file(),
         script.file(),
         render(
             "index.html".to_owned(),
             &HomePage::new(layout(None), inputs),
+        )?,
+        render(
+            "featured/index.html".to_owned(),
+            &FeaturedPage::new(layout(None), inputs),
         )?,
         render(
             "topics/index.html".to_owned(),
@@ -75,26 +89,28 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         render("404.html".to_owned(), &NotFoundPage::new(layout(None)))?,
     ];
     for topic in catalogue.topics() {
-        let page = TopicPage::new(layout(Some(NavItem::Topics)), catalogue, report, topic);
+        let page = TopicPage::new(layout(Some(NavItem::Topics)), inputs, topic);
         files.push(render(topic_file(&topic.id), &page)?);
     }
     for category in catalogue.categories() {
-        let page = CategoryPage::new(layout(None), catalogue, report, category);
+        let page = CategoryPage::new(layout(None), inputs, category);
         files.push(render(category_file(&category.id), &page)?);
     }
     for slug in catalogue.entries().keys() {
         if let Some(effective) = catalogue.effective(slug) {
-            let page = ProjectPage::new(layout(None), catalogue, report, &effective);
+            let page = ProjectPage::new(layout(None), inputs, &effective);
             files.push(render(project_file(slug), &page)?);
         }
     }
+    let sitemap = sitemap_file(&files)?;
+    files.push(sitemap);
     files.extend(search_files(&search_records(catalogue, report))?);
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
 }
 
 /// `page` rendered to the file at `path`.
-fn render(path: String, page: &impl Template) -> Result<OutputFile, SiteError> {
+pub(crate) fn render(path: String, page: &impl Template) -> Result<OutputFile, SiteError> {
     match page.render() {
         Ok(html) => Ok(OutputFile {
             path,

@@ -1,0 +1,342 @@
+{
+  "schema": 1,
+  "generated": "2026-11-04",
+  "license": "CC-BY-4.0",
+  "thresholds_version": 3,
+  "entries": [
+    {
+      "slug": "alpha",
+      "name": "Alpha",
+      "kind": "library",
+      "repo": "https://github.com/ml-rust/alpha",
+      "crates": [
+        "alpha-crate",
+        "alpha-extra"
+      ],
+      "topics": [
+        "tensors"
+      ],
+      "category": "tensor-libraries",
+      "part_of": null,
+      "description": {
+        "text": "A tensor library.",
+        "source": "crate",
+        "source_url": "https://crates.io/crates/alpha-crate"
+      },
+      "tier": "featured",
+      "reasons": [
+        {
+          "rule": "expected-interval",
+          "detail": "expected interval 80 days"
+        },
+        {
+          "rule": "featured",
+          "detail": "fails: active users 9 below 11"
+        },
+        {
+          "rule": "demotion-pending",
+          "detail": "stays Featured until a demotion judgment is approved"
+        }
+      ],
+      "signals": [
+        {
+          "name": "last_release",
+          "label": "Latest release",
+          "value": "2026-09-01",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "active_users",
+          "label": "Active users",
+          "value": "9.36",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "former_glory",
+          "label": "Former glory",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "stars",
+          "label": "GitHub stars",
+          "value": "1200",
+          "source": {
+            "label": "GitHub",
+            "url": "https://github.com/ml-rust/alpha"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": "Apache-2.0 OR MIT",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on",
+          "value": "CUDA, Metal",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on_evidence",
+          "label": "What shows each backend",
+          "value": "CUDA: alpha-crate feature cuda (dependency cudarc); Metal: alpha-extra feature metal",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "native_code",
+          "label": "Native code",
+          "value": "Binds native code: openssl-sys",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "python_bindings",
+          "label": "Python bindings",
+          "value": "Has Python bindings: alpha-extra needs Python",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "dependents",
+          "label": "Dependents",
+          "value": "12",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors",
+          "value": "38",
+          "source": {
+            "label": "GitHub contributors",
+            "url": "https://github.com/ml-rust/alpha/graphs/contributors"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        }
+      ]
+    },
+    {
+      "slug": "beta",
+      "name": "Beta",
+      "kind": "app",
+      "repo": "https://github.com/ml-rust/beta",
+      "crates": [],
+      "topics": [
+        "ml"
+      ],
+      "category": "inference-runtimes",
+      "part_of": null,
+      "description": {
+        "text": "A command line tool that runs models.",
+        "source": "readme",
+        "source_url": "https://github.com/ml-rust/beta#readme"
+      },
+      "tier": "listed",
+      "reasons": [
+        {
+          "rule": "finished",
+          "detail": "dormant 400 days with no rot signal"
+        },
+        {
+          "rule": "featured-needs-outside-approval",
+          "detail": "passes the Featured gates with no featured-approval judgment"
+        }
+      ],
+      "signals": [
+        {
+          "name": "binary_downloads_per_release",
+          "label": "Binary downloads per release",
+          "value": "1500",
+          "source": {
+            "label": "GitHub releases",
+            "url": "https://github.com/ml-rust/beta/releases"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "repology_families",
+          "label": "Repology families",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": "None stated",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "stars",
+          "label": "GitHub stars",
+          "value": "40",
+          "source": {
+            "label": "GitHub",
+            "url": "https://github.com/ml-rust/beta"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        }
+      ]
+    },
+    {
+      "slug": "delta",
+      "name": "Delta",
+      "kind": "library",
+      "repo": "https://github.com/someone/delta",
+      "crates": [
+        "delta"
+      ],
+      "topics": [
+        "tensors"
+      ],
+      "category": null,
+      "part_of": null,
+      "description": {
+        "text": "A small automatic differentiation crate.",
+        "source": "human",
+        "source_url": null
+      },
+      "tier": "new",
+      "reasons": [
+        {
+          "rule": "new",
+          "detail": "first release 30 days ago, under 180"
+        }
+      ],
+      "signals": [
+        {
+          "name": "first_release",
+          "label": "First release",
+          "value": "2026-10-05",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": "MIT",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on",
+          "value": "CPU",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": false
+        }
+      ]
+    },
+    {
+      "slug": "gamma",
+      "name": "Gamma",
+      "kind": "library",
+      "repo": "https://github.com/someone/gamma",
+      "crates": [
+        "gamma"
+      ],
+      "topics": [
+        "tensors"
+      ],
+      "category": "tensor-libraries",
+      "part_of": null,
+      "description": {
+        "text": "An older tensor library.",
+        "source": "human",
+        "source_url": null
+      },
+      "tier": "archived",
+      "reasons": [
+        {
+          "rule": "instant-archive",
+          "detail": "the repository is archived"
+        }
+      ],
+      "signals": [
+        {
+          "name": "repo_archived",
+          "label": "Repository archived",
+          "value": "yes",
+          "source": {
+            "label": "GitHub",
+            "url": "https://github.com/someone/gamma"
+          },
+          "fetched": "2026-11-03",
+          "counts_toward_tier": true
+        }
+      ]
+    }
+  ]
+}

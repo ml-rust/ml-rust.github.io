@@ -2,12 +2,14 @@
 //!
 //! A shared topic is the whole claim. The section says "Also in" and nothing about similarity.
 
-use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
-use catalogue_core::{ACTIVE_USERS_SIGNAL, Catalogue, EffectiveEntry, Slug, Tier, TierReport};
+use catalogue_core::{EffectiveEntry, Slug};
 
-use crate::pages::shared::{NamedLink, TierBadge, entry_link, tier_of, topic_link};
+use crate::inputs::SiteInputs;
+use crate::pages::shared::{
+    NamedLink, RelatedLink, TierBadge, entry_link, family_heads, movement_word, tier_of, topic_link,
+};
 
 /// The most rows the section shows.
 const LIMIT: usize = 5;
@@ -21,55 +23,21 @@ pub(crate) struct AlsoInRow<'a> {
     pub badge: Option<TierBadge>,
     /// The link to the first topic of the page's entry that this entry shares.
     pub topic: NamedLink<'a>,
+    /// The plain word for how the entry moved.
+    pub movement: Option<&'static str>,
+    /// The link that stands for the related projects this row hides.
+    pub related: Option<RelatedLink>,
 }
 
-/// How strong an entry reads for the order of the section.
-struct Rank {
-    /// The tier's place in [`Tier::ALL`]. An entry with no tier comes last.
-    tier: usize,
-    /// The active users. An unknown count reads as zero.
-    users: f64,
-}
-
-impl Rank {
-    fn of(report: Option<&TierReport>, slug: &Slug) -> Self {
-        let tier = tier_of(report, slug)
-            .and_then(|tier| Tier::ALL.iter().position(|listed| *listed == tier))
-            .unwrap_or(Tier::ALL.len());
-        let users = report
-            .and_then(|report| report.entries.get(slug))
-            .and_then(|record| record.value_of(ACTIVE_USERS_SIGNAL))
-            .and_then(|text| text.parse::<f64>().ok())
-            .unwrap_or(0.0);
-        Self { tier, users }
-    }
-
-    /// The strongest tier first, then the most active users.
-    fn order(&self, other: &Self) -> Ordering {
-        self.tier
-            .cmp(&other.tier)
-            .then_with(|| other.users.total_cmp(&self.users))
-    }
-}
-
-/// One candidate with what orders it.
-struct Ranked<'a, 'b> {
-    rank: Rank,
-    /// The entry name in lowercase.
-    name: String,
-    slug: &'a Slug,
-    /// The first shared topic.
-    topic: &'b Slug,
-}
-
-/// Up to [`LIMIT`] other entries that share a topic with `effective`.
+/// Up to [`LIMIT`] rows of the other entries that share a topic with `effective`.
 ///
-/// The strongest tier comes first, then the most active users, then the name.
+/// Rows follow the one order of every list, with one row per project family.
 pub(crate) fn also_in<'a>(
-    catalogue: &'a Catalogue,
-    report: Option<&TierReport>,
+    inputs: &SiteInputs<'a>,
     effective: &EffectiveEntry<'_>,
 ) -> Vec<AlsoInRow<'a>> {
+    let catalogue = inputs.catalogue;
+    let report = inputs.report;
     let mut shared: BTreeMap<&'a Slug, &Slug> = BTreeMap::new();
     for topic in effective.topics {
         for slug in catalogue.entries_in_topic(topic) {
@@ -78,31 +46,17 @@ pub(crate) fn also_in<'a>(
             }
         }
     }
-    let mut ranked: Vec<Ranked<'a, '_>> = shared
+    let slugs: Vec<&'a Slug> = shared.keys().copied().collect();
+    family_heads(catalogue, report, &slugs)
         .into_iter()
-        .map(|(slug, topic)| Ranked {
-            rank: Rank::of(report, slug),
-            name: catalogue
-                .entry(slug)
-                .map(|entry| entry.name.to_lowercase())
-                .unwrap_or_default(),
-            slug,
-            topic,
-        })
-        .collect();
-    ranked.sort_by(|a, b| {
-        a.rank
-            .order(&b.rank)
-            .then_with(|| a.name.cmp(&b.name))
-            .then_with(|| a.slug.cmp(b.slug))
-    });
-    ranked
-        .into_iter()
-        .filter_map(|Ranked { slug, topic, .. }| {
+        .filter_map(|head| {
+            let topic = shared.get(head.slug)?;
             Some(AlsoInRow {
-                entry: entry_link(catalogue, slug)?,
-                badge: tier_of(report, slug).map(TierBadge::of),
+                entry: entry_link(catalogue, head.slug)?,
+                badge: tier_of(report, head.slug).map(TierBadge::of),
                 topic: topic_link(catalogue, topic)?,
+                movement: movement_word(inputs, head.slug),
+                related: RelatedLink::of(head.slug, head.related),
             })
         })
         .take(LIMIT)
@@ -114,11 +68,24 @@ mod tests {
     use std::collections::BTreeMap;
 
     use catalogue_core::{
-        DataSources, Date, EntryReport, REPORT_SCHEMA, SignalFact, SourceFile, SourceRef,
+        ACTIVE_USERS_SIGNAL, Catalogue, DataSources, Date, EntryReport, Movement, REPORT_SCHEMA,
+        SignalFact, SourceFile, SourceRef, Tier, TierReport,
     };
     use url::Url;
 
     use super::*;
+
+    static NO_MOVEMENT: Movement = Movement::NeedsHistory;
+
+    fn inputs<'a>(data: &'a Catalogue, report: Option<&'a TierReport>) -> SiteInputs<'a> {
+        SiteInputs {
+            catalogue: data,
+            report,
+            changes: &[],
+            first_check: None,
+            movement: &NO_MOVEMENT,
+        }
+    }
 
     const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\n\n[[topic]]\nid = \"two\"\nname = \"Two\"\n\n[[topic]]\nid = \"three\"\nname = \"Three\"\n";
 
@@ -191,10 +158,10 @@ mod tests {
         }
     }
 
-    fn names<'a>(data: &'a Catalogue, report: Option<&TierReport>, of: &str) -> Vec<&'a str> {
+    fn names<'a>(data: &'a Catalogue, report: Option<&'a TierReport>, of: &str) -> Vec<&'a str> {
         let slug = Slug::new(of).expect("slug");
         let effective = data.effective(&slug).expect("entry");
-        also_in(data, report, &effective)
+        also_in(&inputs(data, report), &effective)
             .iter()
             .map(|row| row.entry.name)
             .collect()
@@ -235,7 +202,7 @@ mod tests {
         ]);
         let slug = Slug::new("page").expect("slug");
         let effective = data.effective(&slug).expect("entry");
-        let rows = also_in(&data, None, &effective);
+        let rows = also_in(&inputs(&data, None), &effective);
         let topics: Vec<(&str, &str)> = rows
             .iter()
             .map(|row| (row.entry.name, row.topic.name))

@@ -26,10 +26,9 @@
 {%- if groups.is_empty() %}
 <p>No entry lists this topic.</p>
 {%- else %}
-{%- if tiered %}
-<p>Entries are grouped by tier, then sorted by name.</p>
-{%- else %}
-<p>Entries are sorted by name.</p>
+<p>{{ order }}</p>
+{%- if let Some(note) = movement_note %}
+<p>{{ note }}</p>
 {%- endif %}
 {%- for group in groups %}
 {%- if let Some(heading) = group.heading %}

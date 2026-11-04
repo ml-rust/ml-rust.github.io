@@ -42,6 +42,17 @@ pub enum SiteError {
     /// The search index failed to encode.
     #[error("encoding the search index failed: {0}")]
     Search(#[source] oxidoc_search::SearchError),
+    /// A data file failed to encode.
+    #[error(
+        "encoding {path} failed: {source}. Check the report and the data files, then rerun `catalogue build`"
+    )]
+    Encode {
+        /// The output path of the file.
+        path: &'static str,
+        /// The JSON error.
+        #[source]
+        source: serde_json::Error,
+    },
     /// A template failed to render.
     #[error("rendering {path} failed: {source}")]
     Render {

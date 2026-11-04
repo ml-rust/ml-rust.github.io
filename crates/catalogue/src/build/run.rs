@@ -4,8 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Slug, TierReport};
-use catalogue_signals::history::read_all;
+use catalogue_core::{Catalogue, Date, Movement, Slug, TierReport};
+use catalogue_signals::history::{History, read_all};
 use catalogue_site::{SiteInputs, TierChangeRow, build_site};
 use clap::{ArgGroup, Args};
 
@@ -16,8 +16,9 @@ use crate::exit::INVALID;
 
 /// The arguments of `catalogue build`.
 ///
-/// The build writes the pages, the stylesheet, the search page, its script and
-/// the search index. It does not write `search/oxidoc_search.js` or
+/// The build writes the pages, the stylesheet, the search page, its script, the
+/// search index, the Atom feed, the data file, `llms.txt`, `sitemap.xml` and
+/// `robots.txt`. It does not write `search/oxidoc_search.js` or
 /// `search/oxidoc_search_bg.wasm`: the deploy adds both with
 /// `scripts/ci/build_search_wasm.sh`.
 #[derive(Debug, Args)]
@@ -34,7 +35,7 @@ pub struct BuildArgs {
     #[arg(long)]
     pub no_tiers: bool,
     /// Directory of daily snapshots from `catalogue tiers --history`. Feeds the
-    /// tier changes page.
+    /// changes page, the feed and the movement words.
     #[arg(
         long,
         value_name = "DIR",
@@ -95,14 +96,16 @@ pub fn build(args: &BuildArgs) -> Result<BuildSummary, BuildError> {
         Some(path) => Some(read_report(path)?),
         None => None,
     };
-    let changes = match &args.history {
-        Some(dir) => read_changes(dir)?,
-        None => Vec::new(),
+    let history = match &args.history {
+        Some(dir) => read_history(dir, &catalogue)?,
+        None => HistoryFacts::default(),
     };
     let files = build_site(&SiteInputs {
         catalogue: &catalogue,
         report: report.as_ref(),
-        changes: &changes,
+        changes: &history.changes,
+        first_check: history.first_check,
+        movement: &history.movement,
     })?;
     let mut protected: Vec<&Path> = vec![&args.data];
     protected.extend(args.report.as_deref());
@@ -127,12 +130,35 @@ fn read_report(path: &Path) -> Result<TierReport, BuildError> {
     })
 }
 
-/// Every tier change in the history at `dir`, newest first.
+/// What the pages read from a history.
+#[derive(Debug, Default)]
+struct HistoryFacts {
+    changes: Vec<TierChangeRow>,
+    first_check: Option<Date>,
+    movement: Movement,
+}
+
+/// The tier changes, the first check and the movement of the history at `dir`.
+fn read_history(dir: &Path, catalogue: &Catalogue) -> Result<HistoryFacts, BuildError> {
+    let history = read_all(dir)?;
+    let movement = catalogue
+        .thresholds()
+        .map_or(Movement::NeedsHistory, |thresholds| {
+            history.movement(&thresholds.movement)
+        });
+    Ok(HistoryFacts {
+        changes: change_rows(&history)?,
+        first_check: history.first_check(),
+        movement,
+    })
+}
+
+/// Every tier change in `history`, newest first.
 ///
 /// A change for a slug that the catalogue lacks stays: the changes page shows
 /// it as plain text.
-fn read_changes(dir: &Path) -> Result<Vec<TierChangeRow>, BuildError> {
-    read_all(dir)?
+fn change_rows(history: &History) -> Result<Vec<TierChangeRow>, BuildError> {
+    history
         .tier_changes()
         .into_iter()
         .map(|change| {

@@ -2,6 +2,7 @@
 
 mod category;
 mod changes;
+mod featured;
 mod home;
 mod layout;
 mod not_found;
@@ -14,15 +15,17 @@ mod topics;
 
 pub(crate) use category::CategoryPage;
 pub(crate) use changes::ChangesPage;
+pub(crate) use featured::FeaturedPage;
 pub(crate) use home::HomePage;
-pub use layout::SITE_NAME;
 pub(crate) use layout::{Layout, NavItem};
+pub use layout::{SITE_NAME, SITE_URL};
 pub(crate) use not_found::NotFoundPage;
 pub(crate) use project::ProjectPage;
 pub(crate) use rules::RulesPage;
 pub(crate) use search::SearchPage;
 pub(crate) use shared::{
-    category_file, category_link, project_file, project_href, topic_file, topic_link,
+    category_file, category_href, category_link, first_check_line, is_first_check, project_file,
+    project_href, tier_name, topic_file, topic_href, topic_link,
 };
 pub(crate) use submit::SubmitPage;
 pub(crate) use topics::{TopicPage, TopicsPage};

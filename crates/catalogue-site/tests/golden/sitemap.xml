@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://ml-rust.github.io/</loc></url>
+<url><loc>https://ml-rust.github.io/categories/inference-runtimes/</loc></url>
+<url><loc>https://ml-rust.github.io/categories/tensor-libraries/</loc></url>
+<url><loc>https://ml-rust.github.io/categories/vector-databases/</loc></url>
+<url><loc>https://ml-rust.github.io/changes/</loc></url>
+<url><loc>https://ml-rust.github.io/featured/</loc></url>
+<url><loc>https://ml-rust.github.io/projects/alpha/</loc></url>
+<url><loc>https://ml-rust.github.io/projects/beta/</loc></url>
+<url><loc>https://ml-rust.github.io/projects/delta/</loc></url>
+<url><loc>https://ml-rust.github.io/projects/gamma/</loc></url>
+<url><loc>https://ml-rust.github.io/rules/</loc></url>
+<url><loc>https://ml-rust.github.io/search/</loc></url>
+<url><loc>https://ml-rust.github.io/submit/</loc></url>
+<url><loc>https://ml-rust.github.io/topics/</loc></url>
+<url><loc>https://ml-rust.github.io/topics/ml/</loc></url>
+<url><loc>https://ml-rust.github.io/topics/tensors/</loc></url>
+</urlset>

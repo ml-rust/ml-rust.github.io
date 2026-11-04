@@ -7,7 +7,7 @@ mod fixture;
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Catalogue, TierReport};
+use catalogue_core::{Catalogue, Movement, TierReport};
 use catalogue_site::{
     NO_TIER_BOOST, OutputFile, SEARCH_DIR, SiteInputs, build_site, search_records,
 };
@@ -26,6 +26,8 @@ fn build(catalogue: &Catalogue, report: Option<&TierReport>) -> BTreeMap<String,
         catalogue,
         report,
         changes: &[],
+        first_check: None,
+        movement: &Movement::NeedsHistory,
     })
     .unwrap_or_else(|error| panic!("build fails: {error}"));
     files

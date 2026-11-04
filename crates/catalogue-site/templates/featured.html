@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Featured{% endblock %}
+{% block content %}
+<h1>Featured</h1>
+{%- if !tiered %}
+<p>Tiers are not published, so this page lists no entry.</p>
+{%- else if rows.is_empty() %}
+<p>No entry is Featured.</p>
+{%- else %}
+<p>{{ order }}</p>
+<ul class="entry-list">
+{%- for row in rows %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{% endblock %}

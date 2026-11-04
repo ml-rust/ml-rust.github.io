@@ -69,6 +69,7 @@ pub(super) fn draft_family(
         crates,
         topics: matched.into_iter().collect(),
         category,
+        part_of: None,
         description: Description {
             text,
             source: DescriptionSource::Crate,

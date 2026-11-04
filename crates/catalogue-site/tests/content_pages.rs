@@ -108,7 +108,7 @@ fn the_home_page_lists_topics_featured_recent_entries_and_changes() {
             "<h2 id=\"changes\">Recent tier changes</h2>",
             "/projects/alpha/\">Alpha</a></td><td>Listed</td><td>Featured</td>",
             "/projects/delta/\">Delta</a></td><td>First check</td><td>New</td>",
-            "<td>omega</td><td>First check</td><td>Listed</td>",
+            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1.",
             "<a href=\"/changes/\">All tier changes</a>",
         ],
     );
@@ -328,7 +328,8 @@ fn the_change_page_lists_every_change_newest_first() {
             "2026-11-04</time></td><td><a href=\"/projects/alpha/\">Alpha</a>",
             "2026-11-04</time></td><td><a href=\"/projects/delta/\">Delta</a>",
             "2026-10-28</time></td><td><a href=\"/projects/gamma/\">Gamma</a></td><td>Listed</td><td>Archived</td>",
-            "2026-09-01</time></td><td>omega</td>",
+            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1.",
         ],
     );
+    assert!(!changes.contains("<td>omega</td>"), "{changes}");
 }

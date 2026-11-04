@@ -4,7 +4,7 @@ use catalogue_core::Thresholds;
 
 use super::rows::{
     ThresholdRow, app_rows, dead_rows, fallback_rows, finished_rows, interval_rows, library_rows,
-    new_rows, rot_rows,
+    movement_rows, new_rows, rot_rows,
 };
 
 /// One rule with its text and thresholds.
@@ -322,6 +322,41 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
             ],
             notes: &["An unknown value reads as not measured."],
             rows: Vec::new(),
+        },
+        RuleSection {
+            id: "list-order",
+            title: "List order",
+            lead: &[
+                "Lists show the strongest tier first, then the most active users, then the name. A value not measured sorts last.",
+                "This is an order and never a score. No page prints a rank.",
+                "A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.",
+            ],
+            items: &[],
+            notes: &[],
+            rows: Vec::new(),
+        },
+        RuleSection {
+            id: "movement",
+            title: "Movement",
+            lead: &["Movement comes from the daily snapshots. It never affects a tier."],
+            items: &[
+                Item {
+                    label: "New",
+                    text: "The entry first appears in the history inside the window. The first day of history does not count, because every entry appears then.",
+                },
+                Item {
+                    label: "Rising",
+                    text: "Active users rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.",
+                },
+                Item {
+                    label: "Falling",
+                    text: "Active users fell by at least the set share and the set number, over the same two snapshots.",
+                },
+            ],
+            notes: &[
+                "A value missing at either end gives no movement. History shorter than the window gives none, and pages say movement needs more history.",
+            ],
+            rows: rows(movement_rows),
         },
     ]
 }

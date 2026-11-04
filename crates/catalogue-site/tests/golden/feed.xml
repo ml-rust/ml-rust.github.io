@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>Rust ML catalogue: tier changes and new entries</title>
+<id>https://ml-rust.github.io/changes/feed.xml</id>
+<link rel="self" type="application/atom+xml" href="https://ml-rust.github.io/changes/feed.xml"/>
+<link rel="alternate" type="text/html" href="https://ml-rust.github.io/changes/"/>
+<updated>2026-11-04T00:00:00Z</updated>
+<author><name>Rust ML catalogue</name></author>
+<entry>
+<title>Alpha: Listed to Featured</title>
+<id>tag:ml-rust.github.io,2026-11-04:tier-change/alpha</id>
+<link rel="alternate" type="text/html" href="https://ml-rust.github.io/projects/alpha/"/>
+<updated>2026-11-04T00:00:00Z</updated>
+<summary>The check on 2026-11-04 moved Alpha from Listed to Featured.</summary>
+</entry>
+<entry>
+<title>New entry: Delta</title>
+<id>tag:ml-rust.github.io,2026-11-04:tier-change/delta</id>
+<link rel="alternate" type="text/html" href="https://ml-rust.github.io/projects/delta/"/>
+<updated>2026-11-04T00:00:00Z</updated>
+<summary>The check on 2026-11-04 first saw Delta, in tier New.</summary>
+</entry>
+<entry>
+<title>Gamma: Listed to Archived</title>
+<id>tag:ml-rust.github.io,2026-10-28:tier-change/gamma</id>
+<link rel="alternate" type="text/html" href="https://ml-rust.github.io/projects/gamma/"/>
+<updated>2026-10-28T00:00:00Z</updated>
+<summary>The check on 2026-10-28 moved Gamma from Listed to Archived.</summary>
+</entry>
+<entry>
+<title>First check: 1 entry: Listed 1</title>
+<id>tag:ml-rust.github.io,2026-09-01:first-check</id>
+<link rel="alternate" type="text/html" href="https://ml-rust.github.io/changes/"/>
+<updated>2026-09-01T00:00:00Z</updated>
+<summary>The first check on 2026-09-01 placed 1 entry: Listed 1. Later items name each change.</summary>
+</entry>
+</feed>

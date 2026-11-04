@@ -6,6 +6,7 @@ use catalogue_core::{Date, Slug};
 
 use super::family::families;
 use super::family_draft::draft_family;
+use super::related::set_part_of;
 use super::types::{Drafts, ExistingIndex, Mappings};
 use crate::discover::Candidate;
 use crate::dump::{DumpSnapshot, IdMap};
@@ -48,6 +49,8 @@ use crate::usage::Usage;
 /// all lack a usable description, that matches no topic or that has an
 /// invalid or taken slug appears in [`Drafts::skipped`] under the primary's
 /// name with the reason.
+///
+/// A draft gets `part_of` only with evidence: a name match and a shared crate owner.
 pub fn draft_entries(
     snapshot: &DumpSnapshot,
     candidates: &[Candidate],
@@ -79,6 +82,7 @@ pub fn draft_entries(
             Err(reason) => drafts.skipped.push((family.primary.name.clone(), reason)),
         }
     }
+    set_part_of(snapshot, existing, &mut drafts.entries);
     drafts.entries.sort_by(|a, b| a.0.cmp(&b.0));
     drafts.skipped.sort();
     drafts

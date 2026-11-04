@@ -24,6 +24,7 @@ pub struct ExistingIndex {
     crates: HashSet<String>,
     slugs: HashSet<String>,
     repos: HashMap<String, String>,
+    parents: Vec<(Slug, String)>,
 }
 
 impl ExistingIndex {
@@ -38,6 +39,11 @@ impl ExistingIndex {
             for name in &entry.crates {
                 index.crates.insert(name.normalized());
             }
+            if entry.part_of.is_none()
+                && let Some(primary) = entry.crates.first()
+            {
+                index.parents.push((slug.clone(), primary.normalized()));
+            }
         }
         index
     }
@@ -51,7 +57,20 @@ impl ExistingIndex {
             crates: crates.into_iter().map(canonical_crate_name).collect(),
             slugs: slugs.into_iter().map(str::to_owned).collect(),
             repos: HashMap::new(),
+            parents: Vec::new(),
         }
+    }
+
+    /// Records that the entry `slug` has the primary crate `name` and no parent of its own.
+    #[must_use]
+    pub fn with_parent(mut self, slug: Slug, name: &str) -> Self {
+        self.parents.push((slug, canonical_crate_name(name)));
+        self
+    }
+
+    /// The entries that can be a parent: slug and canonical primary crate name.
+    pub(super) fn parents(&self) -> &[(Slug, String)] {
+        &self.parents
     }
 
     /// Records that the entry `slug` holds the repository `key`.

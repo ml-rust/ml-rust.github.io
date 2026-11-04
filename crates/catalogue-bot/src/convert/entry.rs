@@ -245,6 +245,7 @@ pub fn submission(
             crates,
             topics,
             category,
+            part_of: None,
             description: Description {
                 text,
                 source,

@@ -132,7 +132,7 @@ cargo run -p catalogue -- build --no-tiers
 
 - `validate` checks every data file and every rule across files. Run it after any change under `data/`.
 - `build_search_wasm.sh` builds the search wasm files. It needs the wasm-bindgen CLI at the version `Cargo.lock` pins.
-- `build --no-tiers` writes the site to `dist/` without tier data. It replaces `dist/` whole. The build needs either `--report` or `--no-tiers`, and it does not write the search wasm files.
+- `build --no-tiers` writes the site to `dist/` without tier data. It replaces `dist/` whole. The build needs either `--report` or `--no-tiers`, and it does not write the search wasm files. It also writes `changes/feed.xml`, `data/catalogue.json`, `data/README.txt`, `llms.txt`, `sitemap.xml` and `robots.txt`.
 
 ## Deploy
 

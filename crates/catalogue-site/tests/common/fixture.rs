@@ -5,12 +5,12 @@
 use std::collections::BTreeMap;
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, Catalogue, DEPENDENTS_SIGNAL, DataSources, Date, EntryReport,
-    LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA, RUNS_ON_EVIDENCE_SIGNAL,
-    RUNS_ON_SIGNAL, ReasonRecord, Rule, STARS_SIGNAL, SignalFact, Slug, SourceRef, Tier,
-    TierReport, never_counts,
+    CONTRIBUTORS_SIGNAL, Catalogue, DEPENDENTS_SIGNAL, DataSources, Date, EntryReport, FirstSeen,
+    LICENSE_SIGNAL, MeasuredMovement, Movement, NATIVE_CODE_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA,
+    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL, ReasonRecord, Rule, STARS_SIGNAL, SignalFact, Slug,
+    SourceRef, Tier, TierReport, UsersChange, never_counts,
 };
-use catalogue_site::TierChangeRow;
+use catalogue_site::{SiteInputs, TierChangeRow};
 use url::Url;
 
 use crate::build::{render, source, thresholds};
@@ -245,10 +245,26 @@ pub fn files() -> Vec<(String, String)> {
 
 /// Every file of a build over `files` and calibrated thresholds, keyed by path, as UTF-8 text.
 ///
-/// `tiered` adds the tier report. The tier changes go in either way.
+/// `tiered` adds the tier report. The tier changes and the movement go in either way.
 pub fn site(files: &[(String, String)], tiered: bool) -> BTreeMap<String, String> {
+    site_with(files, tiered, &movement())
+}
+
+/// The build of [`site`], with `movement` in place of the fixture's movement.
+pub fn site_with(
+    files: &[(String, String)],
+    tiered: bool,
+    movement: &Movement,
+) -> BTreeMap<String, String> {
     let (catalogue, report) = data(files);
-    render(&catalogue, tiered.then_some(&report), &changes())
+    let changes = changes();
+    render(&SiteInputs {
+        catalogue: &catalogue,
+        report: tiered.then_some(&report),
+        changes: &changes,
+        first_check: Some(first_check()),
+        movement,
+    })
 }
 
 /// The checked catalogue of `files` with calibrated thresholds, and the tier report over it.
@@ -457,8 +473,33 @@ fn report() -> TierReport {
     }
 }
 
+/// The date of the oldest snapshot behind [`changes`].
+pub fn first_check() -> Date {
+    day(9, 1)
+}
+
+/// The movement of a check on 2026-11-04: Delta is new, Alpha rises and Beta falls.
+/// `omega` is an entry the catalogue no longer holds.
+pub fn movement() -> Movement {
+    let users = |name: &str, from, to| UsersChange {
+        slug: slug(name),
+        from,
+        to,
+    };
+    Movement::Measured(MeasuredMovement {
+        newest: day(11, 4),
+        baseline: day(10, 5),
+        new: vec![FirstSeen {
+            slug: slug("delta"),
+            date: day(11, 2),
+        }],
+        rising: vec![users("alpha", 5.0, 9.36), users("omega", 1.0, 90.0)],
+        falling: vec![users("beta", 40.0, 20.5)],
+    })
+}
+
 /// Tier changes, newest first. `omega` is an entry the catalogue no longer holds.
-fn changes() -> Vec<TierChangeRow> {
+pub fn changes() -> Vec<TierChangeRow> {
     let change = |month, on, name: &str, from, to| TierChangeRow {
         date: day(month, on),
         slug: slug(name),
