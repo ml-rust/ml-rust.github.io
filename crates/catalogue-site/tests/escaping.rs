@@ -17,23 +17,71 @@ const HOSTILE: &str = r#"<script>"'&"#;
 /// [`HOSTILE`] as the pages print it.
 const ESCAPED: &str = "&#60;script&#62;&#34;&#39;&#38;";
 
-/// The start of the one script tag the site emits: the search page loads its driver.
-const SEARCH_SCRIPT_TAG: &str = "<script type=\"module\" src=\"/search/search.";
+/// The start of every script tag the site emits.
+const SCRIPT_TAG_START: &str = "<script type=\"module\" src=\"/";
 
-/// Whether `text` holds a `<script` tag other than the search page's own.
+/// The end of every script tag the site emits.
+const SCRIPT_TAG_END: &str = ".js\"></script>";
+
+/// The stem of each script the site emits, before its content hash.
+const SCRIPT_STEMS: [&str; 3] = ["search/search.", "assets/list.", "assets/compare."];
+
+/// The length of the content hash in a script path.
+const HASH_LEN: usize = 8;
+
+/// The length of the allowed script tag at the start of `text`, when one starts there.
+fn allowed_tag_len(text: &str) -> Option<usize> {
+    let path = text.strip_prefix(SCRIPT_TAG_START)?;
+    let stem = SCRIPT_STEMS.iter().find(|stem| path.starts_with(**stem))?;
+    let hashed = &path[stem.len()..];
+    let hash = hashed.get(..HASH_LEN)?;
+    if !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    hashed[HASH_LEN..]
+        .starts_with(SCRIPT_TAG_END)
+        .then_some(SCRIPT_TAG_START.len() + stem.len() + HASH_LEN + SCRIPT_TAG_END.len())
+}
+
+/// Whether `text` holds a `<script` tag other than the exact hashed tags of the site's scripts.
 fn holds_raw_script(text: &str) -> bool {
-    text.replace(SEARCH_SCRIPT_TAG, "").contains("<script")
+    let mut rest = text;
+    while let Some(start) = rest.find("<script") {
+        let Some(len) = allowed_tag_len(&rest[start..]) else {
+            return true;
+        };
+        rest = &rest[start + len..];
+    }
+    false
 }
 
 #[test]
-fn the_script_check_allows_only_the_search_script() {
-    assert!(!holds_raw_script(
-        "<script type=\"module\" src=\"/search/search.0a1b2c3d.js\"></script>"
-    ));
-    assert!(holds_raw_script("<script>alert(1)</script>"));
-    assert!(holds_raw_script(
-        "<script type=\"module\" src=\"/x.js\"></script>"
-    ));
+fn the_script_check_allows_only_the_hashed_script_tags() {
+    for allowed in [
+        "<script type=\"module\" src=\"/search/search.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"/assets/compare.0a1b2c3d.js\"></script>",
+        "a <script type=\"module\" src=\"/assets/list.0a1b2c3d.js\"></script> b \
+         <script type=\"module\" src=\"/search/search.0a1b2c3d.js\"></script> c",
+    ] {
+        assert!(!holds_raw_script(allowed), "{allowed}");
+    }
+    for refused in [
+        "<script>alert(1)</script>",
+        "<script type=\"module\" src=\"/x.js\"></script>",
+        "<script src=\"/assets/list.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"/assets/other.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3z.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3d4.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3d.js\" onload=\"x()\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3d.js\">alert(1)</script>",
+        "<script type=\"module\" src=\"//evil.example/assets/list.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"https://evil.example/assets/list.0a1b2c3d.js\"></script>",
+        "<script type=\"module\" src=\"/assets/list.0a1b2c3d.js\"></script><script>alert(1)</script>",
+    ] {
+        assert!(holds_raw_script(refused), "{refused}");
+    }
 }
 
 #[test]

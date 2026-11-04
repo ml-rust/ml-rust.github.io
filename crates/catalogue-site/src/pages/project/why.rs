@@ -16,6 +16,9 @@ const ARCHIVE_SIGNALS: [&str; 5] = [
     "crate_deleted",
 ];
 
+/// The verdict of a New entry. The block's lead line names the age and the limit.
+const NEW_VERDICT: &str = "The first release is under the age limit for the Featured gates.";
+
 /// The word that names a rule, and the link to it on the rules page.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RuleLink {
@@ -85,6 +88,8 @@ pub(crate) struct Why<'a> {
     pub rules: Vec<RuleLink>,
     /// The sources of the rule inputs.
     pub sources: Vec<SourceNote<'a>>,
+    /// The first lack, with no measured value. `None` when the entry lacks nothing the rule names.
+    pub first_lack: Option<String>,
 }
 
 impl<'a> Why<'a> {
@@ -103,6 +108,7 @@ impl<'a> Why<'a> {
             found: Vec::new(),
             rules: Vec::new(),
             sources: Vec::new(),
+            first_lack: None,
         };
         let mut activity = None;
         for reason in &record.reasons {
@@ -162,6 +168,7 @@ impl<'a> Why<'a> {
             self.lacks.push(WhyLine::new(verbatim(detail), None));
             return;
         };
+        self.first_lack = lacks.first().map(|lack| lack.verdict.clone());
         self.lacks.extend(lacks.into_iter().map(|lack| {
             let rule = lack.dormant.then(RuleLink::dormancy);
             WhyLine::new(lack.sentence, rule)
@@ -242,6 +249,51 @@ impl<'a> Why<'a> {
     }
 }
 
+/// The sentences of the "Why <tier>" block, for a reader away from the page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct WhyText {
+    /// The one line that says why the entry has its tier. It holds no measured value when the
+    /// rule text allows it, so two entries in the same place read the same.
+    pub verdict: String,
+    /// The plain statement that opens the block.
+    pub lead: Vec<String>,
+    /// What the entry meets. Featured only.
+    pub meets: Vec<String>,
+    /// What the entry lacks for Featured.
+    pub lacks: Vec<String>,
+    /// What else the check found.
+    pub found: Vec<String>,
+}
+
+impl WhyText {
+    /// The sentences for `record` of an entry of `kind`.
+    pub(crate) fn of(
+        record: &EntryReport,
+        kind: EntryKind,
+        thresholds: Option<&Thresholds>,
+    ) -> Self {
+        let why = Why::new(record, kind, thresholds);
+        let waits_for_approval = record
+            .reasons
+            .iter()
+            .any(|reason| reason.rule == Rule::FeaturedNeedsOutsideApproval);
+        let lead = why.lead.first().cloned().unwrap_or_default();
+        let verdict = match (record.tier, why.first_lack) {
+            (Tier::New, _) => NEW_VERDICT.to_owned(),
+            (Tier::Listed, Some(lack)) if !waits_for_approval => lack,
+            _ => lead,
+        };
+        let texts = |lines: Vec<WhyLine>| lines.into_iter().map(|line| line.text).collect();
+        Self {
+            verdict,
+            lead: why.lead,
+            meets: texts(why.meets),
+            lacks: texts(why.lacks),
+            found: texts(why.found),
+        }
+    }
+}
+
 /// Whether the value of an instant archive signal is the one that archives.
 fn archive_signal_fired(name: &str, value: Option<&str>) -> bool {
     match name {
@@ -293,6 +345,59 @@ mod tests {
 
     fn texts(lines: &[WhyLine]) -> Vec<&str> {
         lines.iter().map(|line| line.text.as_str()).collect()
+    }
+
+    #[test]
+    fn the_verdict_of_two_listed_entries_with_the_same_lack_reads_the_same() {
+        let verdict = |users: &str| {
+            let detail = format!(
+                "not featured: active_users {users} < 11 and new_adopters {users} < 9; docs missing"
+            );
+            let found = record(
+                Tier::Listed,
+                vec![reason(Rule::Featured, &detail)],
+                Vec::new(),
+            );
+            WhyText::of(&found, EntryKind::Library, None).verdict
+        };
+        assert_eq!(verdict("2"), verdict("5"));
+        assert_eq!(
+            verdict("2"),
+            "It has too few active users and new adopters for Featured."
+        );
+    }
+
+    #[test]
+    fn the_verdict_follows_the_tier() {
+        let of = |tier, reasons| {
+            WhyText::of(&record(tier, reasons, Vec::new()), EntryKind::Library, None).verdict
+        };
+        assert_eq!(
+            of(Tier::Featured, Vec::new()),
+            "It passes every Featured gate."
+        );
+        assert_eq!(of(Tier::New, Vec::new()), NEW_VERDICT);
+        assert_eq!(
+            of(Tier::Listed, Vec::new()),
+            "No archive, New or Featured rule places it, so it is Listed."
+        );
+        assert_eq!(
+            of(
+                Tier::Listed,
+                vec![reason(Rule::FeaturedNeedsOutsideApproval, "needs approval")],
+            ),
+            "It passes the Featured gates and waits for outside approval."
+        );
+        assert_eq!(
+            of(
+                Tier::Listed,
+                vec![reason(
+                    Rule::Featured,
+                    "not featured: dormant and not stable"
+                )],
+            ),
+            "The project is dormant and not finished."
+        );
     }
 
     #[test]

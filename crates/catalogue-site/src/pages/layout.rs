@@ -51,6 +51,8 @@ pub(crate) struct Layout {
     pub favicon: SafeHref,
     /// The main navigation.
     pub nav: Vec<NavLink>,
+    /// The scripts of the page, in load order. Empty on a page with no script.
+    pub scripts: Vec<SafeHref>,
 }
 
 impl Layout {
@@ -70,7 +72,14 @@ impl Layout {
             css,
             favicon,
             nav,
+            scripts: Vec::new(),
         }
+    }
+
+    /// The layout with the module script at `src` added after the ones it holds.
+    pub(crate) fn with_script(mut self, src: SafeHref) -> Self {
+        self.scripts.push(src);
+        self
     }
 }
 

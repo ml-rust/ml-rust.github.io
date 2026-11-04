@@ -230,7 +230,7 @@ fn a_history_shorter_than_the_window_says_movement_needs_more_history() {
     let feed = fs::read_to_string(out.join("changes/feed.xml")).expect("feed");
     assert!(feed.contains("2026-11-01:first-check"), "{feed}");
     let json = fs::read_to_string(out.join("data/catalogue.json")).expect("data file");
-    assert!(json.contains("\"schema\": 1"), "{json}");
+    assert!(json.contains("\"schema\": 2"), "{json}");
 }
 
 #[test]

@@ -1,0 +1,21 @@
+{
+  "schema": 2,
+  "entries": [
+    {
+      "slug": "alpha",
+      "name": "Alpha"
+    },
+    {
+      "slug": "beta",
+      "name": "Beta"
+    },
+    {
+      "slug": "delta",
+      "name": "Delta"
+    },
+    {
+      "slug": "gamma",
+      "name": "Gamma"
+    }
+  ]
+}

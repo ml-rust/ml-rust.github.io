@@ -1,0 +1,120 @@
+{
+  "slug": "alpha",
+  "name": "Alpha",
+  "kind": "library",
+  "repo": "https://github.com/ml-rust/alpha",
+  "description": {
+    "text": "A tensor library.",
+    "source": "crate",
+    "source_url": "https://crates.io/crates/alpha-crate"
+  },
+  "install": {
+    "command": "cargo add alpha-crate",
+    "text": "crates.io",
+    "url": "https://crates.io/crates/alpha-crate"
+  },
+  "docs": "https://docs.rs/alpha-crate",
+  "tier": "featured",
+  "why": {
+    "verdict": "A demotion to Listed waits for approval. The entry stays Featured until a demotion judgment is approved.",
+    "lead": [
+      "A demotion to Listed waits for approval. The entry stays Featured until a demotion judgment is approved."
+    ],
+    "meets": [],
+    "lacks": [
+      "Fails: active users 9 below 11."
+    ],
+    "found": []
+  },
+  "native_word": "Required",
+  "signals": [
+    {
+      "name": "last_release",
+      "label": "Latest release",
+      "value": "2026-09-01",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
+      "name": "active_users",
+      "label": "Active users",
+      "value": "9.36",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
+      "name": "license",
+      "label": "License",
+      "value": "Apache-2.0 OR MIT",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
+      "name": "runs_on",
+      "label": "Runs on",
+      "value": "CUDA, Metal",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
+      "name": "native_code",
+      "label": "Native code",
+      "value": "Binds native code: openssl-sys",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
+      "name": "python_bindings",
+      "label": "Python bindings",
+      "value": "Has Python bindings: alpha-extra needs Python",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
+      "name": "dependents",
+      "label": "Dependents",
+      "value": "12",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
+      "name": "contributors",
+      "label": "Contributors",
+      "value": "38",
+      "source": {
+        "label": "GitHub contributors",
+        "url": "https://github.com/ml-rust/alpha/graphs/contributors"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    }
+  ]
+}

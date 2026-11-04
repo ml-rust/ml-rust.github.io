@@ -39,4 +39,9 @@ impl<'a> CategoryPage<'a> {
             groups,
         }
     }
+
+    /// Whether the page holds a table for the list script.
+    pub(crate) fn uses_list_script(&self) -> bool {
+        !self.groups.is_empty()
+    }
 }

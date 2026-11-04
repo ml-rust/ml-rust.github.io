@@ -57,4 +57,9 @@ impl<'a> FeaturedPage<'a> {
             movement_note: movement_note(inputs),
         }
     }
+
+    /// Whether the page holds a table for the list script.
+    pub(crate) fn uses_list_script(&self) -> bool {
+        !self.groups.is_empty()
+    }
 }

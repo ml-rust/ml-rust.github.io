@@ -5,7 +5,7 @@
 
 use catalogue_core::{
     CrateName, DescriptionSource, EffectiveEntry, EntryKind, EntryReport, ReasonRecord, SignalFact,
-    Slug, Tier,
+    Slug, Thresholds, Tier,
 };
 use serde::Serialize;
 use url::Url;
@@ -14,12 +14,13 @@ use crate::build::OutputFile;
 use crate::error::SiteError;
 use crate::href::SafeHref;
 use crate::inputs::SiteInputs;
+use crate::pages::{ChoiceText, WhyText, docs_href, install_line};
 
 /// The path of the file below the site root.
 pub(crate) const CATALOGUE_FILE: &str = "data/catalogue.json";
 
 /// The version of the file format. A change to any field raises it.
-pub(crate) const CATALOGUE_SCHEMA: u32 = 1;
+pub(crate) const CATALOGUE_SCHEMA: u32 = 2;
 
 /// The license of the data.
 pub(crate) const DATA_LICENSE: &str = "CC-BY-4.0";
@@ -36,31 +37,63 @@ struct CatalogueFile<'a> {
 }
 
 #[derive(Debug, Serialize)]
-struct EntryRecord<'a> {
-    slug: &'a Slug,
-    name: &'a str,
-    kind: EntryKind,
-    repo: Option<String>,
+pub(super) struct EntryRecord<'a> {
+    pub(super) slug: &'a Slug,
+    pub(super) name: &'a str,
+    pub(super) kind: EntryKind,
+    pub(super) repo: Option<String>,
     crates: &'a [CrateName],
     topics: &'a [Slug],
     category: Option<&'a Slug>,
     part_of: Option<&'a Slug>,
-    description: DescriptionRecord<'a>,
-    tier: Option<Tier>,
+    pub(super) description: DescriptionRecord<'a>,
+    pub(super) install: InstallRecord,
+    pub(super) docs: Option<String>,
+    pub(super) tier: Option<Tier>,
+    pub(super) why: Option<WhyRecord>,
+    pub(super) native_word: String,
     reasons: &'a [ReasonRecord],
-    signals: Vec<SignalRecord<'a>>,
+    pub(super) signals: Vec<SignalRecord<'a>>,
 }
 
 #[derive(Debug, Serialize)]
-struct DescriptionRecord<'a> {
+pub(super) struct InstallRecord {
+    command: Option<String>,
+    text: &'static str,
+    url: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct WhyRecord {
+    verdict: String,
+    lead: Vec<String>,
+    meets: Vec<String>,
+    lacks: Vec<String>,
+    found: Vec<String>,
+}
+
+impl From<WhyText> for WhyRecord {
+    fn from(text: WhyText) -> Self {
+        Self {
+            verdict: text.verdict,
+            lead: text.lead,
+            meets: text.meets,
+            lacks: text.lacks,
+            found: text.found,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct DescriptionRecord<'a> {
     text: &'a str,
     source: DescriptionSource,
     source_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
-struct SignalRecord<'a> {
-    name: &'a str,
+pub(super) struct SignalRecord<'a> {
+    pub(super) name: &'a str,
     label: &'a str,
     value: Option<&'a str>,
     source: Option<SourceRecord<'a>>,
@@ -69,14 +102,18 @@ struct SignalRecord<'a> {
 }
 
 #[derive(Debug, Serialize)]
-struct SourceRecord<'a> {
+pub(super) struct SourceRecord<'a> {
     label: &'a str,
     url: Option<String>,
 }
 
 /// The text of `url`, or `None` when [`SafeHref`] refuses it.
 fn safe_url(url: &Url) -> Option<String> {
-    let href = SafeHref::from(url);
+    href_text(&SafeHref::from(url))
+}
+
+/// The text of `href`, or `None` when it is refused.
+fn href_text(href: &SafeHref) -> Option<String> {
     (!href.is_refused()).then(|| href.as_str().to_owned())
 }
 
@@ -105,8 +142,13 @@ impl<'a> SignalRecord<'a> {
 }
 
 impl<'a> EntryRecord<'a> {
-    fn of(effective: &EffectiveEntry<'a>, record: Option<&'a EntryReport>) -> Self {
+    fn of(
+        effective: &EffectiveEntry<'a>,
+        record: Option<&'a EntryReport>,
+        thresholds: Option<&Thresholds>,
+    ) -> Self {
         let entry = effective.entry;
+        let install = install_line(entry);
         Self {
             slug: effective.slug,
             name: &entry.name,
@@ -121,7 +163,15 @@ impl<'a> EntryRecord<'a> {
                 source: entry.description.source,
                 source_url: entry.description.source_url.as_ref().and_then(safe_url),
             },
+            install: InstallRecord {
+                command: install.command,
+                text: install.text,
+                url: href_text(&install.href),
+            },
+            docs: docs_href(entry).as_ref().and_then(href_text),
             tier: record.map(|record| record.tier),
+            why: record.map(|record| WhyText::of(record, entry.kind, thresholds).into()),
+            native_word: ChoiceText::of(record).native_code.short,
             reasons: record
                 .map(|record| record.reasons.as_slice())
                 .unwrap_or_default(),
@@ -132,44 +182,64 @@ impl<'a> EntryRecord<'a> {
     }
 }
 
-/// The data file of `inputs`. The same inputs give the same bytes.
+/// Every entry of `inputs` as the data files print it, sorted by slug.
+pub(super) fn entry_records<'a>(inputs: &SiteInputs<'a>) -> Vec<EntryRecord<'a>> {
+    let catalogue = inputs.catalogue;
+    let report = inputs.report;
+    catalogue
+        .entries()
+        .keys()
+        .filter_map(|slug| catalogue.effective(slug))
+        .map(|effective| {
+            let record = report.and_then(|report| report.entries.get(effective.slug));
+            EntryRecord::of(&effective, record, catalogue.thresholds())
+        })
+        .collect()
+}
+
+/// `value` as the JSON file at `path`.
 ///
 /// `<`, `>` and `&` are written as `\u` escapes, so the file is safe to embed in a page.
 ///
 /// # Errors
 ///
 /// Returns [`SiteError::Encode`] when the JSON fails to encode.
+pub(super) fn json_file(path: String, value: &impl Serialize) -> Result<OutputFile, SiteError> {
+    let text = match serde_json::to_string_pretty(value) {
+        Ok(text) => text,
+        Err(source) => return Err(SiteError::Encode { path, source }),
+    };
+    let mut escaped = String::with_capacity(text.len() + 1);
+    for character in text.chars() {
+        match character {
+            '<' => escaped.push_str("\\u003c"),
+            '>' => escaped.push_str("\\u003e"),
+            '&' => escaped.push_str("\\u0026"),
+            other => escaped.push(other),
+        }
+    }
+    escaped.push('\n');
+    Ok(OutputFile {
+        path,
+        bytes: escaped.into_bytes(),
+    })
+}
+
+/// The data file of `inputs`. The same inputs give the same bytes.
+///
+/// # Errors
+///
+/// Returns [`SiteError::Encode`] when the JSON fails to encode.
 pub(crate) fn catalogue_file(inputs: &SiteInputs<'_>) -> Result<OutputFile, SiteError> {
-    let catalogue = inputs.catalogue;
     let report = inputs.report;
-    let entries = catalogue
-        .entries()
-        .keys()
-        .filter_map(|slug| catalogue.effective(slug))
-        .map(|effective| {
-            let record = report.and_then(|report| report.entries.get(effective.slug));
-            EntryRecord::of(&effective, record)
-        })
-        .collect();
     let file = CatalogueFile {
         schema: CATALOGUE_SCHEMA,
         generated: report.map(|report| report.generated.to_string()),
         license: DATA_LICENSE,
         thresholds_version: report.map(|report| report.thresholds_version),
-        entries,
+        entries: entry_records(inputs),
     };
-    let text = serde_json::to_string_pretty(&file).map_err(|source| SiteError::Encode {
-        path: CATALOGUE_FILE,
-        source,
-    })?;
-    let escaped = text
-        .replace('<', "\\u003c")
-        .replace('>', "\\u003e")
-        .replace('&', "\\u0026");
-    Ok(OutputFile {
-        path: CATALOGUE_FILE.to_owned(),
-        bytes: format!("{escaped}\n").into_bytes(),
-    })
+    json_file(CATALOGUE_FILE.to_owned(), &file)
 }
 
 #[cfg(test)]
@@ -227,6 +297,12 @@ mod tests {
         assert_eq!(core["description"]["source"], "human");
         assert_eq!(core["description"]["source_url"], Value::Null);
         assert_eq!(core["tier"], "featured");
+        assert_eq!(core["install"]["command"], "cargo add core");
+        assert_eq!(core["install"]["text"], "crates.io");
+        assert_eq!(core["install"]["url"], "https://crates.io/crates/core");
+        assert_eq!(core["docs"], "https://docs.rs/core");
+        assert_eq!(core["native_word"], "Not measured");
+        assert_eq!(core["why"]["lead"][0], "It passes every Featured gate.");
         assert!(core["reasons"].as_array().expect("reasons").is_empty());
         let signal = &core["signals"][0];
         assert_eq!(signal["name"], "active_users");
@@ -259,6 +335,7 @@ mod tests {
         assert_eq!(value["thresholds_version"], Value::Null);
         let alpha = &value["entries"][0];
         assert_eq!(alpha["tier"], Value::Null);
+        assert_eq!(alpha["why"], Value::Null);
         assert!(alpha["reasons"].as_array().expect("reasons").is_empty());
         assert!(alpha["signals"].as_array().expect("signals").is_empty());
     }

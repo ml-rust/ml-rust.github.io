@@ -94,7 +94,11 @@ Each entry
 - category: the category id, or null.
 - part_of: the slug of the bigger project this entry belongs to, or null.
 - description: text, source (readme, crate, human or repo) and source_url, or null.
+- install: how to get the project, as command (or null), text and url, as the entry page shows it.
+- docs: the docs link the entry page shows, or null.
 - tier: featured, listed, new or archived. Null when tiers are not published.
+- why: the sentences of the Why block of the entry page, as verdict, lead, meets, lacks and found. The verdict is the one line that says why the entry has its tier. Null when tiers are not published.
+- native_word: the word a list prints for the native code fact: Required, Optional, None found, Build tool or Not measured.
 - reasons: each rule outcome, as rule and detail.
 - signals: every signal of the check.
 
@@ -105,6 +109,10 @@ Each signal
 - source: label and url of the page that holds the value. Null when not measured.
 - fetched: the date of the data behind the value. Null when not measured.
 - counts_toward_tier: whether a tier rule reads the value.
+
+Smaller files for the compare page
+- {SITE_URL}/data/compare/index.json: slug and name of every entry, sorted by slug.
+- {SITE_URL}/data/compare/<slug>.json: one entry, holding the same values as its record in the file above. It leaves out crates, topics, category, part_of and reasons, and it holds only the signals the compare page shows.
 "
         ),
     )

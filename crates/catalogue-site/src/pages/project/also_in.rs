@@ -1,6 +1,6 @@
 //! Other entries that share a topic with one entry, as rows that compare with it.
 //!
-//! A shared topic is the whole claim. The section says "Also in" and nothing about similarity.
+//! A shared topic is the whole claim behind the section heading. The table caption says so.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -41,18 +41,24 @@ pub(crate) fn also_in<'a>(
     let slugs: Vec<&'a Slug> = shared.keys().copied().collect();
     let heads = family_heads(catalogue, inputs.report, &slugs);
     let picked = fair_share(&heads, &shared, effective.topics);
+    let jobs: BTreeSet<&Slug> = picked
+        .iter()
+        .filter_map(|slug| shared.get(slug).copied())
+        .collect();
     heads
         .into_iter()
         .filter(|head| picked.contains(head.slug))
         .filter_map(|head| {
+            let found = row(inputs, head.slug)?.with_family(
+                movement_word(inputs, head.slug),
+                RelatedLink::of(head.slug, head.related),
+            );
+            // Rows from one job need no line each: the page already names that job.
+            if jobs.len() < 2 {
+                return Some(found);
+            }
             let topic = topic_link(catalogue, shared.get(head.slug)?)?;
-            let row = row(inputs, head.slug)?
-                .with_family(
-                    movement_word(inputs, head.slug),
-                    RelatedLink::of(head.slug, head.related),
-                )
-                .with_also_in(topic);
-            Some(row)
+            Some(found.with_also_in(topic))
         })
         .collect()
 }
@@ -256,6 +262,20 @@ mod tests {
             .collect();
         assert_eq!(topics, [("both", "Two"), ("only-one", "One")]);
         assert!(rows.iter().all(|row| row.badge.is_none()));
+    }
+
+    #[test]
+    fn rows_from_one_job_drop_the_line_that_names_it() {
+        let data = catalogue(vec![
+            entry("page", "\"one\", \"two\""),
+            entry("first", "\"one\""),
+            entry("second", "\"one\""),
+        ]);
+        let slug = Slug::new("page").expect("slug");
+        let effective = data.effective(&slug).expect("entry");
+        let rows = also_in(&inputs(&data, None), &effective);
+        assert_eq!(rows.len(), 2);
+        assert!(rows.iter().all(|row| row.also_in.is_none()));
     }
 
     #[test]

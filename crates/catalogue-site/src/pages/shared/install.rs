@@ -4,6 +4,18 @@ use catalogue_core::{Entry, EntryKind, crate_page, docker_page, homebrew_page, r
 
 use crate::href::SafeHref;
 
+/// The site that hosts the docs of every crate.
+const DOCS_HOST: &str = "https://docs.rs/";
+
+/// The docs of `entry`: docs.rs for a library's primary crate. `None` for any other entry.
+pub(crate) fn docs_href(entry: &Entry) -> Option<SafeHref> {
+    entry
+        .crates
+        .first()
+        .filter(|_| entry.kind == EntryKind::Library)
+        .map(|name| SafeHref::new(&format!("{DOCS_HOST}{name}")))
+}
+
 /// One way to get a project.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct InstallLine {

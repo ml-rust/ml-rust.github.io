@@ -15,3 +15,4 @@ mod tier;
 mod why;
 
 pub(crate) use page::ProjectPage;
+pub(crate) use why::WhyText;

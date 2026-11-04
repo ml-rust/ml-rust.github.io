@@ -197,19 +197,24 @@ fn a_build_without_a_report_reads_not_measured_and_shows_no_tier() {
 }
 
 #[test]
-fn the_section_names_the_shared_topic_and_nothing_more() {
+fn the_section_compares_with_one_link_and_names_a_single_job_once() {
     let site = tiered();
     in_order(
         &site[ALPHA],
         &[
-            "<h2 id=\"also-in\">Also in these topics</h2>",
+            "<h2 id=\"also-in\">Compare with similar projects</h2>",
+            "beside the projects that share a topic with it",
             "<a class=\"row-name\" href=\"/projects/alpha/\" aria-current=\"page\">Alpha</a> <span class=\"row-tag\">This page</span>",
             "<a class=\"row-name\" href=\"/projects/delta/\">Delta</a>",
-            "Also in <a href=\"/topics/tensors/\">Tensors</a>.",
             "<a class=\"row-name\" href=\"/projects/gamma/\">Gamma</a>",
-            "Also in <a href=\"/topics/tensors/\">Tensors</a>.",
+            "<a href=\"/compare/?p=alpha,delta,gamma\">Compare these",
             "<a href=\"/topics/tensors/\">All projects in Tensors",
         ],
+    );
+    assert!(
+        !site[ALPHA].contains("Also in"),
+        "every row comes from one job: {}",
+        site[ALPHA]
     );
     let page = &site[BETA];
     assert!(

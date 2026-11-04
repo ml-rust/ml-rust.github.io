@@ -48,7 +48,7 @@ pub enum SiteError {
     )]
     Encode {
         /// The output path of the file.
-        path: &'static str,
+        path: String,
         /// The JSON error.
         #[source]
         source: serde_json::Error,

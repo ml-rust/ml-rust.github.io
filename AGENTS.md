@@ -10,7 +10,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-bot`: issue form parsing, data file drafts, check reports, the labels file and its sync plan, the pure parts of the link check. Pure: no IO, network, clock or env.
 - `crates/catalogue-github`: the bot's GitHub App client: private key, App JWT, installation tokens, REST calls. Keys and tokens never reach logs, errors or disk.
 - `crates/catalogue-triage`: the bot's advisory LLM link check: provider fallback, Ollama `web_fetch` reads, GitHub page reads. The bot host NEVER fetches an evidence link itself.
-- `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks, the feed, `data/catalogue.json`, `llms.txt`, sitemap and robots. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off.
+- `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks, the feed, `data/catalogue.json`, `data/compare/`, `llms.txt`, sitemap, robots and the page scripts. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off. A page stays complete without scripts: a script adds its own controls and NEVER sets `innerHTML`.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `deploy/`: systemd units and scripts for the bot VM. Secrets live only on the VM, under `/etc/catalogue-bot/`.
 - `data/`: entries, judgments, maintainers, topics, categories, backends, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).

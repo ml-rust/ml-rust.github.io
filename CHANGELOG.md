@@ -8,6 +8,8 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Added
 
+- Sort and filter on list pages, copy buttons on install lines.
+- `/compare/`: up to 4 projects side by side.
 - `catalogue validate`: checks every data file and the rules across files.
 - `catalogue build`: builds the static site from the data files.
 - Tier engine and `data/thresholds.toml`: published rules that place each entry in a tier.
@@ -47,6 +49,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Changed
 
+- Data file schema 2: adds install lines, docs links and plain tier reasons.
 - New site theme on every page. Project pages explain each tier and compare neighbours.
 - The New tier now means a recent first release only.
 - Row facts state only what the check found, and native code reads deeper dependencies.

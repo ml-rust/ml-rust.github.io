@@ -36,8 +36,8 @@ pub use entry::{
     MAX_DESCRIPTION_CHARS,
 };
 pub use ids::{
-    CommitSha, CrateName, GithubLogin, IdError, Slug, canonical_crate_name, is_github_repo_name,
-    normalize_repo_url, push_canonical_crate_name,
+    CommitSha, CrateName, GithubLogin, IdError, RESERVED_ENTRY_SLUG, Slug, canonical_crate_name,
+    is_github_repo_name, normalize_repo_url, push_canonical_crate_name,
 };
 pub use intake::{description_text, entry_name, is_generic_repo_name, repo_entry_name, repo_link};
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};

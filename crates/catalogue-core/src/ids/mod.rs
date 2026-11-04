@@ -14,4 +14,4 @@ pub use error::IdError;
 pub use login::GithubLogin;
 pub use repo_name::is_github_repo_name;
 pub use repo_url::normalize_repo_url;
-pub use slug::Slug;
+pub use slug::{RESERVED_ENTRY_SLUG, Slug};

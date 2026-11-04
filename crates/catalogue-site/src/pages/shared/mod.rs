@@ -9,6 +9,7 @@ mod entry_row;
 mod examples;
 mod install;
 mod labels;
+mod license_family;
 mod list_head;
 mod listing;
 mod movement;
@@ -29,7 +30,7 @@ pub(crate) use entry_row::{
     DORMANT, DORMANT_MEANING, EntryRow, RelatedLink, row_statuses, tier_of,
 };
 pub(crate) use examples::{ExampleSearch, example_searches};
-pub(crate) use install::{InstallLine, install_line};
+pub(crate) use install::{InstallLine, docs_href, install_line};
 pub(crate) use labels::{kind_name, project_kind_name, status_name, tier_name};
 pub(crate) use list_head::{ListHead, checked_dates};
 pub(crate) use listing::{EntryGroup, featured_rows, featured_slugs, group_entries, project_count};
@@ -38,8 +39,8 @@ pub(crate) use order::{
     FamilyHead, family_heads, featured_order_text, order_text, strongest_first,
 };
 pub(crate) use paths::{
-    EvidenceLink, NamedLink, category_file, category_href, category_link, entry_link, project_file,
-    project_href, topic_file, topic_href, topic_link,
+    EvidenceLink, NamedLink, category_file, category_href, category_link, compare_href, entry_link,
+    project_file, project_href, topic_file, topic_href, topic_link,
 };
 pub(crate) use tier_help::{FEATURED_MEANING, TierLine, tier_lines};
 pub(crate) use topic_card::{TopicCard, topic_cards};

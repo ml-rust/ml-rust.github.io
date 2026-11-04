@@ -48,6 +48,17 @@ impl EvidenceLink {
     }
 }
 
+/// The most projects the compare page shows, and the most a list can select.
+pub(crate) const COMPARE_LIMIT: usize = 4;
+
+/// The link to the compare page over the first [`COMPARE_LIMIT`] of `slugs`.
+///
+/// A slug holds only letters, digits and `-`, so the query needs no encoding.
+pub(crate) fn compare_href<'s>(slugs: impl IntoIterator<Item = &'s str>) -> SafeHref {
+    let picked: Vec<&str> = slugs.into_iter().take(COMPARE_LIMIT).collect();
+    SafeHref::new(&format!("/compare/?p={}", picked.join(",")))
+}
+
 /// The file of the page of entry `slug`, below the site root.
 pub(crate) fn project_file(slug: &Slug) -> String {
     format!("projects/{slug}/index.html")
@@ -115,6 +126,18 @@ pub(crate) fn topic_link<'a>(catalogue: &'a Catalogue, id: &Slug) -> Option<Name
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_compare_link_takes_the_first_four_slugs_in_order() {
+        assert_eq!(
+            compare_href(["burn", "candle", "tch-rs"]).as_str(),
+            "/compare/?p=burn,candle,tch-rs"
+        );
+        assert_eq!(
+            compare_href(["a", "b", "c", "d", "e", "f"]).as_str(),
+            "/compare/?p=a,b,c,d"
+        );
+    }
 
     fn slug(text: &str) -> Slug {
         Slug::new(text).expect("slug")

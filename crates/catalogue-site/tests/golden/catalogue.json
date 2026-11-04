@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "generated": "2026-11-04",
   "license": "CC-BY-4.0",
   "thresholds_version": 3,
@@ -23,7 +23,25 @@
         "source": "crate",
         "source_url": "https://crates.io/crates/alpha-crate"
       },
+      "install": {
+        "command": "cargo add alpha-crate",
+        "text": "crates.io",
+        "url": "https://crates.io/crates/alpha-crate"
+      },
+      "docs": "https://docs.rs/alpha-crate",
       "tier": "featured",
+      "why": {
+        "verdict": "A demotion to Listed waits for approval. The entry stays Featured until a demotion judgment is approved.",
+        "lead": [
+          "A demotion to Listed waits for approval. The entry stays Featured until a demotion judgment is approved."
+        ],
+        "meets": [],
+        "lacks": [
+          "Fails: active users 9 below 11."
+        ],
+        "found": []
+      },
+      "native_word": "Required",
       "reasons": [
         {
           "rule": "expected-interval",
@@ -175,7 +193,27 @@
         "source": "readme",
         "source_url": "https://github.com/ml-rust/beta#readme"
       },
+      "install": {
+        "command": "brew install beta",
+        "text": "Homebrew",
+        "url": "https://formulae.brew.sh/formula/beta"
+      },
+      "docs": null,
       "tier": "listed",
+      "why": {
+        "verdict": "It passes the Featured gates and waits for outside approval.",
+        "lead": [
+          "It passes the Featured gates and waits for outside approval."
+        ],
+        "meets": [],
+        "lacks": [
+          "A featured-approval judgment from a maintainer outside the organization. It passes every other Featured gate."
+        ],
+        "found": [
+          "Dormant 400 days with no rot signal."
+        ]
+      },
+      "native_word": "Not measured",
       "reasons": [
         {
           "rule": "finished",
@@ -256,7 +294,24 @@
         "source": "human",
         "source_url": null
       },
+      "install": {
+        "command": "cargo add delta",
+        "text": "crates.io",
+        "url": "https://crates.io/crates/delta"
+      },
+      "docs": "https://docs.rs/delta",
       "tier": "new",
+      "why": {
+        "verdict": "The first release is under the age limit for the Featured gates.",
+        "lead": [
+          "First release 30 days ago, under 180.",
+          "The check tests the Featured gates once the first release passes this age limit."
+        ],
+        "meets": [],
+        "lacks": [],
+        "found": []
+      },
+      "native_word": "Not measured",
       "reasons": [
         {
           "rule": "new",
@@ -317,7 +372,23 @@
         "source": "human",
         "source_url": null
       },
+      "install": {
+        "command": "cargo add gamma",
+        "text": "crates.io",
+        "url": "https://crates.io/crates/gamma"
+      },
+      "docs": "https://docs.rs/gamma",
       "tier": "archived",
+      "why": {
+        "verdict": "The repository is archived.",
+        "lead": [
+          "The repository is archived."
+        ],
+        "meets": [],
+        "lacks": [],
+        "found": []
+      },
+      "native_word": "Not measured",
       "reasons": [
         {
           "rule": "instant-archive",

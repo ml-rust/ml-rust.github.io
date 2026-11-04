@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Compare projects{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+{% block content %}
+<h1>Compare projects</h1>
+<p class="lede">See up to 4 projects side by side, with one row per fact. The table marks the rows where the values differ and marks no value as best. The catalogue publishes no combined judgement.</p>
+<noscript>
+<p>The comparison runs in your browser and needs JavaScript. Each <a href="/topics/">job page</a> lists the same facts in one table.</p>
+</noscript>
+<p class="search-status" id="compare-status" role="status"></p>
+<ul class="compare-notes" id="compare-notes" hidden></ul>
+<div id="compare-view"></div>
+{% endblock %}

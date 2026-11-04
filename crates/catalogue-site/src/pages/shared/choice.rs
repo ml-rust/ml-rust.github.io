@@ -1,12 +1,14 @@
-//! The facts a person reads to choose a project, as text for rows and the at-a-glance list.
+//! The facts a person reads to choose a project, as text for list rows and the data files.
 
 use catalogue_core::amount_text::whole;
 use catalogue_core::{
     ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, EntryReport, LICENSE_SIGNAL,
-    NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_SIGNAL,
+    NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_SEPARATOR,
+    RUNS_ON_SIGNAL,
 };
 
 use super::date_text::date_text;
+use super::license_family::license_family;
 
 /// The id of the latest release fact.
 const LATEST_RELEASE_SIGNAL: &str = "last_release";
@@ -34,6 +36,12 @@ const OPTIONAL: &str = "Optional";
 
 /// The word a row tag prints for a project with Python bindings.
 const PYTHON_BINDINGS: &str = "Python bindings";
+
+/// The value of a measured project where the check finds no Python binding crate.
+const NO_PYTHON_CRATE: &str = "No Python binding crate found";
+
+/// What separates the values of a data attribute that holds several.
+const VALUE_SEPARATOR: &str = "|";
 
 /// The short form of a value that states the check found nothing.
 const NONE_FOUND: &str = "None found";
@@ -128,6 +136,14 @@ pub(crate) struct ChoiceText {
     pub dependents: Option<String>,
     /// The contributors for a data attribute. `None` when not measured.
     pub contributors: Option<String>,
+    /// The GPU backends for a data attribute, joined by `|`.
+    pub gpu_values: String,
+    /// The license family for a data attribute.
+    pub license_family: &'static str,
+    /// The Python bindings state for a data attribute.
+    pub python_state: &'static str,
+    /// The dormancy state for a data attribute.
+    pub dormancy: &'static str,
 }
 
 impl ChoiceText {
@@ -153,7 +169,43 @@ impl ChoiceText {
             users,
             dependents: whole_value(record, DEPENDENTS_SIGNAL),
             contributors: whole_value(record, CONTRIBUTORS_SIGNAL),
+            gpu_values: gpu_values(value(RUNS_ON_SIGNAL)),
+            license_family: license_family(value(LICENSE_SIGNAL)),
+            python_state: python_state(value(PYTHON_SIGNAL)),
+            dormancy: dormancy(record),
         }
+    }
+}
+
+/// The values of the runs-on `value` for a data attribute: each backend, or the one word for no
+/// backend. A value not measured counts as neither.
+fn gpu_values(value: Option<&str>) -> String {
+    match value {
+        None => NOT_MEASURED.to_owned(),
+        Some(NO_GPU_FEATURE) => NONE_FOUND.to_owned(),
+        Some(names) => names.replace(RUNS_ON_SEPARATOR, VALUE_SEPARATOR),
+    }
+}
+
+/// The state of the Python `value` for a data attribute.
+///
+/// Only the exact wording of a found-nothing check reads as none found. Any other value that
+/// names no bindings reads as not measured.
+fn python_state(value: Option<&str>) -> &'static str {
+    match value {
+        Some(text) if text.starts_with(HAS_PYTHON) => PYTHON_BINDINGS,
+        Some(NO_PYTHON_CRATE) => NONE_FOUND,
+        _ => NOT_MEASURED,
+    }
+}
+
+/// The dormancy of `record` for a data attribute. A finished project is stable, not dormant.
+fn dormancy(record: Option<&EntryReport>) -> &'static str {
+    match record {
+        Some(found) if found.stable => "stable",
+        Some(found) if found.dormant == Some(true) => "dormant",
+        Some(found) if found.dormant == Some(false) => "active",
+        _ => "not-measured",
     }
 }
 
@@ -326,6 +378,38 @@ mod tests {
             native_fact("Other wording"),
             CellFact::plain("Other wording")
         );
+    }
+
+    #[test]
+    fn the_gpu_values_hold_each_backend_and_keep_the_two_other_answers_apart() {
+        assert_eq!(gpu_values(Some("CUDA, Metal")), "CUDA|Metal");
+        assert_eq!(gpu_values(Some("CUDA")), "CUDA");
+        assert_eq!(gpu_values(Some(NO_GPU_FEATURE)), NONE_FOUND);
+        assert_eq!(gpu_values(None), NOT_MEASURED);
+    }
+
+    #[test]
+    fn the_python_state_never_turns_a_missing_value_into_an_answer() {
+        assert_eq!(
+            python_state(Some("Has Python bindings: a needs Python")),
+            PYTHON_BINDINGS
+        );
+        assert_eq!(python_state(Some(NO_PYTHON_CRATE)), NONE_FOUND);
+        assert_eq!(python_state(None), NOT_MEASURED);
+        assert_eq!(python_state(Some("Other wording")), NOT_MEASURED);
+    }
+
+    #[test]
+    fn the_dormancy_keeps_stable_and_unknown_apart_from_dormant() {
+        let mut found = record(Vec::new());
+        assert_eq!(dormancy(None), "not-measured");
+        assert_eq!(dormancy(Some(&found)), "not-measured");
+        found.dormant = Some(false);
+        assert_eq!(dormancy(Some(&found)), "active");
+        found.dormant = Some(true);
+        assert_eq!(dormancy(Some(&found)), "dormant");
+        found.stable = true;
+        assert_eq!(dormancy(Some(&found)), "stable");
     }
 
     #[test]

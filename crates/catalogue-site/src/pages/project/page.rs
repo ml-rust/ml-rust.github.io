@@ -16,7 +16,8 @@ use crate::href::SafeHref;
 use crate::inputs::SiteInputs;
 use crate::pages::layout::Layout;
 use crate::pages::shared::{
-    EntryRow, NamedLink, entry_link, movement_note, order_text, strongest_first, topic_link,
+    EntryRow, NamedLink, compare_href, entry_link, movement_note, order_text, strongest_first,
+    topic_link,
 };
 
 /// The page of one entry.
@@ -47,6 +48,8 @@ pub(crate) struct ProjectPage<'a> {
     pub correction_href: SafeHref,
     /// This entry and the others that share a topic, strongest first after this entry.
     pub compare: Vec<EntryRow<'a>>,
+    /// The link to the compare page over the first rows of `compare`. `None` without rows.
+    pub compare_link: Option<SafeHref>,
     /// The topics of the entry that the comparison links in full.
     pub compare_topics: Vec<NamedLink<'a>>,
     /// The entries that name this one in `part_of`, strongest first.
@@ -73,6 +76,7 @@ impl<'a> ProjectPage<'a> {
         });
         let record = found.map(|(_, record)| record);
         let archived = record.is_some_and(|record| record.tier == Tier::Archived);
+        let compare = compare_rows(inputs, effective);
         Self {
             layout,
             header: Header::new(inputs, effective, record),
@@ -95,7 +99,9 @@ impl<'a> ProjectPage<'a> {
                 .map(|&(issue, judgment)| JudgmentRow::new(catalogue, issue, judgment))
                 .collect(),
             correction_href: CORRECTNESS_FORM.new_issue_href(),
-            compare: compare_rows(inputs, effective),
+            compare_link: (!compare.is_empty())
+                .then(|| compare_href(compare.iter().map(|row| row.slug.as_str()))),
+            compare,
             compare_topics: effective
                 .topics
                 .iter()
@@ -108,5 +114,10 @@ impl<'a> ProjectPage<'a> {
             order: order_text(report),
             movement_note: movement_note(inputs),
         }
+    }
+
+    /// Whether the page holds what the list script works on: a table to sort or a command to copy.
+    pub(crate) fn uses_list_script(&self) -> bool {
+        !self.compare.is_empty() || self.action.install.command.is_some()
     }
 }

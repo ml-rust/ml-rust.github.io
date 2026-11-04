@@ -7,6 +7,10 @@ use super::error::IdError;
 
 const MAX_LEN: usize = 64;
 
+/// The slug no entry can take. The site writes its compare index to the file an entry with this
+/// slug needs: `data/compare/index.json`.
+pub const RESERVED_ENTRY_SLUG: &str = "index";
+
 /// A lowercase kebab-case identifier, 1 to 64 characters.
 ///
 /// Matches `^[a-z0-9]+(-[a-z0-9]+)*$`.

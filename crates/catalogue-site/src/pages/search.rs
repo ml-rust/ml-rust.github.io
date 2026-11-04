@@ -13,7 +13,6 @@ use super::layout::Layout;
 use super::shared::{
     ExampleSearch, TopicCard, example_searches, kind_name, tier_name, topic_cards,
 };
-use crate::href::SafeHref;
 use crate::search::{
     CATEGORY_TAG, KIND_TAG, LICENSE_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, RUNS_ON_TAG,
     TIER_TAG, TOPIC_TAG, is_stated_license, license_value,
@@ -30,8 +29,6 @@ const ORG_COMMUNITY_LABEL: &str = "Community";
 pub(crate) struct SearchPage<'a> {
     /// The shared layout.
     pub layout: Layout,
-    /// The link to the search script.
-    pub script: SafeHref,
     /// The filter groups, in display order.
     pub groups: Vec<FilterGroup<'a>>,
     /// One tile per top-level topic, for the empty and no-result states.
@@ -63,13 +60,12 @@ pub(crate) struct FilterOption<'a> {
 }
 
 impl<'a> SearchPage<'a> {
-    /// The search page in `layout`, loading the script at `script`.
+    /// The search page in `layout`.
     ///
     /// The groups are kind, topic, category, license, runs on, tier and organization.
     /// The license, runs-on and tier groups are left out without `report`.
     pub(crate) fn new(
         layout: Layout,
-        script: SafeHref,
         catalogue: &'a Catalogue,
         report: Option<&TierReport>,
     ) -> Self {
@@ -104,7 +100,6 @@ impl<'a> SearchPage<'a> {
         groups.push(group(ORG_TAG, "Organization", orgs));
         Self {
             layout,
-            script,
             groups,
             topics: topic_cards(catalogue, report),
             examples: example_searches(),

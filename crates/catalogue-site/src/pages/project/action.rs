@@ -1,13 +1,10 @@
 //! The action panel of an entry page: how to get the project and where to read about it.
 
-use catalogue_core::{Entry, EntryKind};
+use catalogue_core::Entry;
 
 use super::links::{LinkRow, link_rows};
 use crate::href::SafeHref;
-use crate::pages::shared::{InstallLine, install_line};
-
-/// The site that hosts the docs of every crate.
-const DOCS_HOST: &str = "https://docs.rs/";
+use crate::pages::shared::{InstallLine, docs_href, install_line};
 
 /// A link that prints as a button.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,14 +39,10 @@ impl<'a> ActionPanel<'a> {
             label: "Repository",
             href: SafeHref::from(&entry.repo),
         };
-        let docs = entry
-            .crates
-            .first()
-            .filter(|_| entry.kind == EntryKind::Library)
-            .map(|name| ActionButton {
-                label: "Documentation",
-                href: SafeHref::new(&format!("{DOCS_HOST}{name}")),
-            });
+        let docs = docs_href(entry).map(|href| ActionButton {
+            label: "Documentation",
+            href,
+        });
         let (primary, repository) = match docs {
             Some(docs) => (docs, Some(repo)),
             None => (repo, None),
@@ -67,7 +60,7 @@ impl<'a> ActionPanel<'a> {
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::{CrateName, Date, Description, DescriptionSource, Slug};
+    use catalogue_core::{CrateName, Date, Description, DescriptionSource, EntryKind, Slug};
     use url::Url;
 
     use super::*;

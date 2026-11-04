@@ -9,6 +9,8 @@ const DEBOUNCE_MS = 200;
 const FILTER_KEYS = ["kind", "topic", "category", "license", "runs_on", "tier", "org"];
 // Every record links an entry page. Any other link is dropped.
 const RESULT_PREFIX = "/projects/";
+// The slug in the path of a record, for the compare box the list script adds.
+const RESULT_SLUG = /^\/projects\/([a-z0-9-]+)\/$/;
 const TIER_VALUE = /^[a-z]+$/;
 // The word a row prints for a fact with no value.
 const NOT_MEASURED = "Not measured";
@@ -187,17 +189,6 @@ function tagsOf(hit) {
   return found;
 }
 
-// Every value of tag `key` of `hit`.
-function valuesOf(hit, key) {
-  const found = [];
-  for (const [name, value] of Array.isArray(hit.tags) ? hit.tags : []) {
-    if (name === key && typeof value === "string") {
-      found.push(value);
-    }
-  }
-  return found;
-}
-
 // A span with the short text of fact `name`, and its full wording when the two differ.
 function factSpan(found, name) {
   const short = found[`row_${name}`] ?? NOT_MEASURED;
@@ -237,6 +228,11 @@ function releaseCell(found) {
 function resultRow(hit) {
   const found = tagsOf(hit);
   const row = element("tr", "entry-row");
+  const slug = RESULT_SLUG.exec(hit.path)?.[1];
+  if (slug && typeof hit.title === "string") {
+    row.setAttribute("data-slug", slug);
+    row.setAttribute("data-name", hit.title);
+  }
   const head = element("div", "row-head");
   const title = element("a", "row-name", hit.title);
   title.setAttribute("href", hit.path);
@@ -257,9 +253,9 @@ function resultRow(hit) {
     head.append(" ", element("span", `tier-badge tier-${found.tier}`, tier));
   }
   if (found.row_status) {
-    const status = element("span", "row-tag row-tag-notice", found.row_status);
-    status.setAttribute("title", found.row_status_meaning ?? "");
-    head.append(" ", status);
+    const notice = element("span", "row-tag row-tag-notice", found.row_status);
+    notice.setAttribute("title", found.row_status_meaning ?? "");
+    head.append(" ", notice);
   }
   const project = element("th", "cell-project");
   project.setAttribute("scope", "row");
@@ -285,6 +281,8 @@ function showResults(text, hits, filters) {
     .filter((hit) => typeof hit.path === "string" && hit.path.startsWith(RESULT_PREFIX))
     .map(resultRow);
   results.replaceChildren(...items);
+  // The list script adds its compare box to each new row.
+  document.dispatchEvent(new CustomEvent("catalogue:rows"));
   const filtered = Object.keys(filters).length > 0;
   table.hidden = items.length === 0;
   order.hidden = items.length === 0;

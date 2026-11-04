@@ -1,4 +1,4 @@
-//! The stylesheet, the favicon and the search script, each named by its content hash.
+//! The stylesheet, the favicon and the scripts, each named by its content hash.
 
 use std::fmt::Write as _;
 
@@ -12,6 +12,12 @@ const SITE_CSS: &[u8] = include_bytes!("../assets/site.css");
 
 /// The script of the search page.
 const SEARCH_JS: &[u8] = include_bytes!("../assets/search.js");
+
+/// The script of the list pages: sort, filter, copy and the compare selection.
+const LIST_JS: &[u8] = include_bytes!("../assets/list.js");
+
+/// The script of the compare page.
+const COMPARE_JS: &[u8] = include_bytes!("../assets/compare.js");
 
 /// The favicon of every page. It carries its own light and dark colours.
 const FAVICON: &[u8] = include_bytes!("../assets/favicon.svg");
@@ -35,6 +41,16 @@ impl HashedAsset {
     /// The search page script, at `search/search.<hash>.js`.
     pub(crate) fn search_script() -> Self {
         Self::of("search/search", "js", SEARCH_JS)
+    }
+
+    /// The list script, at `assets/list.<hash>.js`.
+    pub(crate) fn list_script() -> Self {
+        Self::of("assets/list", "js", LIST_JS)
+    }
+
+    /// The compare page script, at `assets/compare.<hash>.js`.
+    pub(crate) fn compare_script() -> Self {
+        Self::of("assets/compare", "js", COMPARE_JS)
     }
 
     /// The favicon, at `assets/favicon.<hash>.svg`.
@@ -103,6 +119,13 @@ mod tests {
                 HashedAsset::search_script(),
                 SEARCH_JS,
                 "search/search",
+                "js",
+            ),
+            (HashedAsset::list_script(), LIST_JS, "assets/list", "js"),
+            (
+                HashedAsset::compare_script(),
+                COMPARE_JS,
+                "assets/compare",
                 "js",
             ),
         ] {

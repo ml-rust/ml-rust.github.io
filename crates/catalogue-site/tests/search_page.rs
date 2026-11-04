@@ -12,8 +12,11 @@ use std::path::PathBuf;
 /// The search page file.
 const PAGE: &str = "search/index.html";
 
-/// The start of the script tag on the search page.
-const SCRIPT_TAG: &str = "<script type=\"module\" src=\"";
+/// The start of the search script tag on the search page.
+const SCRIPT_TAG: &str = "<script type=\"module\" src=\"/search/search.";
+
+/// The start of the list script tag on the search page.
+const LIST_TAG: &str = "<script type=\"module\" src=\"/assets/list.";
 
 /// DOM APIs that parse text as markup. The search script uses none of them.
 const MARKUP_APIS: [&str; 4] = [
@@ -190,7 +193,8 @@ fn readers_without_scripts_get_every_topic_link() {
 fn the_page_loads_the_emitted_hashed_script() {
     let site = site(true);
     let page = &site[PAGE];
-    let start = page.find(SCRIPT_TAG).expect("script tag") + SCRIPT_TAG.len();
+    let start =
+        page.find(SCRIPT_TAG).expect("script tag") + SCRIPT_TAG.len() - "/search/search.".len();
     let src = &page[start..start + page[start..].find('"').expect("src end")];
     let hash = src
         .strip_prefix("/search/search.")
@@ -202,13 +206,28 @@ fn the_page_loads_the_emitted_hashed_script() {
         .get(src.trim_start_matches('/'))
         .unwrap_or_else(|| panic!("the build has no {src}"));
     assert_eq!(*emitted, script_source());
-    assert_eq!(page.matches("<script").count(), 1, "{page}");
+    // The list script adds the compare box to each result row, so it loads first.
+    let list = page.find(LIST_TAG).expect("list script tag");
+    assert!(list < start, "{page}");
+    assert_eq!(page.matches("<script").count(), 2, "{page}");
 }
 
 #[test]
 fn the_script_never_parses_text_as_markup() {
     let found = markup_apis(&script_source());
     assert!(found.is_empty(), "search.js uses {found:?}");
+}
+
+#[test]
+fn each_result_row_names_its_project_for_the_compare_box() {
+    let source = script_source();
+    for part in [
+        "row.setAttribute(\"data-slug\", slug);",
+        "row.setAttribute(\"data-name\", hit.title);",
+        "new CustomEvent(\"catalogue:rows\")",
+    ] {
+        assert!(source.contains(part), "search.js has no {part}");
+    }
 }
 
 #[test]

@@ -276,6 +276,8 @@ pub(super) fn new(detail: &str) -> Sentence {
 pub(super) struct Lack {
     /// The sentence.
     pub sentence: Sentence,
+    /// The sentence with no measured value, so two entries with the same lack read the same.
+    pub verdict: String,
     /// Whether the reason is the dormancy condition.
     pub dormant: bool,
 }
@@ -292,6 +294,7 @@ pub(super) fn featured_lacks(detail: &str, label: impl Fn(&str) -> String) -> Op
                 "The check holds no value for {}. A gate that lacks its signal does not pass.",
                 labels.join(", ")
             )),
+            verdict: "The check holds no value for a signal that a Featured gate reads.".to_owned(),
             dormant: false,
         }]);
     }
@@ -300,6 +303,15 @@ pub(super) fn featured_lacks(detail: &str, label: impl Fn(&str) -> String) -> Op
 
 fn one_failure(failure: &str) -> Lack {
     let dormant = failure == "dormant and not stable";
+    let measured = if parse_adoption(failure).is_some() {
+        Some("It has too few active users and new adopters for Featured.")
+    } else if parse_glory(failure, "below the Featured floor of").is_some() {
+        Some("Its active users are too far below their peak for Featured.")
+    } else if parse_use_signals(failure).is_some() {
+        Some("Too few use signals pass for Featured.")
+    } else {
+        None
+    };
     let sentence = match failure {
         "dormant and not stable" => Sentence::plain("The project is dormant and not finished."),
         "unpatched vulnerabilities exist" => {
@@ -319,7 +331,11 @@ fn one_failure(failure: &str) -> Lack {
             .or_else(|| parse_use_signals(other))
             .unwrap_or_else(|| verbatim(other)),
     };
-    Lack { sentence, dormant }
+    Lack {
+        verdict: measured.map_or_else(|| sentence.text.clone(), str::to_owned),
+        sentence,
+        dormant,
+    }
 }
 
 fn parse_adoption(failure: &str) -> Option<Sentence> {

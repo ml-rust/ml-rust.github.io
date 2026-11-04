@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::diagnostics::Diagnostics;
 use super::parse::Parsed;
 use crate::entry::Entry;
-use crate::ids::{CrateName, Slug, normalize_repo_url};
+use crate::ids::{CrateName, RESERVED_ENTRY_SLUG, Slug, normalize_repo_url};
 
 /// Checks entries against each other and against the topic and category lists.
 ///
@@ -51,6 +51,14 @@ pub(crate) fn check_entries(
                     crate_owners.insert(name.clone(), path.clone());
                 }
             }
+        }
+        if stem == RESERVED_ENTRY_SLUG {
+            diags.push(
+                &path,
+                format!(
+                    "slug `{stem}` is reserved: the site writes its compare index to data/compare/{stem}.json. Rename the file"
+                ),
+            );
         }
         let slug = Slug::new(stem);
         if let Some(repo) = normalize_repo_url(value.repo.as_str()) {
@@ -197,6 +205,29 @@ mod tests {
         let mut src = valid();
         put(&mut src, "entries/Bad_Name.toml", BETA);
         expect_error(src, "file name is not a slug");
+    }
+
+    #[test]
+    fn an_entry_cannot_take_the_reserved_slug() {
+        let mut src = valid();
+        put(&mut src, "entries/index.toml", BETA);
+        expect_error(
+            src,
+            "entries/index.toml: slug `index` is reserved: the site writes its compare index to data/compare/index.json. Rename the file",
+        );
+    }
+
+    #[test]
+    fn a_slug_that_only_starts_with_the_reserved_word_passes() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/index-tool.toml",
+            &BETA
+                .replace("name = \"Beta\"", "name = \"Index tool\"")
+                .replace("ml-rust/beta\"", "ml-rust/index-tool\""),
+        );
+        assert!(errors(src).is_empty());
     }
 
     #[test]
