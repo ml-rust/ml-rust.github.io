@@ -1,21 +1,12 @@
-<aside class="project-action{% if action.archived %} project-action-quiet{% endif %}" aria-labelledby="use-project">
-<h2 id="use-project">{% if action.archived %}For existing users{% else %}Use {{ action.name }}{% endif %}</h2>
-{%- if let Some(command) = action.install.command %}
-<p class="install-line"><code data-install-command="{{ command }}">{{ command }}</code></p>
-{%- else %}
-<p class="action-note">The catalogue holds no install command for this project.</p>
-{%- endif %}
-<p class="action-buttons">
-<a class="button{% if !action.archived %} button-primary{% endif %}" href="{{ action.primary.href }}">{{ action.primary.label }}</a>
-{%- if let Some(repository) = action.repository %}
-<a class="button" href="{{ repository.href }}">{{ repository.label }}</a>
-{%- endif %}
-</p>
-{%- if !action.links.is_empty() %}
-<ul class="action-links">
+<aside class="project-action{% if action.archived %} project-action-quiet{% endif %}" aria-labelledby="project-links-title">
+<h2 id="project-links-title">{% if action.archived %}For existing users{% else %}Links{% endif %}</h2>
+<ul class="link-list">
 {%- for link in action.links %}
-<li>{{ link.label }}: <a href="{{ link.href }}">{{ link.text }}</a></li>
+<li><a class="link-row" href="{{ link.href }}"><span class="link-label">{{ link.label }}</span><span class="link-target">{{ link.text }}</span></a></li>
 {%- endfor %}
 </ul>
+{%- if let Some(command) = action.install.command %}
+<p class="install-label">Install</p>
+<p class="install-line"><code data-install-command="{{ command }}">{{ command }}</code></p>
 {%- endif %}
 </aside>

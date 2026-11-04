@@ -9,6 +9,7 @@ use super::compat::Compat;
 use super::header::Header;
 use super::judgments::{CorrectionRow, JudgmentRow};
 use super::links::{CrateRow, DescriptionView, crate_rows};
+use super::readme::ReadmeView;
 use super::sources::SourceList;
 use super::stats::StatStrip;
 use super::tier::TierSection;
@@ -31,8 +32,10 @@ pub(crate) struct ProjectPage<'a> {
     pub header: Header<'a>,
     /// The stat strip. `None` without a report.
     pub stats: Option<StatStrip>,
-    /// The install line and the links to use the project.
-    pub action: ActionPanel<'a>,
+    /// The links of the project and its install line.
+    pub action: ActionPanel,
+    /// The README. `None` when the report holds none, so the page leaves the section out.
+    pub readme: Option<ReadmeView>,
     /// What the project runs on and needs.
     pub compat: Compat,
     /// The description with its source.
@@ -85,6 +88,9 @@ impl<'a> ProjectPage<'a> {
             header: Header::new(inputs, effective, record),
             stats: found.map(|(report, record)| StatStrip::new(entry, report, record)),
             action: ActionPanel::new(entry, archived),
+            readme: record
+                .and_then(|record| record.readme.as_ref())
+                .and_then(|readme| ReadmeView::of(readme, &entry.name)),
             compat: Compat::new(entry, record),
             description: DescriptionView::of(entry),
             sources: SourceList::of(record),

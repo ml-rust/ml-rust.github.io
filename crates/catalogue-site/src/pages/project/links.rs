@@ -6,6 +6,7 @@ use catalogue_core::{
 use url::Url;
 
 use crate::href::SafeHref;
+use crate::pages::shared::docs_href;
 
 /// The data the description section of `project.html` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,18 +42,18 @@ impl<'a> DescriptionView<'a> {
 pub(crate) struct LinkRow {
     /// What the link points to, such as `Repository`.
     pub label: &'static str,
-    /// The link text.
+    /// The host and path of the target, with no scheme.
     pub text: String,
     /// The link target.
     pub href: SafeHref,
 }
 
 impl LinkRow {
-    /// The row `label` linking `url` with text `text`.
-    fn new(label: &'static str, text: &str, url: &Url) -> Self {
+    /// The row `label` linking `url`.
+    fn new(label: &'static str, url: &Url) -> Self {
         Self {
             label,
-            text: text.to_owned(),
+            text: target_text(url),
             href: SafeHref::from(url),
         }
     }
@@ -86,25 +87,31 @@ pub(crate) fn crate_rows(entry: &Entry) -> Vec<CrateRow> {
         .collect()
 }
 
-/// The link text of a homepage: its host without `www.`, or the whole link when it has no host.
-fn homepage_text(url: &Url) -> String {
-    url.host_str()
-        .map(|host| host.strip_prefix("www.").unwrap_or(host))
-        .filter(|host| !host.is_empty())
-        .unwrap_or(url.as_str())
-        .to_owned()
+/// The text of a link: its host without `www.` and its path without the last `/`, or the whole
+/// link when it has no host.
+fn target_text(url: &Url) -> String {
+    let Some(host) = url.host_str().filter(|host| !host.is_empty()) else {
+        return url.as_str().to_owned();
+    };
+    let host = host.strip_prefix("www.").unwrap_or(host);
+    format!("{host}{}", url.path().trim_end_matches('/'))
 }
 
-/// The homepage, the crates.io page of the primary crate, and each install channel page.
+/// The docs, the repository, the homepage, the crates.io page of the primary crate, and each
+/// install channel page.
 pub(crate) fn link_rows(entry: &Entry) -> Vec<LinkRow> {
     let mut rows = Vec::new();
+    if let Some(url) = docs_href(entry).and_then(|href| Url::parse(href.as_str()).ok()) {
+        rows.push(LinkRow::new("Documentation", &url));
+    }
+    rows.push(LinkRow::new("Repository", &entry.repo));
     if let Some(homepage) = &entry.homepage {
-        rows.push(LinkRow::new("Homepage", &homepage_text(homepage), homepage));
+        rows.push(LinkRow::new("Homepage", homepage));
     }
     if let Some(name) = entry.crates.first()
         && let Some(url) = crate_page(name.as_str())
     {
-        rows.push(LinkRow::new("crates.io", name.as_str(), &url));
+        rows.push(LinkRow::new("crates.io", &url));
     }
     let Some(distribution) = &entry.distribution else {
         return rows;
@@ -112,17 +119,17 @@ pub(crate) fn link_rows(entry: &Entry) -> Vec<LinkRow> {
     if let Some(formula) = distribution.homebrew.as_deref()
         && let Some(url) = homebrew_page(formula)
     {
-        rows.push(LinkRow::new("Homebrew", formula, &url));
+        rows.push(LinkRow::new("Homebrew", &url));
     }
     for image in &distribution.docker {
         if let Some(url) = docker_page(image) {
-            rows.push(LinkRow::new("Docker Hub", image, &url));
+            rows.push(LinkRow::new("Docker Hub", &url));
         }
     }
     if let Some(project) = distribution.repology.as_deref()
         && let Some(url) = repology_page(project)
     {
-        rows.push(LinkRow::new("Repology", project, &url));
+        rows.push(LinkRow::new("Repology", &url));
     }
     rows
 }
@@ -134,14 +141,21 @@ mod tests {
     use super::*;
 
     fn text_of(raw: &str) -> String {
-        homepage_text(&Url::parse(raw).expect("url"))
+        target_text(&Url::parse(raw).expect("url"))
     }
 
     #[test]
-    fn a_homepage_shows_its_host_only() {
+    fn a_link_shows_its_host_and_path_with_no_scheme() {
         assert_eq!(text_of("https://qdrant.tech/"), "qdrant.tech");
-        assert_eq!(text_of("https://www.qdrant.tech/docs?x=1"), "qdrant.tech");
-        assert_eq!(text_of("http://example.org:8080/a/"), "example.org");
+        assert_eq!(
+            text_of("https://www.qdrant.tech/docs?x=1"),
+            "qdrant.tech/docs"
+        );
+        assert_eq!(text_of("http://example.org:8080/a/"), "example.org/a");
+        assert_eq!(
+            text_of("https://crates.io/crates/numr"),
+            "crates.io/crates/numr"
+        );
     }
 
     #[test]

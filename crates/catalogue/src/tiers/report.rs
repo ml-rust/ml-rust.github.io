@@ -12,8 +12,8 @@ use super::error::TiersError;
 
 /// The tier report of the check on `today`: one record per assessment, keyed by slug.
 ///
-/// Each record holds the verdict, the notes, every signal with its source and data date, and the
-/// search terms.
+/// Each record holds the verdict, the notes, every signal with its source and data date, the
+/// search terms and the README.
 pub(crate) fn tier_report(
     assessments: &[Assessment],
     thresholds: &Thresholds,
@@ -27,6 +27,7 @@ pub(crate) fn tier_report(
             facts.extend(choice_signal_facts(&assessment.choice, &assessment.sources));
             let mut record = EntryReport::new(&assessment.verdict, assessment.notes.clone(), facts);
             record.search_terms = assessment.choice.search_terms.clone();
+            record.readme = assessment.readme.clone();
             (assessment.slug.clone(), record)
         })
         .collect();
@@ -127,6 +128,7 @@ mod tests {
             notes: Vec::new(),
             signals: Vec::new(),
             search_terms: Vec::new(),
+            readme: None,
         };
         let text = serde_json::to_string(&entry).expect("writes");
         assert!(!text.contains("search_terms"), "{text}");
@@ -160,6 +162,7 @@ mod tests {
             notes: Vec::new(),
             signals: vec![fact],
             search_terms: Vec::new(),
+            readme: None,
         };
         let slug = catalogue_core::Slug::new("alpha").expect("slug");
         let report = TierReport {

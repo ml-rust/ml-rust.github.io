@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::fact::SignalFact;
+use super::readme::ReadmeFact;
 use crate::tier::{Reason, Rule, Tier, Verdict};
 
 /// One rule outcome with the values it compared.
@@ -48,6 +49,11 @@ pub struct EntryReport {
     /// sorted. Search input only: no tier rule reads them, and no page states them as a claim.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub search_terms: Vec<String>,
+    /// The README of the repository. `None` when the forge holds none, the host has no README
+    /// source, or the fetch failed with nothing to fall back on. A display fact: no tier rule
+    /// reads it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub readme: Option<ReadmeFact>,
 }
 
 impl EntryReport {
@@ -67,6 +73,7 @@ impl EntryReport {
             notes,
             signals,
             search_terms: Vec::new(),
+            readme: None,
         }
     }
 

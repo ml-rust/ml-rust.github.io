@@ -57,7 +57,7 @@ pub use report::{
     FORMER_GLORY_LABEL, FORMER_GLORY_SIGNAL, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL,
     NEW_ADOPTERS_SIGNAL, NEW_DEPENDENTS_LABEL, NO_GPU_FEATURE, NONE_STATED, NOT_APPLICABLE,
     NOT_MEASURED, PEAK_DEPENDENTS_LABEL, PEAK_USERS_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA,
-    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, ReasonRecord, ReportMismatch,
-    STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
+    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, ReadmeFact, ReasonRecord,
+    ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

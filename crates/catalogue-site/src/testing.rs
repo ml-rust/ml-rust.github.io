@@ -73,6 +73,7 @@ pub(crate) fn record(tier: Tier, amount: Option<&str>) -> EntryReport {
         notes: Vec::new(),
         signals,
         search_terms: Vec::new(),
+        readme: None,
     }
 }
 

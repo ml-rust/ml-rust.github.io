@@ -8,6 +8,7 @@ mod judgments;
 mod links;
 mod measurements;
 mod page;
+mod readme;
 mod reason_text;
 mod sources;
 mod stats;
@@ -15,4 +16,5 @@ mod tier;
 mod why;
 
 pub(crate) use page::ProjectPage;
+pub(crate) use readme::readme_search_text;
 pub(crate) use why::WhyText;

@@ -9,7 +9,10 @@ mod common;
 #[path = "common/fixture.rs"]
 mod fixture;
 
+use catalogue_core::{ReadmeFact, Slug};
+use catalogue_site::SiteInputs;
 use common::{TOPICS, catalogue, pages, thresholds};
+use url::Url;
 
 /// Markup characters that must never reach a page raw.
 const HOSTILE: &str = r#"<script>"'&"#;
@@ -138,6 +141,45 @@ fn hostile_files() -> Vec<(String, String)> {
         assert_eq!(hits, 1, "the fixture holds {from} once");
     }
     files
+}
+
+#[test]
+fn a_hostile_readme_holds_no_raw_script_on_the_built_page() {
+    let readme = "<script>alert(1)</script>\n\n\
+                  text <script>alert(2)</script> more\n\n\
+                  &lt;script&gt;alert(3)&lt;/script&gt;\n\n\
+                  `<script>alert(4)</script>`\n\n\
+                  ```html\n<script>alert(5)</script>\n```\n\n\
+                  [<script>alert(6)</script>](https://example.org \"<script>\")\n\n\
+                  ![<script>alert(7)</script>](a.png \"<script>\")\n\n\
+                  - <script>alert(8)</script>\n\n\
+                  | a |\n| - |\n| <script>alert(9)</script> |\n";
+    let (catalogue, mut report) = fixture::data(&fixture::files());
+    let slug = Slug::new("alpha").expect("slug");
+    let source = Url::parse("https://github.com/ml-rust/alpha/blob/main/README.md").expect("url");
+    report.entries.get_mut(&slug).expect("alpha").readme = Some(ReadmeFact {
+        text: readme.to_owned(),
+        path: "README.md".to_owned(),
+        branch: "main".to_owned(),
+        truncated: false,
+        fetched: fixture::first_check(),
+        source,
+    });
+    let changes = fixture::changes();
+    let movement = fixture::movement();
+    let site = build::render(&SiteInputs {
+        catalogue: &catalogue,
+        report: Some(&report),
+        changes: &changes,
+        first_check: Some(fixture::first_check()),
+        movement: &movement,
+    });
+    let page = &site["projects/alpha/index.html"];
+    assert!(page.contains("id=\"about\""), "{page}");
+    assert!(page.contains("alert(3)"), "{page}");
+    assert!(!holds_raw_script(page), "{page}");
+    assert!(!page.contains("alert(1)"), "{page}");
+    assert!(!page.contains("alert(2)"), "{page}");
 }
 
 #[test]

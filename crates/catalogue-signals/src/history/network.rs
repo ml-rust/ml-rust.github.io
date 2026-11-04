@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::distribution::ReleaseDownloads;
 use crate::github::{Contributors, Facts, RepoFacts, RepoLicense};
-use crate::link::LinkCheck;
+use crate::link::{LinkCheck, RepoReadme};
 
 /// A fetched value with the date of its data and what it describes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -180,6 +180,10 @@ pub struct NetworkValues {
     /// The GitHub contributor count. Absent in snapshots written before the field existed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub contributors: Option<Dated<Contributors>>,
+    /// The README. Display only: no tier rule reads it. Snapshots leave it out, so a fetch error
+    /// hides the About section for that run and the history stays small.
+    #[serde(skip)]
+    pub readme: Option<Dated<RepoReadme>>,
 }
 
 impl NetworkValues {
@@ -230,6 +234,7 @@ mod tests {
             repology: dated(2),
             docker: dated(5_000),
             contributors: dated(Contributors::Counted { count: 38 }),
+            readme: None,
         }
     }
 
@@ -238,6 +243,7 @@ mod tests {
         let text = r#"{"facts":{"date":"2026-10-02","of":"a/b","value":{"state":"found","archived":false,"stars":1,"last_human_commit":null,"oldest_unanswered_days":null,"maintainer_replies_365":0}}}"#;
         let values: NetworkValues = serde_json::from_str(text).expect("parses");
         assert_eq!(values.contributors, None);
+        assert_eq!(values.readme, None);
         let facts = values.facts.expect("facts");
         assert_eq!(facts.value.license(), Some(&RepoLicense::NotMeasured));
         assert_eq!(facts.value.commits(), None);

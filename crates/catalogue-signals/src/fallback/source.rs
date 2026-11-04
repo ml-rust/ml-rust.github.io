@@ -19,6 +19,8 @@ pub enum Source {
     Docker,
     /// The GitHub contributor count.
     Contributors,
+    /// The repo README. Only a request to GitHub sends the token.
+    Readme,
 }
 
 impl Source {
@@ -32,6 +34,7 @@ impl Source {
             Self::Repology => "Repology",
             Self::Docker => "Docker Hub",
             Self::Contributors => "GitHub contributors",
+            Self::Readme => "repo README",
         }
     }
 
@@ -39,7 +42,7 @@ impl Source {
     pub fn sends_token(self) -> bool {
         matches!(
             self,
-            Self::RepoFacts | Self::RepoLink | Self::Releases | Self::Contributors
+            Self::RepoFacts | Self::RepoLink | Self::Releases | Self::Contributors | Self::Readme
         )
     }
 }

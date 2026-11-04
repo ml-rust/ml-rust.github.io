@@ -97,6 +97,7 @@ mod tests {
             sources,
             commits: None,
             choice: ChoiceFacts::default(),
+            readme: None,
         }
     }
 

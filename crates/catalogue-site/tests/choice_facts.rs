@@ -43,12 +43,10 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
     in_order(
         &site[ALPHA],
         &[
-            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value\">1,840,052</span>",
+            "<p class=\"project-checked\">Checked",
+            "<dt title=\"Downloads over 30 days\">Downloads</dt><dd><span class=\"stat-value\">1,840,052</span>",
             "<dt>Dependents</dt><dd><span class=\"stat-value\">12</span>",
-            "<dt>Version</dt><dd><span class=\"stat-value\">0.4.2</span>",
-            "<dt>Released</dt>",
-            "<time class=\"stat-sub\" datetime=\"2026-09-01\">1 Sep 2026</time>",
-            "<p class=\"stat-foot\">Checked",
+            "<dt>Latest release</dt><dd><span class=\"stat-value\">0.4.2</span> · <time class=\"stat-value\" datetime=\"2026-09-01\" title=\"1 Sep 2026\">",
             "<h2 id=\"compatibility\">",
             "<dt>Runs on</dt>",
             "CUDA, Metal",
@@ -122,7 +120,7 @@ fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
     in_order(
         page,
         &[
-            "<dt>Downloads per release</dt><dd><span class=\"stat-value\">1,500</span>",
+            "<dt title=\"Binary downloads per release\">Downloads</dt><dd><span class=\"stat-value\">1,500</span>",
             "<dt>Dependents</dt><dd><span class=\"stat-value fact-quiet\">Not applicable</span>",
         ],
     );
@@ -134,7 +132,7 @@ fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
     let delta = &site["projects/delta/index.html"];
     assert!(
         delta.contains(
-            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>"
+            "<dt title=\"Downloads over 30 days\">Downloads</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>"
         ),
         "{delta}"
     );
@@ -179,17 +177,20 @@ fn rows_on_topic_and_category_pages_show_the_facts_as_whole_numbers() {
 }
 
 #[test]
-fn the_entry_page_shows_the_repository_row_below_the_stat_strip() {
+fn the_entry_page_shows_every_stat_in_one_row() {
     let site = tiered();
+    assert_eq!(site[ALPHA].matches("<dl class=\"stat-strip").count(), 1);
     in_order(
         &site[ALPHA],
         &[
-            "<dl class=\"stat-strip stat-strip-repo\">",
+            "<dl class=\"stat-strip\">",
+            "<dt>Dependents</dt>",
             "<dt>Stars</dt><dd><span class=\"stat-value\">1,200</span>",
             "<dt>Forks</dt><dd><span class=\"stat-value\">80</span>",
             "<dt>Contributors</dt><dd><span class=\"stat-value\">38</span>",
             "<dt>Commits</dt><dd><span class=\"stat-value\">4,200</span>",
-            "<p class=\"stat-foot\">Checked",
+            "<dt>Latest release</dt>",
+            "</dl>",
             "<h2 id=\"compatibility\">",
         ],
     );
@@ -287,7 +288,7 @@ fn an_app_with_a_crate_and_no_binaries_shows_downloads_over_30_days() {
     in_order(
         &site[BETA],
         &[
-            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value\">4,200</span>",
+            "<dt title=\"Downloads over 30 days\">Downloads</dt><dd><span class=\"stat-value\">4,200</span>",
             "<dt>Dependents</dt><dd><span class=\"stat-value fact-quiet\">Not applicable</span>",
         ],
     );

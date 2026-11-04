@@ -8,12 +8,13 @@ mod fixture;
 use std::collections::BTreeMap;
 
 /// Markup that only a build with a report prints.
-const TIER_MARKUP: [&str; 5] = [
+const TIER_MARKUP: [&str; 6] = [
     "tier-badge",
     "data-tier",
     "signal-table",
     "tier-counts",
     "class=\"panel why",
+    "class=\"disclosure disclosure-card\" id=\"tier\"",
 ];
 
 fn tiered() -> BTreeMap<String, String> {
@@ -303,8 +304,6 @@ fn an_entry_page_shows_every_signal_with_its_source() {
         &[
             "<span class=\"tier-badge tier-featured\">Featured</span>",
             "This project replaces <a href=\"/projects/gamma/\">Gamma</a>.",
-            "Homepage: <a href=\"https://alpha.example.org/\">alpha.example.org</a>",
-            "crates.io: <a href=\"https://crates.io/crates/alpha-crate\">alpha-crate</a>",
             "A demotion to Listed waits for approval.",
             "Fails: active dependents 9 below 11.",
             "Not measured: Active dependents as a share of the peak.",
@@ -322,8 +321,25 @@ fn an_entry_page_shows_every_signal_with_its_source() {
             "<a href=\"https://github.com/ml-rust/ml-rust.github.io/issues/15\">#15</a></td><td>Maintainer statement</td><td>Maintained</td>",
             "<td>frank</td><td>bob</td><td>None</td>",
             "<a href=\"https://github.com/ml-rust/ml-rust.github.io/issues/11\">#11</a></td><td>Correctness</td>",
+            &link_row(
+                "Homepage",
+                "https://alpha.example.org/",
+                "alpha.example.org",
+            ),
+            &link_row(
+                "crates.io",
+                "https://crates.io/crates/alpha-crate",
+                "crates.io/crates/alpha-crate",
+            ),
         ],
     );
+}
+
+/// One row of the links card.
+fn link_row(label: &str, href: &str, target: &str) -> String {
+    format!(
+        "<a class=\"link-row\" href=\"{href}\"><span class=\"link-label\">{label}</span><span class=\"link-target\">{target}</span></a>"
+    )
 }
 
 /// The page text from the start of the `#signals` section to its closing tag.
@@ -401,9 +417,6 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
         &[
             "<span class=\"entry-kind\">App</span> <span class=\"entry-label\">Product</span>",
             "<span class=\"tier-badge tier-listed\">Listed</span> <span class=\"stable-label\">Stable</span>",
-            "Homebrew: <a href=\"https://formulae.brew.sh/formula/beta\">beta</a>",
-            "Docker Hub: <a href=\"https://hub.docker.com/r/ml-rust/beta\">ml-rust/beta</a>",
-            "Repology: <a href=\"https://repology.org/project/beta/versions\">beta</a>",
             "It passes the Featured gates and waits for outside approval.",
             "A featured-approval judgment from a maintainer outside the organization.",
             "Not measured: Repology families.",
@@ -413,6 +426,21 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
             "<td>Yes — one part of the repository route</td>",
             "No correction applies to this entry.",
             "<td>Kind</td><td>Product</td>",
+            &link_row(
+                "Homebrew",
+                "https://formulae.brew.sh/formula/beta",
+                "formulae.brew.sh/formula/beta",
+            ),
+            &link_row(
+                "Docker Hub",
+                "https://hub.docker.com/r/ml-rust/beta",
+                "hub.docker.com/r/ml-rust/beta",
+            ),
+            &link_row(
+                "Repology",
+                "https://repology.org/project/beta/versions",
+                "repology.org/project/beta/versions",
+            ),
         ],
     );
     let gamma = &site["projects/gamma/index.html"];
@@ -488,29 +516,69 @@ fn with_only_the_first_check_the_change_page_says_nothing_changed() {
 }
 
 #[test]
-fn the_action_comes_right_after_the_header_with_a_hook_on_the_install_line() {
+fn the_main_column_comes_first_and_the_links_card_ends_with_the_install_line() {
     let site = tiered();
     in_order(
         &site["projects/alpha/index.html"],
         &[
             "<header class=\"project-head\">",
             "</header>",
-            "<aside class=\"project-action\"",
-            "Use Alpha",
-            "<code data-install-command=\"cargo add alpha-crate\">cargo add alpha-crate</code>",
-            "<a class=\"button button-primary\" href=\"https://docs.rs/alpha-crate\">Documentation</a>",
-            "<a class=\"button\" href=\"https://github.com/ml-rust/alpha\">Repository</a>",
-            "<h2 id=\"tier\">",
+            "<div class=\"project-layout\">",
             "<h2 id=\"compatibility\">",
             "<h2 id=\"also-in\">",
+            "<details class=\"disclosure disclosure-card\" id=\"tier\">",
+            "<span class=\"disclosure-title\">Why Featured</span>",
+            "</details>",
             "<h2 id=\"signals\">",
             "<h2 id=\"corrections\">",
+            "<aside class=\"project-action\"",
+            ">Links</h2>",
+            &link_row(
+                "Documentation",
+                "https://docs.rs/alpha-crate",
+                "docs.rs/alpha-crate",
+            ),
+            &link_row(
+                "Repository",
+                "https://github.com/ml-rust/alpha",
+                "github.com/ml-rust/alpha",
+            ),
+            "<p class=\"install-label\">Install</p>",
+            "<code data-install-command=\"cargo add alpha-crate\">cargo add alpha-crate</code>",
+            "</aside>",
         ],
     );
 }
 
 #[test]
-fn an_archived_page_leads_with_the_reason_and_the_other_projects_and_steps_the_install_back() {
+fn a_project_with_no_install_command_leaves_the_install_part_out() {
+    let site = tiered();
+    for page in site.iter().filter_map(|(path, page)| {
+        (path.starts_with("projects/") && !page.contains("data-install-command")).then_some(page)
+    }) {
+        assert!(!page.contains("install-label"), "{page}");
+        assert!(!page.contains("holds no install command"), "{page}");
+    }
+}
+
+#[test]
+fn the_why_block_is_collapsed_with_the_lead_as_its_summary() {
+    let site = tiered();
+    let beta = &site["projects/beta/index.html"];
+    in_order(
+        beta,
+        &[
+            "<details class=\"disclosure disclosure-card\" id=\"tier\">",
+            "<span class=\"disclosure-title\">Why Listed</span><span class=\"disclosure-summary\">It passes the Featured gates and waits for outside approval.</span></summary>",
+            "</details>",
+        ],
+    );
+    assert!(!beta.contains("class=\"panel why"), "{beta}");
+    assert_eq!(beta.matches("id=\"tier\"").count(), 1, "{beta}");
+}
+
+#[test]
+fn an_archived_page_leads_with_the_reason_and_steps_the_links_back() {
     let site = tiered();
     let gamma = &site["projects/gamma/index.html"];
     in_order(
@@ -521,17 +589,18 @@ fn an_archived_page_leads_with_the_reason_and_the_other_projects_and_steps_the_i
             "Why Archived",
             "The repository is archived.",
             "<a href=\"/projects/alpha/\">Alpha</a> replaces this project.",
-            "<h2 id=\"also-in\">",
-            "<aside class=\"project-action project-action-quiet\"",
-            "For existing users",
-            "<a class=\"button\" href=\"https://docs.rs/gamma\">Documentation</a>",
+            "<div class=\"project-layout\">",
             "<h2 id=\"compatibility\">",
+            "<h2 id=\"also-in\">",
             "id=\"sources\"",
             "<a href=\"https://github.com/someone/gamma\">GitHub</a>",
+            "<aside class=\"project-action project-action-quiet\"",
+            ">For existing users</h2>",
+            &link_row("Documentation", "https://docs.rs/gamma", "docs.rs/gamma"),
         ],
     );
-    assert!(!gamma.contains("Use Gamma"), "{gamma}");
-    assert!(!gamma.contains("button-primary"), "{gamma}");
+    assert!(!gamma.contains(">Links</h2>"), "{gamma}");
+    assert!(!gamma.contains("disclosure-card\" id=\"tier\""), "{gamma}");
     assert_eq!(gamma.matches("id=\"tier\"").count(), 1, "{gamma}");
     assert_eq!(gamma.matches("replaces this project").count(), 1, "{gamma}");
 }

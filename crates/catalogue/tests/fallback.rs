@@ -733,6 +733,66 @@ fn a_list_too_large_reads_as_not_measured_with_a_note_and_no_fallback() {
     assert_eq!(stored.date, today());
 }
 
+/// The README request of `ml-rust/beta`.
+const BETA_README: &str = "ml-rust/beta/readme";
+
+#[test]
+fn a_readme_joins_the_report_and_stays_out_of_the_snapshot() {
+    let dirs = Dirs::new();
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(
+            BETA_README,
+            answer(
+                200,
+                r#"{"path":"docs/README.md","html_url":"https://github.com/ml-rust/beta/blob/dev/docs/README.md","encoding":"base64","content":"IyBB"}"#,
+            ),
+        );
+    let found = run(&dirs, &rules).expect("runs");
+    let readme = entry(&found, "beta").readme.as_ref().expect("a readme");
+    assert_eq!(readme.text, "# A");
+    assert_eq!(readme.path, "docs/README.md");
+    assert_eq!(readme.branch, "dev");
+    assert!(!readme.truncated);
+    assert_eq!(readme.fetched, today());
+    assert_eq!(
+        readme.source.as_str(),
+        "https://github.com/ml-rust/beta/blob/dev/docs/README.md"
+    );
+    assert_eq!(
+        entry(&found, "gamma").readme,
+        None,
+        "a gone repo asks for none"
+    );
+    let text = serde_json::to_string(&found.report).expect("writes");
+    let back: catalogue_core::TierReport = serde_json::from_str(&text).expect("reads");
+    assert_eq!(back, found.report);
+    let written = todays_row(&dirs, "beta");
+    assert_eq!(written.network.expect("network").readme, None);
+}
+
+#[test]
+fn a_repo_with_no_readme_has_none_and_no_note() {
+    let dirs = Dirs::new();
+    let rules = Rules::default().repo("beta", answer(200, &found_repo("beta", 40)));
+    let found = run(&dirs, &rules).expect("runs");
+    let beta = entry(&found, "beta");
+    assert_eq!(beta.readme, None);
+    assert!(!has_note(beta, "README"), "{:?}", beta.notes);
+    assert!(found.summary.failures.is_empty(), "{:?}", found.summary);
+}
+
+#[test]
+fn a_failed_readme_fetch_leaves_no_readme_and_the_run_goes_on() {
+    let dirs = Dirs::new();
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(BETA_README, answer(500, ""));
+    let found = run(&dirs, &rules).expect("the run goes on");
+    assert_eq!(entry(&found, "beta").readme, None);
+    assert_eq!(found.summary.failures[0].source, Source::Readme);
+}
+
 #[test]
 fn a_gone_repo_asks_for_no_contributors() {
     let dirs = Dirs::new();

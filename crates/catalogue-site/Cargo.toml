@@ -13,6 +13,7 @@ askama.workspace = true
 aws-lc-rs.workspace = true
 catalogue-core.workspace = true
 oxidoc-search.workspace = true
+pulldown-cmark.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

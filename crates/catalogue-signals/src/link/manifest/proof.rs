@@ -79,7 +79,7 @@ pub(in crate::link) fn declaring_manifest(
 }
 
 /// The name of the default branch, when the repo has one.
-fn default_branch(
+pub(in crate::link) fn default_branch(
     transport: &dyn Transport,
     site: &RepoSite<'_>,
     paced: &mut Paced<'_>,
@@ -100,10 +100,35 @@ fn tree_paths(
     branch: &str,
     paced: &mut Paced<'_>,
 ) -> Result<Vec<String>, LinkError> {
+    listed_files(transport, site, |page| site.tree_url(branch, page), paced)
+}
+
+/// The file paths of the root folder of `branch`, over at most [`MAX_TREE_PAGES`] pages.
+pub(in crate::link) fn root_files(
+    transport: &dyn Transport,
+    site: &RepoSite<'_>,
+    branch: &str,
+    paced: &mut Paced<'_>,
+) -> Result<Vec<String>, LinkError> {
+    listed_files(
+        transport,
+        site,
+        |page| site.root_tree_url(branch, page),
+        paced,
+    )
+}
+
+/// The file paths of the tree pages at `url_of`, over at most [`MAX_TREE_PAGES`] pages.
+fn listed_files(
+    transport: &dyn Transport,
+    site: &RepoSite<'_>,
+    url_of: impl Fn(u32) -> String,
+    paced: &mut Paced<'_>,
+) -> Result<Vec<String>, LinkError> {
     let headers = site.json_headers();
     let mut paths = Vec::new();
     for page in 1..=MAX_TREE_PAGES {
-        let url = site.tree_url(branch, page);
+        let url = url_of(page);
         let Some(answer) = fetch(transport, site, &url, &headers, MAX_BODY, paced)? else {
             break;
         };
@@ -130,7 +155,7 @@ fn has_next_page(answer: &Answer) -> bool {
 }
 
 /// Sends one paced GET and turns its error into a link error.
-fn fetch(
+pub(in crate::link) fn fetch(
     transport: &dyn Transport,
     site: &RepoSite<'_>,
     url: &str,

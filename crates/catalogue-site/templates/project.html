@@ -7,24 +7,23 @@
 {%- if let Some(section) = tier %}
 {% let why = &section.why %}{% include "project_why.html" %}
 {%- endif %}
-{% include "project_compare.html" %}
 {%- endif %}
 <div class="project-layout">
-{% include "project_action.html" %}
 <div class="project-main">
+{%- if let Some(readme) = readme %}
+{% include "project_readme.html" %}
+{%- endif %}
+{% include "project_compat.html" %}
+{% include "project_compare.html" %}
 {%- if !action.archived %}
 {%- if let Some(section) = tier %}
-{% let why = &section.why %}{% include "project_why.html" %}
+{% let why = &section.why %}{% include "project_why_fold.html" %}
 {%- else %}
 <section class="panel" aria-labelledby="tier">
 <h2 id="tier">Tier</h2>
 <p>Tiers are not published.</p>
 </section>
 {%- endif %}
-{%- endif %}
-{% include "project_compat.html" %}
-{%- if !action.archived %}
-{% include "project_compare.html" %}
 {%- endif %}
 {%- if crates.len() > 1 %}
 <details class="disclosure disclosure-card" id="crates">
@@ -52,5 +51,6 @@
 {% include "project_measurements.html" %}
 {% include "project_review.html" %}
 </div>
+{% include "project_action.html" %}
 </div>
 {% endblock %}

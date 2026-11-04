@@ -8,7 +8,7 @@ use super::aliases::alias_terms;
 use super::boost::tier_boost;
 use super::choice_tags::{LICENSE_TAG, RUNS_ON_TAG, license_value, runs_on_values};
 use super::row_tags::row_tags;
-use crate::pages::{category_link, project_href, topic_link};
+use crate::pages::{category_link, project_href, readme_search_text, topic_link};
 
 /// The field of the effective topic names.
 const TOPICS_FIELD: &str = "topics";
@@ -20,6 +20,8 @@ const DESCRIPTION_FIELD: &str = "description";
 const KEYWORDS_FIELD: &str = "keywords";
 /// The field of the synonym terms the other fields gain.
 const ALIASES_FIELD: &str = "aliases";
+/// The field of the README prose.
+const README_FIELD: &str = "readme";
 
 /// The weight of the name, slug and crate names.
 const NAME_WEIGHT: f32 = 3.0;
@@ -33,6 +35,8 @@ const DESCRIPTION_WEIGHT: f32 = 1.5;
 const KEYWORDS_WEIGHT: f32 = 1.2;
 /// The weight of the synonym terms.
 const ALIASES_WEIGHT: f32 = 1.0;
+/// The weight of the README prose.
+const README_WEIGHT: f32 = 0.5;
 
 /// The tag of the entry kind.
 pub(crate) const KIND_TAG: &str = "kind";
@@ -65,6 +69,8 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 ///   when there are none, as in a build without `report`.
 /// - `aliases`, weight 1: the synonym terms the fields above gain from
 ///   [`Catalogue::synonyms`]. Left out when there are none.
+/// - `readme`, weight 0.5: the first prose of the README of `report`, with no code and no URLs.
+///   Left out when there is none.
 ///
 /// Tags: `kind`, `org` (`ml-rust` or `community`), one `topic` per effective
 /// topic id, `category` when the entry has one, and `license`, one `runs_on` per
@@ -151,6 +157,14 @@ fn record(
         record
             .fields
             .push(weighted(ALIASES_FIELD, aliases.join(", "), ALIASES_WEIGHT));
+    }
+    let readme = found
+        .and_then(|found| found.readme.as_ref())
+        .map_or_else(String::new, |readme| readme_search_text(&readme.text));
+    if !readme.is_empty() {
+        record
+            .fields
+            .push(weighted(README_FIELD, readme, README_WEIGHT));
     }
 
     let org = if entry.org_affiliated {

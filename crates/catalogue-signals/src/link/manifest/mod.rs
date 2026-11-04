@@ -5,5 +5,5 @@ mod declares;
 mod proof;
 mod site;
 
-pub(super) use proof::declaring_manifest;
+pub(super) use proof::{declaring_manifest, default_branch, fetch, root_files};
 pub(super) use site::RepoSite;

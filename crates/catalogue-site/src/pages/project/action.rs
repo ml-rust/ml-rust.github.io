@@ -1,58 +1,27 @@
-//! The action panel of an entry page: how to get the project and where to read about it.
+//! The links card of an entry page: where to read about the project and how to get it.
 
 use catalogue_core::Entry;
 
 use super::links::{LinkRow, link_rows};
-use crate::href::SafeHref;
-use crate::pages::shared::{InstallLine, docs_href, install_line};
+use crate::pages::shared::{InstallLine, install_line};
 
-/// A link that prints as a button.
+/// The data of the links card.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ActionButton {
-    /// The link text.
-    pub label: &'static str,
-    /// The link target.
-    pub href: SafeHref,
-}
-
-/// The data of the action panel.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ActionPanel<'a> {
-    /// The project name.
-    pub name: &'a str,
-    /// Whether the entry is Archived. The panel then steps back.
+pub(crate) struct ActionPanel {
+    /// Whether the entry is Archived. The card then steps back.
     pub archived: bool,
     /// How to get the project.
     pub install: InstallLine,
-    /// The main link: the docs of a library, else the homepage, else the repository.
-    pub primary: ActionButton,
-    /// The repository, when the main link is something else.
-    pub repository: Option<ActionButton>,
-    /// The homepage, the crates.io page and each install channel.
+    /// The docs, the repository, the homepage, the crates.io page and each install channel.
     pub links: Vec<LinkRow>,
 }
 
-impl<'a> ActionPanel<'a> {
-    /// The panel of `entry`.
-    pub(crate) fn new(entry: &'a Entry, archived: bool) -> Self {
-        let repo = ActionButton {
-            label: "Repository",
-            href: SafeHref::from(&entry.repo),
-        };
-        let docs = docs_href(entry).map(|href| ActionButton {
-            label: "Documentation",
-            href,
-        });
-        let (primary, repository) = match docs {
-            Some(docs) => (docs, Some(repo)),
-            None => (repo, None),
-        };
+impl ActionPanel {
+    /// The card of `entry`.
+    pub(crate) fn new(entry: &Entry, archived: bool) -> Self {
         Self {
-            name: &entry.name,
             archived,
             install: install_line(entry),
-            primary,
-            repository,
             links: link_rows(entry),
         }
     }
@@ -89,16 +58,19 @@ mod tests {
         }
     }
 
+    fn labels(panel: &ActionPanel) -> Vec<&'static str> {
+        panel.links.iter().map(|link| link.label).collect()
+    }
+
     #[test]
     fn a_library_leads_with_the_docs_of_its_primary_crate() {
         let entry = entry(EntryKind::Library, &["first", "second"]);
         let panel = ActionPanel::new(&entry, false);
-        assert_eq!(panel.primary.label, "Documentation");
-        assert_eq!(panel.primary.href.as_str(), "https://docs.rs/first");
-        assert_eq!(
-            panel.repository.expect("repository").href.as_str(),
-            "https://github.com/o/tool"
-        );
+        assert_eq!(labels(&panel), ["Documentation", "Repository", "crates.io"]);
+        assert_eq!(panel.links[0].href.as_str(), "https://docs.rs/first");
+        assert_eq!(panel.links[0].text, "docs.rs/first");
+        assert_eq!(panel.links[1].href.as_str(), "https://github.com/o/tool");
+        assert_eq!(panel.links[1].text, "github.com/o/tool");
         assert_eq!(panel.install.command.as_deref(), Some("cargo add first"));
     }
 
@@ -106,8 +78,7 @@ mod tests {
     fn an_app_claims_no_docs_link_and_leads_with_its_repository() {
         let entry = entry(EntryKind::App, &[]);
         let panel = ActionPanel::new(&entry, false);
-        assert_eq!(panel.primary.label, "Repository");
-        assert_eq!(panel.repository, None);
+        assert_eq!(labels(&panel), ["Repository"]);
         assert_eq!(panel.install.command, None);
     }
 }

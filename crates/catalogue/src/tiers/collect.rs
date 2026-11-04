@@ -11,7 +11,7 @@ use catalogue_signals::distribution::{
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{
     Failed, FetchFailure, FetchSummary, Source, attempt, distribution_failure, github_failure,
-    recover,
+    link_failure, recover,
 };
 use catalogue_signals::github::{
     Contributors, GITHUB_INTERVAL, RepoRef, repo_contributors, repo_facts,
@@ -21,7 +21,7 @@ use catalogue_signals::http::{IntervalPacer, Transport};
 
 use super::docker::fetch_docker;
 use super::error::TiersError;
-use super::links::fetch_links;
+use super::links::{TargetRepo, fetch_links};
 use crate::batch;
 
 /// Where the network signals come from.
@@ -148,6 +148,7 @@ impl Collector<'_> {
 /// repo gets its release downloads, then the Homebrew and Repology counts its
 /// `distribution` names, then the Docker Hub pulls of its listed images. Every
 /// library gets its repo link check, which `snapshot` supplies the release for.
+/// Every entry on GitHub, Codeberg or GitLab gets its README, unless the facts find the repo gone.
 /// Each source has its own pacer.
 ///
 /// [`catalogue_signals::fallback`] sorts every error. A fatal error ends the run.
@@ -194,6 +195,7 @@ pub(crate) fn fetch_all(
     collect_facts(&mut run, &repos, transport, token)?;
     collect_links(&mut run, catalogue, snapshot, transport, token, cache_dir)?;
     collect_contributors(&mut run, &repos, transport, token)?;
+    collect_readmes(&mut run, catalogue, transport, token)?;
     let apps: Vec<(Slug, RepoRef)> = repos
         .into_iter()
         .filter(|(slug, _)| kind(catalogue, slug) == Some(EntryKind::App))
@@ -302,6 +304,43 @@ fn collect_contributors(
             );
         }
         run.settle(&fetch, result.map(Some), String::new);
+    }
+    Ok(())
+}
+
+/// Fetches the README of every entry on a host that serves one.
+///
+/// A repo with no README adds no note: the entry page leaves the section out. A failed fetch reads
+/// the previous snapshot, like every other source.
+fn collect_readmes(
+    run: &mut Collector<'_>,
+    catalogue: &Catalogue,
+    transport: &dyn Transport,
+    token: &str,
+) -> Result<(), TiersError> {
+    let repos: Vec<(Slug, TargetRepo)> = catalogue
+        .entries()
+        .iter()
+        .filter(|(slug, _)| !is_gone(run, slug))
+        .filter_map(|(slug, entry)| Some((slug.clone(), TargetRepo::of(entry)?)))
+        .collect();
+    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
+    let found = batch::each(&repos, &mut pacer, |(_, repo), pacer| {
+        attempt(repo.readme(transport, token, pacer), link_failure)
+    })?;
+    run.out.summary.fetches += repos.len();
+    for ((slug, repo), result) in repos.iter().zip(found) {
+        let of = repo.to_string();
+        let fetch = Fetch {
+            slug,
+            source: Source::Readme,
+            of: &of,
+            slot: |values| &mut values.readme,
+        };
+        match result {
+            Ok(None) | Err(Failed::Definitive(_)) => {}
+            other => run.settle(&fetch, other, String::new),
+        }
     }
     Ok(())
 }

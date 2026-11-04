@@ -1,0 +1,51 @@
+{%- if !why.meets.is_empty() %}
+<h3>What it meets</h3>
+<ul class="why-list why-meets">
+{%- for line in why.meets %}
+{% include "why_line.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if !why.lacks.is_empty() %}
+<h3 id="lacks">What it lacks for Featured</h3>
+<ul class="why-list why-lacks">
+{%- for line in why.lacks %}
+{% include "why_line.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if !why.found.is_empty() %}
+<h3>What else the check found</h3>
+<ul class="why-list">
+{%- for line in why.found %}
+{% include "why_line.html" %}
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if let Some(section) = tier %}
+{%- if section.reasons.is_empty() %}
+<p>The check recorded no reason.</p>
+{%- endif %}
+{%- if !section.unknown.is_empty() %}
+<p class="why-note">Not measured: {% for name in section.unknown %}{{ name }}{% if !loop.last %}, {% endif %}{% endfor %}.</p>
+{%- endif %}
+{%- if !section.notes.is_empty() %}
+<h3>Check notes</h3>
+<ul class="why-list note-list">
+{%- for note in section.notes %}
+<li>{{ note }}</li>
+{%- endfor %}
+</ul>
+{%- endif %}
+<p class="why-rules">Exact rules:{% for rule in why.rules %} <a href="{{ rule.href }}">{{ rule.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}. The check on <time datetime="{{ section.checked }}">{{ section.checked_text }}</time> applied thresholds version {{ section.version }}.</p>
+{%- if !section.reasons.is_empty() %}
+<details class="disclosure">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Every rule outcome, as the check records it</span></summary>
+<ul class="reason-list">
+{%- for reason in section.reasons %}
+<li><code>{{ reason.rule }}</code>: {{ reason.detail }}</li>
+{%- endfor %}
+</ul>
+</details>
+{%- endif %}
+{%- endif %}

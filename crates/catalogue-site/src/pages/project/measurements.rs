@@ -254,6 +254,7 @@ mod tests {
             notes: Vec::new(),
             signals,
             search_terms: Vec::new(),
+            readme: None,
         }
     }
 

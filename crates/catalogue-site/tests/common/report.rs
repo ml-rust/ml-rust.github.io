@@ -22,6 +22,7 @@ pub fn report(catalogue: &Catalogue, slugs: &[&str]) -> TierReport {
                 notes: Vec::new(),
                 signals: Vec::new(),
                 search_terms: Vec::new(),
+                readme: None,
             };
             (Slug::new(*slug).expect("slug"), record)
         })

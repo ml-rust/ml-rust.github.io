@@ -38,6 +38,7 @@ fn record(tier: Tier) -> EntryReport {
         notes: Vec::new(),
         signals: Vec::new(),
         search_terms: Vec::new(),
+        readme: None,
     }
 }
 

@@ -346,6 +346,7 @@ fn record(tier: Tier, reasons: Vec<ReasonRecord>, signals: Vec<SignalFact>) -> E
         notes: Vec::new(),
         signals,
         search_terms: Vec::new(),
+        readme: None,
     }
 }
 

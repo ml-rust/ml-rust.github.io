@@ -13,7 +13,11 @@ use crate::pages::shared::{
 const VERSION_SIGNAL: &str = "latest_version";
 /// The signal of the latest release date.
 const RELEASE_SIGNAL: &str = "last_release";
-/// The stats of the repository row: the label and the signal of each.
+/// What the Downloads value counts when it reads the 30-day window.
+const DOWNLOADS_HINT: &str = "Downloads over 30 days";
+/// What the Downloads value counts when it reads release assets.
+const PER_RELEASE_HINT: &str = "Binary downloads per release";
+/// The repository stats: the label and the signal of each.
 const REPOSITORY_STATS: [(&str, &str); 4] = [
     ("Stars", STARS_SIGNAL),
     ("Forks", FORKS_SIGNAL),
@@ -26,24 +30,35 @@ const REPOSITORY_STATS: [(&str, &str); 4] = [
 pub(crate) struct Stat {
     /// The stat name.
     pub label: &'static str,
-    /// The value.
+    /// What the stat counts, when the name alone does not say.
+    pub hint: Option<&'static str>,
+    /// The value. Empty when only the date is known.
     pub value: String,
     /// Whether the value prints in the muted colour: a value not measured.
     pub quiet: bool,
-    /// The date below the value, as an ISO date.
-    pub date: Option<String>,
-    /// The date below the value, as a person reads it.
-    pub date_text: Option<String>,
+    /// The date after the value.
+    pub date: Option<StatDate>,
+}
+
+/// The date of a stat.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct StatDate {
+    /// The ISO date.
+    pub iso: String,
+    /// How long ago, as the page prints it.
+    pub text: String,
+    /// The exact date as a person reads it.
+    pub exact: String,
 }
 
 impl Stat {
     fn plain(label: &'static str, value: String) -> Self {
         Self {
             label,
+            hint: None,
             quiet: value == NOT_MEASURED || value == NOT_APPLICABLE,
             value,
             date: None,
-            date_text: None,
         }
     }
 }
@@ -51,11 +66,8 @@ impl Stat {
 /// The data of the stat strip.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct StatStrip {
-    /// The stats, with the check date last.
+    /// Downloads, dependents, stars, forks, contributors, commits and the latest release.
     pub stats: Vec<Stat>,
-    /// The repository stats: stars, forks, contributors and commits. Empty when the check
-    /// measured none of them.
-    pub repository: Vec<Stat>,
     /// The check date as an ISO date.
     pub checked: String,
     /// The check date as a person reads it.
@@ -70,39 +82,40 @@ impl StatStrip {
         let mut stats = Vec::new();
         let value_of = |name: &str| record.value_of(name).map(str::to_owned);
         let downloads = downloads_signal(entry.kind, Some(record));
-        stats.push(Stat::plain(
-            if downloads == DOWNLOADS_SIGNAL {
-                "Downloads (30 days)"
+        stats.push(Stat {
+            hint: Some(if downloads == DOWNLOADS_SIGNAL {
+                DOWNLOADS_HINT
             } else {
-                "Downloads per release"
-            },
-            value_of(downloads).map_or_else(|| NOT_MEASURED.to_owned(), |count| grouped(&count)),
-        ));
+                PER_RELEASE_HINT
+            }),
+            ..Stat::plain(
+                "Downloads",
+                value_of(downloads)
+                    .map_or_else(|| NOT_MEASURED.to_owned(), |count| grouped(&count)),
+            )
+        });
         stats.push(Stat::plain(
             "Dependents",
             dependents_text(entry.kind, Some(record)),
         ));
-        if library || record.value_of(VERSION_SIGNAL).is_some() {
-            stats.push(Stat::plain(
-                "Version",
-                value_of(VERSION_SIGNAL).unwrap_or_else(|| NOT_MEASURED.to_owned()),
-            ));
+        stats.extend(repository_stats(record));
+        if library
+            || has_crates
+            || record.value_of(VERSION_SIGNAL).is_some()
+            || record.value_of(RELEASE_SIGNAL).is_some()
+        {
+            stats.push(latest_release(record, report));
         }
-        if has_crates || record.value_of(RELEASE_SIGNAL).is_some() {
-            stats.push(released(record, report));
-        }
-        let repository = repository_stats(record);
         let checked = report.generated.to_string();
         Self {
             stats,
-            repository,
             checked_text: date_text(&checked).unwrap_or_else(|| checked.clone()),
             checked,
         }
     }
 }
 
-/// The repository row, with the unmeasured values in place. Empty when none is measured.
+/// The repository stats, with the unmeasured values in place. Empty when none is measured.
 fn repository_stats(record: &EntryReport) -> Vec<Stat> {
     let measured = REPOSITORY_STATS
         .iter()
@@ -116,19 +129,23 @@ fn repository_stats(record: &EntryReport) -> Vec<Stat> {
         .collect()
 }
 
-/// The release stat: how long ago, and the date.
-fn released(record: &EntryReport, report: &TierReport) -> Stat {
-    let Some(iso) = record.value_of(RELEASE_SIGNAL) else {
-        return Stat::plain("Released", NOT_MEASURED.to_owned());
+/// The release stat: the version and how long ago, with the exact date in the title.
+fn latest_release(record: &EntryReport, report: &TierReport) -> Stat {
+    let date = record.value_of(RELEASE_SIGNAL).map(|iso| {
+        let exact = date_text(iso).unwrap_or_else(|| iso.to_owned());
+        StatDate {
+            iso: iso.to_owned(),
+            text: ago_text(iso, report.generated).unwrap_or_else(|| exact.clone()),
+            exact,
+        }
+    });
+    let value = match (record.value_of(VERSION_SIGNAL), &date) {
+        (Some(version), _) => version.to_owned(),
+        (None, Some(_)) => String::new(),
+        (None, None) => NOT_MEASURED.to_owned(),
     };
-    let shown = date_text(iso);
     Stat {
-        label: "Released",
-        value: ago_text(iso, report.generated)
-            .or_else(|| shown.clone())
-            .unwrap_or_else(|| iso.to_owned()),
-        quiet: false,
-        date_text: shown,
-        date: Some(iso.to_owned()),
+        date,
+        ..Stat::plain("Latest release", value)
     }
 }

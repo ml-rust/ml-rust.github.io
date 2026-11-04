@@ -22,7 +22,7 @@ pub(crate) use home::HomePage;
 pub(crate) use layout::{Layout, NavItem};
 pub use layout::{SITE_NAME, SITE_URL};
 pub(crate) use not_found::NotFoundPage;
-pub(crate) use project::{ProjectPage, WhyText};
+pub(crate) use project::{ProjectPage, WhyText, readme_search_text};
 pub(crate) use rules::RulesPage;
 pub(crate) use search::SearchPage;
 pub(crate) use shared::{

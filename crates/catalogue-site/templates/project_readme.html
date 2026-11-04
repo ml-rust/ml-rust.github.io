@@ -1,0 +1,20 @@
+<section class="panel readme-panel" aria-labelledby="about">
+<div class="section-head">
+<h2 id="about">About</h2>
+<p class="order-note"><a class="stat-link" href="{{ readme.source }}">From the project README</a> · <time datetime="{{ readme.fetched }}">{{ readme.fetched_text }}</time></p>
+</div>
+<div class="readme">{{ readme.head }}</div>
+{%- if let Some(rest) = readme.rest %}
+<details class="disclosure">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Read the full README</span></summary>
+<div class="readme">{{ rest }}</div>
+{%- if readme.truncated %}
+<p class="readme-note">The README is longer than this. <a href="{{ readme.source }}">Read the rest at the source.</a></p>
+{%- endif %}
+</details>
+{%- else %}
+{%- if readme.truncated %}
+<p class="readme-note">The README is longer than this. <a href="{{ readme.source }}">Read the rest at the source.</a></p>
+{%- endif %}
+{%- endif %}
+</section>

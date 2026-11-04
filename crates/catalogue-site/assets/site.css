@@ -1473,6 +1473,14 @@ h1 + .lede {
   overflow-wrap: anywhere;
 }
 
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-5);
+}
+
 .project-links {
   display: flex;
   flex-wrap: wrap;
@@ -1482,55 +1490,47 @@ h1 + .lede {
   list-style: none;
 }
 
-.stat-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-5);
-  margin: var(--space-4) 0 0;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
-.stat-strip-repo {
-  margin-top: var(--space-3);
-  padding-top: 0;
-  border-top: 0;
-}
-
-.stat-foot {
-  margin: var(--space-3) 0 0;
+.project-checked {
+  margin: 0 0 0 auto;
   color: var(--secondary);
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+
+.stat-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.stat {
+  min-width: 0;
 }
 
 .stat dt {
   color: var(--secondary);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  white-space: nowrap;
 }
 
 .stat dd {
-  display: flex;
-  flex-direction: column;
   margin: 0;
+  white-space: nowrap;
 }
 
 .stat-value {
-  font-size: 1.125rem;
-  line-height: 1.625rem;
+  font-size: 1rem;
+  line-height: 1.375rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-value.fact-quiet {
   font-weight: 400;
-}
-
-.stat-sub {
-  color: var(--secondary);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
 }
 
 .banner {
@@ -1597,17 +1597,162 @@ h1 + .lede {
   font-size: 0.9375rem;
 }
 
-.action-note {
+.install-label {
+  margin: var(--space-3) 0 var(--space-1);
+  color: var(--secondary);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+.link-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.link-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  text-decoration: none;
+}
+
+.link-row:hover .link-label {
+  text-decoration: underline;
+}
+
+.link-label {
+  flex: none;
+  font-weight: 500;
+}
+
+.link-target {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readme {
+  max-width: var(--measure);
+  overflow-wrap: anywhere;
+}
+
+.readme > :first-child {
+  margin-top: 0;
+}
+
+.readme > :last-child {
+  margin-bottom: 0;
+}
+
+.readme h3,
+.readme h4,
+.readme h5 {
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.readme h4,
+.readme h5 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.readme h5 {
+  color: var(--secondary);
+}
+
+.readme p,
+.readme ul,
+.readme ol,
+.readme blockquote,
+.readme pre,
+.readme .table-scroll {
+  margin: 0 0 var(--space-3);
+}
+
+.readme ul,
+.readme ol {
+  padding-left: var(--space-5);
+}
+
+.readme li > p:last-child,
+.readme li > ul:last-child,
+.readme li > ol:last-child {
+  margin-bottom: 0;
+}
+
+.readme blockquote {
+  padding-left: var(--space-3);
+  color: var(--secondary);
+  border-left: 3px solid var(--border-strong);
+}
+
+.readme pre {
+  max-width: 100%;
+  padding: var(--space-3);
+  overflow-x: auto;
+  background: var(--wash);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  overflow-wrap: normal;
+}
+
+.readme pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.875rem;
+  white-space: pre;
+}
+
+.readme img {
+  max-width: 100%;
+  height: auto;
+}
+
+.readme hr {
+  margin: var(--space-4) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.readme table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  overflow-wrap: normal;
+}
+
+.readme th,
+.readme td {
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.readme-panel > .disclosure {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.readme-note {
+  margin: var(--space-3) 0 0;
   color: var(--secondary);
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
 
-.action-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+#tier h3 {
+  margin: var(--space-4) 0 var(--space-2);
 }
 
 .button {
@@ -1633,20 +1778,6 @@ h1 + .lede {
   color: var(--on-accent);
   background: var(--accent);
   border-color: var(--accent);
-}
-
-.action-links {
-  margin-bottom: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--secondary);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-.action-links li {
-  padding-block: var(--space-1);
-  overflow-wrap: anywhere;
 }
 
 .project-action-quiet .install-line {
@@ -1781,6 +1912,18 @@ h1 + .lede {
 
 .disclosure-card[open] {
   padding-bottom: var(--space-4);
+}
+
+/* A sentence, not a count: it takes the free width and starts after the title. */
+@media (min-width: 761px) {
+  #tier > summary {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  #tier > summary .disclosure-summary {
+    justify-content: flex-start;
+    margin-left: var(--space-2);
+  }
 }
 
 .reason-list {
@@ -2935,7 +3078,7 @@ td.not-measured {
   .start-name,
   .site-footer-links a,
   .site-footer-licenses a,
-  .action-links a,
+  .link-row,
   .rules-contents a,
   .compare-more a,
   .compare-links a,
@@ -2993,13 +3136,40 @@ td.not-measured {
 
 /* The project page and the submit page drop to one column. The action comes first. */
 @media (max-width: 1100px) {
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: normal;
+  }
+
+  /* One column: the README first, then the links card, then the rest of the main column. */
   .project-layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "action" "main";
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .project-main {
+    display: contents;
+  }
+
+  .project-main > * {
+    order: 2;
+  }
+
+  .project-main > .readme-panel {
+    order: 0;
+  }
+
+  .project-main > :last-child {
+    margin-bottom: var(--space-4);
   }
 
   .project-action {
     position: static;
+    order: 1;
+    margin-bottom: var(--space-4);
   }
 
   .submit-layout {
@@ -3402,10 +3572,6 @@ td.not-measured {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 var(--space-3);
-  }
-
-  .action-links li {
-    padding-block: 0;
   }
 
 

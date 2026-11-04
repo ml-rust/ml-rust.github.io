@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Catalogue, Date, EntryKind, Signals, Slug, Verdict, assess};
+use catalogue_core::{Catalogue, Date, EntryKind, ReadmeFact, Signals, Slug, Verdict, assess};
 use catalogue_signals::assemble::choice::{ChoiceFacts, ChoiceInputs, DependentIndex, measure};
 use catalogue_signals::assemble::{
     Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_crate_signals, app_signals,
@@ -34,6 +34,8 @@ pub(crate) struct Assessment {
     pub(crate) commits: Option<u64>,
     /// The facts a person reads to choose a project. No rule reads them.
     pub(crate) choice: ChoiceFacts,
+    /// The README of the repository, with the date of its fetch. No rule reads it.
+    pub(crate) readme: Option<ReadmeFact>,
 }
 
 /// Assesses every entry in slug order.
@@ -167,6 +169,10 @@ pub(crate) fn assess_entries(
                 sources: cited,
                 commits,
                 choice,
+                readme: values
+                    .readme
+                    .as_ref()
+                    .map(|found| found.value.to_fact(found.date)),
             }
         })
         .collect();

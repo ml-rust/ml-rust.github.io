@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::Path;
 
-use catalogue_core::{Catalogue, Date, Slug};
+use catalogue_core::{Catalogue, Date, Entry, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{Failed, attempt, link_failure};
@@ -12,16 +12,16 @@ use catalogue_signals::github::{GITHUB_INTERVAL, RepoRef};
 use catalogue_signals::history::Dated;
 use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
 use catalogue_signals::link::{
-    CrateRelease, ForgeRepo, LinkCheck, LinkError, LinkOutcome, cached_forge_link, cached_link,
-    check_forge_link, check_link,
+    CrateRelease, ForgeRepo, LinkCheck, LinkError, LinkOutcome, RepoReadme, cached_forge_link,
+    cached_link, check_forge_link, check_link, forge_readme, github_readme,
 };
 
 use super::collect::github_repo;
 use crate::batch;
 
-/// The repo a link check reads.
+/// The repo a link check or a README fetch reads.
 #[derive(Debug)]
-enum TargetRepo {
+pub(super) enum TargetRepo {
     /// A repo on GitHub.
     Github(RepoRef),
     /// A repo on another host that the manifest proof can read.
@@ -29,6 +29,27 @@ enum TargetRepo {
 }
 
 impl TargetRepo {
+    /// The repo of `entry`. `None` for a host no fetch can read.
+    pub(super) fn of(entry: &Entry) -> Option<Self> {
+        github_repo(entry)
+            .map(Self::Github)
+            .ok()
+            .or_else(|| ForgeRepo::parse(entry.repo.as_str()).map(Self::Forge))
+    }
+
+    /// Fetches the README. Only a GitHub repo gets `token`.
+    pub(super) fn readme(
+        &self,
+        transport: &dyn Transport,
+        token: &str,
+        pacer: &mut dyn Pacer,
+    ) -> Result<Option<RepoReadme>, LinkError> {
+        match self {
+            Self::Github(repo) => github_readme(transport, token, repo, pacer),
+            Self::Forge(repo) => forge_readme(transport, repo, pacer),
+        }
+    }
+
     /// The cached result for `release`, with no request.
     fn cached(
         &self,
@@ -136,11 +157,7 @@ pub(super) fn fetch_links(
         if entry.crates.is_empty() {
             continue;
         }
-        let repo = github_repo(entry)
-            .map(TargetRepo::Github)
-            .ok()
-            .or_else(|| ForgeRepo::parse(entry.repo.as_str()).map(TargetRepo::Forge));
-        let Some(repo) = repo else {
+        let Some(repo) = TargetRepo::of(entry) else {
             let check = Dated {
                 date: today,
                 of: entry.repo.to_string(),

@@ -51,6 +51,8 @@ jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_r
 aws-lc-rs = { version = "1", default-features = false, features = ["aws-lc-sys"] }
 # HTML templates for the static site. Escapes every value by default.
 askama = { version = "0.16", default-features = false, features = ["derive", "std"] }
+# Reads README Markdown as events. The site writes its own tags from them.
+pulldown-cmark = { version = "0.13", default-features = false }
 # The lexical search index of the static site: records to BM25 index files.
 # Not on crates.io yet: `.cargo/config.toml.example` patches it to a local checkout.
 oxidoc-search = { version = "0.1", default-features = false, features = ["builder"] }

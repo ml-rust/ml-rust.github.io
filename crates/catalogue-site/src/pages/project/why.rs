@@ -65,8 +65,6 @@ impl WhyLine {
 pub(crate) struct Why {
     /// The tier badge.
     pub badge: TierBadge,
-    /// Whether the entry is Archived. The page then leads with this block.
-    pub archived: bool,
     /// The plain statement that opens the block.
     pub lead: Vec<String>,
     /// What the entry meets. Featured only.
@@ -90,7 +88,6 @@ impl Why {
     ) -> Self {
         let mut why = Self {
             badge: TierBadge::of(record.tier),
-            archived: record.tier == Tier::Archived,
             lead: Vec::new(),
             meets: Vec::new(),
             lacks: Vec::new(),
@@ -135,6 +132,16 @@ impl Why {
         }
         why.finish(record, kind, activity);
         why
+    }
+
+    /// The first lead sentence: the summary line of the collapsed block.
+    pub(crate) fn summary(&self) -> &str {
+        self.lead.first().map_or("", String::as_str)
+    }
+
+    /// The lead sentences after the summary line.
+    pub(crate) fn more_lead(&self) -> &[String] {
+        self.lead.get(1..).unwrap_or_default()
     }
 
     /// Sorts the `featured` reason into what the entry meets or lacks.
@@ -309,6 +316,7 @@ mod tests {
             notes: Vec::new(),
             signals,
             search_terms: Vec::new(),
+            readme: None,
         }
     }
 
@@ -514,7 +522,6 @@ mod tests {
             )],
         );
         let why = Why::new(&record, EntryKind::Library, None);
-        assert!(why.archived);
         assert_eq!(why.lead, ["GitHub reports the repository as archived."]);
     }
 

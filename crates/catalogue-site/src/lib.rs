@@ -13,7 +13,8 @@
 //! gives one search record per entry.
 //! Without a report, no page shows a tier.
 //!
-//! Templates escape every value. [`SafeHref`] carries every link built from data.
+//! Templates escape every value, except the README HTML that `pages::project::readme` writes from
+//! its own allowlist. [`SafeHref`] carries every link built from data.
 
 mod asset;
 mod build;

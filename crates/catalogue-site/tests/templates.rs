@@ -1,4 +1,4 @@
-//! No template or source file turns HTML escaping off.
+//! No template or source file turns HTML escaping off. One audited type prints README HTML.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,6 +14,9 @@ const ESCAPE_OFF: [&str; 5] = [
 
 /// Rust items that mark a value as already escaped.
 const SAFE_TYPES: [&str; 3] = ["HtmlSafe", "MarkupDisplay", "filters::Safe"];
+
+/// The one file that marks a type as already escaped, relative to the crate.
+const README_HTML: &str = "src/pages/project/readme/html.rs";
 
 fn crate_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -87,11 +90,62 @@ fn no_source_file_turns_escaping_off() {
     for path in files(&crate_dir().join("src")) {
         let text =
             fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
-        let found = escape_breaks(&text, &patterns);
+        let mut found = escape_breaks(&text, &patterns);
+        if path == crate_dir().join(README_HTML) {
+            found.retain(|pattern| pattern != "HtmlSafe");
+        }
         assert!(
             found.is_empty(),
             "{} turns escaping off: {found:?}",
             path.display()
         );
+    }
+}
+
+#[test]
+fn the_readme_html_type_is_the_only_html_safe_impl_and_only_its_file_builds_it() {
+    for path in files(&crate_dir().join("src")) {
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        let squeezed: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+        if path == crate_dir().join(README_HTML) {
+            assert_eq!(
+                squeezed.matches("HtmlSafe").count(),
+                1,
+                "{} names the marker more than once",
+                path.display()
+            );
+            assert!(
+                squeezed.contains("implaskama::filters::HtmlSafeforReadmeHtml{}"),
+                "{} marks another type",
+                path.display()
+            );
+        } else {
+            assert!(
+                !squeezed.contains("HtmlSafe"),
+                "{} names the marker",
+                path.display()
+            );
+            assert!(
+                !squeezed.contains("ReadmeHtml("),
+                "{} builds the type",
+                path.display()
+            );
+        }
+    }
+}
+
+#[test]
+fn a_template_prints_the_readme_html_only_in_the_readme_section() {
+    for path in files(&crate_dir().join("templates")) {
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        if text.contains("readme.head") || text.contains("{{ rest }}") {
+            assert!(
+                path.ends_with("project_readme.html"),
+                "{} prints README HTML",
+                path.display()
+            );
+        }
     }
 }

@@ -12,7 +12,8 @@
 //! runs the checks for one crate release and keeps the result in the cache
 //! directory. [`check_forge_link`] does the same for a [`ForgeRepo`]. The HTTP
 //! layer sits behind [`Transport`](crate::http::Transport), so the check runs
-//! without a network.
+//! without a network. [`github_readme`] and [`forge_readme`] fetch a repo's README
+//! through the same hosts. No tier rule reads it.
 
 mod cache;
 mod check;
@@ -21,6 +22,7 @@ mod forge;
 mod forge_check;
 mod manifest;
 mod query;
+mod readme;
 #[cfg(test)]
 mod test_host;
 mod types;
@@ -32,6 +34,7 @@ pub use check::{CommitStanding, commit_standing};
 pub use error::LinkError;
 pub use forge::{ForgeHost, ForgeRepo};
 pub use forge_check::{cached_forge_link, check_forge_link};
+pub use readme::{MAX_README, RepoReadme, forge_readme, github_readme};
 pub use types::{CrateRelease, LinkCheck, LinkOutcome};
 pub use vcs_info::{MAX_VCS_INFO, VcsInfo, VcsInfoError, read_vcs_info};
 pub use verify::{cached_link, check_link};

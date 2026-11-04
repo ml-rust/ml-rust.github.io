@@ -8,6 +8,10 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Added
 
+- `catalogue tiers`: fetches each repository README into the report.
+- Project pages lead with an About section from the README, sanitized.
+- Search reads README prose at low weight.
+- Project pages: one stat row, one Links card, a collapsed Why section.
 - Search reads crate keywords, crate categories and repository topics.
 - Apps that publish a crate show its release facts and `cargo install`.
 - Sort and filter on list pages, copy buttons on install lines.

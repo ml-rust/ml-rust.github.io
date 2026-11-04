@@ -2,6 +2,7 @@
 
 mod entry;
 mod fact;
+mod readme;
 mod tier_report;
 
 pub use entry::{EntryReport, ReasonRecord};
@@ -13,4 +14,5 @@ pub use fact::{
     PEAK_DEPENDENTS_LABEL, PEAK_USERS_SIGNAL, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL,
     RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, STARS_SIGNAL, SignalFact, SourceRef, never_counts,
 };
+pub use readme::ReadmeFact;
 pub use tier_report::{REPORT_SCHEMA, ReportMismatch, TierReport};

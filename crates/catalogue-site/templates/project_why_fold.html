@@ -1,0 +1,7 @@
+<details class="disclosure disclosure-card" id="tier">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Why {{ why.badge.name }}</span><span class="disclosure-summary">{{ why.summary() }}</span></summary>
+{%- for line in why.more_lead() %}
+<p class="why-lead">{{ line }}</p>
+{%- endfor %}
+{% include "project_why_body.html" %}
+</details>

@@ -38,7 +38,7 @@ pub(in crate::link) enum RepoSite<'a> {
 
 impl RepoSite<'_> {
     /// The URL that describes the repo and names its default branch.
-    pub(super) fn repo_url(&self) -> String {
+    pub(in crate::link) fn repo_url(&self) -> String {
         match self {
             Self::Github { repo, .. } => format!("{GITHUB_REPOS}/{}/{}", repo.owner, repo.name),
             Self::Forge(repo) => match repo.host {
@@ -67,8 +67,23 @@ impl RepoSite<'_> {
         }
     }
 
+    /// The URL of page `page`, from 1, of the root folder of `branch`.
+    ///
+    /// Only GitLab pages its tree. The other hosts answer the first page and stop.
+    pub(super) fn root_tree_url(&self, branch: &str, page: u32) -> String {
+        let root = self.repo_url();
+        let branch = percent_encode(branch);
+        match self {
+            Self::Forge(ForgeRepo {
+                host: ForgeHost::Gitlab,
+                ..
+            }) => format!("{root}/repository/tree?ref={branch}&per_page={GITLAB_PAGE}&page={page}"),
+            Self::Github { .. } | Self::Forge(_) => format!("{root}/git/trees/{branch}"),
+        }
+    }
+
     /// The URL of the raw bytes of `path` on `branch`.
-    pub(super) fn raw_url(&self, branch: &str, path: &str) -> String {
+    pub(in crate::link) fn raw_url(&self, branch: &str, path: &str) -> String {
         let root = self.repo_url();
         let branch = percent_encode(branch);
         match self {
@@ -86,7 +101,7 @@ impl RepoSite<'_> {
     }
 
     /// The headers of a JSON request. Only GitHub gets the token.
-    pub(super) fn json_headers(&self) -> Vec<(&'static str, String)> {
+    pub(in crate::link) fn json_headers(&self) -> Vec<(&'static str, String)> {
         match self {
             Self::Github { token, .. } => rest_headers(token, GITHUB_JSON),
             Self::Forge(_) => Vec::new(),
@@ -94,7 +109,7 @@ impl RepoSite<'_> {
     }
 
     /// The headers of a raw file request. Only GitHub gets the token.
-    pub(super) fn raw_headers(&self) -> Vec<(&'static str, String)> {
+    pub(in crate::link) fn raw_headers(&self) -> Vec<(&'static str, String)> {
         match self {
             Self::Github { token, .. } => rest_headers(token, GITHUB_RAW),
             Self::Forge(_) => Vec::new(),
@@ -111,7 +126,7 @@ impl RepoSite<'_> {
     }
 
     /// Parses a JSON answer from `url`.
-    pub(super) fn parse<T: DeserializeOwned>(
+    pub(in crate::link) fn parse<T: DeserializeOwned>(
         &self,
         url: &str,
         body: &[u8],
