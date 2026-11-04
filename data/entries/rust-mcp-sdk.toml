@@ -1,0 +1,14 @@
+name = "rust-mcp-sdk"
+kind = "library"
+repo = "https://github.com/rust-mcp-stack/rust-mcp-sdk"
+homepage = "https://rust-mcp-stack.github.io/rust-mcp-sdk/"
+crates = ["rust-mcp-sdk", "rust-mcp-actix", "rust-mcp-axum", "rust-mcp-extra", "rust-mcp-macros", "rust-mcp-transport"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An asynchronous SDK and framework for building MCP-Servers and MCP-Clients, leveraging the rust-mcp-schema for type safe MCP Schema Objects."
+source = "crate"
+source_url = "https://crates.io/crates/rust-mcp-sdk"

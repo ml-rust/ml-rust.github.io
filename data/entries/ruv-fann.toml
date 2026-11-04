@@ -1,0 +1,13 @@
+name = "ruv-fann"
+kind = "library"
+repo = "https://github.com/ruvnet/ruv-fann"
+crates = ["ruv-fann", "claude-parser", "geometric-langlands", "geometric-langlands-cli", "micro_cartan_attn", "micro_core", "micro_metrics", "micro_routing", "micro_swarm", "neuro-divergent-models", "neuro-divergent-training", "neurodna", "opencv-core", "opencv-sdk", "opencv-wasm", "ruv-swarm-agents", "ruv-swarm-core", "ruv-swarm-daa", "ruv-swarm-mcp", "ruv-swarm-ml", "ruv-swarm-ml-training", "ruv-swarm-persistence", "ruv-swarm-transport"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A pure Rust implementation of the Fast Artificial Neural Network (FANN) library"
+source = "crate"
+source_url = "https://crates.io/crates/ruv-fann"

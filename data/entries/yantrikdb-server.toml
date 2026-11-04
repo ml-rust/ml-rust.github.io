@@ -1,0 +1,14 @@
+name = "yantrikdb-server"
+kind = "app"
+repo = "https://github.com/yantrikos/yantrikdb-server"
+homepage = "https://github.com/yantrikos/yantrikdb-server"
+crates = ["yantrikdb-server", "yantrikdb-protocol", "yantrikdb-witness", "yql"]
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "YantrikDB database server — multi-tenant cognitive memory with wire protocol, HTTP gateway, replication, auto-failover, and at-rest encryption"
+source = "crate"
+source_url = "https://crates.io/crates/yantrikdb-server"

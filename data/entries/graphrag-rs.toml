@@ -1,0 +1,14 @@
+name = "graphrag-rs"
+kind = "library"
+repo = "https://github.com/automataia/graphrag-rs"
+homepage = "https://github.com/automataIA/graphrag-rs"
+crates = ["graphrag", "graphrag-cli", "graphrag-core"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "GraphRAG - Knowledge Graph RAG: meta-crate that bundles graphrag-core and graphrag-cli"
+source = "crate"
+source_url = "https://crates.io/crates/graphrag"

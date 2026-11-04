@@ -1,0 +1,13 @@
+name = "icebreaker"
+kind = "library"
+repo = "https://github.com/hecrj/icebreaker"
+crates = ["icebreaker", "icebreaker_core"]
+topics = ["llm-apps", "run-models"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A local AI chat app powered by 🦀Rust, 🧊iced, 🤗Hugging Face, and 🦙llama.cpp"
+source = "crate"
+source_url = "https://crates.io/crates/icebreaker"

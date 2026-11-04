@@ -1,0 +1,13 @@
+name = "franken_ocr"
+kind = "library"
+repo = "https://github.com/dicklesworthstone/franken_ocr"
+crates = ["franken_ocr"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure-Rust, CPU-hyper-optimized runner for the Baidu Unlimited-OCR model (single-binary CLI: focr)"
+source = "crate"
+source_url = "https://crates.io/crates/franken_ocr"

@@ -1,0 +1,13 @@
+name = "xn-ptts"
+kind = "library"
+repo = "https://github.com/gradium-ai/xn-ptts"
+crates = ["ptts"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Phonon text-to-speech inference and serving"
+source = "crate"
+source_url = "https://crates.io/crates/ptts"

@@ -1,0 +1,13 @@
+name = "wgmath"
+kind = "app"
+repo = "https://github.com/wgmath/wgmath"
+crates = []
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "GPU scientific computing on every platform"
+source = "repo"
+source_url = "https://github.com/wgmath/wgmath"

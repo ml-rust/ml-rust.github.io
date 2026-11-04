@@ -1,0 +1,14 @@
+name = "next-plaid"
+kind = "library"
+repo = "https://github.com/lightonai/next-plaid"
+homepage = "https://github.com/lightonai/next-plaid"
+crates = ["next-plaid", "colgrep", "colgrep-agent", "next-plaid-cli", "next-plaid-onnx"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "CPU-based PLAID implementation for multi-vector search using ndarray"
+source = "crate"
+source_url = "https://crates.io/crates/next-plaid"

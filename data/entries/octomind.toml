@@ -1,0 +1,14 @@
+name = "octomind"
+kind = "app"
+repo = "https://github.com/muvon/octomind"
+homepage = "https://octomind.run/"
+crates = ["octomind"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Open-source AI coding agent and agent runtime: one binary, any model, MCP-native. Runs in terminal, CI, or as a daemon — guardrails in scripts, not approval popups."
+source = "crate"
+source_url = "https://crates.io/crates/octomind"

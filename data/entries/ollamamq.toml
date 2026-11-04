@@ -1,0 +1,14 @@
+name = "ollamaMQ"
+kind = "app"
+repo = "https://github.com/chleba/ollamamq"
+homepage = "https://github.com/Chleba/ollamaMQ"
+crates = ["ollamaMQ"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance LLM backends proxy with per-user fair-share queuing, round-robin scheduling, and a real-time TUI dashboard. Built in Rust."
+source = "repo"
+source_url = "https://github.com/chleba/ollamamq"

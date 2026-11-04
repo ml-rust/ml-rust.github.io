@@ -1,0 +1,14 @@
+name = "ahnlich"
+kind = "library"
+repo = "https://github.com/deven96/ahnlich"
+homepage = "https://github.com/deven96/ahnlich/ahnlich/types"
+crates = ["ahnlich_types", "ahnlich_client_rs"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Suite of tools containing an in-memory vector datastore and AI proxy"
+source = "repo"
+source_url = "https://github.com/deven96/ahnlich"

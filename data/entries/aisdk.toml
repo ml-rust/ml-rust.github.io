@@ -1,0 +1,14 @@
+name = "aisdk"
+kind = "library"
+repo = "https://github.com/lazy-hq/aisdk"
+homepage = "https://github.com/lazy-hq/aisdk"
+crates = ["aisdk", "aisdk-macros"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An open-source Rust library for building AI-powered applications, inspired by the Vercel AI SDK. It provides a robust, type-safe, and easy-to-use interface for interacting with various Large Language Models (LLMs)."
+source = "crate"
+source_url = "https://crates.io/crates/aisdk"

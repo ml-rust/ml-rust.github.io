@@ -1,0 +1,14 @@
+name = "seekstorm"
+kind = "library"
+repo = "https://github.com/seekstorm/seekstorm"
+homepage = "https://seekstorm.com/"
+crates = ["seekstorm", "seekstorm_server"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Vector & lexical search engine library & multi-tenancy server"
+source = "crate"
+source_url = "https://crates.io/crates/seekstorm"

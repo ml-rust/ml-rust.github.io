@@ -1,0 +1,14 @@
+name = "russell"
+kind = "library"
+repo = "https://github.com/cpmech/russell"
+homepage = "https://github.com/cpmech/russell"
+crates = ["russell_lab", "russell_nonlin", "russell_ode", "russell_pde", "russell_sparse", "russell_stat", "russell_tensor"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Scientific laboratory for linear algebra and numerical mathematics"
+source = "crate"
+source_url = "https://crates.io/crates/russell_lab"

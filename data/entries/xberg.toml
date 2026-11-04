@@ -1,0 +1,14 @@
+name = "xberg"
+kind = "library"
+repo = "https://github.com/xberg-io/xberg"
+homepage = "https://xberg.io/"
+crates = ["xberg", "xberg-candle-ocr", "xberg-cli", "xberg-gliner", "xberg-libheif", "xberg-libwpd", "xberg-native-pdf", "xberg-paddle-ocr", "xberg-pdfium-render", "xberg-tesseract"]
+topics = ["text-search", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance document intelligence library for Rust. Extract text, metadata, and structured data from PDFs, Office documents, images, and 107 formats and 371 programming languages via tree-sitter code intelligence with async/sync APIs."
+source = "crate"
+source_url = "https://crates.io/crates/xberg"

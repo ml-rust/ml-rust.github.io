@@ -1,0 +1,14 @@
+name = "zeroclaw"
+kind = "app"
+repo = "https://github.com/zeroclaw-labs/zeroclaw"
+homepage = "https://www.zeroclaw.com/"
+crates = ["zeroclaw", "aardvark-sys", "zeroclaw-api", "zeroclaw-buildinfo", "zeroclaw-channels", "zeroclaw-commands", "zeroclaw-config", "zeroclaw-eval", "zeroclaw-gateway", "zeroclaw-hardware", "zeroclaw-infra", "zeroclaw-log", "zeroclaw-macros", "zeroclaw-memory", "zeroclaw-plugins", "zeroclaw-providers", "zeroclaw-relay-proto", "zeroclaw-runtime", "zeroclaw-sop-graph", "zeroclaw-spawn", "zeroclaw-tls", "zeroclaw-tool-call-parser", "zeroclaw-tools", "zeroclawlabs", "zerocode", "zerorelay"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Zero overhead. Zero compromise. 100% Rust. The fastest, smallest AI assistant."
+source = "crate"
+source_url = "https://crates.io/crates/zeroclaw"

@@ -1,0 +1,14 @@
+name = "pmetal"
+kind = "library"
+repo = "https://github.com/epistates/pmetal"
+homepage = "https://pmetal.io/"
+crates = ["pmetal", "pmetal-bridge", "pmetal-cache", "pmetal-cli", "pmetal-core", "pmetal-core-derive", "pmetal-data", "pmetal-distill", "pmetal-distributed", "pmetal-gguf", "pmetal-hub", "pmetal-lora", "pmetal-mcp", "pmetal-merge", "pmetal-metal", "pmetal-mhc", "pmetal-mlx", "pmetal-models", "pmetal-py", "pmetal-runtime", "pmetal-serve", "pmetal-supervisor", "pmetal-trainer", "pmetal-vocoder"]
+topics = ["run-models", "train-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance LLM fine-tuning framework for Apple Silicon"
+source = "crate"
+source_url = "https://crates.io/crates/pmetal"

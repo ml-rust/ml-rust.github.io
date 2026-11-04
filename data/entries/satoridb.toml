@@ -1,0 +1,13 @@
+name = "satoriDB"
+kind = "app"
+repo = "https://github.com/nubskr/satoridb"
+crates = []
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High performance embedded vector database"
+source = "repo"
+source_url = "https://github.com/nubskr/satoridb"

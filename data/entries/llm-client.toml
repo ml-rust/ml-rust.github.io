@@ -1,0 +1,14 @@
+name = "llm_client"
+kind = "library"
+repo = "https://github.com/shelbyjenkins/llm_client"
+homepage = "https://github.com/shelbyJenkins/llm_client"
+crates = ["llm_client", "llm_devices", "llm_interface", "llm_models", "llm_prompt", "lmcpp"]
+topics = ["llm-apps", "run-models"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "llm_client: The easiest Rust interface for local LLMs"
+source = "crate"
+source_url = "https://crates.io/crates/llm_client"

@@ -1,0 +1,14 @@
+name = "rust-agentai"
+kind = "library"
+repo = "https://github.com/adamstrojek/rust-agentai"
+homepage = "https://docs.rs/agentai"
+crates = ["agentai", "agentai-macros"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "AgentAI is a Rust library designed to simplify the creation of AI agents."
+source = "crate"
+source_url = "https://crates.io/crates/agentai"

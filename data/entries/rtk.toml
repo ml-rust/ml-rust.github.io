@@ -1,0 +1,14 @@
+name = "rtk"
+kind = "app"
+repo = "https://github.com/rtk-ai/rtk"
+homepage = "https://www.rtk-ai.app/"
+crates = ["brokk-rtk"]
+topics = ["llm-apps"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust Token Killer - High-performance CLI proxy to minimize LLM token consumption"
+source = "crate"
+source_url = "https://crates.io/crates/brokk-rtk"

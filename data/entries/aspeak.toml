@@ -1,0 +1,14 @@
+name = "aspeak"
+kind = "app"
+repo = "https://github.com/kxxt/aspeak"
+homepage = "https://github.com/kxxt/aspeak"
+crates = ["aspeak"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A simple text-to-speech client for Azure TTS API."
+source = "crate"
+source_url = "https://crates.io/crates/aspeak"

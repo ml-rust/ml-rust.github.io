@@ -1,0 +1,14 @@
+name = "cua"
+kind = "app"
+repo = "https://github.com/trycua/cua"
+homepage = "https://cua.ai/"
+crates = ["cua-daemon", "cua-agent-setup", "cua-agents", "cua-auth", "cua-byoc", "cua-cluster", "cua-connections", "cua-contrib", "cua-create-failure", "cua-disk", "cua-home", "cua-host", "cua-hotspot", "cua-icon-cache", "cua-image", "cua-mesh", "cua-microvm-init", "cua-proto", "cua-repo-cache", "cua-sandbox-core", "cua-sdk", "cua-share", "cua-snapshot-sync", "cua-spaces", "cua-spaces-contract", "cua-spacesd-client", "cua-telemetry", "cua-vmm"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Scale computer-use 2.0 with open-source drivers, cross-OS sandboxes, and benchmarks for training, evaluation, and data generation."
+source = "repo"
+source_url = "https://github.com/trycua/cua"

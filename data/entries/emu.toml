@@ -1,0 +1,14 @@
+name = "emu"
+kind = "library"
+repo = "https://github.com/calebwin/emu"
+homepage = "https://www.github.com/calebwin/emu"
+crates = ["emu_core", "em", "emu_glsl", "emu_macro"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A low-level GPGPU compute library featuring cross-platform support and SPIR-V as input"
+source = "crate"
+source_url = "https://crates.io/crates/emu_core"

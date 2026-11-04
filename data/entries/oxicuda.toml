@@ -1,0 +1,14 @@
+name = "oxicuda"
+kind = "library"
+repo = "https://github.com/cool-japan/oxicuda"
+homepage = "https://github.com/cool-japan/oxicuda"
+crates = ["oxicuda", "oxicuda-adversarial", "oxicuda-ann", "oxicuda-anomaly", "oxicuda-audio", "oxicuda-autotune", "oxicuda-backend", "oxicuda-bayes", "oxicuda-blas", "oxicuda-causal", "oxicuda-continual", "oxicuda-cs", "oxicuda-cvx", "oxicuda-dist-infer", "oxicuda-distill", "oxicuda-dnn", "oxicuda-driver", "oxicuda-evol", "oxicuda-federated", "oxicuda-fft", "oxicuda-gen", "oxicuda-geom2d", "oxicuda-geometry3d", "oxicuda-gnn", "oxicuda-graph", "oxicuda-graphalg", "oxicuda-hdc", "oxicuda-infer", "oxicuda-launch", "oxicuda-levelzero", "oxicuda-lm", "oxicuda-mamba", "oxicuda-manifold", "oxicuda-memory", "oxicuda-meta", "oxicuda-metal", "oxicuda-moe", "oxicuda-multimodal", "oxicuda-nas", "oxicuda-nerf", "oxicuda-numeric", "oxicuda-nvrtc", "oxicuda-ot", "oxicuda-pde", "oxicuda-peft", "oxicuda-pinn", "oxicuda-primitives", "oxicuda-privacy", "oxicuda-ptx", "oxicuda-quant", "oxicuda-quantum", "oxicuda-rand", "oxicuda-recsys", "oxicuda-rl", "oxicuda-rlhf", "oxicuda-rocm", "oxicuda-runtime", "oxicuda-seq", "oxicuda-signal", "oxicuda-sketch", "oxicuda-snn", "oxicuda-solver", "oxicuda-sparse", "oxicuda-ssl", "oxicuda-stats", "oxicuda-survival", "oxicuda-tabular", "oxicuda-tda", "oxicuda-timeseries", "oxicuda-tn", "oxicuda-train", "oxicuda-vision", "oxicuda-vulkan", "oxicuda-webgpu"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "OxiCUDA replaces the entire NVIDIA CUDA Toolkit software stack with type-safe, memory-safe Rust code. "
+source = "repo"
+source_url = "https://github.com/cool-japan/oxicuda"

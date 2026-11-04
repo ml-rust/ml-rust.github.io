@@ -1,0 +1,18 @@
+name = "hyper-mcp"
+kind = "app"
+repo = "https://github.com/hyper-mcp-rs/hyper-mcp"
+homepage = "https://github.com/hyper-mcp-rs/hyper-mcp"
+crates = ["hyper-mcp"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "📦️ A fast, secure MCP server that extends its capabilities through WebAssembly plugins."
+source = "repo"
+source_url = "https://github.com/hyper-mcp-rs/hyper-mcp"
+
+[distribution]
+homebrew = "hyper-mcp"
+docker = []

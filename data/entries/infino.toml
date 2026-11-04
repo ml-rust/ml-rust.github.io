@@ -1,0 +1,14 @@
+name = "infino"
+kind = "library"
+repo = "https://github.com/infino-ai/infino"
+homepage = "https://github.com/infino-ai/infino"
+crates = ["infino"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fast retrieval engine that stores data on object storage and runs SQL, full-text search, and vector search over it from a single system — search-on-Parquet."
+source = "crate"
+source_url = "https://crates.io/crates/infino"

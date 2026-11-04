@@ -1,0 +1,14 @@
+name = "usls"
+kind = "library"
+repo = "https://github.com/jamjamjon/usls"
+homepage = "https://docs.rs/usls/latest/usls/"
+crates = ["usls"]
+topics = ["run-models", "vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust library integrated with ONNXRuntime, providing a collection of ML models."
+source = "crate"
+source_url = "https://crates.io/crates/usls"

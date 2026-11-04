@@ -1,0 +1,18 @@
+name = "tinysearch"
+kind = "app"
+repo = "https://github.com/tinysearch/tinysearch"
+homepage = "https://endler.dev/2019/tinysearch"
+crates = []
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "🔍 Tiny, full-text search engine for static websites built with Rust and Wasm"
+source = "repo"
+source_url = "https://github.com/tinysearch/tinysearch"
+
+[distribution]
+homebrew = "tinysearch"
+docker = []

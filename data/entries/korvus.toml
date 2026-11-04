@@ -1,0 +1,14 @@
+name = "korvus"
+kind = "library"
+repo = "https://github.com/postgresml/korvus"
+homepage = "https://postgresml.org/"
+crates = ["korvus"]
+topics = ["text-search"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Korvus is a search SDK that unifies the entire RAG pipeline in a single database query. Built on top of Postgres with bindings for Python, JavaScript, Rust and C."
+source = "repo"
+source_url = "https://github.com/postgresml/korvus"

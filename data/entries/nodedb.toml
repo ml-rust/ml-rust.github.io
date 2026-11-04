@@ -1,0 +1,14 @@
+name = "nodedb"
+kind = "library"
+repo = "https://github.com/nodedb-lab/nodedb"
+homepage = "https://nodedb.dev/"
+crates = ["nodedb", "nodedb-array", "nodedb-bridge", "nodedb-cli", "nodedb-client", "nodedb-cluster", "nodedb-codec", "nodedb-columnar", "nodedb-crdt", "nodedb-document", "nodedb-fts", "nodedb-graph", "nodedb-mem", "nodedb-physical", "nodedb-query", "nodedb-raft", "nodedb-spatial", "nodedb-sql", "nodedb-strict", "nodedb-types", "nodedb-vector", "nodedb-wal"]
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Local-first, real-time, edge-to-cloud hybrid database for multi-modal workloads"
+source = "crate"
+source_url = "https://crates.io/crates/nodedb"

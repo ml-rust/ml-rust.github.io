@@ -1,0 +1,14 @@
+name = "hyperspace-db"
+kind = "library"
+repo = "https://github.com/yarlabs/hyperspace-db"
+homepage = "https://yar.ink/"
+crates = ["hyperspace-proto", "hyperspace-sdk"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "[H] HyperspaceDB is a high-performance, vector database. It features 1-bit quantization, async replication, and native support for hierarchical datasets (Lorentz, Poincaré ball & Hybrid models)."
+source = "repo"
+source_url = "https://github.com/yarlabs/hyperspace-db"

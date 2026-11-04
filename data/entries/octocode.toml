@@ -1,0 +1,14 @@
+name = "octocode"
+kind = "app"
+repo = "https://github.com/muvon/octocode"
+homepage = "https://octomind.run/product/octocode"
+crates = ["octocode"]
+topics = ["text-search"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "AI-powered code intelligence with semantic search, knowledge graphs, and built-in MCP server. Transform your codebase into a queryable knowledge graph for AI assistants."
+source = "crate"
+source_url = "https://crates.io/crates/octocode"

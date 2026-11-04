@@ -1,0 +1,13 @@
+name = "bullet"
+kind = "library"
+repo = "https://github.com/jw1912/bullet"
+crates = ["acyclib"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "ML library for directed acyclic tensor graphs."
+source = "crate"
+source_url = "https://crates.io/crates/acyclib"

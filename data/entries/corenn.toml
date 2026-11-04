@@ -1,0 +1,14 @@
+name = "corenn"
+kind = "library"
+repo = "https://github.com/wilsonzlin/corenn"
+homepage = "https://github.com/wilsonzlin/corenn"
+crates = ["corenn", "corenn-kernels", "hnswlib-rs", "libcorenn"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Billion-scale vector database"
+source = "crate"
+source_url = "https://crates.io/crates/corenn"

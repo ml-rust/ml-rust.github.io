@@ -1,0 +1,13 @@
+name = "rustyml"
+kind = "library"
+repo = "https://github.com/someb1oody/rustyml"
+crates = ["rustyml"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine learning models, neural networks, metrics, and data utilities in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/rustyml"

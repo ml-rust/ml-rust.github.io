@@ -1,0 +1,13 @@
+name = "alyze"
+kind = "library"
+repo = "https://github.com/turbopuffer/alyze"
+crates = ["alyze"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance text analysis for full-text search"
+source = "crate"
+source_url = "https://crates.io/crates/alyze"

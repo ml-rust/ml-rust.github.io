@@ -1,0 +1,13 @@
+name = "instant-segment"
+kind = "app"
+repo = "https://github.com/djc/instant-segment"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast English word segmentation in Rust"
+source = "repo"
+source_url = "https://github.com/djc/instant-segment"

@@ -1,0 +1,14 @@
+name = "ante"
+kind = "app"
+repo = "https://github.com/antigmalabs/ante"
+homepage = "https://antigma.ai/"
+crates = ["ante-protocol-shape", "ante-acp", "ante-exec", "ante-gateway", "ante-llm", "ante-sdk"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ghost in your shell. Ante is a self-contained agent harness with a highly optimized core. It works like Claude Code or Codex, with none of their dependencies or model constraints. "
+source = "repo"
+source_url = "https://github.com/antigmalabs/ante"

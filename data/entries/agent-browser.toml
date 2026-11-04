@@ -1,0 +1,19 @@
+name = "agent-browser"
+kind = "app"
+repo = "https://github.com/vercel-labs/agent-browser"
+homepage = "https://agent-browser.dev/"
+crates = ["agent-browser"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Browser automation CLI for AI agents"
+source = "repo"
+source_url = "https://github.com/vercel-labs/agent-browser"
+
+[distribution]
+homebrew = "agent-browser"
+docker = []
+repology = "agent-browser"

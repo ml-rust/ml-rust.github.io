@@ -1,0 +1,14 @@
+name = "code2prompt"
+kind = "app"
+repo = "https://github.com/mufeedvh/code2prompt"
+homepage = "https://code2prompt.dev/"
+crates = ["code2prompt", "code2prompt_core"]
+topics = ["llm-apps"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A CLI tool to convert your codebase into a single LLM prompt with source tree, prompt templating, and token counting."
+source = "repo"
+source_url = "https://github.com/mufeedvh/code2prompt"

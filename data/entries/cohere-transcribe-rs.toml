@@ -1,0 +1,13 @@
+name = "cohere-transcribe-rs"
+kind = "library"
+repo = "https://github.com/second-state/cohere_transcribe_rs"
+crates = ["cohere-transcribe-rs"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation for the CohereLabs/cohere-transcribe-03-2026 speech-to-text model. Includes a CLI and an OpenAI-compatible API server."
+source = "crate"
+source_url = "https://crates.io/crates/cohere-transcribe-rs"

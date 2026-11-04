@@ -1,0 +1,13 @@
+name = "scribble"
+kind = "library"
+repo = "https://github.com/itsmontoya/scribble"
+crates = ["scribble"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-level Rust API for audio transcription using Whisper"
+source = "crate"
+source_url = "https://crates.io/crates/scribble"

@@ -1,0 +1,14 @@
+name = "needle-rs"
+kind = "library"
+repo = "https://github.com/geekgineer/needle-rs"
+homepage = "https://github.com/geekgineer/needle-rs"
+crates = ["needle-core", "needle-c", "needle-infer", "needle-rs-cli"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "600 KB WASM runtime for Cactus Compute's Needle AI tool-calling models, Needle 3, 2 and 1 from one build. Browser, Cloudflare Workers, Node.js, Python, C FFI and no_std. Token-exact with the JAX reference. No backend, no API key."
+source = "repo"
+source_url = "https://github.com/geekgineer/needle-rs"

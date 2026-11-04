@@ -1,0 +1,14 @@
+name = "respan-gateway"
+kind = "app"
+repo = "https://github.com/respanai/respan-gateway"
+homepage = "https://respan.ai/ai-gateway"
+crates = ["respan-gateway", "respan-gateway-conversation", "respan-gateway-conversation-http", "respan-gateway-core", "respan-gateway-decision", "respan-gateway-decision-http", "respan-gateway-http", "respan-gateway-http-faults", "respan-gateway-http-transport", "respan-gateway-mcp", "respan-gateway-mcp-http", "respan-gateway-media", "respan-gateway-media-http", "respan-gateway-passthrough-http", "respan-gateway-plugin-credentials", "respan-gateway-plugin-fallback", "respan-gateway-plugin-mcp-aggregate", "respan-gateway-plugin-mcp-router", "respan-gateway-plugin-pricing", "respan-gateway-plugin-relay", "respan-gateway-plugin-respan", "respan-gateway-plugin-responses", "respan-gateway-plugin-routing", "respan-gateway-plugin-tool-loop", "respan-gateway-realtime", "respan-gateway-realtime-ws", "respan-gateway-sdk", "respan-gateway-serve", "respan-gateway-sse", "respan-gateway-tool-vendor-kit", "respan-gateway-tool-vendors", "respan-gateway-tool-vendors-green", "respan-gateway-tool-vendors-yellow", "respan-gateway-vendor-kit", "respan-gateway-vendors", "respan-gateway-vendors-green", "respan-gateway-vendors-yellow", "respan-gateway-ws"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An LLM gateway with a neutral core and compiled-in plugins."
+source = "crate"
+source_url = "https://crates.io/crates/respan-gateway"

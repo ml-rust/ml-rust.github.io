@@ -1,0 +1,14 @@
+name = "mentedb"
+kind = "library"
+repo = "https://github.com/nambok/mentedb"
+homepage = "https://mentedb.com/"
+crates = ["mentedb", "mentedb-cli", "mentedb-cognitive", "mentedb-consolidation", "mentedb-context", "mentedb-core", "mentedb-embedding", "mentedb-extraction", "mentedb-graph", "mentedb-index", "mentedb-query", "mentedb-server", "mentedb-storage"]
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A purpose-built database engine for AI agent memory"
+source = "crate"
+source_url = "https://crates.io/crates/mentedb"

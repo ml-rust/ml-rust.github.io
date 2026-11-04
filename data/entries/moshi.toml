@@ -1,0 +1,13 @@
+name = "moshi"
+kind = "library"
+repo = "https://github.com/kyutai-labs/moshi"
+crates = ["moshi", "mimi-pyo3", "moshi-backend", "moshi-cli", "moshi-server"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "moshi, a real-time voice AI"
+source = "crate"
+source_url = "https://crates.io/crates/moshi"

@@ -1,0 +1,13 @@
+name = "hnswlib-rs"
+kind = "library"
+repo = "https://github.com/jean-pierreBoth/hnswlib-rs"
+crates = ["hnsw_rs"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "Rust implementation of the HNSW algorithm (Malkov-Yashunin)"
+source = "repo"
+source_url = "https://github.com/jean-pierreBoth/hnswlib-rs"

@@ -1,0 +1,14 @@
+name = "mofa"
+kind = "library"
+repo = "https://github.com/mofa-org/mofa"
+homepage = "https://github.com/mofa-org/mofa"
+crates = ["mofa-kernel", "mofa-ai", "mofa-extra", "mofa-foundation", "mofa-monitoring", "mofa-plugins", "mofa-runtime", "mofa-sdk"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "MoFA - Modular Framework for Agents. Modular, Compositional and Programmable."
+source = "repo"
+source_url = "https://github.com/mofa-org/mofa"

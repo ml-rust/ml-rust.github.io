@@ -1,0 +1,14 @@
+name = "minutes"
+kind = "app"
+repo = "https://github.com/silverstein/minutes"
+homepage = "https://useminutes.app/"
+crates = ["minutes-core", "minutes-cli", "whisper-guard"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Open-source, local-first Granola/Otter alternative that Claude Code, Codex, Cursor, and any MCP client can query. Meetings, calls, and voice memos transcribed on-device into markdown you own."
+source = "repo"
+source_url = "https://github.com/silverstein/minutes"

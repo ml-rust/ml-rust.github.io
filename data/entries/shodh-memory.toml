@@ -1,0 +1,14 @@
+name = "shodh-memory"
+kind = "library"
+repo = "https://github.com/varun29ankus/shodh-memory"
+homepage = "https://github.com/varun29ankuS/shodh-memory"
+crates = ["shodh-memory"]
+topics = ["llm-apps", "text-search"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Persistent cognitive memory for AI agents and robots — Hebbian learning, knowledge graph, spatial recall. Zenoh/ROS2 native. Single binary, runs offline."
+source = "crate"
+source_url = "https://crates.io/crates/shodh-memory"

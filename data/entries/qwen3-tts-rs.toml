@@ -1,0 +1,13 @@
+name = "qwen3_tts_rs"
+kind = "app"
+repo = "https://github.com/second-state/qwen3_tts_rs"
+crates = []
+topics = ["run-models", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust implementation of the Qwen3 Text-to-Speech (TTS) model inference."
+source = "repo"
+source_url = "https://github.com/second-state/qwen3_tts_rs"

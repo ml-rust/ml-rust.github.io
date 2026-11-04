@@ -1,0 +1,14 @@
+name = "chidori"
+kind = "library"
+repo = "https://github.com/thousandbirdsinc/chidori"
+homepage = "https://docs.thousandbirds.ai/"
+crates = ["chidori", "chidori-core", "chidori-debugger", "chidori-js", "chidori-prompt-format", "chidori-static-analysis", "prompt-graph-core", "prompt-graph-exec"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The agent framework where every run is durable, replayable, and resumable by default. Plain async TypeScript agents on an embedded pure-Rust JS engine."
+source = "crate"
+source_url = "https://crates.io/crates/chidori"

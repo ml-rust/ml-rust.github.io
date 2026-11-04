@@ -1,0 +1,13 @@
+name = "seismic"
+kind = "library"
+repo = "https://github.com/tuskanny/seismic"
+crates = ["seismic"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Seismic is designed for effective and efficient KNN retrieval over learned sparse embeddings."
+source = "crate"
+source_url = "https://crates.io/crates/seismic"

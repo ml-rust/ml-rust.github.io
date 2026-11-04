@@ -1,0 +1,14 @@
+name = "llms-from-scratch-rs"
+kind = "library"
+repo = "https://github.com/nerdai/llms-from-scratch-rs"
+homepage = "https://www.amazon.com/Build-Large-Language-Model-Scratch/dp/1633437167"
+crates = ["llms-from-scratch-rs"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust (candle) code for Build a LLM From Scratch by Sebastian Raschka"
+source = "crate"
+source_url = "https://crates.io/crates/llms-from-scratch-rs"

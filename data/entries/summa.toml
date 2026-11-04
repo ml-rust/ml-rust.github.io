@@ -1,0 +1,14 @@
+name = "summa"
+kind = "library"
+repo = "https://github.com/spacefrontiers/summa"
+homepage = "https://github.com/SpaceFrontiers/summa"
+crates = ["summa-core", "summa-broker", "summa-mal", "summa-proto", "summa-server", "summa-tokenizer", "summa-tool"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Core async search engine library with WASM support"
+source = "crate"
+source_url = "https://crates.io/crates/summa-core"

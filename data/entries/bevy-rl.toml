@@ -1,0 +1,13 @@
+name = "bevy_rl"
+kind = "library"
+repo = "https://github.com/stillonearth/bevy_rl"
+crates = ["bevy_rl", "bevy_dice"]
+topics = ["train-models"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Build environments for reinforcement learning with bevy"
+source = "crate"
+source_url = "https://crates.io/crates/bevy_rl"

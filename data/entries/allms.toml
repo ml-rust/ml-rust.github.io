@@ -1,0 +1,14 @@
+name = "allms"
+kind = "library"
+repo = "https://github.com/neferdata/allms"
+homepage = "https://crates.io/crates/allms"
+crates = ["allms"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "One Library to rule them aLLMs"
+source = "crate"
+source_url = "https://crates.io/crates/allms"

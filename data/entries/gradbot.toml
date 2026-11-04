@@ -1,0 +1,13 @@
+name = "gradbot"
+kind = "library"
+repo = "https://github.com/gradium-ai/gradbot"
+crates = ["gradbot"]
+topics = ["llm-apps", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "Open source framework to vibecode and prototype voice agents with Gradium APIs"
+source = "repo"
+source_url = "https://github.com/gradium-ai/gradbot"

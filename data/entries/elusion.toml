@@ -1,0 +1,14 @@
+name = "elusion"
+kind = "library"
+repo = "https://github.com/databora/elusion"
+homepage = "https://github.com/DataBora/elusion"
+crates = ["elusion"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Elusion is a modern DataFrame / Data Engineering / Data Analysis library that combines the familiarity of DataFrame operations (like those in PySpark, Pandas, and Polars) with the power of SQL query building."
+source = "crate"
+source_url = "https://crates.io/crates/elusion"

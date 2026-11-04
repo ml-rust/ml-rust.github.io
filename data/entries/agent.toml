@@ -1,0 +1,14 @@
+name = "agent"
+kind = "app"
+repo = "https://github.com/stakpak/agent"
+homepage = "https://stakpak.io/"
+crates = ["stakpak", "popup-widget", "stakai", "stakpak-agent-core", "stakpak-ak", "stakpak-api", "stakpak-gateway", "stakpak-mcp-client", "stakpak-mcp-config", "stakpak-mcp-proxy", "stakpak-mcp-server", "stakpak-popup-widget", "stakpak-server", "stakpak-shared", "stakpak-shell-tool-approvals", "stakpak-tui"]
+topics = ["llm-apps"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ship your code, on autopilot. An open source agent that lives on your machines 24/7 and keeps your apps running. 🦀"
+source = "repo"
+source_url = "https://github.com/stakpak/agent"

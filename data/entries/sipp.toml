@@ -1,0 +1,14 @@
+name = "sipp"
+kind = "library"
+repo = "https://github.com/noumena-labs/sipp"
+homepage = "https://www.sipp.sh/"
+crates = ["sipp-rs", "sipp-sys"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Unified Rust library for extensible Sipp inference"
+source = "crate"
+source_url = "https://crates.io/crates/sipp-rs"

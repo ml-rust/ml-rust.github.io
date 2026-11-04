@@ -1,0 +1,14 @@
+name = "oxidizePdf"
+kind = "app"
+repo = "https://github.com/bzsanti/oxidizepdf"
+homepage = "https://bzsanti.github.io/oxidizePdf/"
+crates = ["oxidize-pdf", "oxidize-pdf-cli"]
+topics = ["llm-apps", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust PDF library for AI/RAG: structure-aware chunking, no ML, no C deps."
+source = "repo"
+source_url = "https://github.com/bzsanti/oxidizepdf"

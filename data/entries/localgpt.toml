@@ -1,0 +1,14 @@
+name = "localgpt"
+kind = "app"
+repo = "https://github.com/localgpt-app/localgpt"
+homepage = "https://localgpt.app/"
+crates = ["localgpt", "localgpt-bridge", "localgpt-bridge-cli", "localgpt-bridge-discord", "localgpt-bridge-slack", "localgpt-bridge-telegram", "localgpt-bridge-whatsapp", "localgpt-cli-tools", "localgpt-core", "localgpt-gen", "localgpt-previs", "localgpt-sandbox", "localgpt-server", "localgpt-world-agent", "localgpt-world-audio", "localgpt-world-bevy", "localgpt-world-editor", "localgpt-world-export", "localgpt-world-sync", "localgpt-world-types"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "LocalGPT CLI — a local-only AI assistant"
+source = "crate"
+source_url = "https://crates.io/crates/localgpt"

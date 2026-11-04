@@ -1,0 +1,14 @@
+name = "llmfit"
+kind = "app"
+repo = "https://github.com/alexsjones/llmfit"
+homepage = "https://github.com/AlexsJones/llmfit"
+crates = ["llmfit", "llmfit-core"]
+topics = ["llm-apps", "run-models"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Right-size LLM models to your system hardware. Interactive TUI and CLI to match models against available RAM, CPU, and GPU."
+source = "crate"
+source_url = "https://crates.io/crates/llmfit"

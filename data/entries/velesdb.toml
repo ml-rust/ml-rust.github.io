@@ -1,0 +1,14 @@
+name = "velesdb"
+kind = "library"
+repo = "https://github.com/cyberlife-coder/velesdb"
+homepage = "https://velesdb.com/"
+crates = ["velesdb-core", "tauri-plugin-velesdb", "velesdb-cli", "velesdb-memory", "velesdb-migrate", "velesdb-mobile", "velesdb-server", "velesdb-wasm"]
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance vector database engine written in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/velesdb-core"

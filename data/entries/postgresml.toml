@@ -1,0 +1,14 @@
+name = "postgresml"
+kind = "app"
+repo = "https://github.com/postgresml/postgresml"
+homepage = "https://postgresml.org/"
+crates = ["pgml"]
+topics = ["run-models", "text-search", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Postgres with GPUs for ML/AI apps."
+source = "repo"
+source_url = "https://github.com/postgresml/postgresml"

@@ -1,0 +1,14 @@
+name = "llmman"
+kind = "app"
+repo = "https://github.com/llmmanorg/llmman"
+homepage = "https://github.com/llmmanorg/llmman"
+crates = ["llmman"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Run any agent on any model, models stored as OCI images"
+source = "crate"
+source_url = "https://crates.io/crates/llmman"

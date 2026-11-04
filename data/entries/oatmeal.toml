@@ -1,0 +1,18 @@
+name = "oatmeal"
+kind = "app"
+repo = "https://github.com/dustinblackman/oatmeal"
+homepage = "https://dustinblackman.com/posts/oatmeal/"
+crates = ["oatmeal"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Terminal UI to chat with large language models (LLM) using different model backends, and integrations with your favourite editors!"
+source = "repo"
+source_url = "https://github.com/dustinblackman/oatmeal"
+
+[distribution]
+docker = []
+repology = "oatmeal"

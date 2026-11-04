@@ -1,0 +1,14 @@
+name = "sentencex"
+kind = "library"
+repo = "https://github.com/wikimedia/sentencex"
+homepage = "https://wikimedia.github.io/sentencex/demo"
+crates = ["sentencex"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Sentence segmentation library with wide language support optimized for speed and utility."
+source = "crate"
+source_url = "https://crates.io/crates/sentencex"

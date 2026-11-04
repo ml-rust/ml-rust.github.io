@@ -1,0 +1,14 @@
+name = "pipeless"
+kind = "library"
+repo = "https://github.com/pipeless-ai/pipeless"
+homepage = "https://www.pipeless.ai/"
+crates = ["pipeless-ai"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An open-source computer vision framework to build and deploy applications in minutes"
+source = "crate"
+source_url = "https://crates.io/crates/pipeless-ai"

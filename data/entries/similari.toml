@@ -1,0 +1,14 @@
+name = "similari"
+kind = "library"
+repo = "https://github.com/insight-platform/similari"
+homepage = "https://github.com/insight-platform/Similari"
+crates = ["similari", "similari-trackers-rs"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine learning framework for building object trackers and similarity search engines"
+source = "crate"
+source_url = "https://crates.io/crates/similari"

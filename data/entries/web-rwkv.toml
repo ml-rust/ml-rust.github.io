@@ -1,0 +1,14 @@
+name = "web-rwkv"
+kind = "library"
+repo = "https://github.com/cryscan/web-rwkv"
+homepage = "https://github.com/cryscan/web-rwkv"
+crates = ["web-rwkv", "web-rwkv-derive"]
+topics = ["run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An implementation of the RWKV language model in pure WebGPU."
+source = "crate"
+source_url = "https://crates.io/crates/web-rwkv"

@@ -1,0 +1,14 @@
+name = "docling"
+kind = "library"
+repo = "https://github.com/docling-project/docling.rs"
+homepage = "https://github.com/docling-project/docling.rs"
+crates = ["docling", "docling-asr", "docling-cli", "docling-core", "docling-onnx", "docling-pdf", "docling-rag", "docling-serve"]
+topics = ["text-search", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Full Rust port of Python docling"
+source = "repo"
+source_url = "https://github.com/docling-project/docling.rs"

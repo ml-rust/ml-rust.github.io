@@ -1,0 +1,14 @@
+name = "aprender"
+kind = "library"
+repo = "https://github.com/paiml/aprender"
+homepage = "https://github.com/paiml/aprender"
+crates = ["aprender", "apr-cli", "apr-format", "aprender-build-sha", "aprender-cbtop", "aprender-cgp", "aprender-common", "aprender-compute", "aprender-contracts", "aprender-contracts-cli", "aprender-contracts-macros", "aprender-contrastive-data", "aprender-core", "aprender-cuda-edge", "aprender-cupti", "aprender-data", "aprender-db", "aprender-distribute", "aprender-explain", "aprender-fft", "aprender-gpu", "aprender-graph", "aprender-image", "aprender-mcp", "aprender-monte-carlo", "aprender-orchestrate", "aprender-present-cli", "aprender-present-core", "aprender-present-layout", "aprender-present-lib", "aprender-present-terminal", "aprender-present-test", "aprender-present-test-macros", "aprender-present-widgets", "aprender-present-yaml", "aprender-profile", "aprender-profile-core", "aprender-ptx-debug", "aprender-qa-certify", "aprender-qa-gen", "aprender-quant", "aprender-rag", "aprender-rag-cli", "aprender-rand", "aprender-registry", "aprender-serve", "aprender-shell", "aprender-simulate", "aprender-solve", "aprender-sparse", "aprender-tensor", "aprender-test-cli", "aprender-test-derive", "aprender-test-js-gen", "aprender-test-lib", "aprender-test-showcase", "aprender-train", "aprender-train-bench", "aprender-train-common", "aprender-train-distill", "aprender-train-inspect", "aprender-train-lora", "aprender-train-shell", "aprender-tsp", "aprender-update", "aprender-verify", "aprender-verify-ml", "aprender-viz", "aprender-zram", "aprender-zram-adaptive", "aprender-zram-cli", "aprender-zram-core", "aprender-zram-generator", "forjar-contracts", "forjar-contracts-macros", "provable-contracts", "provable-contracts-macros"]
+topics = ["tabular-ml", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Next-generation ML framework in pure Rust — `cargo install aprender` for the `apr` CLI"
+source = "crate"
+source_url = "https://crates.io/crates/aprender"

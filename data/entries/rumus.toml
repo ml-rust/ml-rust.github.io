@@ -1,0 +1,13 @@
+name = "rumus"
+kind = "library"
+repo = "https://github.com/sum-innovation/rumus"
+crates = ["rumus", "rumus-distributed", "rumus-graph", "rumus-macros", "rumus-serve", "rumus-vision"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A native-Rust deep learning framework with explicit memory safety and hardware acceleration"
+source = "crate"
+source_url = "https://crates.io/crates/rumus"

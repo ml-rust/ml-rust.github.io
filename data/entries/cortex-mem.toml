@@ -1,0 +1,14 @@
+name = "cortex-mem"
+kind = "library"
+repo = "https://github.com/sopaco/cortex-mem"
+homepage = "https://sopaco.github.io/cortex.github.com/"
+crates = ["cortex-mem-core"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "🧠 The production-ready cognitive foundation for autonomous systems such as Embodied-AI and OpenClaw. For memory management, from extraction and search to automated optimization, with SKILL, CLI, API, MCP, and insights dashboard out-of-the-box."
+source = "repo"
+source_url = "https://github.com/sopaco/cortex-mem"

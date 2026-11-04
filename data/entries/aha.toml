@@ -1,0 +1,14 @@
+name = "aha"
+kind = "library"
+repo = "https://github.com/jhqxxx/aha"
+homepage = "https://s5dgj23f.pub.makeit.coderbox.cn/"
+crates = ["aha"]
+topics = ["run-models", "vision-documents"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "aha model inference library, now supports Qwen(2.5VL/3/3VL/3.5/ASR/3Embedding/3Reranker), MiniCPM(4/5), VoxCPM(0.5B/1.5/2), DeepSeek-OCR/2, Hunyuan-OCR, PaddleOCR-VL/1.5, RMBG2.0, GLM(ASR-Nano-2512/OCR), Fun-ASR-Nano-2512, LFM(2/2.5/2VL/2.5VL)"
+source = "crate"
+source_url = "https://crates.io/crates/aha"

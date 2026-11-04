@@ -1,0 +1,14 @@
+name = "tinyvector"
+kind = "app"
+repo = "https://github.com/m1guelpf/tinyvector"
+homepage = "https://crates.io/crates/tinyvector"
+crates = []
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A tiny embedding database in pure Rust."
+source = "repo"
+source_url = "https://github.com/m1guelpf/tinyvector"

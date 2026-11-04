@@ -1,0 +1,14 @@
+name = "flowcat"
+kind = "library"
+repo = "https://github.com/areevai/flowcat"
+homepage = "https://areevai.github.io/flowcat/"
+crates = ["flowcat-core", "flowcat-cli", "flowcat-services", "flowcat-telephony", "flowcat-transports"]
+topics = ["llm-apps", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Self-hosted native-Rust real-time voice-agent runtime — one binary, no Python or softswitch: transports, serializers, codec, and a speech-to-speech (Gemini Live) pipeline."
+source = "crate"
+source_url = "https://crates.io/crates/flowcat-core"

@@ -1,0 +1,14 @@
+name = "llamastash"
+kind = "app"
+repo = "https://github.com/llamastash/llamastash"
+homepage = "https://github.com/llamastash/llamastash"
+crates = ["llamastash"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Zero-overhead, terminal-native local-LLM orchestrator. Run any engine, any model via the same proxy."
+source = "crate"
+source_url = "https://crates.io/crates/llamastash"

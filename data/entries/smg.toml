@@ -1,0 +1,14 @@
+name = "smg"
+kind = "app"
+repo = "https://github.com/smg-project/smg"
+homepage = "https://lightseek.org/smg"
+crates = ["smg", "data-connector", "engine-servicer", "engine-zmq-adapter", "engine-zmq-client", "kv-index", "llm-multimodal", "llm-tokenizer", "openai-protocol", "reasoning-parser", "smg-auth", "smg-client", "smg-external-router", "smg-grpc-client", "smg-mcp", "smg-mesh", "smg-mm-rdma", "smg-radix-tree", "smg-response-template", "smg-rl", "smg-symphony", "smg-wasm", "tool-parser", "wfaas"]
+topics = ["llm-apps", "run-models"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance model-routing gateway for large-scale LLM deployments"
+source = "crate"
+source_url = "https://crates.io/crates/smg"

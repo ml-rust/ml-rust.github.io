@@ -1,0 +1,14 @@
+name = "crw"
+kind = "app"
+repo = "https://github.com/fastcrw/crw"
+homepage = "https://fastcrw.com/"
+crates = ["crw-core", "crw-browse", "crw-cli", "crw-crawl", "crw-diff", "crw-extract", "crw-mcp", "crw-mcp-proto", "crw-renderer", "crw-search", "crw-server"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast, lightweight Firecrawl and Tavily alternative in Rust for web scraping."
+source = "repo"
+source_url = "https://github.com/fastcrw/crw"

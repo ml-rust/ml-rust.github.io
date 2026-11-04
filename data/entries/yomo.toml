@@ -1,0 +1,14 @@
+name = "yomo"
+kind = "library"
+repo = "https://github.com/yomorun/yomo"
+homepage = "https://github.com/yomorun/yomo"
+crates = ["yomo"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A QUIC-based runtime for AI-LLM tool routing and serverless execution"
+source = "crate"
+source_url = "https://crates.io/crates/yomo"

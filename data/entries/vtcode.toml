@@ -1,0 +1,14 @@
+name = "vtcode"
+kind = "app"
+repo = "https://github.com/vinhnx/vtcode"
+homepage = "https://github.com/vinhnx/vtcode"
+crates = ["vtcode", "vtcode-a2a", "vtcode-acp", "vtcode-acp-client", "vtcode-agent-plugins", "vtcode-auth", "vtcode-bash-runner", "vtcode-battery-pack", "vtcode-collaboration-tool-specs", "vtcode-commons", "vtcode-config", "vtcode-core", "vtcode-design", "vtcode-desktop-protocol", "vtcode-diff", "vtcode-eval", "vtcode-exec-events", "vtcode-file-search", "vtcode-ghostty-core", "vtcode-ghostty-vt-sys", "vtcode-indexer", "vtcode-llm", "vtcode-macros", "vtcode-markdown-store", "vtcode-mcp", "vtcode-memory", "vtcode-process-hardening", "vtcode-safety", "vtcode-session-store", "vtcode-skills", "vtcode-terminal-detection", "vtcode-theme", "vtcode-tui", "vtcode-ui", "vtcode-utility-tool-specs", "vtcode-vim", "vtcode-webmcp"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust-based terminal coding agent with modular architecture supporting multiple LLM providers"
+source = "crate"
+source_url = "https://crates.io/crates/vtcode"

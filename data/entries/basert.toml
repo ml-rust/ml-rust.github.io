@@ -1,0 +1,14 @@
+name = "baseRT"
+kind = "library"
+repo = "https://github.com/basecompute/basert"
+homepage = "https://docs.basecompute.co/"
+crates = ["baseRT", "baseRT-sys", "basert-arch", "basert-awq", "basert-cli", "basert-format", "basert-hub", "basert-quant", "basert-readers", "basert-sign"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Safe Rust bindings for the BaseRT LLM inference engine (Apple Silicon)"
+source = "crate"
+source_url = "https://crates.io/crates/baseRT"

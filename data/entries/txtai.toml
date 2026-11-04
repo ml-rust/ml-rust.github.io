@@ -1,0 +1,14 @@
+name = "txtai"
+kind = "library"
+repo = "https://github.com/neuml/txtai.rs"
+homepage = "https://github.com/neuml/txtai.rs"
+crates = ["txtai"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust client for txtai"
+source = "crate"
+source_url = "https://crates.io/crates/txtai"

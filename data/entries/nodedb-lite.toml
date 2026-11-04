@@ -1,0 +1,15 @@
+name = "nodedb-lite"
+kind = "library"
+repo = "https://github.com/nodedb-lab/nodedb-lite"
+homepage = "https://nodedb.dev/"
+crates = ["nodedb-lite", "nodedb-lite-ffi", "nodedb-lite-wasm"]
+topics = ["llm-apps", "text-search"]
+category = "vector-databases"
+part_of = "nodedb"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Embedded edge client for NodeDB — offline vector search, graph traversal, and CRDT sync"
+source = "crate"
+source_url = "https://crates.io/crates/nodedb-lite"

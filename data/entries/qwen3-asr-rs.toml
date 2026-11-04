@@ -1,0 +1,13 @@
+name = "qwen3-asr-rs"
+kind = "library"
+repo = "https://github.com/second-state/qwen3_asr_rs"
+crates = ["qwen3-asr-rs"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust implementation of Qwen3 ASR (Automatic Speech Recognition) with libtorch and MLX backends"
+source = "crate"
+source_url = "https://crates.io/crates/qwen3-asr-rs"

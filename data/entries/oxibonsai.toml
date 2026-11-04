@@ -1,0 +1,14 @@
+name = "oxibonsai"
+kind = "library"
+repo = "https://github.com/cool-japan/oxibonsai"
+homepage = "https://github.com/cool-japan/oxibonsai"
+crates = ["oxibonsai", "oxibonsai-cli", "oxibonsai-core", "oxibonsai-eval", "oxibonsai-image", "oxibonsai-kernels", "oxibonsai-model", "oxibonsai-rag", "oxibonsai-runtime", "oxibonsai-serve", "oxibonsai-tokenizer"]
+topics = ["llm-apps", "run-models", "text-search"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust 1-bit LLM inference engine for PrismML Bonsai models — umbrella crate"
+source = "crate"
+source_url = "https://crates.io/crates/oxibonsai"

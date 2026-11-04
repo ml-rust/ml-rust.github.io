@@ -1,0 +1,14 @@
+name = "kornia-slam"
+kind = "library"
+repo = "https://github.com/kornia/kornia-slam"
+homepage = "https://kornia.org/"
+crates = ["kornia-slam", "kornia-sensors"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Real-time visual-inertial SLAM in Rust, built on kornia-rs."
+source = "crate"
+source_url = "https://crates.io/crates/kornia-slam"

@@ -1,0 +1,13 @@
+name = "opendev"
+kind = "app"
+repo = "https://github.com/opendev-to/opendev"
+crates = ["opendev-cli"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "Open-Source Coding Agent in the terminal"
+source = "repo"
+source_url = "https://github.com/opendev-to/opendev"

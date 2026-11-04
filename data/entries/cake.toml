@@ -1,0 +1,13 @@
+name = "cake"
+kind = "library"
+repo = "https://github.com/evilsocket/cake"
+crates = ["cake-core", "cake-cli"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Distributed LLM inference for mobile, desktop and server."
+source = "crate"
+source_url = "https://crates.io/crates/cake-core"

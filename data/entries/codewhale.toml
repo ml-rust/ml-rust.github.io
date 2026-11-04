@@ -1,0 +1,14 @@
+name = "codewhale"
+kind = "app"
+repo = "https://github.com/codewhale-hq/codewhale"
+homepage = "https://codewhale.net/"
+crates = ["codewhale-tui", "codewhale-agent", "codewhale-app-server", "codewhale-build-support", "codewhale-cli", "codewhale-cloud-facts", "codewhale-command-contract", "codewhale-commands", "codewhale-config", "codewhale-core", "codewhale-execpolicy", "codewhale-hooks", "codewhale-lane", "codewhale-localization", "codewhale-mcp", "codewhale-memory", "codewhale-models", "codewhale-palette", "codewhale-paths", "codewhale-protocol", "codewhale-release", "codewhale-runtime", "codewhale-sanitize", "codewhale-secrets", "codewhale-state", "codewhale-telemetry", "codewhale-tools", "codewhale-workflow", "codewhale-workflow-js"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Terminal UI for open-source and open-weight coding models"
+source = "crate"
+source_url = "https://crates.io/crates/codewhale-tui"

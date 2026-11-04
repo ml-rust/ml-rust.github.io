@@ -1,0 +1,14 @@
+name = "dynamo"
+kind = "app"
+repo = "https://github.com/ai-dynamo/dynamo"
+homepage = "https://docs.nvidia.com/dynamo/latest"
+crates = ["dynamo-truthy", "dynamo-async-openai", "dynamo-backend-common", "dynamo-bench", "dynamo-config", "dynamo-custom-policy-builtin", "dynamo-data-gen", "dynamo-kv-hashing", "dynamo-kv-router", "dynamo-llm", "dynamo-memory", "dynamo-mocker", "dynamo-rl", "dynamo-runtime", "dynamo-sglang-sidecar", "dynamo-sidecar-common", "dynamo-tokens", "dynamo-trtllm-sidecar", "dynamo-vllm-sidecar", "kvbm-common", "kvbm-config", "kvbm-consolidator", "kvbm-engine", "kvbm-kernels", "kvbm-logical", "kvbm-physical"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Datacenter Scale Distributed Inference Serving Framework"
+source = "repo"
+source_url = "https://github.com/ai-dynamo/dynamo"

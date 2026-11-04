@@ -1,0 +1,14 @@
+name = "surrealdb"
+kind = "library"
+repo = "https://github.com/surrealdb/surrealdb"
+homepage = "https://surrealdb.com"
+crates = ["surrealdb"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "A scalable, distributed, collaborative, document-graph database, for the realtime web"
+source = "repo"
+source_url = "https://github.com/surrealdb/surrealdb"

@@ -1,0 +1,14 @@
+name = "rllm"
+kind = "library"
+repo = "https://github.com/graniet/rllm"
+homepage = "https://github.com/graniet/rllm"
+crates = ["rllm"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Unifies multiple LLM backends in Rust."
+source = "crate"
+source_url = "https://crates.io/crates/rllm"

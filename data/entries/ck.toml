@@ -1,0 +1,14 @@
+name = "ck"
+kind = "app"
+repo = "https://github.com/beaconbay/ck"
+homepage = "https://beaconbay.github.io/ck/"
+crates = ["ck-core", "ck-ann", "ck-chunk", "ck-embed", "ck-engine", "ck-index", "ck-models", "ck-search", "ck-tui"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Local first semantic and hybrid BM25 grep / search tool for use by AI and humans! "
+source = "repo"
+source_url = "https://github.com/beaconbay/ck"

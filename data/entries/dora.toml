@@ -1,0 +1,14 @@
+name = "dora"
+kind = "library"
+repo = "https://github.com/dora-rs/dora"
+homepage = "https://dora-rs.ai"
+crates = ["dora-node-api", "dora-cli"]
+topics = ["run-models"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-05
+
+[description]
+text = "DORA (Dataflow-Oriented Robotic Architecture) is middleware designed to streamline and simplify the creation of AI-based robotic applications. It offers low latency, composable, and distributed dataflow capabilities. Applications are modeled as directed graphs, also referred to as pipelines."
+source = "repo"
+source_url = "https://github.com/dora-rs/dora"

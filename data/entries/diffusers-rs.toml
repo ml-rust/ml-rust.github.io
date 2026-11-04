@@ -1,0 +1,13 @@
+name = "diffusers-rs"
+kind = "library"
+repo = "https://github.com/laurentmazare/diffusers-rs"
+crates = ["diffusers"]
+topics = ["run-models", "vision-documents"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation of the Diffusers library using Torch."
+source = "crate"
+source_url = "https://crates.io/crates/diffusers"

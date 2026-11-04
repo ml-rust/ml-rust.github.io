@@ -1,0 +1,13 @@
+name = "rapl"
+kind = "library"
+repo = "https://github.com/jernestomtz/rapl"
+crates = ["rapl"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A crate that makes numerical scripting with Rust simple and enjoyable."
+source = "crate"
+source_url = "https://crates.io/crates/rapl"

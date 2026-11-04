@@ -1,0 +1,14 @@
+name = "opencrabs"
+kind = "app"
+repo = "https://github.com/opencrabs/opencrabs"
+homepage = "https://opencrabs.com/"
+crates = ["opencrabs"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The autonomous, self-improving AI agent. Single Rust binary. Every channel. Recommended: the 40MB prebuilt binary for macOS, Linux and Windows: https://github.com/opencrabs/opencrabs/releases"
+source = "crate"
+source_url = "https://crates.io/crates/opencrabs"

@@ -1,0 +1,14 @@
+name = "edgeparse"
+kind = "library"
+repo = "https://github.com/raphaelmansuy/edgeparse"
+homepage = "https://edgeparse.com/"
+crates = ["edgeparse-core", "edgeparse-cli"]
+topics = ["llm-apps", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "EdgeParse core library — PDF parsing and structured data extraction"
+source = "crate"
+source_url = "https://crates.io/crates/edgeparse-core"

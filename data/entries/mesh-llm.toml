@@ -1,0 +1,14 @@
+name = "mesh-llm"
+kind = "app"
+repo = "https://github.com/mesh-llm/mesh-llm"
+homepage = "https://github.com/Mesh-LLM/mesh-llm"
+crates = ["mesh-llm-sdk", "mesh-api", "mesh-llm-analytics", "mesh-llm-api-client", "mesh-llm-api-server", "mesh-llm-build-info", "mesh-llm-cli", "mesh-llm-client", "mesh-llm-config", "mesh-llm-console-server", "mesh-llm-embedded-runtime", "mesh-llm-events", "mesh-llm-gpu-bench", "mesh-llm-guardrails", "mesh-llm-hardware-profile", "mesh-llm-host-runtime", "mesh-llm-identity", "mesh-llm-log-store", "mesh-llm-moa-plugin", "mesh-llm-native-runtime", "mesh-llm-node", "mesh-llm-payments", "mesh-llm-payments-types", "mesh-llm-plugin", "mesh-llm-plugin-manager", "mesh-llm-protocol", "mesh-llm-release-footer", "mesh-llm-routing", "mesh-llm-runtime-event-contracts", "mesh-llm-runtime-install", "mesh-llm-skills", "mesh-llm-system", "mesh-llm-tui", "mesh-llm-types", "mesh-llm-ui", "mesh-llm-wallet", "mesh-mixture-of-agents", "mesh-native-serving-plugin-api", "mesh-native-serving-plugin-host", "mesh-wallet-lexe", "model-artifact", "model-hf", "model-package", "model-ref", "model-resolver", "openai-frontend", "skippy-cache", "skippy-coordinator", "skippy-ffi", "skippy-metrics", "skippy-model", "skippy-package-format", "skippy-protocol", "skippy-runtime", "skippy-scheduler", "skippy-server", "skippy-tokenizer", "skippy-topology"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Distributed AI/LLM for the people. Share compute privately or publicly to power your agents and chat."
+source = "repo"
+source_url = "https://github.com/mesh-llm/mesh-llm"

@@ -1,0 +1,14 @@
+name = "llmserve"
+kind = "app"
+repo = "https://github.com/alexsjones/llmserve"
+homepage = "https://github.com/AlexsJones/llmserve"
+crates = ["llmserve"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "TUI for serving local LLM models. Pick a model, pick a backend, serve it."
+source = "crate"
+source_url = "https://crates.io/crates/llmserve"

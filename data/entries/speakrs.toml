@@ -1,0 +1,13 @@
+name = "speakrs"
+kind = "library"
+repo = "https://github.com/avencera/speakrs"
+crates = ["speakrs", "speakrs-ptx-sm120", "speakrs-ptx-sm75", "speakrs-ptx-sm80"]
+topics = ["run-models"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast Rust speaker diarization with pyannote-level accuracy and native CPU/CoreML/CUDA inference"
+source = "crate"
+source_url = "https://crates.io/crates/speakrs"

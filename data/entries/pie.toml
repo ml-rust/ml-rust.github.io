@@ -1,0 +1,14 @@
+name = "pie"
+kind = "library"
+repo = "https://github.com/pie-project/pie"
+homepage = "https://pie-project.org/"
+crates = ["pie", "inferlet", "inferlet-macros", "pie-cli", "pie-client", "pie-client-api", "pie-dtype", "pie-eta-dsl", "pie-eta-ir"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pie: A Programmable LLM Serving System"
+source = "crate"
+source_url = "https://crates.io/crates/pie"

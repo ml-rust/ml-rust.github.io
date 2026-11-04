@@ -1,0 +1,14 @@
+name = "bitrouter"
+kind = "app"
+repo = "https://github.com/bitrouter/bitrouter"
+homepage = "https://bitrouter.ai/"
+crates = ["bitrouter", "bitrouter-a2a", "bitrouter-accounts", "bitrouter-ai", "bitrouter-anthropic", "bitrouter-api", "bitrouter-attestation", "bitrouter-attestation-plugin", "bitrouter-bedrock", "bitrouter-blob", "bitrouter-cloud-sdk", "bitrouter-config", "bitrouter-core", "bitrouter-google", "bitrouter-guardrails", "bitrouter-mcp", "bitrouter-observe", "bitrouter-openai", "bitrouter-orchestrator", "bitrouter-providers", "bitrouter-registry", "bitrouter-runtime", "bitrouter-sdk", "bitrouter-skills", "bitrouter-substrate", "bitrouter-telemetry", "bitrouter-tui"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "elastic inference for your agentic workloads, on your terms"
+source = "repo"
+source_url = "https://github.com/bitrouter/bitrouter"

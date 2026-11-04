@@ -1,0 +1,14 @@
+name = "scirs"
+kind = "library"
+repo = "https://github.com/cool-japan/scirs"
+homepage = "https://github.com/cool-japan/scirs"
+crates = ["scirs2", "cargo-scirs2-policy", "scirs2-autograd", "scirs2-cluster", "scirs2-core", "scirs2-datasets", "scirs2-fft", "scirs2-graph", "scirs2-integrate", "scirs2-interpolate", "scirs2-io", "scirs2-linalg", "scirs2-metrics", "scirs2-ndimage", "scirs2-neural", "scirs2-numpy", "scirs2-optimize", "scirs2-python", "scirs2-series", "scirs2-signal", "scirs2-sparse", "scirs2-spatial", "scirs2-special", "scirs2-stats", "scirs2-symbolic", "scirs2-symbolic-macros", "scirs2-text", "scirs2-transform", "scirs2-vision", "scirs2-wasm"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust port of SciPy with AI/ML extensions - Scientific Computing and AI Library (scirs2)"
+source = "crate"
+source_url = "https://crates.io/crates/scirs2"

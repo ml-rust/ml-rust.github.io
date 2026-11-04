@@ -1,0 +1,14 @@
+name = "kitten-tts-rs"
+kind = "library"
+repo = "https://github.com/second-state/kitten_tts_rs"
+homepage = "https://github.com/second-state/kitten_tts_rs"
+crates = ["kitten-tts-rs"]
+topics = ["run-models", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust port of KittenTTS — ultra-lightweight ONNX-based text-to-speech"
+source = "crate"
+source_url = "https://crates.io/crates/kitten-tts-rs"

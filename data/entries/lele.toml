@@ -1,0 +1,14 @@
+name = "lele"
+kind = "library"
+repo = "https://github.com/miuda-ai/lele"
+homepage = "https://miuda.ai/?ref=lele"
+crates = ["lele"]
+topics = ["run-models", "speech-audio"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Bare-metal machine learning inference library in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/lele"

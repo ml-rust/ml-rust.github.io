@@ -1,0 +1,14 @@
+name = "whis"
+kind = "app"
+repo = "https://github.com/frankdierolf/whis"
+homepage = "https://whis.ink/"
+crates = ["whis-cli"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Voice-to-text CLI for terminal users"
+source = "repo"
+source_url = "https://github.com/frankdierolf/whis"

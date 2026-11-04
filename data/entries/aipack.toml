@@ -1,0 +1,14 @@
+name = "aipack"
+kind = "app"
+repo = "https://github.com/aipack-ai/aipack"
+homepage = "https://aipack.ai/"
+crates = ["aipack", "devai"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Run, Build, Share your AI Packs"
+source = "repo"
+source_url = "https://github.com/aipack-ai/aipack"

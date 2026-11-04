@@ -1,0 +1,14 @@
+name = "cersei"
+kind = "library"
+repo = "https://github.com/pacifio/cersei"
+homepage = "https://github.com/pacifio/cersei"
+crates = ["cersei", "abstract-cli", "cersei-agent", "cersei-agentlang", "cersei-agentrl", "cersei-compression", "cersei-embeddings", "cersei-hooks", "cersei-lsp", "cersei-mcp", "cersei-memory", "cersei-provider", "cersei-skills", "cersei-tbench", "cersei-tools", "cersei-tools-derive", "cersei-types", "cersei-vms", "cersei-workflows"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Cersei: A modular Rust SDK for building coding agents"
+source = "crate"
+source_url = "https://crates.io/crates/cersei"

@@ -1,0 +1,13 @@
+name = "augurs"
+kind = "library"
+repo = "https://github.com/grafana/augurs"
+crates = ["augurs", "augurs-changepoint", "augurs-clustering", "augurs-core", "augurs-dtw", "augurs-ets", "augurs-forecaster", "augurs-mstl", "augurs-outlier", "augurs-prophet", "augurs-seasons", "augurs-testing"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A time-series toolkit for forecasting, outlier detection, clustering and more."
+source = "crate"
+source_url = "https://crates.io/crates/augurs"

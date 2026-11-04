@@ -1,0 +1,14 @@
+name = "tenere"
+kind = "app"
+repo = "https://github.com/pythops/tenere"
+homepage = "https://github.com/pythops/tenere"
+crates = ["tenere"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "TUI interface for LLMs written in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/tenere"

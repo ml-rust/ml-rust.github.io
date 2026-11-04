@@ -1,0 +1,14 @@
+name = "yoagent"
+kind = "library"
+repo = "https://github.com/yologdev/yoagent"
+homepage = "https://yologdev.github.io/yoagent/"
+crates = ["yoagent", "yoagent-rutis", "yoagent-workers"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The agent loop for Rust: stream from 7 LLM protocols, run tools, loop until done. Native or wasm32 (Cloudflare Workers)."
+source = "crate"
+source_url = "https://crates.io/crates/yoagent"
