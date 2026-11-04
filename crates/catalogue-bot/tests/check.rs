@@ -30,6 +30,14 @@ name = "Tensors"
 parent = "ml"
 "#;
 
+const CATEGORIES: &str = r#"[[category]]
+id = "vector-databases"
+name = "Vector databases"
+blurb = "Databases that store vectors."
+"#;
+
+const NO_CATEGORY: &str = "### Category\n\n_No response_\n";
+
 const MAINTAINERS: &str = r#"[[maintainer]]
 login = "carol"
 org_member = true
@@ -64,6 +72,7 @@ fn main_data() -> DataSources {
     DataSources {
         entries: vec![file("data/entries/alpha.toml", ALPHA)],
         topics: Some(file("data/topics.toml", TOPICS)),
+        categories: Some(file("data/categories.toml", CATEGORIES)),
         maintainers: Some(file("data/maintainers.toml", MAINTAINERS)),
         ..DataSources::default()
     }
@@ -266,6 +275,59 @@ fn a_library_with_unknown_topic_and_distribution_blocks() {
         report.contains("only an app can have `distribution`"),
         "{report}"
     );
+}
+
+#[test]
+fn a_known_category_goes_in_the_file() {
+    let text = body("submit.md").replace(NO_CATEGORY, "### Category\n\nvector-databases\n");
+    let (blocking, report) = run(FormKind::Submit, &text);
+    assert!(!blocking, "{report}");
+    assert!(
+        report.contains("category = \"vector-databases\""),
+        "{report}"
+    );
+    assert!(
+        report.contains("The new file passes every data rule."),
+        "{report}"
+    );
+}
+
+#[test]
+fn no_category_answer_writes_no_field() {
+    let (blocking, report) = run(FormKind::Submit, &body("submit.md"));
+    assert!(!blocking, "{report}");
+    assert!(!report.contains("category ="), "{report}");
+}
+
+#[test]
+fn an_issue_from_before_the_category_question_still_passes() {
+    let text = body("submit.md").replace(NO_CATEGORY, "");
+    let (blocking, report) = run(FormKind::Submit, &text);
+    assert!(!blocking, "{report}");
+}
+
+#[test]
+fn an_unknown_category_blocks_and_names_the_next_action() {
+    let text = body("submit.md").replace(NO_CATEGORY, "### Category\n\nghost\n");
+    let (blocking, report) = run(FormKind::Submit, &text);
+    assert!(blocking, "{report}");
+    assert!(
+        report.contains("category `ghost` does not exist. Use an id from `categories.toml`"),
+        "{report}"
+    );
+}
+
+#[test]
+fn a_bad_category_answer_blocks_without_a_file() {
+    for answer in ["Not An Id", "vector-databases\ntensor-libraries"] {
+        let text = body("submit.md").replace(NO_CATEGORY, &format!("### Category\n\n{answer}\n"));
+        let (blocking, report) = run(FormKind::Submit, &text);
+        assert!(blocking, "{answer}: {report}");
+        assert!(
+            report.contains("No file. Fix the parse problems first."),
+            "{report}"
+        );
+    }
 }
 
 #[test]

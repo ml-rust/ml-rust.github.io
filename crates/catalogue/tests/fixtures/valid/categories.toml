@@ -1,0 +1,13 @@
+[[category]]
+id = "ml-frameworks"
+name = "ML frameworks"
+blurb = "Libraries for defining neural networks and training them."
+keywords = ["neural-network"]
+terms = ["ml framework"]
+
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries for multidimensional arrays and the math on them."
+keywords = ["tensor"]
+terms = ["tensor library"]

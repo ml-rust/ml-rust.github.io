@@ -23,6 +23,8 @@ pub struct DataSources {
     pub maintainers: Option<SourceFile>,
     /// `data/topics.toml`.
     pub topics: Option<SourceFile>,
+    /// `data/categories.toml`.
+    pub categories: Option<SourceFile>,
     /// `data/synonyms.toml`.
     pub synonyms: Option<SourceFile>,
     /// `data/discovery.toml`.
@@ -47,6 +49,8 @@ pub enum DataPlace {
     Maintainers,
     /// `topics.toml`.
     Topics,
+    /// `categories.toml`.
+    Categories,
     /// `synonyms.toml`.
     Synonyms,
     /// `discovery.toml`.
@@ -65,9 +69,10 @@ impl DataPlace {
     pub const LISTS: [Self; 2] = [Self::Entries, Self::Judgments];
 
     /// The places that hold one file, in load order.
-    pub const FILES: [Self; 6] = [
+    pub const FILES: [Self; 7] = [
         Self::Maintainers,
         Self::Topics,
+        Self::Categories,
         Self::Synonyms,
         Self::Discovery,
         Self::Thresholds,
@@ -82,6 +87,7 @@ impl DataPlace {
             Self::Judgments => "judgments",
             Self::Maintainers => "maintainers.toml",
             Self::Topics => "topics.toml",
+            Self::Categories => "categories.toml",
             Self::Synonyms => "synonyms.toml",
             Self::Discovery => "discovery.toml",
             Self::Thresholds => "thresholds.toml",
@@ -116,6 +122,7 @@ impl DataSources {
             DataPlace::Judgments => self.judgments.push(file),
             DataPlace::Maintainers => self.maintainers = Some(file),
             DataPlace::Topics => self.topics = Some(file),
+            DataPlace::Categories => self.categories = Some(file),
             DataPlace::Synonyms => self.synonyms = Some(file),
             DataPlace::Discovery => self.discovery = Some(file),
             DataPlace::Thresholds => self.thresholds = Some(file),
@@ -152,6 +159,10 @@ mod tests {
             Some(DataPlace::Judgments)
         );
         assert_eq!(DataPlace::of(&["topics.toml"]), Some(DataPlace::Topics));
+        assert_eq!(
+            DataPlace::of(&["categories.toml"]),
+            Some(DataPlace::Categories)
+        );
         for parts in [
             &["entries", "a.txt"][..],
             &["entries", ".toml"],
@@ -175,7 +186,7 @@ mod tests {
             .collect();
         names.sort_unstable();
         names.dedup();
-        assert_eq!(names.len(), 8);
+        assert_eq!(names.len(), 9);
     }
 
     #[test]

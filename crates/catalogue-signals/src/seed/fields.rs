@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use catalogue_core::{Slug, Topics, repo_link};
+use catalogue_core::{Categories, Slug, Topics, repo_link};
 use url::Url;
 
 use super::primary::words;
@@ -30,20 +30,75 @@ pub(super) fn matching_topics(
     keywords: &[String],
     categories: &[String],
 ) -> Vec<Slug> {
-    let keywords: BTreeSet<String> = keywords.iter().map(|k| k.to_lowercase()).collect();
+    let keywords = lowercase(keywords);
     let found: BTreeSet<&Slug> = topics
         .topic
         .iter()
-        .filter(|topic| {
-            topic.keywords.iter().any(|k| keywords.contains(k))
-                || topic
-                    .categories
-                    .iter()
-                    .any(|c| categories.iter().any(|slug| in_category(c, slug)))
-        })
+        .filter(|topic| maps_metadata(&topic.keywords, &topic.categories, &keywords, categories))
         .map(|topic| &topic.id)
         .collect();
     found.into_iter().cloned().collect()
+}
+
+/// The first category, in file order, that maps to these keywords or crates.io category slugs.
+///
+/// The mapping rules are those of [`matching_topics`].
+pub(super) fn category_by_metadata(
+    file: &Categories,
+    keywords: &[String],
+    categories: &[String],
+) -> Option<Slug> {
+    let keywords = lowercase(keywords);
+    file.category
+        .iter()
+        .find(|category| {
+            maps_metadata(
+                &category.keywords,
+                &category.categories,
+                &keywords,
+                categories,
+            )
+        })
+        .map(|category| category.id.clone())
+}
+
+/// The first category, in file order, with a term in one of `texts`.
+///
+/// The term rules are those of [`topics_by_terms_in`].
+pub(super) fn category_by_terms(file: &Categories, texts: &[&str]) -> Option<Slug> {
+    let texts = word_lists(texts);
+    file.category
+        .iter()
+        .find(|category| holds_any_term(&category.terms, &texts))
+        .map(|category| category.id.clone())
+}
+
+fn lowercase(keywords: &[String]) -> BTreeSet<String> {
+    keywords.iter().map(|k| k.to_lowercase()).collect()
+}
+
+fn word_lists(texts: &[&str]) -> Vec<Vec<String>> {
+    texts.iter().map(|text| words(text)).collect()
+}
+
+/// Whether a record with `own_keywords` and `own_categories` maps to this crate metadata.
+fn maps_metadata(
+    own_keywords: &[String],
+    own_categories: &[String],
+    keywords: &BTreeSet<String>,
+    categories: &[String],
+) -> bool {
+    own_keywords.iter().any(|k| keywords.contains(k))
+        || own_categories
+            .iter()
+            .any(|c| categories.iter().any(|slug| in_category(c, slug)))
+}
+
+/// Whether one of `terms` appears in one of `texts`.
+fn holds_any_term(terms: &[String], texts: &[Vec<String>]) -> bool {
+    terms
+        .iter()
+        .any(|term| texts.iter().any(|text| holds_term(text, term)))
 }
 
 /// The ids of the topics with a term in `name` or `description`, sorted.
@@ -59,16 +114,11 @@ pub(super) fn topics_by_terms(topics: &Topics, name: &str, description: Option<&
 /// A term matches whole words in order, ignoring case and punctuation. It never matches across
 /// two texts.
 pub(super) fn topics_by_terms_in(topics: &Topics, texts: &[&str]) -> Vec<Slug> {
-    let texts: Vec<Vec<String>> = texts.iter().map(|text| words(text)).collect();
+    let texts = word_lists(texts);
     let found: BTreeSet<&Slug> = topics
         .topic
         .iter()
-        .filter(|topic| {
-            topic
-                .terms
-                .iter()
-                .any(|term| texts.iter().any(|text| holds_term(text, term)))
-        })
+        .filter(|topic| holds_any_term(&topic.terms, &texts))
         .map(|topic| &topic.id)
         .collect();
     found.into_iter().cloned().collect()
@@ -347,5 +397,145 @@ keywords = ["tensor"]
     #[test]
     fn a_keyword_is_not_a_term() {
         assert!(by_terms("tensor", "A tensor library.").is_empty());
+    }
+
+    /// The published categories.
+    const PUBLISHED_CATEGORIES: &str = include_str!("../../../../data/categories.toml");
+
+    fn published_categories() -> Categories {
+        toml::from_str(PUBLISHED_CATEGORIES).expect("categories parse")
+    }
+
+    /// Two categories that share a crate. The later one sorts first by id.
+    const ORDERED: &str = r#"
+[[category]]
+id = "zeta"
+name = "Zeta"
+blurb = "Zeta."
+keywords = ["shared"]
+terms = ["shared term"]
+
+[[category]]
+id = "alpha"
+name = "Alpha"
+blurb = "Alpha."
+keywords = ["other"]
+categories = ["science::math"]
+terms = ["other term"]
+"#;
+
+    fn ordered() -> Categories {
+        toml::from_str(ORDERED).expect("categories parse")
+    }
+
+    fn strings(values: &[&str]) -> Vec<String> {
+        values.iter().map(|value| (*value).to_owned()).collect()
+    }
+
+    fn id(found: Option<Slug>) -> Option<String> {
+        found.map(|slug| slug.to_string())
+    }
+
+    #[test]
+    fn the_first_category_in_file_order_wins_on_metadata() {
+        let found = category_by_metadata(&ordered(), &strings(&["other", "Shared"]), &[]);
+        assert_eq!(id(found).as_deref(), Some("zeta"));
+        let by_slug = category_by_metadata(&ordered(), &[], &strings(&["science::math::linear"]));
+        assert_eq!(id(by_slug).as_deref(), Some("alpha"));
+    }
+
+    #[test]
+    fn the_first_category_in_file_order_wins_on_terms() {
+        let found = category_by_terms(&ordered(), &["An other term.", "A shared term."]);
+        assert_eq!(id(found).as_deref(), Some("zeta"));
+    }
+
+    #[test]
+    fn no_match_gives_no_category() {
+        assert_eq!(
+            category_by_metadata(&ordered(), &strings(&["zip"]), &[]),
+            None
+        );
+        assert_eq!(category_by_terms(&ordered(), &["A shared thing."]), None);
+    }
+
+    #[test]
+    fn published_categories_are_in_the_promised_order() {
+        let published = published_categories();
+        let names: Vec<&str> = published
+            .category
+            .iter()
+            .map(|category| category.name.as_str())
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "Inference runtimes",
+                "ML frameworks",
+                "Vector databases",
+                "Tensor libraries",
+                "Model formats",
+                "Developer tools",
+            ]
+        );
+    }
+
+    #[test]
+    fn published_terms_name_what_a_project_is() {
+        let published = published_categories();
+        for (text, expected) in [
+            (
+                "A serverless vector database for AI apps.",
+                "vector-databases",
+            ),
+            (
+                "Tract: ONNX inference for neural nets.",
+                "inference-runtimes",
+            ),
+            ("A parser for the GGUF container.", "model-formats"),
+            (
+                "Read and write SafeTensors with tensors inside.",
+                "model-formats",
+            ),
+            ("An N-dimensional array crate.", "tensor-libraries"),
+            ("A deep learning framework.", "ml-frameworks"),
+            ("Experiment tracking for runs.", "developer-tools"),
+        ] {
+            let found = category_by_terms(&published, &[text]);
+            assert_eq!(id(found).as_deref(), Some(expected), "{text}");
+        }
+    }
+
+    #[test]
+    fn published_terms_skip_words_with_a_second_meaning() {
+        let published = published_categories();
+        for text in [
+            "Type inference for a small language.",
+            "Embedding a scripting language in Rust.",
+            "A machine learning crate.",
+            "An AI helper.",
+            "Reads audio files.",
+            "A data parallelism library for Rust.",
+        ] {
+            assert_eq!(category_by_terms(&published, &[text]), None, "{text}");
+        }
+    }
+
+    #[test]
+    fn published_metadata_skips_the_generic_markers() {
+        let published = published_categories();
+        let generic = strings(&["machine-learning", "ml", "ai"]);
+        let found = category_by_metadata(&published, &generic, &strings(&["science::ml"]));
+        assert_eq!(found, None);
+    }
+
+    #[test]
+    fn published_metadata_prefers_a_runtime_over_a_format() {
+        let found = category_by_metadata(
+            &published_categories(),
+            &strings(&["onnx", "onnxruntime"]),
+            &[],
+        );
+        assert_eq!(id(found).as_deref(), Some("inference-runtimes"));
     }
 }

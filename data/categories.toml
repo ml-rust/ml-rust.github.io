@@ -1,0 +1,66 @@
+# Catalogue categories.
+#
+# A category says what a project is, for a person who wants a ready thing: "I want a vector database".
+# A topic in `topics.toml` says the job: "I want to run models". An entry has at most one category.
+# A `blurb` is one plain sentence that defines the category. It holds no claim that needs evidence.
+#
+# `catalogue seed` and `catalogue seed --leads` set `category` in the same two steps as topics.
+# A human reviews every drafted entry.
+#
+# 1. `keywords` and `categories` match the crates.io keywords and category slugs of every family crate.
+# 2. When step 1 finds no category, `terms` match the same texts as the terms of a topic.
+#
+# When several categories match in one step, the first in this file wins. So order matters, and an
+# earlier category holds only words that a later category cannot use. `tensors` stays out of Tensor
+# libraries, because a model format also stores tensors.
+#
+# No match leaves `category` unset and never skips the draft. An install channel changes nothing.
+#
+# The term rules of `topics.toml` apply: whole lowercase words, separated by one space. A term names
+# what the project is or a format. It never names one crate. A word with a second common meaning
+# stays out: `inference` also means type inference. The `machine-learning` and `ml` keywords, the
+# `science::ml` category, and `machine learning` or `ai` alone map to no category.
+# A term maps to one category.
+
+[[category]]
+id = "inference-runtimes"
+name = "Inference runtimes"
+blurb = "Programs and libraries that load a trained model and run it."
+keywords = ["inference", "onnxruntime", "llama-cpp", "model-serving", "inference-engine", "inference-server"]
+terms = ["inference runtime", "inference runtimes", "inference server", "inference servers", "model serving", "model inference", "llm inference", "onnx inference", "neural network inference", "machine learning inference"]
+
+[[category]]
+id = "ml-frameworks"
+name = "ML frameworks"
+blurb = "Libraries for defining neural networks and training them."
+keywords = ["neural-network", "neural-networks", "autograd", "ml-framework", "deep-learning-framework"]
+terms = ["machine learning framework", "machine learning frameworks", "ml framework", "ml frameworks", "deep learning framework", "deep learning frameworks", "deep learning library", "machine learning library", "neural network library", "neural network framework", "machine learning toolkit"]
+
+[[category]]
+id = "vector-databases"
+name = "Vector databases"
+blurb = "Databases that store vectors and find the ones nearest to a query."
+keywords = ["vector-database", "vector-db", "vectordb", "vector-search", "vector-store"]
+terms = ["vector database", "vector databases", "vector store", "vector stores", "vector search", "vector similarity search"]
+
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries for multidimensional arrays and the math on them."
+keywords = ["tensor", "tensors", "ndarray"]
+terms = ["tensor library", "tensor libraries", "tensor computation", "tensor operations", "n dimensional array", "n dimensional arrays", "multidimensional array", "multidimensional arrays"]
+
+[[category]]
+id = "model-formats"
+name = "Model formats"
+blurb = "File formats for model weights, and the code that reads and writes them."
+keywords = ["safetensors", "gguf", "onnx", "model-format", "model-formats"]
+terms = ["safetensors", "gguf", "onnx", "model format", "model formats", "model file format", "model file"]
+
+[[category]]
+id = "developer-tools"
+name = "Developer tools"
+blurb = "Tools that help people build, test and manage machine learning projects."
+keywords = ["mlops", "experiment-tracking", "model-registry", "coding-agent", "coding-assistant"]
+categories = ["development-tools"]
+terms = ["mlops", "experiment tracking", "model registry", "model management", "model monitoring", "model evaluation", "model conversion", "model converter", "hyperparameter tuning", "hyperparameter search", "hyperparameter optimization", "coding assistant", "coding assistants", "coding agent", "coding agents"]

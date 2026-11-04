@@ -18,6 +18,9 @@
 {%- if !header.topics.is_empty() %}
 <p>Topics:{% for link in header.topics %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
 {%- endif %}
+{%- if let Some(link) = header.category %}
+<p>Category: <a href="{{ link.href }}">{{ link.name }}</a></p>
+{%- endif %}
 
 <h2 id="description">Description</h2>
 <p>{{ description.text }}</p>

@@ -2,6 +2,7 @@
 #
 # Each topic is a job a developer wants done, named in their words. `parent` nests a topic under another.
 # A topic `summary` is a published claim: it needs evidence links.
+# `categories.toml` holds the second way in: what a project is, not the job it does.
 #
 # `catalogue seed` maps a drafted entry to topics in two steps. A human reviews every drafted entry.
 #

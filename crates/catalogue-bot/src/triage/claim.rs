@@ -143,6 +143,7 @@ mod tests {
             repo: "https://github.com/o/gizmo".to_owned(),
             crates: vec!["gizmo".to_owned(), "gizmo-core".to_owned()],
             topics: vec!["inference".to_owned()],
+            category: None,
             description: "Runs models.".to_owned(),
             description_source: "human".to_owned(),
             description_source_url: None,

@@ -50,6 +50,14 @@ body:
       placeholder: tensors
     validations:
       required: true
+  - type: input
+    id: category
+    attributes:
+      label: Category
+      description: What the project is. One id from `data/categories.toml`. Leave it empty when none fits.
+      placeholder: vector-databases
+    validations:
+      required: false
   - type: textarea
     id: description
     attributes:

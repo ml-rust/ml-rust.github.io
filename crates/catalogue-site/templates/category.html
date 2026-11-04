@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<h1>{{ name }}</h1>
+<p>{{ blurb }}</p>
+
+<h2 id="entries">Entries</h2>
+{%- if groups.is_empty() %}
+<p>No entry is in this category yet.</p>
+{%- else %}
+{%- if tiered %}
+<p>Entries are grouped by tier, strongest first, then sorted by name.</p>
+{%- else %}
+<p>Entries are sorted by name.</p>
+{%- endif %}
+{%- for group in groups %}
+{%- if let Some(heading) = group.heading %}
+<h3>{{ heading }}</h3>
+{%- endif %}
+<ul class="entry-list">
+{%- for row in group.rows %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</ul>
+{%- endfor %}
+{%- endif %}
+{% endblock %}

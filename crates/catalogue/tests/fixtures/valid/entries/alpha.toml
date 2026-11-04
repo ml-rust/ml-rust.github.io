@@ -3,6 +3,7 @@ kind = "library"
 repo = "https://github.com/ml-rust/alpha"
 crates = ["alpha-crate"]
 topics = ["ml"]
+category = "ml-frameworks"
 org_affiliated = false
 added = 2026-11-03
 

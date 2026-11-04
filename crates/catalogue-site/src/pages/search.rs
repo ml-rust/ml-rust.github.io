@@ -6,7 +6,9 @@ use catalogue_core::{Catalogue, EntryKind, Tier, TierReport};
 use super::layout::Layout;
 use super::shared::{NamedLink, kind_name, tier_name, topic_href};
 use crate::href::SafeHref;
-use crate::search::{KIND_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, TIER_TAG, TOPIC_TAG};
+use crate::search::{
+    CATEGORY_TAG, KIND_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, TIER_TAG, TOPIC_TAG,
+};
 
 /// The label of the [`ORG_AFFILIATED`] filter.
 const ORG_AFFILIATED_LABEL: &str = "ml-rust organization";
@@ -52,8 +54,8 @@ pub(crate) struct FilterOption<'a> {
 impl<'a> SearchPage<'a> {
     /// The search page in `layout`, loading the script at `script`.
     ///
-    /// The groups are kind, topic, tier and organization. The tier group is
-    /// left out without `report`.
+    /// The groups are kind, topic, category, tier and organization. The tier
+    /// group is left out without `report`.
     pub(crate) fn new(
         layout: Layout,
         script: SafeHref,
@@ -67,6 +69,10 @@ impl<'a> SearchPage<'a> {
             .topics()
             .iter()
             .map(|topic| (topic.id.as_str(), topic.name.as_str()));
+        let categories = catalogue
+            .categories()
+            .iter()
+            .map(|category| (category.id.as_str(), category.name.as_str()));
         let tiers = Tier::ALL
             .into_iter()
             .map(|tier| (tier.as_str(), tier_name(tier)));
@@ -77,6 +83,7 @@ impl<'a> SearchPage<'a> {
         let mut groups = vec![
             group(KIND_TAG, "Kind", kinds),
             group(TOPIC_TAG, "Topic", topics),
+            group(CATEGORY_TAG, "Category", categories),
         ];
         if report.is_some() {
             groups.push(group(TIER_TAG, "Tier", tiers));

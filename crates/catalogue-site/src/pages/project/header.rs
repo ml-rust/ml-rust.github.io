@@ -3,7 +3,7 @@
 use catalogue_core::{Catalogue, EffectiveEntry, EntryReport};
 
 use crate::pages::shared::{
-    NamedLink, TierBadge, entry_link, kind_name, project_kind_name, topic_link,
+    NamedLink, TierBadge, category_link, entry_link, kind_name, project_kind_name, topic_link,
 };
 
 /// The data the top of `project.html` reads.
@@ -27,6 +27,8 @@ pub(crate) struct Header<'a> {
     pub replaces: Vec<NamedLink<'a>>,
     /// The effective topics of the entry.
     pub topics: Vec<NamedLink<'a>>,
+    /// The category of the entry.
+    pub category: Option<NamedLink<'a>>,
 }
 
 impl<'a> Header<'a> {
@@ -57,6 +59,10 @@ impl<'a> Header<'a> {
                 .iter()
                 .filter_map(|id| topic_link(catalogue, id))
                 .collect(),
+            category: entry
+                .category
+                .as_ref()
+                .and_then(|id| category_link(catalogue, id)),
         }
     }
 }

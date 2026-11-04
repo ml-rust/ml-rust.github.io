@@ -1,10 +1,10 @@
-//! `/submit/`: the issue forms, what approval means, and the topic slugs.
+//! `/submit/`: the issue forms, what approval means, the topic slugs and the category ids.
 
 use askama::Template;
-use catalogue_core::Topic;
+use catalogue_core::{Category, Topic};
 
 use super::layout::Layout;
-use super::shared::topic_href;
+use super::shared::{NamedLink, category_href, topic_href};
 use crate::forms::ISSUE_FORMS;
 use crate::href::SafeHref;
 
@@ -18,6 +18,17 @@ pub(crate) struct SubmitPage<'a> {
     pub forms: Vec<FormLink>,
     /// The topics a form can name, in file order.
     pub topics: Vec<TopicRow<'a>>,
+    /// The categories the submit form can name, in file order.
+    pub categories: Vec<CategoryRow<'a>>,
+}
+
+/// One category the submit form can name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CategoryRow<'a> {
+    /// The category id.
+    pub id: &'a str,
+    /// The display name and the link to the category page.
+    pub link: NamedLink<'a>,
 }
 
 /// The link to one issue form.
@@ -45,8 +56,8 @@ pub(crate) struct TopicRow<'a> {
 }
 
 impl<'a> SubmitPage<'a> {
-    /// The submit page in `layout`, listing `topics`.
-    pub(crate) fn new(layout: Layout, topics: &'a [Topic]) -> Self {
+    /// The submit page in `layout`, listing `topics` and `categories`.
+    pub(crate) fn new(layout: Layout, topics: &'a [Topic], categories: &'a [Category]) -> Self {
         let forms = ISSUE_FORMS
             .iter()
             .map(|form| FormLink {
@@ -64,10 +75,21 @@ impl<'a> SubmitPage<'a> {
                 href: topic_href(&topic.id),
             })
             .collect();
+        let categories = categories
+            .iter()
+            .map(|category| CategoryRow {
+                id: category.id.as_str(),
+                link: NamedLink {
+                    name: &category.name,
+                    href: category_href(&category.id),
+                },
+            })
+            .collect();
         Self {
             layout,
             forms,
             topics,
+            categories,
         }
     }
 }

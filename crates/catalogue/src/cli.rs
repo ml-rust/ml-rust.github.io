@@ -104,7 +104,8 @@ pub enum Command {
     ///
     /// Drafts one library entry per crate that matches `discovery.toml`, has
     /// enough active users, is not listed yet, and maps to a topic in
-    /// `topics.toml`. A reviewer merges crate families and checks every draft.
+    /// `topics.toml`. A draft takes its category from `categories.toml` when one
+    /// matches. A reviewer merges crate families and checks every draft.
     /// Without `--write` the command prints the drafts and the skipped crates.
     ///
     /// With `--leads FILE` the command drafts from a list of GitHub repos instead,

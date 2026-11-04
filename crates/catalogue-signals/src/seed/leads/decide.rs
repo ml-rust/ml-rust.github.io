@@ -130,7 +130,7 @@ fn draft(
     let kind = found.map_or(Kind::NO_CRATE, |family| classify(inputs.snapshot, family));
     let built = build_entry(
         inputs.snapshot,
-        inputs.topics,
+        &inputs.mappings,
         &canonical,
         profile,
         found,
@@ -211,8 +211,8 @@ fn notes(kind: Kind, users: f64, floor: f64, profile: &RepoProfile, entry: &Entr
 mod tests {
     use std::collections::HashSet;
 
-    use super::super::super::fixtures::{Spec, World, topics};
-    use super::super::super::types::ExistingIndex;
+    use super::super::super::fixtures::{Spec, World, categories, topics};
+    use super::super::super::types::{ExistingIndex, Mappings};
     use super::*;
 
     fn profile(language: Option<&str>) -> RepoProfile {
@@ -233,9 +233,13 @@ mod tests {
         let keys = HashSet::from(["github.com/o/proj".to_owned()]);
         let claims = Claims::of(&world.snapshot, &keys);
         let topics = topics();
+        let categories = categories();
         let inputs = LeadInputs {
             snapshot: &world.snapshot,
-            topics: &topics,
+            mappings: Mappings {
+                topics: &topics,
+                categories: &categories,
+            },
             existing,
             min_active_users: 2.0,
         };

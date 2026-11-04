@@ -2,10 +2,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use catalogue::{Outcome, SeedError, build_seed, load_catalogue, validate, write_drafts};
-use catalogue_core::Topics;
+use catalogue_core::{Categories, Topics};
 use catalogue_signals::discover::Rules;
 use catalogue_signals::dump::{CrateRow, DumpMeta, DumpSnapshot, VersionRow};
-use catalogue_signals::seed::ExistingIndex;
+use catalogue_signals::seed::{ExistingIndex, Mappings};
 use jiff::Timestamp;
 
 /// Path of the `valid` fixture data directory.
@@ -112,12 +112,23 @@ fn copy_dir(from: &Path, to: &Path) {
 }
 
 fn seed(data: &Path) -> catalogue::Seed {
+    seed_snapshot(data, &snapshot())
+}
+
+fn seed_snapshot(data: &Path, snapshot: &DumpSnapshot) -> catalogue::Seed {
     let catalogue = load_catalogue(data).expect("reads").expect("valid");
     let topics = Topics {
         topic: catalogue.topics().to_vec(),
     };
+    let categories = Categories {
+        category: catalogue.categories().to_vec(),
+    };
+    let mappings = Mappings {
+        topics: &topics,
+        categories: &categories,
+    };
     let existing = ExistingIndex::from_catalogue(&catalogue);
-    build_seed(&snapshot(), &rules(), &topics, &existing, 0.0)
+    build_seed(snapshot, &rules(), &mappings, &existing, 0.0)
 }
 
 #[test]
@@ -148,6 +159,20 @@ fn drafted_files_pass_validation() {
         .expect("the draft is listed");
     assert_eq!(entry.description.text, "Learns from data.");
     assert_eq!(entry.repo.as_str(), "https://github.com/someone/gizmo-ml");
+    assert_eq!(entry.category, None);
+}
+
+#[test]
+fn a_draft_with_a_matching_category_writes_it_and_passes_validation() {
+    let data = data_copy("seed-category");
+    let mut snap = snapshot();
+    snap.keywords
+        .insert(1, vec!["machine-learning".to_owned(), "tensor".to_owned()]);
+    let seeded = seed_snapshot(&data, &snap);
+    let paths = write_drafts(&data, &seeded.drafts).expect("writes");
+    let text = fs::read_to_string(&paths[0]).expect("reads the draft");
+    assert!(text.contains("category = \"tensor-libraries\""), "{text}");
+    assert!(matches!(validate(&data).expect("reads"), Outcome::Valid(_)));
 }
 
 #[test]
@@ -181,7 +206,10 @@ fn nothing_to_write_creates_nothing() {
     let seeded = build_seed(
         &snapshot(),
         &Rules::default(),
-        &Topics::default(),
+        &Mappings {
+            topics: &Topics::default(),
+            categories: &Categories::default(),
+        },
         &ExistingIndex::default(),
         0.0,
     );

@@ -156,6 +156,17 @@ name = "Tensors"
 parent = "ml"
 "#;
 
+const CATEGORIES: &str = r#"[[category]]
+id = "vector-databases"
+name = "Vector databases"
+blurb = "Databases that store vectors."
+
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries for arrays."
+"#;
+
 const SYNONYMS: &str = r#"[[group]]
 terms = ["gpu", "cuda"]
 "#;
@@ -177,6 +188,7 @@ pub(crate) fn valid() -> DataSources {
         judgments: vec![file("judgments/7.toml", JUDGMENT)],
         maintainers: Some(file("maintainers.toml", MAINTAINERS)),
         topics: Some(file("topics.toml", TOPICS)),
+        categories: Some(file("categories.toml", CATEGORIES)),
         synonyms: Some(file("synonyms.toml", SYNONYMS)),
         discovery: None,
         thresholds: None,
@@ -187,8 +199,8 @@ pub(crate) fn valid() -> DataSources {
 /// Replaces the file at `path`, or adds it when absent.
 ///
 /// A path that contains `entries/` or `judgments/` goes to that list.
-/// `maintainers.toml`, `topics.toml`, `discovery.toml`, `thresholds.toml` and `deprecated.toml`
-/// replace the optional file of that name.
+/// `maintainers.toml`, `topics.toml`, `categories.toml`, `discovery.toml`, `thresholds.toml` and
+/// `deprecated.toml` replace the optional file of that name.
 /// Any other path replaces the synonyms file.
 pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
     let list = if path.contains("entries/") {
@@ -199,6 +211,7 @@ pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
         let slot = match path {
             "maintainers.toml" => &mut sources.maintainers,
             "topics.toml" => &mut sources.topics,
+            "categories.toml" => &mut sources.categories,
             "discovery.toml" => &mut sources.discovery,
             "thresholds.toml" => &mut sources.thresholds,
             "deprecated.toml" => &mut sources.deprecated,

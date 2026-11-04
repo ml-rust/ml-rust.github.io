@@ -1,4 +1,5 @@
-//! `/`: what the catalogue is, the topic grid, Featured entries, new entries and tier changes.
+//! `/`: what the catalogue is, the topic grid, the categories, Featured entries, new entries and
+//! tier changes.
 
 use std::cmp::Reverse;
 
@@ -7,7 +8,8 @@ use catalogue_core::Tier;
 
 use super::layout::Layout;
 use super::shared::{
-    ChangeRow, EntryRow, TopicCard, change_rows, sort_by_name, tier_of, topic_cards,
+    ChangeRow, EntryRow, NamedLink, TopicCard, category_links, change_rows, sort_by_name, tier_of,
+    topic_cards,
 };
 use crate::inputs::SiteInputs;
 
@@ -24,6 +26,8 @@ pub(crate) struct HomePage<'a> {
     pub checked: Option<String>,
     /// One card per top-level topic, in file order.
     pub topics: Vec<TopicCard<'a>>,
+    /// The link to every category, in file order.
+    pub categories: Vec<NamedLink<'a>>,
     /// Every Featured entry, in name order. Empty without a report.
     pub featured: Vec<EntryRow<'a>>,
     /// The entries added last, newest first.
@@ -59,6 +63,7 @@ impl<'a> HomePage<'a> {
             layout,
             checked: report.map(|report| report.generated.to_string()),
             topics: topic_cards(catalogue, report),
+            categories: category_links(catalogue),
             featured,
             recent,
             changes: report

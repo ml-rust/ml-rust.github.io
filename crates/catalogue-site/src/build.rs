@@ -6,8 +6,8 @@ use crate::asset::HashedAsset;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
 use crate::pages::{
-    ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage, SearchPage,
-    SubmitPage, TopicPage, TopicsPage, project_file, topic_file,
+    CategoryPage, ChangesPage, HomePage, Layout, NavItem, NotFoundPage, ProjectPage, RulesPage,
+    SearchPage, SubmitPage, TopicPage, TopicsPage, category_file, project_file, topic_file,
 };
 use crate::refusal;
 use crate::search::{search_files, search_records};
@@ -62,7 +62,11 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         )?,
         render(
             "submit/index.html".to_owned(),
-            &SubmitPage::new(layout(Some(NavItem::Submit)), catalogue.topics()),
+            &SubmitPage::new(
+                layout(Some(NavItem::Submit)),
+                catalogue.topics(),
+                catalogue.categories(),
+            ),
         )?,
         render(
             "search/index.html".to_owned(),
@@ -73,6 +77,10 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     for topic in catalogue.topics() {
         let page = TopicPage::new(layout(Some(NavItem::Topics)), catalogue, report, topic);
         files.push(render(topic_file(&topic.id), &page)?);
+    }
+    for category in catalogue.categories() {
+        let page = CategoryPage::new(layout(None), catalogue, report, category);
+        files.push(render(category_file(&category.id), &page)?);
     }
     for slug in catalogue.entries().keys() {
         if let Some(effective) = catalogue.effective(slug) {

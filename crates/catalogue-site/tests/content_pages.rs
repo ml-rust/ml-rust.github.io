@@ -43,6 +43,9 @@ fn every_content_page_is_emitted() {
         "topics/index.html",
         "topics/ml/index.html",
         "topics/tensors/index.html",
+        "categories/inference-runtimes/index.html",
+        "categories/tensor-libraries/index.html",
+        "categories/vector-databases/index.html",
         "projects/alpha/index.html",
         "projects/beta/index.html",
         "projects/gamma/index.html",
@@ -91,6 +94,10 @@ fn the_home_page_lists_topics_featured_recent_entries_and_changes() {
             "<li>New: 1</li>",
             "<li>Archived: 1</li>",
             "Subtopics: <a href=\"/topics/tensors/\">Tensors</a>",
+            "<h2 id=\"categories\">Browse by category</h2>",
+            "<a href=\"/categories/inference-runtimes/\">Inference runtimes</a>",
+            "<a href=\"/categories/tensor-libraries/\">Tensor libraries</a>",
+            "<a href=\"/categories/vector-databases/\">Vector databases</a>",
             "<h2 id=\"featured\">Featured</h2>",
             "/projects/alpha/\">Alpha</a>",
             "<h2 id=\"recent\">Recently added</h2>",
@@ -141,6 +148,104 @@ fn a_topic_page_groups_its_entries_by_tier() {
         !ml.contains("Delta</a>"),
         "a category judgment moves Delta: {ml}"
     );
+}
+
+#[test]
+fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
+    let site = tiered();
+    let tensors = &site["categories/tensor-libraries/index.html"];
+    in_order(
+        tensors,
+        &[
+            "<h1>Tensor libraries</h1>",
+            "<p>Libraries for multidimensional arrays and their math.</p>",
+            "<h3>Featured</h3>",
+            "<code>cargo add alpha-crate</code> <a href=\"https://crates.io/crates/alpha-crate\">crates.io</a>",
+            "/projects/alpha/\">Alpha</a>",
+            "<h3>Archived</h3>",
+            "<code>cargo add gamma</code>",
+            "/projects/gamma/\">Gamma</a>",
+        ],
+    );
+    assert!(!tensors.contains("Delta</a>"), "{tensors}");
+    let runtimes = &site["categories/inference-runtimes/index.html"];
+    in_order(
+        runtimes,
+        &[
+            "<code>brew install beta</code> <a href=\"https://formulae.brew.sh/formula/beta\">Homebrew</a>",
+            "/projects/beta/\">Beta</a>",
+        ],
+    );
+}
+
+#[test]
+fn an_app_without_a_channel_leads_with_its_repository() {
+    let mut files = fixture::files();
+    for (path, contents) in &mut files {
+        if path == "entries/beta.toml"
+            && let Some(at) = contents.find("[distribution]")
+        {
+            contents.truncate(at);
+        }
+    }
+    let site = fixture::site(&files, false);
+    let runtimes = &site["categories/inference-runtimes/index.html"];
+    assert!(
+        runtimes.contains("<p><a href=\"https://github.com/ml-rust/beta\">Repository</a></p>"),
+        "{runtimes}"
+    );
+    assert!(!runtimes.contains("<code>"), "{runtimes}");
+}
+
+#[test]
+fn a_category_with_no_entries_says_so_and_the_home_page_stays_silent_about_counts() {
+    for site in [tiered(), untiered()] {
+        let empty = &site["categories/vector-databases/index.html"];
+        in_order(
+            empty,
+            &[
+                "<h1>Vector databases</h1>",
+                "<p>Databases that store vectors and find the ones nearest to a query.</p>",
+                "<p>No entry is in this category yet.</p>",
+            ],
+        );
+        let home = &site["index.html"];
+        let start = home.find("id=\"categories\"").expect("the category block");
+        let block = &home[start..];
+        let block = &block[block.find("<ul").expect("the list")..];
+        let block = &block[..block.find("</ul>").expect("the end of the list")];
+        assert!(block.contains("Vector databases</a>"), "{block}");
+        assert!(!block.contains(char::is_numeric), "{block}");
+    }
+}
+
+#[test]
+fn a_build_without_a_report_lists_a_category_by_name() {
+    let site = untiered();
+    let tensors = &site["categories/tensor-libraries/index.html"];
+    in_order(
+        tensors,
+        &[
+            "Entries are sorted by name.",
+            "/projects/alpha/\">Alpha</a>",
+            "/projects/gamma/\">Gamma</a>",
+        ],
+    );
+    assert!(!tensors.contains("<h3>"), "{tensors}");
+}
+
+#[test]
+fn an_entry_page_links_its_category_beside_its_topics() {
+    let site = tiered();
+    in_order(
+        &site["projects/alpha/index.html"],
+        &[
+            "Topics: <a href=\"/topics/tensors/\">Tensors</a>",
+            "Category: <a href=\"/categories/tensor-libraries/\">Tensor libraries</a>",
+            "<h2 id=\"description\">Description</h2>",
+        ],
+    );
+    assert!(!site["projects/delta/index.html"].contains("Category: <a"));
 }
 
 #[test]

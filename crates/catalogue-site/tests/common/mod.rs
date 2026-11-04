@@ -18,6 +18,13 @@ name = "Tensors"
 parent = "ml"
 "#;
 
+/// One category that no entry names.
+const CATEGORIES: &str = r#"[[category]]
+id = "vector-databases"
+name = "Vector databases"
+blurb = "Databases that store vectors and find the ones nearest to a query."
+"#;
+
 /// A library entry on the `tensors` topic.
 const ALPHA: &str = r#"name = "Alpha"
 kind = "library"
@@ -36,6 +43,7 @@ pub fn catalogue(topics: &str, thresholds: Option<&str>) -> Catalogue {
     let sources = DataSources {
         entries: vec![source("entries/alpha.toml", ALPHA)],
         topics: Some(source("topics.toml", topics)),
+        categories: Some(source("categories.toml", CATEGORIES)),
         thresholds: thresholds.map(|text| source("thresholds.toml", text)),
         ..DataSources::default()
     };

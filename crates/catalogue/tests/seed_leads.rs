@@ -8,10 +8,10 @@ use catalogue::{
     LeadSeed, Outcome, SeedError, build_lead_seed, load_catalogue, parse_leads, validate,
     write_drafts,
 };
-use catalogue_core::{CrateName, DescriptionSource, Entry, EntryKind, Topics};
+use catalogue_core::{Categories, CrateName, DescriptionSource, Entry, EntryKind, Topics};
 use catalogue_signals::dump::{CrateRow, DumpMeta, DumpSnapshot, Owner, OwnerKind, VersionRow};
 use catalogue_signals::http::{Headers, Pacer};
-use catalogue_signals::seed::{ExistingIndex, LeadInputs, LeadPacers};
+use catalogue_signals::seed::{ExistingIndex, LeadInputs, LeadPacers, Mappings};
 use jiff::Timestamp;
 use lead_transport::Script;
 use serde_json::json;
@@ -31,6 +31,21 @@ id = "tensors"
 name = "Tensors"
 keywords = ["tensor"]
 terms = ["tensor"]
+"#;
+
+/// The category ids of the `valid` fixture, with terms. Each keyword and term is its own case.
+const CATEGORIES: &str = r#"
+[[category]]
+id = "ml-frameworks"
+name = "ML frameworks"
+blurb = "Frameworks."
+terms = ["neural network"]
+
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries."
+keywords = ["tensor"]
 "#;
 
 fn at(text: &str) -> Timestamp {
@@ -186,11 +201,15 @@ fn run_counting(
 ) -> Result<LeadSeed, SeedError> {
     let catalogue = load_catalogue(data).expect("reads").expect("valid");
     let topics: Topics = toml::from_str(TOPICS).expect("topics parse");
+    let categories: Categories = toml::from_str(CATEGORIES).expect("categories parse");
     let existing = ExistingIndex::from_catalogue(&catalogue);
     let dump = snapshot(specs);
     let inputs = LeadInputs {
         snapshot: &dump,
-        topics: &topics,
+        mappings: Mappings {
+            topics: &topics,
+            categories: &categories,
+        },
         existing: &existing,
         min_active_users: 2.0,
     };
@@ -290,6 +309,61 @@ fn an_app_without_a_crate_drafts_and_passes_validation() {
         }
         Outcome::Invalid(diagnostics) => panic!("the draft is invalid:\n{diagnostics}"),
     }
+}
+
+#[test]
+fn an_app_takes_its_category_from_its_terms_and_writes_it() {
+    let seed = run("acme/tool\n", &tool_on_every_channel(), &[]);
+    let entry = only_entry(&seed);
+    assert_eq!(
+        entry.category.as_ref().map(ToString::to_string).as_deref(),
+        Some("ml-frameworks")
+    );
+    let data = data_copy("seed-leads-category");
+    let paths = write_drafts(&data, &seed.drafts).expect("writes");
+    let text = fs::read_to_string(&paths[0]).expect("reads the draft");
+    assert!(text.contains("category = \"ml-frameworks\""), "{text}");
+    assert!(matches!(validate(&data).expect("reads"), Outcome::Valid(_)));
+}
+
+#[test]
+fn an_install_channel_never_gives_a_category_and_no_match_keeps_the_draft() {
+    let script = Script::default()
+        .repo(
+            "acme/tool",
+            200,
+            &found("acme/tool", "Rust", Some("Maps tensor data."), &[]),
+        )
+        .url(
+            "formulae.brew.sh",
+            200,
+            r#"{"urls":{"head":{"url":"https://github.com/acme/tool.git"}}}"#,
+        )
+        .url("repology.org", 200, r#"[{"repo":"debian_12"}]"#)
+        .url("hub.docker.com", 200, r#"{"pull_count":7}"#);
+    let seed = run("acme/tool\n", &script, &[]);
+    let entry = only_entry(&seed);
+    assert_eq!(entry.kind, EntryKind::App);
+    assert!(entry.distribution.is_some());
+    assert_eq!(entry.category, None);
+    let data = data_copy("seed-leads-no-category");
+    let paths = write_drafts(&data, &seed.drafts).expect("writes");
+    let text = fs::read_to_string(&paths[0]).expect("reads the draft");
+    assert!(!text.contains("category"), "{text}");
+    assert!(matches!(validate(&data).expect("reads"), Outcome::Valid(_)));
+}
+
+#[test]
+fn a_library_lead_takes_its_category_from_any_family_crate() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    let specs = [library(1, "tool", "https://github.com/acme/tool")];
+    let seed = run("acme/tool\n", &script, &specs);
+    let entry = only_entry(&seed);
+    assert_eq!(entry.kind, EntryKind::Library);
+    assert_eq!(
+        entry.category.as_ref().map(ToString::to_string).as_deref(),
+        Some("tensor-libraries")
+    );
 }
 
 #[test]

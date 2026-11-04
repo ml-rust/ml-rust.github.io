@@ -43,10 +43,10 @@ pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, P
 pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
-    AppFeaturedThresholds, Deprecated, DeprecatedRequirement, Discovery, DormancyThresholds,
-    FallbackThresholds, FinishedThresholds, IntervalThresholds, LibraryFeaturedThresholds,
-    Maintainer, Maintainers, NewThresholds, RequirementCheck, RotThresholds, SynonymGroup,
-    Synonyms, Thresholds, Topic, TopicSummary, Topics,
+    AppFeaturedThresholds, Categories, Category, Deprecated, DeprecatedRequirement, Discovery,
+    DormancyThresholds, FallbackThresholds, FinishedThresholds, IntervalThresholds,
+    LibraryFeaturedThresholds, Maintainer, Maintainers, NewThresholds, RequirementCheck,
+    RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
     EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef,

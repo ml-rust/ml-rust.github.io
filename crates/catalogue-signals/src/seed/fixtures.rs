@@ -1,6 +1,6 @@
-//! Hand-built dumps and topics for the drafting tests.
+//! Hand-built dumps, topics and categories for the drafting tests.
 
-use catalogue_core::{Date, Topics};
+use catalogue_core::{Categories, Date, Topics};
 use jiff::Timestamp;
 
 use crate::dump::{
@@ -48,6 +48,27 @@ terms = ["sparse matrix"]
 "#,
     )
     .expect("topics parse")
+}
+
+/// The categories of every test. The first in the file sorts last by id.
+pub(super) fn categories() -> Categories {
+    toml::from_str(
+        r#"
+[[category]]
+id = "zeta-tools"
+name = "Zeta"
+blurb = "Zeta tools."
+keywords = ["tensor"]
+terms = ["sparse matrix"]
+
+[[category]]
+id = "alpha-tools"
+name = "Alpha"
+blurb = "Alpha tools."
+keywords = ["nlp"]
+"#,
+    )
+    .expect("categories parse")
 }
 
 /// A crate that passes every rule, until a test changes a field.

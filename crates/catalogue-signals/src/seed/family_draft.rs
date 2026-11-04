@@ -3,13 +3,16 @@
 use std::collections::BTreeSet;
 
 use catalogue_core::{
-    CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug, Topics, crate_page,
-    entry_name, repo_link,
+    Categories, CrateName, Date, Description, DescriptionSource, Entry, EntryKind, Slug, Topics,
+    crate_page, entry_name, repo_link,
 };
 
 use super::family::Family;
-use super::fields::{https_link, matching_topics, topics_by_terms};
+use super::fields::{
+    category_by_metadata, category_by_terms, https_link, matching_topics, topics_by_terms,
+};
 use super::names::description_of;
+use super::types::Mappings;
 use crate::dump::DumpSnapshot;
 
 /// Builds the draft of one family, or the reason it yields none.
@@ -20,13 +23,15 @@ use crate::dump::DumpSnapshot;
 /// the first member, primary first, with a usable crates.io description. The
 /// topics are those whose keywords or categories match any member. When none
 /// does, they are those with a term in the primary's name or description.
+/// The category comes from the same two steps and can stay unset.
 /// The crates are the primary, then the other members sorted by name.
 pub(super) fn draft_family(
     snapshot: &DumpSnapshot,
     family: &Family<'_>,
-    topics: &Topics,
+    mappings: &Mappings<'_>,
     today: Date,
 ) -> Result<(Slug, Entry), String> {
+    let topics = mappings.topics;
     let members = family_members(family);
     let row = snapshot
         .crates
@@ -46,6 +51,12 @@ pub(super) fn draft_family(
     if matched.is_empty() {
         return Err("no topic matches".to_owned());
     }
+    let category = member_category(snapshot, &members, mappings.categories).or_else(|| {
+        category_by_terms(
+            mappings.categories,
+            &[crate_name, row.description.as_deref().unwrap_or_default()],
+        )
+    });
     let (name, slug) = entry_name(crate_name, &repo)?;
     let crates = crate_names(crate_name, &members)?;
     let source_url = crate_page(described_by)
@@ -57,6 +68,7 @@ pub(super) fn draft_family(
         homepage: https_link(row.homepage.as_deref()),
         crates,
         topics: matched.into_iter().collect(),
+        category,
         description: Description {
             text,
             source: DescriptionSource::Crate,
@@ -92,6 +104,21 @@ pub(super) fn member_topics(
     matched
 }
 
+/// The first category, in file order, whose keywords or slugs match any of `members`.
+pub(super) fn member_category(
+    snapshot: &DumpSnapshot,
+    members: &[(u32, &str)],
+    categories: &Categories,
+) -> Option<Slug> {
+    let mut keywords = Vec::new();
+    let mut slugs = Vec::new();
+    for (id, _) in members {
+        keywords.extend(snapshot.keywords.get(id).into_iter().flatten().cloned());
+        slugs.extend(snapshot.categories.get(id).into_iter().flatten().cloned());
+    }
+    category_by_metadata(categories, &keywords, &slugs)
+}
+
 /// The crate list of a draft: `primary`, then the other `members` sorted by name.
 pub(super) fn crate_names(
     primary: &str,
@@ -115,8 +142,8 @@ mod tests {
     use crate::dump::DependencyKind;
 
     use super::super::draft::draft_entries;
-    use super::super::fixtures::{Spec, World, today, topics, user};
-    use super::super::types::{Drafts, ExistingIndex};
+    use super::super::fixtures::{Spec, World, categories, today, topics, user};
+    use super::super::types::{Drafts, ExistingIndex, Mappings};
 
     const REPO: &str = "https://github.com/ml-rust/fam";
 
@@ -134,7 +161,10 @@ mod tests {
             &world.snapshot,
             &world.candidates,
             &world.usage,
-            &topics(),
+            &Mappings {
+                topics: &topics(),
+                categories: &categories(),
+            },
             &ExistingIndex::default(),
             2.0,
             today(),
@@ -147,6 +177,27 @@ mod tests {
             .iter()
             .map(|(name, reason)| (name.as_str(), reason.as_str()))
             .collect()
+    }
+
+    #[test]
+    fn a_family_takes_the_first_category_in_file_order_for_any_member_order() {
+        for reverse in [false, true] {
+            let mut specs = vec![
+                member(1, "fam", 9.0, "nlp"),
+                member(2, "fam-core", 3.0, "tensor"),
+            ];
+            if reverse {
+                specs.reverse();
+            }
+            let drafts = run(specs);
+            let [(_, entry)] = drafts.entries.as_slice() else {
+                panic!("one draft expected");
+            };
+            assert_eq!(
+                entry.category.as_ref().map(ToString::to_string).as_deref(),
+                Some("zeta-tools")
+            );
+        }
     }
 
     #[test]

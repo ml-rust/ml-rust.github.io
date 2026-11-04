@@ -100,7 +100,7 @@ Each judgment appears on its entry page with a link to its issue.
 | `crates/catalogue-site` | Site templates, page data, and refusal checks. No IO. |
 | `crates/catalogue-search-wasm` | The browser search runtime. |
 | `crates/catalogue` | The `catalogue` CLI. |
-| `data/` | Entries, judgments, maintainers, topics, synonyms, discovery rules, tier thresholds, and deprecated requirements. |
+| `data/` | Entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, and deprecated requirements. |
 | `deploy/` | systemd units and scripts for the bot VM. |
 
 ## Develop

@@ -2,9 +2,17 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::diagnostics::Diagnostics;
 use super::graph::reaches;
+use super::mappings::{Mapped, MappingNames, check_mappings};
 use super::parse::Parsed;
 use crate::ids::Slug;
-use crate::registry::{Topic, Topics};
+use crate::registry::Topics;
+
+/// What the mapping diagnostics of `topics.toml` call things.
+const NAMES: MappingNames = MappingNames {
+    owner: "topic",
+    owners: "topics",
+    slug: "category",
+};
 
 /// Checks the topic list and returns the set of topic ids.
 pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BTreeSet<Slug> {
@@ -18,7 +26,17 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
             diags.push(&file.path, format!("topic `{}` is defined twice", topic.id));
         }
     }
-    check_mappings(topics, file, diags);
+    check_mappings(
+        NAMES,
+        topics.iter().map(|topic| Mapped {
+            id: &topic.id,
+            keywords: &topic.keywords,
+            categories: &topic.categories,
+            terms: &topic.terms,
+        }),
+        &file.path,
+        diags,
+    );
     let mut parents: BTreeMap<Slug, Vec<Slug>> = BTreeMap::new();
     for topic in topics {
         let Some(parent) = &topic.parent else {
@@ -48,58 +66,6 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
         }
     }
     ids
-}
-
-/// Reports a keyword, category or term that two topics claim, or that one topic lists twice.
-fn check_mappings(topics: &[Topic], file: &Parsed<Topics>, diags: &mut Diagnostics) {
-    let mut keywords: BTreeMap<&str, &Slug> = BTreeMap::new();
-    let mut categories: BTreeMap<&str, &Slug> = BTreeMap::new();
-    let mut terms: BTreeMap<&str, &Slug> = BTreeMap::new();
-    for topic in topics {
-        claim("term", &topic.terms, topic, &mut terms, file, diags);
-        claim(
-            "keyword",
-            &topic.keywords,
-            topic,
-            &mut keywords,
-            file,
-            diags,
-        );
-        claim(
-            "category",
-            &topic.categories,
-            topic,
-            &mut categories,
-            file,
-            diags,
-        );
-    }
-}
-
-fn claim<'a>(
-    what: &str,
-    values: &'a [String],
-    topic: &'a Topic,
-    owners: &mut BTreeMap<&'a str, &'a Slug>,
-    file: &Parsed<Topics>,
-    diags: &mut Diagnostics,
-) {
-    for value in values {
-        match owners.insert(value.as_str(), &topic.id) {
-            Some(first) if *first == topic.id => diags.push(
-                &file.path,
-                format!("topic `{}`: {what} `{value}` is listed twice", topic.id),
-            ),
-            Some(first) => diags.push(
-                &file.path,
-                format!(
-                    "{what} `{value}` maps to topics `{first}` and `{}`; a {what} maps to one topic",
-                    topic.id
-                ),
-            ),
-            None => {}
-        }
-    }
 }
 
 #[cfg(test)]

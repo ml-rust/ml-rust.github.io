@@ -35,4 +35,5 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue bot run`: opens a data PR for each approved issue.
 - `catalogue bot run`: adds an advisory LLM check of evidence links.
 - `data/synonyms.toml`: search synonyms. A human reviews every group.
+- `data/categories.toml`: browse by what a project is, on the site, in search, in seed drafts and in the submit form.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.

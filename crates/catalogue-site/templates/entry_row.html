@@ -1,2 +1,3 @@
-<li class="entry-row"><a class="entry-name" href="{{ row.href }}">{{ row.name }}</a> <span class="entry-kind">{{ row.kind }}</span>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}{% if let Some(added) = row.added %} <span class="entry-added">Added <time datetime="{{ added }}">{{ added }}</time></span>{% endif %}
+<li class="entry-row">{% if let Some(install) = row.install %}<p>{% if let Some(command) = install.command %}<code>{{ command }}</code> {% endif %}<a href="{{ install.href }}">{{ install.text }}</a></p>
+{% endif %}<a class="entry-name" href="{{ row.href }}">{{ row.name }}</a> <span class="entry-kind">{{ row.kind }}</span>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}{% if let Some(added) = row.added %} <span class="entry-added">Added <time datetime="{{ added }}">{{ added }}</time></span>{% endif %}
 <p class="entry-description">{{ row.description }}</p></li>

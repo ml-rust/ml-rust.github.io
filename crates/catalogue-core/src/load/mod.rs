@@ -1,5 +1,6 @@
 //! Parsing and validation of a whole data set.
 
+mod categories;
 mod deprecated;
 mod diagnostics;
 mod discovery;
@@ -7,6 +8,7 @@ mod entries;
 mod graph;
 mod judgments;
 mod maintainers;
+mod mappings;
 mod parse;
 mod run;
 mod sources;

@@ -12,6 +12,17 @@
 
 <h2 id="topics">Topics</h2>
 {% include "topic_grid.html" %}
+
+<h2 id="categories">Browse by category</h2>
+{%- if categories.is_empty() %}
+<p>No category exists yet.</p>
+{%- else %}
+<ul class="link-list">
+{%- for link in categories %}
+<li><a href="{{ link.href }}">{{ link.name }}</a></li>
+{%- endfor %}
+</ul>
+{%- endif %}
 {%- if checked.is_some() %}
 
 <h2 id="featured">Featured</h2>

@@ -53,10 +53,18 @@ fn a_topic_name_with_markup_is_escaped() {
     }
 }
 
-/// The fixture files with markup in a description, a topic summary and a
-/// correction finding.
+/// The fixture files with markup in a description, a topic summary, a category
+/// name and blurb, and a correction finding.
 fn hostile_files() -> Vec<(String, String)> {
     let swaps = [
+        (
+            "\"Tensor libraries\"".to_owned(),
+            format!("'''{HOSTILE}category</script>'''"),
+        ),
+        (
+            "\"Libraries for multidimensional arrays and their math.\"".to_owned(),
+            format!("'''{HOSTILE}blurb</script>'''"),
+        ),
         (
             "\"A tensor library.\"".to_owned(),
             format!("'''{HOSTILE}description</script>'''"),
@@ -91,8 +99,15 @@ fn hostile_data_text_never_reaches_a_page_raw() {
         let alpha = &site["projects/alpha/index.html"];
         let ml = &site["topics/ml/index.html"];
         let home = &site["index.html"];
+        let category = &site["categories/tensor-libraries/index.html"];
         for (page, text, field) in [
             (alpha, "description", "description"),
+            (alpha, "category", "project category link"),
+            (home, "category", "home category link"),
+            (&site["search/index.html"], "category", "category filter"),
+            (category, "category", "category page name"),
+            (category, "blurb", "category page blurb"),
+            (category, "description", "category page row"),
             (
                 &site["topics/tensors/index.html"],
                 "description",

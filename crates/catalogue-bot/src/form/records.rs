@@ -18,6 +18,8 @@ pub struct SubmitForm {
     pub crates: Vec<String>,
     /// `topics`: topic slugs, one per item.
     pub topics: Vec<String>,
+    /// `category`: the category id.
+    pub category: Option<String>,
     /// `description`: the text as written.
     pub description: String,
     /// `description_source`: `readme` or `human`.
@@ -176,6 +178,7 @@ impl Answers {
             repo: self.required("repo")?,
             crates: self.list("crates"),
             topics: self.list("topics"),
+            category: self.optional("category"),
             description: self.required("description")?,
             description_source: self.required("description_source")?,
             description_source_url: self.optional("description_source_url"),

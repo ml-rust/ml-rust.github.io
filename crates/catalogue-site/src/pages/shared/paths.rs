@@ -1,6 +1,6 @@
 //! The paths of the data-built pages, and links to them.
 
-use catalogue_core::{Catalogue, Slug, Topic};
+use catalogue_core::{Catalogue, Category, Slug, Topic};
 use url::Url;
 
 use crate::href::SafeHref;
@@ -68,6 +68,37 @@ pub(crate) fn topic_href(id: &Slug) -> SafeHref {
     SafeHref::new(&format!("/topics/{id}/"))
 }
 
+/// The file of the page of category `id`, below the site root.
+pub(crate) fn category_file(id: &Slug) -> String {
+    format!("categories/{id}/index.html")
+}
+
+/// The link to the page of category `id`.
+pub(crate) fn category_href(id: &Slug) -> SafeHref {
+    SafeHref::new(&format!("/categories/{id}/"))
+}
+
+/// The link to category `id` with the category's name, or `None` for an id the catalogue lacks.
+pub(crate) fn category_link<'a>(catalogue: &'a Catalogue, id: &Slug) -> Option<NamedLink<'a>> {
+    catalogue
+        .categories()
+        .iter()
+        .find(|category| &category.id == id)
+        .map(named_category)
+}
+
+/// The link to every category, in file order.
+pub(crate) fn category_links(catalogue: &Catalogue) -> Vec<NamedLink<'_>> {
+    catalogue.categories().iter().map(named_category).collect()
+}
+
+fn named_category(category: &Category) -> NamedLink<'_> {
+    NamedLink {
+        name: &category.name,
+        href: category_href(&category.id),
+    }
+}
+
 /// The link to entry `slug` with the entry's name, or `None` for a slug the catalogue lacks.
 pub(crate) fn entry_link<'a>(catalogue: &'a Catalogue, slug: &Slug) -> Option<NamedLink<'a>> {
     let entry = catalogue.entry(slug)?;
@@ -100,6 +131,14 @@ mod tests {
         assert_eq!(project_href(&slug("numr")).as_str(), "/projects/numr/");
         assert_eq!(topic_file(&slug("gpu")), "topics/gpu/index.html");
         assert_eq!(topic_href(&slug("gpu")).as_str(), "/topics/gpu/");
+        assert_eq!(
+            category_file(&slug("model-formats")),
+            "categories/model-formats/index.html"
+        );
+        assert_eq!(
+            category_href(&slug("model-formats")).as_str(),
+            "/categories/model-formats/"
+        );
     }
 
     #[test]

@@ -4,7 +4,9 @@ use crate::entry::Entry;
 use crate::ids::Slug;
 use crate::judgment::Judgment;
 use crate::load::{self, DataSources, Diagnostics};
-use crate::registry::{Deprecated, Discovery, Maintainer, SynonymGroup, Thresholds, Topic};
+use crate::registry::{
+    Category, Deprecated, Discovery, Maintainer, SynonymGroup, Thresholds, Topic,
+};
 
 /// A checked data set.
 ///
@@ -14,6 +16,7 @@ pub struct Catalogue {
     pub(crate) entries: BTreeMap<Slug, Entry>,
     pub(crate) judgments: BTreeMap<u64, Judgment>,
     pub(crate) topics: Vec<Topic>,
+    pub(crate) categories: Vec<Category>,
     pub(crate) maintainers: Vec<Maintainer>,
     pub(crate) synonyms: Vec<SynonymGroup>,
     pub(crate) discovery: Option<Discovery>,
@@ -47,6 +50,20 @@ impl Catalogue {
     /// Topics in file order.
     pub fn topics(&self) -> &[Topic] {
         &self.topics
+    }
+
+    /// Categories in file order.
+    pub fn categories(&self) -> &[Category] {
+        &self.categories
+    }
+
+    /// The slugs of the entries in category `id`, sorted by slug.
+    pub fn entries_in_category(&self, id: &Slug) -> Vec<&Slug> {
+        self.entries
+            .iter()
+            .filter(|(_, entry)| entry.category.as_ref() == Some(id))
+            .map(|(slug, _)| slug)
+            .collect()
     }
 
     /// Maintainers in file order.
@@ -90,6 +107,12 @@ mod tests {
             [7]
         );
         assert_eq!(catalogue.topics().len(), 2);
+        let ids: Vec<&str> = catalogue
+            .categories()
+            .iter()
+            .map(|category| category.id.as_str())
+            .collect();
+        assert_eq!(ids, ["vector-databases", "tensor-libraries"]);
         assert_eq!(catalogue.maintainers().len(), 2);
         assert_eq!(catalogue.synonyms().len(), 1);
         assert!(catalogue.discovery().is_none());
@@ -112,6 +135,26 @@ mod tests {
         let catalogue = Catalogue::load(src).expect("valid data");
         let slugs: Vec<&str> = catalogue.entries().keys().map(Slug::as_str).collect();
         assert_eq!(slugs, ["aardvark", "alpha", "beta"]);
+    }
+
+    #[test]
+    fn entries_in_category_lists_only_the_entries_that_name_it() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "entries/beta.toml",
+            &format!("category = \"tensor-libraries\"\n{BETA}"),
+        );
+        let catalogue = Catalogue::load(src).expect("valid data");
+        let found = |id: &str| -> Vec<String> {
+            catalogue
+                .entries_in_category(&Slug::new(id).expect("slug"))
+                .iter()
+                .map(ToString::to_string)
+                .collect()
+        };
+        assert_eq!(found("tensor-libraries"), ["beta"]);
+        assert!(found("vector-databases").is_empty());
     }
 
     #[test]

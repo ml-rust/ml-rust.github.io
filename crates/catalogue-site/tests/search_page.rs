@@ -62,6 +62,7 @@ fn the_page_holds_the_form_and_the_live_result_list() {
         "<ol class=\"search-results\" id=\"search-results\" aria-live=\"polite\"></ol>",
         "<legend>Kind</legend>",
         "<legend>Topic</legend>",
+        "<legend>Category</legend>",
         "<legend>Tier</legend>",
         "<legend>Organization</legend>",
     ] {
@@ -87,11 +88,37 @@ fn the_filters_come_from_the_catalogue_and_match_the_record_tags() {
             .iter()
             .map(|topic| checkbox("topic", topic.id.as_str())),
     );
+    boxes.extend(
+        catalogue
+            .categories()
+            .iter()
+            .map(|category| checkbox("category", category.id.as_str())),
+    );
     for found in &boxes {
         assert!(page.contains(found.as_str()), "no {found} in:\n{page}");
     }
     assert!(page.contains("<label for=\"filter-topic-ml\">Machine learning</label>"));
     assert!(page.contains("<span class=\"facet-count\" id=\"filter-topic-ml-count\"></span>"));
+    assert!(
+        page.contains("<label for=\"filter-category-tensor-libraries\">Tensor libraries</label>")
+    );
+    assert!(page.contains(
+        "<span class=\"facet-count\" id=\"filter-category-tensor-libraries-count\"></span>"
+    ));
+}
+
+#[test]
+fn the_script_keeps_every_filter_group_in_the_url() {
+    let source = script_source();
+    let keys = source
+        .lines()
+        .find(|line| line.starts_with("const FILTER_KEYS"))
+        .expect("the filter keys");
+    let site = site(true);
+    for key in ["kind", "topic", "category", "tier", "org"] {
+        assert!(keys.contains(&format!("\"{key}\"")), "{keys}");
+        assert!(site[PAGE].contains(&format!("name=\"{key}\"")), "{key}");
+    }
 }
 
 #[test]

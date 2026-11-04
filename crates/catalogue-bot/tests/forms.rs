@@ -176,6 +176,7 @@ fn a_submit_body_reads_every_field() {
     };
     assert_eq!(form.name, "Gizmo");
     assert_eq!(form.crates, ["gizmo-core", "gizmo-nn"]);
+    assert_eq!(form.category, None);
     assert_eq!(form.description, "A gizmo that learns\nfrom data.");
     assert_eq!(form.description_source_url, None);
     assert!(form.docker.is_empty());

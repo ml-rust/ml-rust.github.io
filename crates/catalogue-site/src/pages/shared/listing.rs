@@ -1,6 +1,6 @@
 //! Entries grouped by tier, or one alphabetical list without a report.
 
-use catalogue_core::{Catalogue, Slug, Tier, TierReport};
+use catalogue_core::{Catalogue, Entry, Slug, Tier, TierReport};
 
 use super::entry_row::{EntryRow, sort_by_name, tier_of};
 use super::labels::tier_name;
@@ -26,12 +26,32 @@ pub(crate) fn group_entries<'a>(
     report: Option<&TierReport>,
     slugs: &[&Slug],
 ) -> Vec<EntryGroup<'a>> {
+    group_rows(catalogue, report, slugs, EntryRow::new)
+}
+
+/// The groups of [`group_entries`], with each row leading with how to get the entry.
+pub(crate) fn group_install_rows<'a>(
+    catalogue: &'a Catalogue,
+    report: Option<&TierReport>,
+    slugs: &[&Slug],
+) -> Vec<EntryGroup<'a>> {
+    group_rows(catalogue, report, slugs, |slug, entry, tier| {
+        EntryRow::new(slug, entry, tier).with_install(entry)
+    })
+}
+
+fn group_rows<'a>(
+    catalogue: &'a Catalogue,
+    report: Option<&TierReport>,
+    slugs: &[&Slug],
+    row: impl Fn(&Slug, &'a Entry, Option<Tier>) -> EntryRow<'a>,
+) -> Vec<EntryGroup<'a>> {
     let mut rows: Vec<(Option<Tier>, EntryRow<'a>)> = slugs
         .iter()
         .filter_map(|&slug| {
             let entry = catalogue.entry(slug)?;
             let tier = tier_of(report, slug);
-            Some((tier, EntryRow::new(slug, entry, tier)))
+            Some((tier, row(slug, entry, tier)))
         })
         .collect();
     if report.is_none() {

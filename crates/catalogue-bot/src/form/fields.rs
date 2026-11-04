@@ -58,6 +58,7 @@ pub const SUBMIT: &[Field] = &[
     field("repo", "Repository URL", true, Shape::Line),
     field("crates", "Crates", false, Shape::List),
     field("topics", "Topics", true, Shape::List),
+    field("category", "Category", false, Shape::Line),
     field("description", "Description", true, Shape::Text),
     field(
         "description_source",

@@ -1,5 +1,6 @@
 //! Page data and the templates that render it.
 
+mod category;
 mod changes;
 mod home;
 mod layout;
@@ -11,6 +12,7 @@ mod shared;
 mod submit;
 mod topics;
 
+pub(crate) use category::CategoryPage;
 pub(crate) use changes::ChangesPage;
 pub(crate) use home::HomePage;
 pub use layout::SITE_NAME;
@@ -19,6 +21,8 @@ pub(crate) use not_found::NotFoundPage;
 pub(crate) use project::ProjectPage;
 pub(crate) use rules::RulesPage;
 pub(crate) use search::SearchPage;
-pub(crate) use shared::{project_file, project_href, topic_file, topic_link};
+pub(crate) use shared::{
+    category_file, category_link, project_file, project_href, topic_file, topic_link,
+};
 pub(crate) use submit::SubmitPage;
 pub(crate) use topics::{TopicPage, TopicsPage};

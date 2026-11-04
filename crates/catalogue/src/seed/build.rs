@@ -2,10 +2,10 @@
 
 use std::collections::HashMap;
 
-use catalogue_core::{Date, Topics};
+use catalogue_core::Date;
 use catalogue_signals::discover::{self, Rules};
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
-use catalogue_signals::seed::{Drafts, ExistingIndex, draft_entries};
+use catalogue_signals::seed::{Drafts, ExistingIndex, Mappings, draft_entries};
 use catalogue_signals::usage;
 
 /// The result of one seed run.
@@ -29,7 +29,7 @@ pub struct Seed {
 pub fn build_seed(
     snapshot: &DumpSnapshot,
     rules: &Rules,
-    topics: &Topics,
+    mappings: &Mappings<'_>,
     existing: &ExistingIndex,
     min_active_users: f64,
 ) -> Seed {
@@ -41,7 +41,7 @@ pub fn build_seed(
         snapshot,
         &found.candidates,
         &signals,
-        topics,
+        mappings,
         existing,
         min_active_users,
         Date::from(today),
@@ -75,6 +75,7 @@ fn render(drafts: &Drafts, current: &HashMap<&str, f64>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use catalogue_core::{Categories, Topics};
     use catalogue_signals::dump::{CrateRow, DumpMeta, Owner, OwnerKind, VersionRow};
     use jiff::Timestamp;
 
@@ -149,27 +150,23 @@ mod tests {
         .expect("topics parse")
     }
 
+    fn seed_with(snap: &DumpSnapshot, existing: &ExistingIndex, min: f64) -> Seed {
+        let mappings = Mappings {
+            topics: &topics(),
+            categories: &Categories::default(),
+        };
+        build_seed(snap, &rules(), &mappings, existing, min)
+    }
+
     #[test]
     fn candidates_without_users_are_not_drafted_at_a_positive_minimum() {
-        let seed = build_seed(
-            &snapshot(),
-            &rules(),
-            &topics(),
-            &ExistingIndex::default(),
-            1.0,
-        );
+        let seed = seed_with(&snapshot(), &ExistingIndex::default(), 1.0);
         assert_eq!(seed.text, "drafts: 0\nskipped: 0");
     }
 
     #[test]
     fn the_report_lists_drafts_then_skips() {
-        let seed = build_seed(
-            &snapshot(),
-            &rules(),
-            &topics(),
-            &ExistingIndex::default(),
-            0.0,
-        );
+        let seed = seed_with(&snapshot(), &ExistingIndex::default(), 0.0);
         assert_eq!(
             seed.text,
             "drafts: 1\nhas-repo\t0.00\tinference\nskipped: 1\nno-repo\tno repository"
@@ -198,7 +195,7 @@ mod tests {
         };
         snap.owners.insert(1, vec![owner]);
         snap.owners.insert(3, vec![owner]);
-        let seed = build_seed(&snap, &rules(), &topics(), &ExistingIndex::default(), 0.0);
+        let seed = seed_with(&snap, &ExistingIndex::default(), 0.0);
         assert_eq!(seed.drafts.entries.len(), 1);
         for (low, high) in [
             ("has-repo", "has-repo-derive"),
@@ -214,7 +211,7 @@ mod tests {
     #[test]
     fn listed_crates_are_left_out() {
         let existing = ExistingIndex::new(["has_repo", "no-repo"], []);
-        let seed = build_seed(&snapshot(), &rules(), &topics(), &existing, 0.0);
+        let seed = seed_with(&snapshot(), &existing, 0.0);
         assert_eq!(seed.text, "drafts: 0\nskipped: 0");
     }
 }

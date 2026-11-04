@@ -27,7 +27,7 @@
 <main id="main" tabindex="-1">
 
 <h1>Search</h1>
-<p>Search entries by name, crate, topic or description. Tick filters to narrow the results.</p>
+<p>Search entries by name, crate, topic, category or description. Tick filters to narrow the results.</p>
 <form class="search-form" id="search-form" action="/search/" method="get" role="search">
 <p class="search-box">
 <label for="search-q">Search terms</label>
@@ -47,6 +47,14 @@
 <ul>
 <li><input type="checkbox" id="filter-topic-ml" name="topic" value="ml"> <label for="filter-topic-ml">Machine learning</label> <span class="facet-count" id="filter-topic-ml-count"></span></li>
 <li><input type="checkbox" id="filter-topic-tensors" name="topic" value="tensors"> <label for="filter-topic-tensors">Tensors</label> <span class="facet-count" id="filter-topic-tensors-count"></span></li>
+</ul>
+</fieldset>
+<fieldset class="search-filter">
+<legend>Category</legend>
+<ul>
+<li><input type="checkbox" id="filter-category-inference-runtimes" name="category" value="inference-runtimes"> <label for="filter-category-inference-runtimes">Inference runtimes</label> <span class="facet-count" id="filter-category-inference-runtimes-count"></span></li>
+<li><input type="checkbox" id="filter-category-tensor-libraries" name="category" value="tensor-libraries"> <label for="filter-category-tensor-libraries">Tensor libraries</label> <span class="facet-count" id="filter-category-tensor-libraries-count"></span></li>
+<li><input type="checkbox" id="filter-category-vector-databases" name="category" value="vector-databases"> <label for="filter-category-vector-databases">Vector databases</label> <span class="facet-count" id="filter-category-vector-databases-count"></span></li>
 </ul>
 </fieldset>
 <fieldset class="search-filter">
@@ -76,7 +84,7 @@
 <li><a href="/topics/tensors/">Tensors</a></li>
 </ul>
 </noscript>
-<script type="module" src="/search/search.6562dd22.js"></script>
+<script type="module" src="/search/search.f0cf4c2c.js"></script>
 
 </main>
 <footer class="site-footer">

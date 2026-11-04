@@ -1,0 +1,12 @@
+name = "Alpha"
+kind = "library"
+repo = "https://github.com/ml-rust/alpha"
+crates = ["alpha-crate"]
+topics = ["ml"]
+category = "missing"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The Alpha project."
+source = "human"

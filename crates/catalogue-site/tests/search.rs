@@ -120,6 +120,7 @@ fn a_record_links_names_and_weights_the_entry() {
         [
             ("name", "Alpha alpha-crate alpha-extra", 3.0),
             ("topics", "Tensors", 2.0),
+            ("category", "Tensor libraries", 2.0),
             ("description", "A tensor library.", 1.5),
         ]
     );
@@ -129,6 +130,7 @@ fn a_record_links_names_and_weights_the_entry() {
             ("kind", "library"),
             ("org", "community"),
             ("topic", "tensors"),
+            ("category", "tensor-libraries"),
             ("tier", "featured"),
         ]
     );
@@ -145,6 +147,7 @@ fn synonyms_of_the_entry_text_become_aliases() {
         [
             ("name", "Beta", 3.0),
             ("topics", "Machine learning", 2.0),
+            ("category", "Inference runtimes", 2.0),
             ("description", "A command line tool that runs models.", 1.5),
             ("aliases", "ml, cli, command-line interface", 1.0),
         ]
@@ -155,6 +158,7 @@ fn synonyms_of_the_entry_text_become_aliases() {
             ("kind", "app"),
             ("org", "ml-rust"),
             ("topic", "ml"),
+            ("category", "inference-runtimes"),
             ("tier", "listed"),
         ]
     );
@@ -163,6 +167,41 @@ fn synonyms_of_the_entry_text_become_aliases() {
     assert_eq!(
         delta.fields.last().map(|field| field.text.as_str()),
         Some("autodiff")
+    );
+}
+
+#[test]
+fn an_entry_without_a_category_has_no_category_field_or_tag() {
+    let (catalogue, report) = data();
+    let records = search_records(&catalogue, Some(&report));
+    let delta = record(&records, "delta");
+    assert!(fields(delta).iter().all(|(name, _, _)| *name != "category"));
+    assert!(tags(delta).iter().all(|(name, _)| *name != "category"));
+}
+
+#[test]
+fn the_category_filter_and_its_facets_work_like_the_topic_filter() {
+    let (catalogue, report) = data();
+    let files = build(&catalogue, Some(&report));
+    let filtered = hits(&files, "tensor", &[("category", "tensor-libraries")]);
+    assert_eq!(filtered, ["/projects/alpha/", "/projects/gamma/"]);
+    assert!(hits(&files, "tensor", &[("category", "vector-databases")]).is_empty());
+    assert_eq!(
+        hits(&files, "runtimes", &[]),
+        ["/projects/beta/"],
+        "a category name is searchable"
+    );
+    let facets = searcher(&files, "").facets("", &[]);
+    let (_, counts) = facets
+        .iter()
+        .find(|(key, _)| key == "category")
+        .expect("a category facet");
+    assert_eq!(
+        counts.as_slice(),
+        [
+            ("tensor-libraries".to_owned(), 2),
+            ("inference-runtimes".to_owned(), 1),
+        ]
     );
 }
 

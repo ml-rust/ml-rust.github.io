@@ -1,0 +1,4 @@
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries for multidimensional arrays and the math on them."

@@ -151,6 +151,8 @@ pub struct Entry {
     pub crates: Vec<CrateName>,
     /// Topic ids. At least one.
     pub topics: Vec<Slug>,
+    /// Category id: what the project is. At most one.
+    pub category: Option<Slug>,
     /// Short description.
     pub description: Description,
     /// Whether the ml-rust organization maintains the project.

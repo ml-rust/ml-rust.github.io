@@ -1,4 +1,4 @@
-//! Four entries over two topics, with judgments, a tier report and tier changes.
+//! Four entries over two topics and three categories, with judgments, a tier report and tier changes.
 //!
 //! Every test file that includes this module uses each item.
 
@@ -30,6 +30,23 @@ parent = "ml"
 [topic.summary]
 text = "Libraries for n-dimensional arrays and the math on them."
 evidence = ["https://en.wikipedia.org/wiki/Tensor_(machine_learning)"]
+"#;
+
+/// Three categories. No entry names the last.
+const CATEGORIES: &str = r#"[[category]]
+id = "inference-runtimes"
+name = "Inference runtimes"
+blurb = "Programs and libraries that load a trained model and run it."
+
+[[category]]
+id = "tensor-libraries"
+name = "Tensor libraries"
+blurb = "Libraries for multidimensional arrays and their math."
+
+[[category]]
+id = "vector-databases"
+name = "Vector databases"
+blurb = "Databases that store vectors and find the ones nearest to a query."
 "#;
 
 /// An org member and an outside maintainer.
@@ -65,6 +82,7 @@ repo = "https://github.com/ml-rust/alpha"
 homepage = "https://alpha.example.org/"
 crates = ["alpha-crate", "alpha-extra"]
 topics = ["tensors"]
+category = "tensor-libraries"
 added = 2026-10-01
 
 [description]
@@ -79,6 +97,7 @@ kind = "app"
 repo = "https://github.com/ml-rust/beta"
 crates = []
 topics = ["ml"]
+category = "inference-runtimes"
 org_affiliated = true
 added = 2026-11-03
 
@@ -99,6 +118,7 @@ kind = "library"
 repo = "https://github.com/someone/gamma"
 crates = ["gamma"]
 topics = ["tensors"]
+category = "tensor-libraries"
 added = 2026-09-15
 
 [description]
@@ -187,6 +207,7 @@ status = "maintained"
 pub fn files() -> Vec<(String, String)> {
     [
         ("topics.toml", TOPICS),
+        ("categories.toml", CATEGORIES),
         ("maintainers.toml", MAINTAINERS),
         ("synonyms.toml", SYNONYMS),
         ("entries/alpha.toml", ALPHA),
@@ -232,6 +253,8 @@ fn load(files: &[(String, String)]) -> Catalogue {
             sources.judgments.push(file);
         } else if path == "topics.toml" {
             sources.topics = Some(file);
+        } else if path == "categories.toml" {
+            sources.categories = Some(file);
         } else if path == "maintainers.toml" {
             sources.maintainers = Some(file);
         } else if path == "synonyms.toml" {

@@ -2,11 +2,11 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Date, Slug, Topics};
+use catalogue_core::{Date, Slug};
 
 use super::family::families;
 use super::family_draft::draft_family;
-use super::types::{Drafts, ExistingIndex};
+use super::types::{Drafts, ExistingIndex, Mappings};
 use crate::discover::Candidate;
 use crate::dump::{DumpSnapshot, IdMap};
 use crate::usage::Usage;
@@ -38,7 +38,9 @@ use crate::usage::Usage;
 /// the next member with a usable one, cut to whole sentences when longer than
 /// 300 characters. Its topics are the union of the topics whose keywords or
 /// categories match any member. When that union is empty, they are the topics
-/// with a term in the primary's name or description.
+/// with a term in the primary's name or description. Its category comes from
+/// the same two steps, and the first match in file order wins. No match leaves
+/// the category unset and keeps the draft.
 ///
 /// Any https host is accepted. GitHub-only signals stay unknown for other
 /// hosts, so such entries can be Listed but not Featured. A family whose
@@ -50,7 +52,7 @@ pub fn draft_entries(
     snapshot: &DumpSnapshot,
     candidates: &[Candidate],
     usage: &IdMap<Usage>,
-    topics: &Topics,
+    mappings: &Mappings<'_>,
     existing: &ExistingIndex,
     min_active_users: f64,
     today: Date,
@@ -59,7 +61,7 @@ pub fn draft_entries(
     let mut taken: BTreeMap<Slug, &str> = BTreeMap::new();
     for family in families(snapshot, candidates, usage, existing, min_active_users) {
         drafts.skipped.extend(family.left_out.iter().cloned());
-        let outcome = draft_family(snapshot, &family, topics, today).and_then(|(slug, entry)| {
+        let outcome = draft_family(snapshot, &family, mappings, today).and_then(|(slug, entry)| {
             if existing.has_slug(&slug) {
                 return Err(format!("slug `{slug}` is already an entry"));
             }
@@ -87,7 +89,7 @@ mod tests {
     use catalogue_core::{CrateName, DescriptionSource, EntryKind};
     use url::Url;
 
-    use super::super::fixtures::{Spec, World, today, topics};
+    use super::super::fixtures::{Spec, World, categories, today, topics};
     use super::*;
 
     fn run(world: &World, existing: &ExistingIndex, min: f64) -> Drafts {
@@ -95,7 +97,10 @@ mod tests {
             &world.snapshot,
             &world.candidates,
             &world.usage,
-            &topics(),
+            &Mappings {
+                topics: &topics(),
+                categories: &categories(),
+            },
             existing,
             min,
             today(),
@@ -146,6 +151,10 @@ mod tests {
         assert_eq!(crates, ["Tok_Lib"]);
         let found: Vec<&str> = entry.topics.iter().map(Slug::as_str).collect();
         assert_eq!(found, ["foundations", "nlp"]);
+        assert_eq!(
+            entry.category.as_ref().map(Slug::as_str),
+            Some("zeta-tools")
+        );
         assert_eq!(entry.description.text, "Fast tokenizer.");
         assert_eq!(entry.description.source, DescriptionSource::Crate);
         assert_eq!(
@@ -246,6 +255,38 @@ mod tests {
         spec.keywords = vec!["zip"];
         let drafts = plain(&World::new(vec![spec]));
         assert_eq!(skipped(&drafts), [("tool", "no topic matches")]);
+    }
+
+    fn category_of(spec: Spec) -> Option<String> {
+        let drafts = plain(&World::new(vec![spec]));
+        assert!(drafts.skipped.is_empty(), "{:?}", drafts.skipped);
+        let [(_, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected");
+        };
+        entry.category.as_ref().map(ToString::to_string)
+    }
+
+    #[test]
+    fn no_category_match_keeps_the_draft_with_the_category_unset() {
+        let mut spec = Spec::new(1, "tool");
+        spec.keywords = Vec::new();
+        spec.categories = vec!["science::math"];
+        assert_eq!(category_of(spec), None);
+    }
+
+    #[test]
+    fn the_terms_decide_the_category_when_no_metadata_does() {
+        let mut spec = Spec::new(1, "tool");
+        spec.keywords = Vec::new();
+        spec.description = Some("A sparse matrix tool.".to_owned());
+        assert_eq!(category_of(spec).as_deref(), Some("zeta-tools"));
+    }
+
+    #[test]
+    fn metadata_beats_a_term_of_an_earlier_category() {
+        let mut spec = Spec::new(1, "tool");
+        spec.description = Some("A sparse matrix tool.".to_owned());
+        assert_eq!(category_of(spec).as_deref(), Some("alpha-tools"));
     }
 
     #[test]

@@ -2,9 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Slug, Topics};
+use catalogue_core::Slug;
 
-use super::super::types::{Drafts, ExistingIndex};
+use super::super::types::{Drafts, ExistingIndex, Mappings};
 use crate::dump::DumpSnapshot;
 use crate::http::Pacer;
 
@@ -13,8 +13,8 @@ use crate::http::Pacer;
 pub struct LeadInputs<'a> {
     /// The crates.io dump.
     pub snapshot: &'a DumpSnapshot,
-    /// The topic mappings.
-    pub topics: &'a Topics,
+    /// The topic and category mappings.
+    pub mappings: Mappings<'a>,
     /// The entries that already exist.
     pub existing: &'a ExistingIndex,
     /// The active-user floor of the dump flow. It only marks a draft below it.

@@ -2,7 +2,18 @@
 
 use std::collections::{HashMap, HashSet};
 
-use catalogue_core::{Catalogue, Entry, Slug, canonical_crate_name, normalize_repo_url};
+use catalogue_core::{
+    Catalogue, Categories, Entry, Slug, Topics, canonical_crate_name, normalize_repo_url,
+};
+
+/// The data files that map crate metadata to the topics and the category of a draft.
+#[derive(Debug, Clone, Copy)]
+pub struct Mappings<'a> {
+    /// The topic mappings. A draft needs at least one topic.
+    pub topics: &'a Topics,
+    /// The category mappings. A draft can have no category.
+    pub categories: &'a Categories,
+}
 
 /// The crate names, slugs and repositories of the entries that already exist.
 ///

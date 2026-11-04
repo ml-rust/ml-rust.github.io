@@ -4,7 +4,7 @@
 //! environment. [`build_site`] takes a checked [`catalogue_core::Catalogue`],
 //! an optional [`catalogue_core::TierReport`] and the tier changes in
 //! [`SiteInputs`]. It returns every page and asset as an [`OutputFile`]:
-//! the home page, the topic list, one page per topic and per entry, the tier
+//! the home page, the topic list, one page per topic, category and entry, the tier
 //! changes, the rules, the submit page, the not-found page, the search page,
 //! its script and the search index under [`SEARCH_DIR`]. The deploy adds the
 //! wasm module of the search engine to [`SEARCH_DIR`]. [`search_records`]

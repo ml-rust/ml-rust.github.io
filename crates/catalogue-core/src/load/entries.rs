@@ -5,12 +5,13 @@ use super::parse::Parsed;
 use crate::entry::Entry;
 use crate::ids::{CrateName, Slug, normalize_repo_url};
 
-/// Checks entries against each other and against the topic list.
+/// Checks entries against each other and against the topic and category lists.
 ///
 /// Returns the entries that have a valid slug, keyed by slug.
 pub(crate) fn check_entries(
     files: Vec<Parsed<Entry>>,
     topic_ids: &BTreeSet<Slug>,
+    category_ids: &BTreeSet<Slug>,
     diags: &mut Diagnostics,
 ) -> BTreeMap<Slug, Entry> {
     let mut entries: BTreeMap<Slug, Entry> = BTreeMap::new();
@@ -24,6 +25,18 @@ pub(crate) fn check_entries(
             if !topic_ids.contains(topic) {
                 diags.push(&path, format!("topic `{topic}` does not exist"));
             }
+        }
+        if let Some(category) = value
+            .category
+            .as_ref()
+            .filter(|category| !category_ids.contains(category))
+        {
+            diags.push(
+                &path,
+                format!(
+                    "category `{category}` does not exist. Use an id from `categories.toml`, or remove the field"
+                ),
+            );
         }
         for name in &value.crates {
             match crate_owners.get(name) {

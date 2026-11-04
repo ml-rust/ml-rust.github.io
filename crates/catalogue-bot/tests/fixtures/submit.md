@@ -19,6 +19,10 @@ gizmo-nn
 
 ml
 
+### Category
+
+_No response_
+
 ### Description
 
 A gizmo that learns

@@ -52,6 +52,15 @@ fn unknown_entry_topic_is_reported() {
 }
 
 #[test]
+fn unknown_entry_category_is_reported() {
+    expect_invalid(
+        "unknown-category",
+        "category `missing` does not exist. Use an id from `categories.toml`",
+        1,
+    );
+}
+
+#[test]
 fn topic_parent_cycle_is_reported() {
     expect_invalid("topic-cycle", "parent chain forms a cycle", 2);
 }

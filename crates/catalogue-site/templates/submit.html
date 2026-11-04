@@ -33,4 +33,21 @@
 </tbody>
 </table>
 {%- endif %}
+
+<h2 id="categories">Categories</h2>
+<p>The submit form takes one optional category id from this list.</p>
+{%- if categories.is_empty() %}
+<p>No category exists yet.</p>
+{%- else %}
+<table>
+<thead>
+<tr><th scope="col">Id</th><th scope="col">Name</th></tr>
+</thead>
+<tbody>
+{%- for category in categories %}
+<tr><td><a href="{{ category.link.href }}"><code>{{ category.id }}</code></a></td><td>{{ category.link.name }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endif %}
 {% endblock %}

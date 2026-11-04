@@ -3,13 +3,13 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Catalogue, Diagnostics, Topics};
+use catalogue_core::{Catalogue, Categories, Diagnostics, Topics};
 use catalogue_signals::distribution::{DOCKER_INTERVAL, HOMEBREW_INTERVAL, REPOLOGY_INTERVAL};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::github::{GITHUB_INTERVAL, GithubError};
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
-use catalogue_signals::seed::{Drafts, ExistingIndex, LeadInputs, LeadPacers};
+use catalogue_signals::seed::{Drafts, ExistingIndex, LeadInputs, LeadPacers, Mappings};
 use clap::Args;
 
 use super::build::build_seed;
@@ -95,11 +95,13 @@ fn seed(args: &SeedArgs) -> Result<String, SeedError> {
     let rules = crate_rules(&catalogue, &args.data)?;
     let min_users = min_users(args, &catalogue)?;
     let snapshot = cached_dump(args)?;
-    let topics = Topics {
-        topic: catalogue.topics().to_vec(),
+    let (topics, categories) = mapping_files(&catalogue);
+    let mappings = Mappings {
+        topics: &topics,
+        categories: &categories,
     };
     let existing = ExistingIndex::from_catalogue(&catalogue);
-    let seeded = build_seed(&snapshot, &rules, &topics, &existing, min_users);
+    let seeded = build_seed(&snapshot, &rules, &mappings, &existing, min_users);
     finish(args, seeded.text, &seeded.drafts)
 }
 
@@ -116,13 +118,14 @@ fn seed_from_leads(
     let token = token_from_env()?;
     let min_active_users = min_users(args, catalogue)?;
     let snapshot = cached_dump(args)?;
-    let topics = Topics {
-        topic: catalogue.topics().to_vec(),
-    };
+    let (topics, categories) = mapping_files(catalogue);
     let existing = ExistingIndex::from_catalogue(catalogue);
     let inputs = LeadInputs {
         snapshot: &snapshot,
-        topics: &topics,
+        mappings: Mappings {
+            topics: &topics,
+            categories: &categories,
+        },
         existing: &existing,
         min_active_users,
     };
@@ -142,6 +145,17 @@ fn seed_from_leads(
         eprintln!("warning: {warning}");
     }
     finish(args, seeded.text, &seeded.drafts)
+}
+
+/// The topic and category tables of `catalogue`, in file order.
+fn mapping_files(catalogue: &Catalogue) -> (Topics, Categories) {
+    let topics = Topics {
+        topic: catalogue.topics().to_vec(),
+    };
+    let categories = Categories {
+        category: catalogue.categories().to_vec(),
+    };
+    (topics, categories)
 }
 
 /// Reads the cached crates.io dump.

@@ -6,10 +6,12 @@ use oxidoc_search::{Field, Record};
 
 use super::aliases::alias_terms;
 use super::boost::tier_boost;
-use crate::pages::{project_href, topic_link};
+use crate::pages::{category_link, project_href, topic_link};
 
 /// The field of the effective topic names.
 const TOPICS_FIELD: &str = "topics";
+/// The field of the category name.
+const CATEGORY_FIELD: &str = "category";
 /// The field of the description text.
 const DESCRIPTION_FIELD: &str = "description";
 /// The field of the synonym terms the other fields gain.
@@ -19,6 +21,8 @@ const ALIASES_FIELD: &str = "aliases";
 const NAME_WEIGHT: f32 = 3.0;
 /// The weight of the effective topic names.
 const TOPICS_WEIGHT: f32 = 2.0;
+/// The weight of the category name.
+const CATEGORY_WEIGHT: f32 = 2.0;
 /// The weight of the description.
 const DESCRIPTION_WEIGHT: f32 = 1.5;
 /// The weight of the synonym terms.
@@ -30,6 +34,8 @@ pub(crate) const KIND_TAG: &str = "kind";
 pub(crate) const ORG_TAG: &str = "org";
 /// The tag of one effective topic id.
 pub(crate) const TOPIC_TAG: &str = "topic";
+/// The tag of the category id. Present only on an entry with a category.
+pub(crate) const CATEGORY_TAG: &str = "category";
 /// The tag of the tier. Present only with a tier report.
 pub(crate) const TIER_TAG: &str = "tier";
 
@@ -44,14 +50,15 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 /// Its fields, in order:
 /// - `name`, weight 3: the name, the slug and the crate names.
 /// - `topics`, weight 2: the names of the effective topics.
+/// - `category`, weight 2: the name of the category. Left out without a category.
 /// - `description`, weight 1.5: the description text.
 /// - `aliases`, weight 1: the synonym terms the fields above gain from
 ///   [`Catalogue::synonyms`]. Left out when there are none.
 ///
 /// Tags: `kind`, `org` (`ml-rust` or `community`), one `topic` per effective
-/// topic id, and `tier` when `report` is given. The boost comes from the tier
-/// through [`super::TIER_BOOSTS`]. Without `report` there is no `tier` tag and
-/// the boost is [`super::NO_TIER_BOOST`].
+/// topic id, `category` when the entry has one, and `tier` when `report` is
+/// given. The boost comes from the tier through [`super::TIER_BOOSTS`]. Without
+/// `report` there is no `tier` tag and the boost is [`super::NO_TIER_BOOST`].
 pub fn search_records(catalogue: &Catalogue, report: Option<&TierReport>) -> Vec<Record> {
     catalogue
         .entries()
@@ -86,21 +93,33 @@ fn record(
         .collect();
     let name_text = names.join(" ");
     let topics_text = topics.join(", ");
+    let category = entry
+        .category
+        .as_ref()
+        .and_then(|id| Some((id, category_link(catalogue, id)?.name)));
+    let category_name = category.map_or("", |(_, name)| name);
     let description = entry.description.text.as_str();
     let aliases = alias_terms(
         catalogue.synonyms(),
-        &[&name_text, &topics_text, description],
+        &[&name_text, &topics_text, category_name, description],
     );
 
     record.fields = vec![
         weighted(NAME_FIELD, name_text, NAME_WEIGHT),
         weighted(TOPICS_FIELD, topics_text, TOPICS_WEIGHT),
-        weighted(
-            DESCRIPTION_FIELD,
-            description.to_owned(),
-            DESCRIPTION_WEIGHT,
-        ),
     ];
+    if category.is_some() {
+        record.fields.push(weighted(
+            CATEGORY_FIELD,
+            category_name.to_owned(),
+            CATEGORY_WEIGHT,
+        ));
+    }
+    record.fields.push(weighted(
+        DESCRIPTION_FIELD,
+        description.to_owned(),
+        DESCRIPTION_WEIGHT,
+    ));
     if !aliases.is_empty() {
         record
             .fields
@@ -119,6 +138,9 @@ fn record(
             .iter()
             .map(|topic| tag(TOPIC_TAG, topic.as_str())),
     );
+    if let Some((id, _)) = category {
+        record.tags.push(tag(CATEGORY_TAG, id.as_str()));
+    }
     let tier = report
         .and_then(|report| report.entries.get(effective.slug))
         .map(|found| found.tier);

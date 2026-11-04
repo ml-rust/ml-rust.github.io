@@ -122,6 +122,7 @@ mod tests {
             homepage: Some(url("https://gizmo.example.com")),
             crates: Vec::new(),
             topics: vec![slug("ml")],
+            category: Some(slug("vector-databases")),
             description: Description {
                 text: "Runs models.".to_owned(),
                 source: DescriptionSource::Readme,

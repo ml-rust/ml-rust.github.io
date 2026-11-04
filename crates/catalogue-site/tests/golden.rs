@@ -26,10 +26,14 @@ const STATIC_PAGES: [(&str, &str); 3] = [
 ];
 
 /// The pages of the fixture build with a report and their golden file names.
-const CONTENT_PAGES: [(&str, &str); 6] = [
+const CONTENT_PAGES: [(&str, &str); 7] = [
     ("index.html", "index.html"),
     ("search/index.html", "search.html"),
     ("topics/tensors/index.html", "topic-tensors.html"),
+    (
+        "categories/tensor-libraries/index.html",
+        "category-tensor-libraries.html",
+    ),
     ("projects/alpha/index.html", "project-alpha.html"),
     ("projects/beta/index.html", "project-beta.html"),
     ("changes/index.html", "changes.html"),

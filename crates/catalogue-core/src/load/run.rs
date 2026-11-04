@@ -1,3 +1,4 @@
+use super::categories::check_categories;
 use super::deprecated::check_deprecated;
 use super::diagnostics::Diagnostics;
 use super::discovery::check_discovery;
@@ -12,13 +13,15 @@ use super::topics::check_topics;
 use crate::catalogue::Catalogue;
 use crate::entry::Entry;
 use crate::judgment::Judgment;
-use crate::registry::{Discovery, Maintainers, Synonyms, Topics};
+use crate::registry::{Categories, Discovery, Maintainers, Synonyms, Topics};
 
 /// Parses and checks every file, collecting every error.
 pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
     let mut diags = Diagnostics::new();
 
     let topics = parse_optional::<Topics>(sources.topics.as_ref(), "topics.toml", &mut diags);
+    let categories =
+        parse_optional::<Categories>(sources.categories.as_ref(), "categories.toml", &mut diags);
     let maintainers =
         parse_optional::<Maintainers>(sources.maintainers.as_ref(), "maintainers.toml", &mut diags);
     let synonyms =
@@ -44,11 +47,12 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
         .and_then(|file| check_deprecated(file, &mut diags));
 
     let topic_ids = check_topics(&topics, &mut diags);
+    let category_ids = check_categories(&categories, &mut diags);
     let maintainer_index = check_maintainers(&maintainers, &mut diags);
     check_synonyms(&synonyms, &mut diags);
 
     let entry_files = parse_all::<Entry>(&sources.entries, &mut diags);
-    let entries = check_entries(entry_files, &topic_ids, &mut diags);
+    let entries = check_entries(entry_files, &topic_ids, &category_ids, &mut diags);
 
     let judgment_files = parse_all::<Judgment>(&sources.judgments, &mut diags);
     let refs = Refs {
@@ -63,6 +67,7 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
             entries,
             judgments,
             topics: topics.value.topic,
+            categories: categories.value.category,
             maintainers: maintainers.value.maintainer,
             synonyms: synonyms.value.group,
             discovery,

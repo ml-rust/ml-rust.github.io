@@ -1,16 +1,16 @@
 //! The entry of one lead.
 
 use catalogue_core::{
-    Date, Description, DescriptionSource, Entry, EntryKind, Slug, Topics, crate_page, entry_name,
-    repo_link,
+    Date, Description, DescriptionSource, Entry, EntryKind, Slug, crate_page, entry_name, repo_link,
 };
 use url::Url;
 
 use super::super::family::Family;
-use super::super::family_draft::{crate_names, family_members, member_topics};
-use super::super::fields::{https_link, topics_by_terms_in};
+use super::super::family_draft::{crate_names, family_members, member_category, member_topics};
+use super::super::fields::{category_by_terms, https_link, topics_by_terms_in};
 use super::super::names::{description_of, usable_text};
 use super::super::primary::words;
+use super::super::types::Mappings;
 use crate::dump::{CrateRow, DumpSnapshot};
 use crate::github::{RepoProfile, RepoRef};
 
@@ -18,10 +18,11 @@ use crate::github::{RepoProfile, RepoRef};
 ///
 /// The canonical repository gives `repo`, so a crate that still names an old link changes
 /// nothing. The primary crate gives the name and slug as in the dump flow. Without a crate the
-/// repository name gives them.
+/// repository name gives them. No category match leaves the category unset and keeps the draft.
+/// An install channel of an app plays no part in the category.
 pub(super) fn build_entry(
     snapshot: &DumpSnapshot,
-    topics: &Topics,
+    mappings: &Mappings<'_>,
     canonical: &RepoRef,
     profile: &RepoProfile,
     family: Option<&Family<'_>>,
@@ -32,10 +33,18 @@ pub(super) fn build_entry(
     let (repo, org_affiliated) = repo_link(Some(link.as_str()))?;
     let members = family.map(family_members).unwrap_or_default();
     let primary = family.and_then(|found| snapshot.crates.get(&found.primary.crate_id));
-    let matched = entry_topics(snapshot, topics, &members, primary, canonical, profile);
+    let texts = lead_texts(primary, canonical, profile);
+    let mut matched: Vec<Slug> = member_topics(snapshot, &members, mappings.topics)
+        .into_iter()
+        .collect();
+    if matched.is_empty() {
+        matched = topics_by_terms_in(mappings.topics, &texts);
+    }
     if matched.is_empty() {
         return Err("no topic matches".to_owned());
     }
+    let category = member_category(snapshot, &members, mappings.categories)
+        .or_else(|| category_by_terms(mappings.categories, &texts));
     let (name, slug) = match primary {
         Some(row) => entry_name(&row.name, &repo)?,
         None => (canonical.name.clone(), repo_slug(&canonical.name)?),
@@ -55,6 +64,7 @@ pub(super) fn build_entry(
         homepage,
         crates,
         topics: matched,
+        category,
         description,
         org_affiliated,
         distribution: None,
@@ -63,21 +73,13 @@ pub(super) fn build_entry(
     Ok((slug, entry))
 }
 
-/// The topics of the keywords and categories of any member. Without one, the topics with a term
-/// in the repository name, the repository description, a repository topic, or the name or
-/// description of the primary crate.
-fn entry_topics(
-    snapshot: &DumpSnapshot,
-    topics: &Topics,
-    members: &[(u32, &str)],
-    primary: Option<&CrateRow>,
-    canonical: &RepoRef,
-    profile: &RepoProfile,
-) -> Vec<Slug> {
-    let matched = member_topics(snapshot, members, topics);
-    if !matched.is_empty() {
-        return matched.into_iter().collect();
-    }
+/// The texts the terms of a lead read: the repository name, the repository description, each
+/// repository topic, and the name and description of the primary crate.
+fn lead_texts<'a>(
+    primary: Option<&'a CrateRow>,
+    canonical: &'a RepoRef,
+    profile: &'a RepoProfile,
+) -> Vec<&'a str> {
     let mut texts: Vec<&str> = vec![canonical.name.as_str()];
     texts.extend(profile.description.as_deref());
     texts.extend(profile.topics.iter().map(String::as_str));
@@ -85,7 +87,7 @@ fn entry_topics(
         texts.push(row.name.as_str());
         texts.extend(row.description.as_deref());
     }
-    topics_by_terms_in(topics, &texts)
+    texts
 }
 
 /// A library keeps a crate description when a member has one. Every other draft takes the GitHub
@@ -126,8 +128,15 @@ mod tests {
     use catalogue_core::CrateName;
 
     use super::super::super::family::family;
-    use super::super::super::fixtures::{Spec, World, today, topics};
+    use super::super::super::fixtures::{Spec, World, categories, today, topics};
     use super::*;
+
+    fn mappings_of<T>(run: impl FnOnce(&Mappings<'_>) -> T) -> T {
+        run(&Mappings {
+            topics: &topics(),
+            categories: &categories(),
+        })
+    }
 
     fn profile(description: Option<&str>, topics: &[&str]) -> RepoProfile {
         RepoProfile {
@@ -148,15 +157,17 @@ mod tests {
 
     fn app(found: &RepoProfile) -> Result<(Slug, Entry), String> {
         let world = World::new(Vec::new());
-        build_entry(
-            &world.snapshot,
-            &topics(),
-            &canonical(),
-            found,
-            None,
-            EntryKind::App,
-            today(),
-        )
+        mappings_of(|mappings| {
+            build_entry(
+                &world.snapshot,
+                mappings,
+                &canonical(),
+                found,
+                None,
+                EntryKind::App,
+                today(),
+            )
+        })
     }
 
     #[test]
@@ -206,15 +217,41 @@ mod tests {
         let world = World::new(vec![spec]);
         let members = world.candidates.iter().map(|c| (c, 0.0)).collect();
         let family = family(&world.snapshot, "github.com/o/tool.rs", members, 0.0).expect("family");
-        build_entry(
-            &world.snapshot,
-            &topics(),
-            &canonical(),
-            found,
-            Some(&family),
-            EntryKind::Library,
-            today(),
-        )
+        mappings_of(|mappings| {
+            build_entry(
+                &world.snapshot,
+                mappings,
+                &canonical(),
+                found,
+                Some(&family),
+                EntryKind::Library,
+                today(),
+            )
+        })
+    }
+
+    #[test]
+    fn a_lead_without_a_category_match_keeps_its_draft() {
+        let (_, entry) =
+            library(Spec::new(1, "toolkit"), &profile(Some("A tool."), &[])).expect("drafts");
+        assert_eq!(
+            entry.category.as_ref().map(Slug::as_str),
+            Some("alpha-tools")
+        );
+        let mut spec = Spec::new(1, "toolkit");
+        spec.keywords = Vec::new();
+        spec.categories = vec!["science::math"];
+        let (_, entry) = library(spec, &profile(Some("A tool."), &[])).expect("drafts");
+        assert_eq!(entry.category, None);
+    }
+
+    #[test]
+    fn a_repository_topic_can_set_the_category_of_an_app() {
+        let (_, entry) = app(&profile(Some("A tool."), &["sparse-matrix"])).expect("drafts");
+        assert_eq!(
+            entry.category.as_ref().map(Slug::as_str),
+            Some("zeta-tools")
+        );
     }
 
     #[test]

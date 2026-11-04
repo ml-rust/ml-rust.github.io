@@ -6,7 +6,7 @@ const BASE = "/search/";
 const MAX_RESULTS = 30;
 const DEBOUNCE_MS = 200;
 // The filter tags in URL order. The checkboxes submit under the same names.
-const FILTER_KEYS = ["kind", "topic", "tier", "org"];
+const FILTER_KEYS = ["kind", "topic", "category", "tier", "org"];
 // Every record links an entry page. Any other link is dropped.
 const RESULT_PREFIX = "/projects/";
 const TIER_VALUE = /^[a-z]+$/;

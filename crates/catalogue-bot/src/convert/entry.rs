@@ -106,6 +106,18 @@ fn link(text: &str) -> Result<Url, String> {
     Url::parse(text).map_err(|_| format!("`{}` is not a valid link", excerpt(text)))
 }
 
+/// The category id in `text`, or the reason it is not one.
+///
+/// A loaded data set checks that the id exists.
+fn category_id(text: &str) -> Result<Slug, String> {
+    Slug::new(text).map_err(|_| {
+        format!(
+            "`{}` is not a category id. Use one id from `data/categories.toml`, or leave the field empty",
+            excerpt(text)
+        )
+    })
+}
+
 /// The slug and its source, from the first crate or else the repository name.
 fn derive_slug(crates: &[String], repo: &Url) -> Result<(Slug, SlugSource), String> {
     let segment = repo
@@ -160,6 +172,10 @@ pub fn submission(
         .map(|topic| Slug::new(topic.as_str()).map_err(|error| error.to_string()))
         .collect();
     let topics = problems.all("topics", topics_result);
+    let category = form
+        .category
+        .as_deref()
+        .and_then(|raw| problems.take("category", category_id(raw)));
     let text = problems.take(
         "description",
         description_text(Some(form.description.as_str())),
@@ -225,6 +241,7 @@ pub fn submission(
             homepage,
             crates,
             topics,
+            category,
             description: Description {
                 text,
                 source,
@@ -267,6 +284,7 @@ mod tests {
             repo: "https://github.com/Someone/Gizmo.git".to_owned(),
             crates: vec!["gizmo-core".to_owned(), "gizmo-nn".to_owned()],
             topics: vec!["ml".to_owned()],
+            category: None,
             description: "Learns\n  from data.".to_owned(),
             description_source: "human".to_owned(),
             description_source_url: None,
@@ -302,6 +320,32 @@ mod tests {
             "https://github.com/ml-rust/ml-rust.github.io/issues/12"
         );
         assert_eq!(found.notes.evidence_of_use.len(), 1);
+    }
+
+    #[test]
+    fn a_category_answer_goes_on_the_entry_and_no_answer_leaves_it_unset() {
+        let found = submission(&form(), &meta(), today()).expect("converts");
+        assert_eq!(found.entry.category, None);
+        let mut input = form();
+        input.category = Some("vector-databases".to_owned());
+        let found = submission(&input, &meta(), today()).expect("converts");
+        assert_eq!(
+            found.entry.category.as_ref().map(Slug::as_str),
+            Some("vector-databases")
+        );
+    }
+
+    #[test]
+    fn a_category_that_is_not_an_id_names_the_input_and_the_next_action() {
+        let mut input = form();
+        input.category = Some("Vector Databases".to_owned());
+        let errors = submission(&input, &meta(), today()).expect_err("problem");
+        let [FormError::Invalid { label, reason }] = errors.as_slice() else {
+            panic!("one problem expected: {errors:?}");
+        };
+        assert_eq!(*label, "Category");
+        assert!(reason.contains("`Vector Databases`"), "{reason}");
+        assert!(reason.contains("`data/categories.toml`"), "{reason}");
     }
 
     #[test]
