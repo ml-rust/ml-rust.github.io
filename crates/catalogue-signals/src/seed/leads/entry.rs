@@ -1,7 +1,8 @@
 //! The entry of one lead.
 
 use catalogue_core::{
-    Date, Description, DescriptionSource, Entry, EntryKind, Slug, crate_page, entry_name, repo_link,
+    Date, Description, DescriptionSource, Entry, EntryKind, Slug, crate_page, entry_name,
+    is_generic_repo_name, repo_entry_name, repo_link,
 };
 use url::Url;
 
@@ -47,6 +48,7 @@ pub(super) fn build_entry(
         .or_else(|| category_by_terms(mappings.categories, &texts));
     let (name, slug) = match primary {
         Some(row) => entry_name(&row.name, &repo)?,
+        None if is_generic_repo_name(&canonical.name) => repo_entry_name(&repo)?,
         None => (canonical.name.clone(), repo_slug(&canonical.name)?),
     };
     let crates = match primary {
@@ -276,6 +278,48 @@ mod tests {
         assert_eq!(entry.description.text, "Repository text.");
         assert_eq!(entry.description.source, DescriptionSource::Repo);
         assert_eq!(entry.problems(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn an_app_with_a_generic_repository_name_takes_owner_and_repo() {
+        let world = World::new(Vec::new());
+        let generic = RepoRef::parse("o/rust").expect("parses");
+        let (slug, entry) = mappings_of(|mappings| {
+            build_entry(
+                &world.snapshot,
+                mappings,
+                &generic,
+                &profile(Some("A tool."), &["sparse-matrix"]),
+                None,
+                EntryKind::App,
+                today(),
+            )
+        })
+        .expect("drafts");
+        assert_eq!(slug.as_str(), "o-rust");
+        assert_eq!(entry.name, "o-rust");
+    }
+
+    #[test]
+    fn a_library_with_a_generic_repository_name_takes_the_crate_name() {
+        let world = World::new(vec![Spec::new(1, "toolkit")]);
+        let members = world.candidates.iter().map(|c| (c, 0.0)).collect();
+        let family = family(&world.snapshot, "github.com/o/rust", members, 0.0).expect("family");
+        let generic = RepoRef::parse("o/rust").expect("parses");
+        let (slug, entry) = mappings_of(|mappings| {
+            build_entry(
+                &world.snapshot,
+                mappings,
+                &generic,
+                &profile(Some("A tool."), &[]),
+                Some(&family),
+                EntryKind::Library,
+                today(),
+            )
+        })
+        .expect("drafts");
+        assert_eq!(slug.as_str(), "toolkit");
+        assert_eq!(entry.name, "toolkit");
     }
 
     #[test]

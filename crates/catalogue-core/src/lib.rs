@@ -38,7 +38,7 @@ pub use ids::{
     CommitSha, CrateName, GithubLogin, IdError, Slug, canonical_crate_name, is_github_repo_name,
     normalize_repo_url, push_canonical_crate_name,
 };
-pub use intake::{description_text, entry_name, repo_link};
+pub use intake::{description_text, entry_name, is_generic_repo_name, repo_entry_name, repo_link};
 pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, ProjectKind};
 pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};

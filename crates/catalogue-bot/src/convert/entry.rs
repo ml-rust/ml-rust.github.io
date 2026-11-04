@@ -2,7 +2,7 @@
 
 use catalogue_core::{
     CrateName, Date, Description, DescriptionSource, Distribution, Entry, EntryKind, GithubLogin,
-    Slug, description_text, entry_name, repo_link,
+    Slug, description_text, entry_name, repo_entry_name, repo_link,
 };
 use url::Url;
 
@@ -125,10 +125,13 @@ fn derive_slug(crates: &[String], repo: &Url) -> Result<(Slug, SlugSource), Stri
         .and_then(|mut parts| parts.next_back())
         .unwrap_or_default();
     let primary = crates.first().map_or(segment, String::as_str);
-    let (name, slug) = entry_name(primary, repo).map_err(|_| match crates.first() {
-        Some(name) => format!("the first crate `{}` gives no slug", excerpt(name)),
-        None => format!("the repository name `{segment}` gives no slug"),
-    })?;
+    let named = match crates.first() {
+        Some(first) => entry_name(first, repo)
+            .map_err(|_| format!("the first crate `{}` gives no slug", excerpt(first))),
+        None => repo_entry_name(repo)
+            .map_err(|_| format!("the repository name `{segment}` gives no slug")),
+    };
+    let (name, slug) = named?;
     let source = if crates.is_empty() || name != primary {
         SlugSource::RepositoryName
     } else {
@@ -355,6 +358,27 @@ mod tests {
         let found = submission(&input, &meta(), today()).expect("converts");
         assert_eq!(found.slug.as_str(), "gizmo-core");
         assert_eq!(found.slug_source, SlugSource::PrimaryCrate);
+    }
+
+    #[test]
+    fn a_generic_repo_name_gives_way_to_the_first_crate() {
+        let mut input = form();
+        input.repo = "https://github.com/someone/rust-sdk".to_owned();
+        let found = submission(&input, &meta(), today()).expect("converts");
+        assert_eq!(found.slug.as_str(), "gizmo-core");
+        assert_eq!(found.slug_source, SlugSource::PrimaryCrate);
+    }
+
+    #[test]
+    fn an_app_without_crates_and_a_generic_repo_name_takes_owner_and_repo() {
+        let mut input = form();
+        input.kind = "app".to_owned();
+        input.crates.clear();
+        input.repo = "https://github.com/someone/rust".to_owned();
+        input.homebrew = Some("gizmo".to_owned());
+        let found = submission(&input, &meta(), today()).expect("converts");
+        assert_eq!(found.slug.as_str(), "someone-rust");
+        assert_eq!(found.slug_source, SlugSource::RepositoryName);
     }
 
     #[test]

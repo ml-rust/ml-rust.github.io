@@ -37,7 +37,7 @@ terms = ["llm", "llms", "large language model", "large language models", "openai
 id = "train-models"
 name = "Train models"
 keywords = ["deep-learning", "neural-network", "neural-networks", "autograd", "training", "reinforcement-learning"]
-terms = ["deep learning", "neural network", "neural networks", "reinforcement learning", "tensorflow", "machine learning framework", "ml framework", "machine learning library", "machine learning toolkit", "machine learning algorithms"]
+terms = ["deep learning", "neural network", "neural networks", "reinforcement learning", "tensorflow", "machine learning framework", "ml framework", "machine learning library", "machine learning toolkit", "machine learning algorithms", "machine learning crate", "run ai models"]
 
 [[topic]]
 id = "speech-audio"
