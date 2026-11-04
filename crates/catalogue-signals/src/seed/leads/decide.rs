@@ -14,8 +14,8 @@ use crate::dump::IdMap;
 use crate::github::{RepoProfile, RepoRef};
 use crate::usage::Usage;
 
-/// The name GitHub gives the primary language of a Rust repo.
-const RUST: &str = "Rust";
+/// The name GitHub gives the Rust language.
+pub(super) const RUST: &str = "Rust";
 
 /// What every decision of one run reads.
 pub(super) struct Context<'a> {
@@ -70,7 +70,17 @@ pub(super) fn github_key(repo: &RepoRef) -> String {
 /// The order: an entry that holds the repository, a fork, the language rule, an entry that lists
 /// a family crate, then the draft. The crates that claim the canonical repository or the name in
 /// the lead form the family, with no discovery rule and no active-user floor.
-pub(super) fn decide(ctx: &Context<'_>, lead: &RepoRef, profile: &RepoProfile) -> Decision {
+///
+/// The language rule passes a repo whose primary language is Rust, a repo with a Rust-named
+/// family, and a repo with no family when `lists_rust` says GitHub lists Rust among its
+/// languages. The primary language alone misjudges a Rust repo that also holds many scripts. The
+/// last case makes an app draft with the label `language-list:rust`.
+pub(super) fn decide(
+    ctx: &Context<'_>,
+    lead: &RepoRef,
+    profile: &RepoProfile,
+    lists_rust: bool,
+) -> Decision {
     let Ok(canonical) = RepoRef::parse(&profile.name_with_owner) else {
         return Decision::alone(Outcome::Skip(format!(
             "GitHub names the repository `{}`, which is not owner/name",
@@ -96,20 +106,27 @@ pub(super) fn decide(ctx: &Context<'_>, lead: &RepoRef, profile: &RepoProfile) -
     let (members, unnamed) = split_unnamed(&canonical, members);
     let claimed = !members.is_empty();
     let found = family(inputs.snapshot, &keys[0], members, 0.0);
-    if !is_rust(profile) && !has_rust_named_crate(found.as_ref(), &canonical) {
+    let rust_listed = lists_rust && found.is_none();
+    if !is_rust(profile) && !rust_listed && !has_rust_named_crate(found.as_ref(), &canonical) {
         return Decision::alone(Outcome::Skip(language_reason(profile)));
     }
     let mut left_out = found
         .as_ref()
         .map_or_else(Vec::new, |family| family.left_out.clone());
     left_out.extend(unnamed);
-    let outcome = match &found {
+    let mut outcome = match &found {
         None if claimed => Outcome::Skip(
             "every crate that claims the repository is deprecated, yanked or has no default version"
                 .to_owned(),
         ),
         found => draft(ctx, canonical, keys, profile, found.as_ref()),
     };
+    if rust_listed
+        && !is_rust(profile)
+        && let Outcome::Draft(drafted) = &mut outcome
+    {
+        drafted.notes.push("language-list:rust".to_owned());
+    }
     Decision { outcome, left_out }
 }
 
@@ -193,7 +210,8 @@ fn users_of(ctx: &Context<'_>, candidate: &Candidate) -> f64 {
         .map_or(0.0, |usage| usage.current)
 }
 
-fn is_rust(profile: &RepoProfile) -> bool {
+/// Whether GitHub names Rust as the primary language of the repo.
+pub(super) fn is_rust(profile: &RepoProfile) -> bool {
     profile
         .language
         .as_deref()
@@ -262,13 +280,17 @@ mod tests {
     }
 
     fn run(specs: Vec<Spec>, existing: &ExistingIndex, found: &RepoProfile) -> Decision {
-        decide_lead("o/proj", specs, existing, found)
+        decide_lead("o/proj", specs, existing, found, false)
     }
 
     fn run_for(lead: &str, specs: Vec<Spec>, found: &RepoProfile) -> Decision {
         let mut found = found.clone();
         found.name_with_owner = lead.to_owned();
-        decide_lead(lead, specs, &ExistingIndex::default(), &found)
+        decide_lead(lead, specs, &ExistingIndex::default(), &found, false)
+    }
+
+    fn listing_rust(specs: Vec<Spec>, found: &RepoProfile) -> Decision {
+        decide_lead("o/proj", specs, &ExistingIndex::default(), found, true)
     }
 
     fn decide_lead(
@@ -276,6 +298,7 @@ mod tests {
         specs: Vec<Spec>,
         existing: &ExistingIndex,
         found: &RepoProfile,
+        lists_rust: bool,
     ) -> Decision {
         let world = World::new(specs);
         let keys = HashSet::from([format!("github.com/{}", lead.to_lowercase())]);
@@ -297,7 +320,12 @@ mod tests {
             usage: &world.usage,
             added: Date::new(2026, 11, 3).expect("date"),
         };
-        decide(&ctx, &RepoRef::parse(lead).expect("lead"), found)
+        decide(
+            &ctx,
+            &RepoRef::parse(lead).expect("lead"),
+            found,
+            lists_rust,
+        )
     }
 
     fn claim(id: u32, name: &'static str) -> Spec {
@@ -359,6 +387,35 @@ mod tests {
     fn a_repo_without_a_language_is_not_rust() {
         let decision = run(Vec::new(), &ExistingIndex::default(), &profile(None));
         assert!(skip_reason(&decision).contains("unknown"));
+    }
+
+    #[test]
+    fn a_repo_that_lists_rust_with_no_crate_drafts_as_an_app() {
+        let decision = listing_rust(Vec::new(), &profile(Some("Shell")));
+        let found = drafted(&decision);
+        assert_eq!(found.entry.kind, EntryKind::App);
+        assert!(found.entry.crates.is_empty());
+        assert!(found.notes.contains(&"basis:no-crate".to_owned()));
+        assert!(found.notes.contains(&"language:Shell".to_owned()));
+        assert!(found.notes.contains(&"language-list:rust".to_owned()));
+    }
+
+    #[test]
+    fn a_language_list_does_not_lift_a_family_of_dead_crates() {
+        let mut dead = claim(1, "proj");
+        dead.yanked = true;
+        let decision = listing_rust(vec![dead], &profile(Some("Shell")));
+        assert!(skip_reason(&decision).contains("every crate"));
+    }
+
+    #[test]
+    fn a_rust_repo_carries_no_language_list_label() {
+        let decision = listing_rust(Vec::new(), &profile(Some("Rust")));
+        assert!(
+            !drafted(&decision)
+                .notes
+                .contains(&"language-list:rust".to_owned())
+        );
     }
 
     #[test]

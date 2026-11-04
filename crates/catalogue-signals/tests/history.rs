@@ -213,6 +213,8 @@ fn with_network() -> Row {
                 value: RepoValues::Found {
                     archived: false,
                     stars: 12,
+                    forks: Some(3),
+                    commits: Some(450),
                     last_human_commit: Some(date(2026, 9, 1)),
                     oldest_unanswered_days: None,
                     maintainer_replies_365: 7,

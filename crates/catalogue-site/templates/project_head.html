@@ -25,6 +25,13 @@
 {%- endfor %}
 <div class="stat"><dt>Checked</dt><dd><time class="stat-value" datetime="{{ strip.checked }}">{{ strip.checked_text }}</time></dd></div>
 </dl>
+{%- if !strip.repository.is_empty() %}
+<dl class="stat-strip stat-strip-repo">
+{%- for stat in strip.repository %}
+<div class="stat"><dt>{{ stat.label }}</dt><dd><span class="stat-value{% if stat.quiet %} fact-quiet{% endif %}">{{ stat.value }}</span></dd></div>
+{%- endfor %}
+</dl>
+{%- endif %}
 {%- if !strip.sources.is_empty() %}
 <p class="sources">{% for source in strip.sources %}{% if loop.first %}From {% else %}, {% endif %}{% include "source_note.html" %}{% endfor %}.</p>
 {%- endif %}

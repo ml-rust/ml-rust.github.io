@@ -1,10 +1,12 @@
 # Candidate discovery over the crates.io database dump.
 #
-# A crate becomes a candidate when it matches any rule below. Candidates are
-# leads for human review, never entries: an entry needs a merged PR.
+# A crate becomes a candidate when it matches any rule below, or the vocabulary of
+# `topics.toml` and `categories.toml`: their `keywords` and `categories`, and their
+# `terms` in the crate name or description. Candidates are leads for human review,
+# never entries: an entry needs a merged PR.
 # Lists favour recall. A false lead costs one review, a missed crate costs more.
 
-# crates.io category slugs.
+# crates.io category slugs. A slug also matches its sub-categories.
 categories = ["science::ml"]
 
 # crates.io keywords, lowercase, exactly as crates store them.
@@ -27,6 +29,30 @@ keywords = [
     "tensor",
     "transformer",
     "transformers",
+]
+
+# Words of `topics.toml` and `categories.toml` that sort a project into a job or category and never
+# admit it. The rest of the words in those files admit a crate, by keyword, by category slug, or as a
+# term in its name or description. `pdf` places a document project that is already in scope, and on
+# its own it brings every PDF library. A project that these words miss enters through `leads.txt`.
+sort_only = [
+    # Math and GPU.
+    "automatic differentiation", "cuda", "differential equations", "fft", "gpgpu", "gpu",
+    "gpu compute", "gpu computing", "gpu-computing", "linear algebra", "linear-algebra",
+    "mathematical optimization", "mathematical-optimization", "mathematics", "matrices", "matrix",
+    "multidimensional-array", "numerical", "numerical computing", "numerical optimization",
+    "numerical-optimization", "numerics", "science::math", "scientific computing",
+    "scientific-computing", "sparse matrices", "sparse matrix", "sparse-matrix",
+    "statistical computation", "statistical computing", "statistical distributions", "statistics",
+    # Images, video and documents.
+    "image processing", "image-processing", "pdf", "video", "vision",
+    # Data files.
+    "apache arrow", "arrow", "arrow format", "columnar", "data format", "data formats",
+    "data set", "data-format", "dataset", "datasets", "hdf5", "netcdf", "npy", "npz", "parquet",
+    "zarr",
+    # Words with a meaning outside machine learning.
+    "agent", "agents", "chunking", "classification", "natural language", "regression", "speech",
+    "tokenizer", "tokenization", "training", "transcribe",
 ]
 
 # Core ML crates. Each is a candidate itself, and so is a crate whose latest

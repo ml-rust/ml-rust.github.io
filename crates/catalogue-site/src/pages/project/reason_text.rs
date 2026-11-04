@@ -7,7 +7,16 @@ use catalogue_core::Thresholds;
 use catalogue_core::amount_text::whole;
 
 use crate::href::SafeHref;
-use crate::pages::shared::date_text;
+use crate::pages::shared::{date_text, grouped};
+
+/// What a failed gate writes before the repository route.
+const AND_ROUTE: &str = " and repository route ";
+
+/// What a passed reason writes before the repository route of a library.
+const ROUTE_FIRST: &str = "repository route ";
+
+/// What a passed reason writes before the repository route of an app.
+const ROUTE_LAST: &str = ", repository route ";
 
 /// One sentence of the tier block, with the source link it names.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -304,7 +313,11 @@ pub(super) fn featured_lacks(detail: &str, label: impl Fn(&str) -> String) -> Op
 fn one_failure(failure: &str) -> Lack {
     let dormant = failure == "dormant and not stable";
     let measured = if parse_adoption(failure).is_some() {
-        Some("It has too few active dependents and new dependents for Featured.")
+        Some(if failure.contains(AND_ROUTE) {
+            "It has too few dependents for Featured, and it does not pass the repository route."
+        } else {
+            "It has too few active dependents and new dependents for Featured."
+        })
     } else if parse_glory(failure, "below the Featured floor of").is_some() {
         Some("Its active dependents are too far below their peak for Featured.")
     } else if parse_use_signals(failure).is_some() {
@@ -338,23 +351,118 @@ fn one_failure(failure: &str) -> Lack {
     }
 }
 
-fn parse_adoption(failure: &str) -> Option<Sentence> {
-    let rest = failure.strip_prefix("active_users ")?;
-    let (users, rest) = rest.split_once(" < ")?;
-    let (users_limit, rest) = rest.split_once(" and new_adopters ")?;
-    let (adopters, adopters_limit) = rest.split_once(" < ")?;
+/// One part of the repository route: its value and its limit.
+struct RoutePart<'d> {
+    value: &'d str,
+    needs: &'d str,
+}
+
+impl<'d> RoutePart<'d> {
+    /// `<value> (needs <limit>)`.
+    fn parse(text: &'d str) -> Option<Self> {
+        let (value, needs) = text.split_once(" (needs ")?;
+        Some(Self {
+            value,
+            needs: needs.strip_suffix(')')?,
+        })
+    }
+
+    /// The value with its noun, as a person reads it.
+    fn value_words(&self, one: &str, many: &str) -> String {
+        match self.value {
+            "unknown" => format!("{many} not measured"),
+            "1" => format!("1 {one}"),
+            count => format!("{} {many}", grouped(count)),
+        }
+    }
+}
+
+/// The three parts of the repository route.
+struct Route<'d> {
+    stars: RoutePart<'d>,
+    forks: RoutePart<'d>,
+    contributors: RoutePart<'d>,
+}
+
+impl<'d> Route<'d> {
+    /// The route as `stars <part>, forks <part>, contributors <part>`, as the Featured rule
+    /// writes it after the words `repository route`.
+    fn parse(text: &'d str) -> Option<Self> {
+        let rest = text.strip_prefix("stars ")?;
+        let (stars, rest) = rest.split_once(", forks ")?;
+        let (forks, contributors) = rest.split_once(", contributors ")?;
+        Some(Self {
+            stars: RoutePart::parse(stars)?,
+            forks: RoutePart::parse(forks)?,
+            contributors: RoutePart::parse(contributors)?,
+        })
+    }
+
+    /// The three values, as a person reads them.
+    fn values(&self) -> String {
+        format!(
+            "{}, {} and {}",
+            self.stars.value_words("star", "stars"),
+            self.forks.value_words("fork", "forks"),
+            self.contributors.value_words("contributor", "contributors")
+        )
+    }
+
+    /// The sentence that states the three limits.
+    fn limits(&self) -> String {
+        format!(
+            "It needs {} stars, {} forks and {} contributors together.",
+            grouped(self.stars.needs),
+            grouped(self.forks.needs),
+            grouped(self.contributors.needs)
+        )
+    }
+}
+
+/// `failure` split into its own text and the route text after it, when it names the route.
+fn split_route(failure: &str) -> (&str, Option<&str>) {
+    match failure.split_once(AND_ROUTE) {
+        Some((own, route)) => (own, Some(route)),
+        None => (failure, None),
+    }
+}
+
+/// `text` with the sentences of the failed route after it. `None` when the route does not parse.
+fn with_route_lack(text: String, route: Option<&str>) -> Option<Sentence> {
+    let Some(route) = route else {
+        return Some(Sentence::plain(text));
+    };
+    let route = Route::parse(route)?;
     Some(Sentence::plain(format!(
-        "It has {users} active dependents and {adopters} new dependents in 365 days. Featured needs {users_limit} active dependents or {adopters_limit} new dependents in 365 days."
+        "{text} The repository route reads {}. {}",
+        route.values(),
+        route.limits()
     )))
 }
 
+fn parse_adoption(failure: &str) -> Option<Sentence> {
+    let (own, route) = split_route(failure);
+    let rest = own.strip_prefix("active_users ")?;
+    let (users, rest) = rest.split_once(" < ")?;
+    let (users_limit, rest) = rest.split_once(" and new_adopters ")?;
+    let (adopters, adopters_limit) = rest.split_once(" < ")?;
+    with_route_lack(
+        format!(
+            "It has {users} active dependents and {adopters} new dependents in 365 days. Featured needs {users_limit} active dependents or {adopters_limit} new dependents in 365 days."
+        ),
+        route,
+    )
+}
+
 fn parse_use_signals(failure: &str) -> Option<Sentence> {
-    let (passing, rest) = failure.split_once(" of ")?;
+    let (own, route) = split_route(failure);
+    let (passing, rest) = own.split_once(" of ")?;
     let (total, needed) = rest.split_once(" use signals pass, ")?;
     let needed = needed.strip_suffix(" needed")?;
-    Some(Sentence::plain(format!(
-        "{passing} of {total} use signals pass. Featured needs {needed}."
-    )))
+    with_route_lack(
+        format!("{passing} of {total} use signals pass. Featured needs {needed}."),
+        route,
+    )
 }
 
 /// What a passed `featured` reason of a library or an app meets. `None` when it did not pass.
@@ -366,8 +474,34 @@ pub(super) fn featured_meets(
     library_meets(values, thresholds).or_else(|| app_meets(values, thresholds))
 }
 
+/// The sentences of a library that passes on the repository route.
+fn route_meets(route: &Route<'_>, users: &str, adopters: &str) -> Vec<Sentence> {
+    let passes = Sentence::plain(format!(
+        "It passes the repository route: {}. {} Stars alone never qualify a project.",
+        route.values(),
+        route.limits()
+    ));
+    let dependents = if users == "unknown" || adopters == "unknown" {
+        "The check holds no count of its dependents.".to_owned()
+    } else {
+        let shown = |value: &str| whole(value).unwrap_or_else(|| value.to_owned());
+        format!(
+            "It has {} active dependents and {} new dependents in 365 days.",
+            shown(users),
+            shown(adopters)
+        )
+    };
+    vec![passes, Sentence::plain(dependents)]
+}
+
 fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Sentence>> {
-    let rest = values.strip_prefix("active_users ")?;
+    let (route, rest) = match values.strip_prefix(ROUTE_FIRST) {
+        Some(after) => {
+            let (route, rest) = after.split_once(", active_users ")?;
+            (Some(Route::parse(route)?), rest)
+        }
+        None => (None, values.strip_prefix("active_users ")?),
+    };
     let (users, rest) = rest.split_once(", new_adopters ")?;
     let (adopters, glory) = rest.split_once(", former_glory ")?;
     let shown = |value: &str| whole(value).unwrap_or_else(|| value.to_owned());
@@ -384,12 +518,16 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
             percent(&t.min_former_glory.to_string())
         )
     });
-    Some(vec![
-        Sentence::plain(format!(
+    let adoption = match &route {
+        Some(route) => route_meets(route, users, adopters),
+        None => vec![Sentence::plain(format!(
             "It has {} active dependents and {} new dependents in 365 days.{adoption_limit}",
             shown(users),
             shown(adopters)
-        )),
+        ))],
+    };
+    let mut lines = adoption;
+    lines.extend([
         Sentence::plain(format!(
             "Active dependents are at {} of their peak.{glory_limit}",
             percent(glory)
@@ -400,25 +538,41 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
         Sentence::plain(
             "No vulnerability advisory stays unpatched past the grace window. At least one version is neither a prerelease nor 0.0.x.",
         ),
-    ])
+    ]);
+    Some(lines)
 }
 
 fn app_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Sentence>> {
     values.strip_prefix("binary downloads ")?;
+    let (values, route) = match values.split_once(ROUTE_LAST) {
+        Some((own, route)) => (own, Some(Route::parse(route)?)),
+        None => (values, None),
+    };
     let needed = thresholds.map_or_else(String::new, |t| {
         format!(
             " Featured needs {} of these to reach their limits.",
             t.app_featured.min_signals
         )
     });
-    Some(vec![Sentence::plain(format!(
+    let mut lines = vec![Sentence::plain(format!(
         "Its use signals read: {values}.{needed}"
-    ))])
+    ))];
+    if let Some(route) = route {
+        lines.push(Sentence::plain(format!(
+            "It also passes the repository route, which counts as one use signal: {}. {}",
+            route.values(),
+            route.limits()
+        )));
+    }
+    Some(lines)
 }
 
 #[cfg(test)]
 mod tests {
+    use catalogue_core::{Context, Date, EntryKind, Rule, Signals, assess};
+
     use super::*;
+    use crate::pages::rules::fixtures::thresholds;
 
     fn text(sentence: Sentence) -> String {
         sentence.text
@@ -610,6 +764,98 @@ mod tests {
     }
 
     #[test]
+    fn a_failed_route_states_every_number_and_an_unknown_part_reads_not_measured() {
+        assert_eq!(
+            lacks(
+                "not featured: 1 of 5 use signals pass, 2 needed and repository route stars 1 (needs 2000), forks unknown (needs 200), contributors 25 (needs 25)"
+            ),
+            [
+                "1 of 5 use signals pass. Featured needs 2. The repository route reads 1 star, forks not measured and 25 contributors. It needs 2,000 stars, 200 forks and 25 contributors together."
+            ]
+        );
+    }
+
+    #[test]
+    fn a_route_text_that_does_not_parse_stays_as_it_is() {
+        assert_eq!(
+            lacks(
+                "not featured: active_users 2 < 11 and new_adopters 2 < 9 and repository route x"
+            ),
+            ["Active_users 2 < 11 and new_adopters 2 < 9 and repository route x."]
+        );
+    }
+
+    /// A library that passes every gate but the adoption gate, with these repository numbers.
+    fn low_dependents(stars: u64, forks: u64, contributors: u64) -> Signals {
+        let day = |year, month, on| Date::new(year, month, on).ok();
+        Signals {
+            first_release: day(2023, 1, 1),
+            latest_version: Some("1.2.5".to_owned()),
+            release_count: Some(30),
+            last_release: day(2026, 9, 1),
+            all_yanked: Some(false),
+            crate_deleted: Some(false),
+            all_prerelease: Some(false),
+            active_users: Some(1.0),
+            new_adopters: Some(0.0),
+            peak_users: Some(1.0),
+            former_glory: Some(1.0),
+            downloads_per_month: Some(100),
+            unpatched_vulnerabilities: Some(Vec::new()),
+            repo_archived: Some(false),
+            repo_gone: Some(false),
+            last_human_commit: day(2026, 10, 20),
+            oldest_unanswered_days: Some(0),
+            maintainer_replies_365: Some(1),
+            stars: Some(stars),
+            forks: Some(forks),
+            contributors: Some(contributors),
+            docs_present: Some(true),
+            repo_link_verified: Some(true),
+            ..Signals::unknown(EntryKind::Library)
+        }
+    }
+
+    /// The detail the Featured rule writes for `signals`.
+    fn rule_text(signals: &Signals) -> String {
+        let today = Date::new(2026, 11, 3).expect("date");
+        let verdict = assess(signals, &Context::new(today), &thresholds(None));
+        verdict
+            .reasons
+            .into_iter()
+            .find(|reason| reason.rule == Rule::Featured)
+            .map(|reason| reason.detail)
+            .expect("a Featured reason")
+    }
+
+    #[test]
+    fn the_sentences_read_the_exact_text_the_rule_writes() {
+        let route = thresholds(None).repo_route;
+        let passed = rule_text(&low_dependents(
+            route.min_stars,
+            route.min_forks,
+            route.min_contributors,
+        ));
+        let meets = featured_meets(&passed, None).expect("a pass");
+        assert_eq!(
+            meets[0].text,
+            "It passes the repository route: 2,000 stars, 200 forks and 25 contributors. It needs 2,000 stars, 200 forks and 25 contributors together. Stars alone never qualify a project."
+        );
+        assert_eq!(
+            meets[1].text,
+            "It has 1 active dependents and 0 new dependents in 365 days."
+        );
+        let failed = rule_text(&low_dependents(route.min_stars, 0, 0));
+        let lines = lacks(&failed);
+        assert_eq!(
+            lines,
+            [
+                "It has 1 active dependents and 0 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days. The repository route reads 2,000 stars, 0 forks and 0 contributors. It needs 2,000 stars, 200 forks and 25 contributors together."
+            ]
+        );
+    }
+
+    #[test]
     fn an_unknown_gate_names_the_signals_it_lacks() {
         assert_eq!(
             lacks("not featured: unknown homebrew_on_request_365d, repology_families"),
@@ -651,6 +897,19 @@ mod tests {
         assert_eq!(
             app[0].text,
             "Its use signals read: binary downloads 900, Homebrew 600, Repology families unknown, Docker growth unknown."
+        );
+        let on_route = featured_meets(
+            "featured: binary downloads 900, Homebrew 0, Repology families 0, Docker growth 0, repository route stars 2000 (needs 2000), forks 200 (needs 200), contributors 25 (needs 25)",
+            None,
+        )
+        .expect("a pass");
+        assert_eq!(
+            on_route[0].text,
+            "Its use signals read: binary downloads 900, Homebrew 0, Repology families 0, Docker growth 0."
+        );
+        assert_eq!(
+            on_route[1].text,
+            "It also passes the repository route, which counts as one use signal: 2,000 stars, 200 forks and 25 contributors. It needs 2,000 stars, 200 forks and 25 contributors together."
         );
     }
 }

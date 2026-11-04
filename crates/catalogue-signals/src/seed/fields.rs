@@ -531,6 +531,125 @@ terms = ["other term"]
     }
 
     #[test]
+    fn published_terms_place_a_project_by_its_own_description() {
+        let (topics, categories) = (topics(PUBLISHED), published_categories());
+        for (name, description, topic, category) in [
+            (
+                "whisper-rs",
+                "Rust bindings for whisper.cpp",
+                "speech-audio",
+                Some("speech-audio"),
+            ),
+            (
+                "llama-cpp-2",
+                "llama.cpp bindings for Rust",
+                "run-models",
+                Some("inference-runtimes"),
+            ),
+            (
+                "hf-hub",
+                "Rust client for the Hugging Face Hub API",
+                "data-formats",
+                Some("developer-tools"),
+            ),
+            (
+                "hf-tool",
+                "Downloads files from HuggingFace.",
+                "data-formats",
+                Some("developer-tools"),
+            ),
+            (
+                "rmcp",
+                "Rust SDK for Model Context Protocol",
+                "llm-apps",
+                Some("agent-frameworks"),
+            ),
+            (
+                "usearch",
+                "Smaller & Faster Single-File Vector Search Engine from Unum",
+                "text-search",
+                Some("vector-databases"),
+            ),
+            (
+                "xgboost",
+                "Machine learning using XGBoost",
+                "tabular-ml",
+                Some("classical-ml"),
+            ),
+            (
+                "lightgbm",
+                "Machine learning using LightGBM",
+                "tabular-ml",
+                Some("classical-ml"),
+            ),
+            (
+                "catboost",
+                "Catboost inference library for Rust",
+                "tabular-ml",
+                Some("classical-ml"),
+            ),
+            (
+                "langchain-rust",
+                "LangChain for Rust, the easiest way to write LLM-based programs in Rust",
+                "llm-apps",
+                Some("agent-frameworks"),
+            ),
+            (
+                "solvr",
+                "Advanced computing library for real-world problem solving - optimization, \
+                 differential equations, interpolation, statistics, and more",
+                "math-gpu",
+                Some("math-libraries"),
+            ),
+            (
+                "sci",
+                "A scientific computing library.",
+                "math-gpu",
+                Some("math-libraries"),
+            ),
+            (
+                "venus",
+                "Reactive notebook environment for Rust",
+                "math-gpu",
+                Some("developer-tools"),
+            ),
+            (
+                "venus-repo",
+                "Reactive notebooks for Rust.",
+                "math-gpu",
+                Some("developer-tools"),
+            ),
+        ] {
+            assert_eq!(
+                ids(topics_by_terms(&topics, name, Some(description))),
+                [topic],
+                "{name}"
+            );
+            assert_eq!(
+                id(category_by_terms(&categories, &[name, description])).as_deref(),
+                category,
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_earlier_category_wins_over_a_hugging_face_mention() {
+        let found = category_by_terms(
+            &published_categories(),
+            &["A tokenizer for Hugging Face models."],
+        );
+        assert_eq!(id(found).as_deref(), Some("text-tools"));
+    }
+
+    #[test]
+    fn a_plain_notebook_is_no_notebook_environment() {
+        let text = ["notes", "A notebook for plain text notes."];
+        assert!(topics_by_terms_in(&topics(PUBLISHED), &text).is_empty());
+        assert_eq!(category_by_terms(&published_categories(), &text), None);
+    }
+
+    #[test]
     fn published_metadata_skips_the_generic_markers() {
         let published = published_categories();
         let generic = strings(&["machine-learning", "ml", "ai"]);

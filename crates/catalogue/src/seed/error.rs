@@ -43,7 +43,7 @@ pub enum SeedError {
         source: io::Error,
     },
     /// The lead file cannot be read.
-    #[error("cannot read the lead file {}: {source}. Pass a readable file to --leads", .path.display())]
+    #[error("cannot read the lead file {}: {source}. Pass a readable file to --leads, or --no-leads for no list", .path.display())]
     ReadLeads {
         /// The lead file.
         path: PathBuf,

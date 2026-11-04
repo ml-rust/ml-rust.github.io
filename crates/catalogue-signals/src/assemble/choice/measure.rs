@@ -9,7 +9,6 @@ use super::native::{native_code, python_bindings};
 use super::runs_on::{RunsOn, runs_on};
 use crate::assemble::index::CrateIndex;
 use crate::dump::DumpSnapshot;
-use crate::github::Contributors;
 use crate::history::RepoValues;
 
 /// What every entry of one check shares.
@@ -38,13 +37,11 @@ pub struct ChoiceFacts {
     pub python: Option<String>,
     /// The distinct crates outside the family that depend on it.
     pub dependents: Option<u64>,
-    /// The contributors with a GitHub account.
-    pub contributors: Option<u64>,
 }
 
 /// The choice facts of `entry`.
 ///
-/// `facts` and `contributors` come from the network, and `None` leaves them not measured.
+/// `facts` comes from the network, and `None` leaves the license it answers not measured.
 /// A library reads its license from its primary crate, and falls back to GitHub when the crate
 /// states none. An app, or a library whose primary crate the dump does not hold, reads it from
 /// GitHub. Every other fact reads every listed crate.
@@ -52,7 +49,6 @@ pub fn measure(
     entry: &Entry,
     inputs: &ChoiceInputs<'_>,
     facts: Option<&RepoValues>,
-    contributors: Option<&Contributors>,
 ) -> ChoiceFacts {
     let ChoiceInputs {
         dump,
@@ -83,10 +79,6 @@ pub fn measure(
         native_code: native_code(&found, dump, backends),
         python: python_bindings(&found, dump, backends),
         dependents: dependents.count(&family),
-        contributors: contributors.and_then(|found| match found {
-            Contributors::Counted { count } => Some(*count),
-            Contributors::TooLarge => None,
-        }),
     }
 }
 
@@ -124,12 +116,7 @@ mod tests {
         dump
     }
 
-    fn run(
-        dump: &Dump,
-        entry: &Entry,
-        facts: Option<&RepoValues>,
-        contributors: Option<&Contributors>,
-    ) -> ChoiceFacts {
+    fn run(dump: &Dump, entry: &Entry, facts: Option<&RepoValues>) -> ChoiceFacts {
         let index = CrateIndex::new(&dump.snapshot);
         let table: Backends = toml::from_str(TABLE).expect("table parses");
         let targets: IdSet = [1, 2].into_iter().collect();
@@ -140,7 +127,7 @@ mod tests {
             backends: &table,
             dependents: &dependents,
         };
-        measure(entry, &inputs, facts, contributors)
+        measure(entry, &inputs, facts)
     }
 
     fn repo_facts() -> RepoValues {
@@ -150,7 +137,7 @@ mod tests {
     #[test]
     fn a_family_is_measured_across_every_listed_crate() {
         let dump = dump();
-        let found = run(&dump, &library(&["tool", "tool-extra"]), None, None);
+        let found = run(&dump, &library(&["tool", "tool-extra"]), None);
         let license = found.license.expect("license");
         assert_eq!(
             (license.text.as_str(), license.origin),
@@ -168,7 +155,6 @@ mod tests {
             Some(1),
             "user depends on the second crate"
         );
-        assert_eq!(found.contributors, None);
     }
 
     #[test]
@@ -177,14 +163,12 @@ mod tests {
         dump.set_details(1, CrateDetails::default());
         let facts = repo_facts();
         let entry = library(&["tool"]);
-        let license = run(&dump, &entry, Some(&facts), None)
-            .license
-            .expect("license");
+        let license = run(&dump, &entry, Some(&facts)).license.expect("license");
         assert_eq!(
             (license.text.as_str(), license.origin),
             ("MIT", LicenseOrigin::Repo)
         );
-        let none = run(&dump, &entry, None, None).license.expect("license");
+        let none = run(&dump, &entry, None).license.expect("license");
         assert_eq!(
             (none.text.as_str(), none.origin),
             ("None stated", LicenseOrigin::Dump)
@@ -195,9 +179,7 @@ mod tests {
     fn an_app_reads_its_license_from_github_even_with_a_crate() {
         let facts = repo_facts();
         let dump = dump();
-        let license = run(&dump, &app(), Some(&facts), None)
-            .license
-            .expect("license");
+        let license = run(&dump, &app(), Some(&facts)).license.expect("license");
         assert_eq!(license.origin, LicenseOrigin::Repo);
         assert_eq!(license.text, "MIT");
     }
@@ -206,7 +188,7 @@ mod tests {
     fn a_library_whose_crate_the_dump_lacks_reads_github_and_measures_nothing_else() {
         let facts = repo_facts();
         let dump = dump();
-        let found = run(&dump, &library(&["absent"]), Some(&facts), None);
+        let found = run(&dump, &library(&["absent"]), Some(&facts));
         assert_eq!(found.license.expect("license").origin, LicenseOrigin::Repo);
         assert_eq!(found.runs_on, None);
         assert_eq!(found.native_code, None);
@@ -217,23 +199,7 @@ mod tests {
     #[test]
     fn a_gone_repo_and_no_fetch_leave_the_license_not_measured() {
         let dump = dump();
-        assert_eq!(
-            run(&dump, &app(), Some(&RepoValues::Gone), None).license,
-            None
-        );
-        assert_eq!(run(&dump, &app(), None, None).license, None);
-    }
-
-    #[test]
-    fn a_contributor_list_too_large_is_not_measured() {
-        let dump = dump();
-        let entry = library(&["tool"]);
-        let counted = Contributors::Counted { count: 38 };
-        assert_eq!(
-            run(&dump, &entry, None, Some(&counted)).contributors,
-            Some(38)
-        );
-        let large = Contributors::TooLarge;
-        assert_eq!(run(&dump, &entry, None, Some(&large)).contributors, None);
+        assert_eq!(run(&dump, &app(), Some(&RepoValues::Gone)).license, None);
+        assert_eq!(run(&dump, &app(), None).license, None);
     }
 }

@@ -63,6 +63,8 @@ fn archived_facts(date: Date, of: &str) -> NetworkValues {
             RepoValues::Found {
                 archived: true,
                 stars: 12,
+                forks: Some(3),
+                commits: Some(450),
                 last_human_commit: Some(day(9, 1)),
                 oldest_unanswered_days: Some(3),
                 maintainer_replies_365: 7,
@@ -170,7 +172,12 @@ fn a_500_on_one_repo_falls_back_with_the_old_date_and_a_note() {
     let stars = fact(alpha, "stars");
     assert_eq!(stars.value.as_deref(), Some("12"));
     assert_eq!(stars.fetched, Some(old));
-    assert!(!stars.counts_toward_tier);
+    assert!(stars.counts_toward_tier);
+    assert_eq!(fact(alpha, "forks").value.as_deref(), Some("3"));
+    assert_eq!(fact(alpha, "forks").fetched, Some(old));
+    assert!(fact(alpha, "forks").counts_toward_tier);
+    assert_eq!(fact(alpha, "commits").value.as_deref(), Some("450"));
+    assert!(!fact(alpha, "commits").counts_toward_tier);
     assert!(
         has_note(
             alpha,
@@ -599,7 +606,7 @@ fn a_run_where_most_fetches_fail_warns_and_still_succeeds() {
 const BETA_CONTRIBUTORS: &str = "ml-rust/beta/contributors";
 
 #[test]
-fn a_contributor_count_joins_the_report_and_the_snapshot_and_never_counts() {
+fn a_contributor_count_joins_the_report_and_the_snapshot_and_counts_toward_the_tier() {
     let dirs = Dirs::new();
     let rules = Rules::default()
         .repo("beta", answer(200, &found_repo("beta", 40)))
@@ -608,7 +615,7 @@ fn a_contributor_count_joins_the_report_and_the_snapshot_and_never_counts() {
     let contributors = fact(entry(&found, "beta"), "contributors");
     assert_eq!(contributors.value.as_deref(), Some("1"));
     assert_eq!(contributors.fetched, Some(today()));
-    assert!(!contributors.counts_toward_tier);
+    assert!(contributors.counts_toward_tier);
     assert_eq!(
         contributors
             .source

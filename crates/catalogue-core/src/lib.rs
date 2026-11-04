@@ -48,15 +48,16 @@ pub use registry::{
     AppFeaturedThresholds, Backend, Backends, Categories, Category, Deprecated,
     DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, MovementThresholds,
-    NO_GPU_FEATURE_ID, NOT_MEASURED_ID, NewThresholds, RequirementCheck, RotThresholds,
-    SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
+    NO_GPU_FEATURE_ID, NOT_MEASURED_ID, NewThresholds, RepoRouteThresholds, RequirementCheck,
+    RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
-    ACTIVE_DEPENDENTS_LABEL, ACTIVE_USERS_SIGNAL, BINARY_PER_RELEASE_SIGNAL, CONTRIBUTORS_SIGNAL,
-    DEPENDENTS_SIGNAL, DOWNLOADS_SIGNAL, EntryReport, FORMER_GLORY_LABEL, FORMER_GLORY_SIGNAL,
-    LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, NEW_ADOPTERS_SIGNAL, NEW_DEPENDENTS_LABEL, NO_GPU_FEATURE,
-    NONE_STATED, NOT_APPLICABLE, NOT_MEASURED, PEAK_DEPENDENTS_LABEL, PEAK_USERS_SIGNAL,
-    PYTHON_SIGNAL, REPORT_SCHEMA, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL,
-    ReasonRecord, ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
+    ACTIVE_DEPENDENTS_LABEL, ACTIVE_USERS_SIGNAL, BINARY_PER_RELEASE_SIGNAL, COMMITS_SIGNAL,
+    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, DOWNLOADS_SIGNAL, EntryReport, FORKS_SIGNAL,
+    FORMER_GLORY_LABEL, FORMER_GLORY_SIGNAL, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL,
+    NEW_ADOPTERS_SIGNAL, NEW_DEPENDENTS_LABEL, NO_GPU_FEATURE, NONE_STATED, NOT_APPLICABLE,
+    NOT_MEASURED, PEAK_DEPENDENTS_LABEL, PEAK_USERS_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA,
+    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, ReasonRecord, ReportMismatch,
+    STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

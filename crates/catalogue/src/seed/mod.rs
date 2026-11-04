@@ -4,10 +4,12 @@ mod build;
 mod command;
 mod error;
 mod leads;
+mod merge;
 mod write;
 
 pub use build::{Seed, build_seed};
 pub use command::{SeedArgs, run_seed};
 pub use error::SeedError;
 pub use leads::{LeadSeed, build_lead_seed, parse_leads};
+pub use merge::build_merged_seed;
 pub use write::write_drafts;

@@ -19,6 +19,8 @@ pub struct Thresholds {
     pub library_featured: LibraryFeaturedThresholds,
     /// Gates for a featured app.
     pub app_featured: AppFeaturedThresholds,
+    /// The repository route to Featured.
+    pub repo_route: RepoRouteThresholds,
     /// Dormancy floor and the dead rule.
     pub dormancy: DormancyThresholds,
     /// The expected update interval by latest version.
@@ -67,6 +69,20 @@ pub struct AppFeaturedThresholds {
     pub repology_families: u32,
     /// Smallest Docker pull growth over 90 days.
     pub docker_pull_growth_90d: u64,
+}
+
+/// The repository route to Featured. The route passes only when all three reach their limit.
+///
+/// Stars alone never pass. GitHub hides who starred, so stars cannot be screened for fakes.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RepoRouteThresholds {
+    /// Fewest GitHub stars.
+    pub min_stars: u64,
+    /// Fewest GitHub forks.
+    pub min_forks: u64,
+    /// Fewest contributors with a GitHub account.
+    pub min_contributors: u64,
 }
 
 /// Dormancy floor and the dead rule.
@@ -225,6 +241,18 @@ impl Thresholds {
             APP_SIGNALS,
             &mut out,
         );
+        for (name, value) in [
+            ("repo_route.min_stars", self.repo_route.min_stars),
+            ("repo_route.min_forks", self.repo_route.min_forks),
+            (
+                "repo_route.min_contributors",
+                self.repo_route.min_contributors,
+            ),
+        ] {
+            if value == 0 {
+                out.push(format!("{name} = 0 must be at least 1"));
+            }
+        }
         out
     }
 }
@@ -264,16 +292,36 @@ mod tests {
         assert_eq!(t.app_featured.docker_pull_growth_90d, 10_000);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
+        assert_eq!(t.repo_route.min_stars, 2_000);
     }
 
     #[test]
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 6);
+        assert_eq!(t.version, 7);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
         assert_eq!(t.movement.window_days, 30);
+        assert!(t.repo_route.min_stars > 0);
+    }
+
+    #[test]
+    fn each_repository_route_limit_must_be_at_least_one() {
+        for (line, key) in [
+            ("min_stars = 2000", "repo_route.min_stars"),
+            ("min_forks = 200", "repo_route.min_forks"),
+            ("min_contributors = 25", "repo_route.min_contributors"),
+        ] {
+            let name = line.split(" = ").next().expect("a key");
+            let found = problems_with(line, &format!("{name} = 0"));
+            assert!(
+                has(&found, &format!("{key} = 0 must be at least 1")),
+                "{found:?}"
+            );
+        }
+        let absent = THRESHOLDS.replace("min_forks = 200\n", "");
+        assert!(toml::from_str::<Thresholds>(&absent).is_err());
     }
 
     #[test]
@@ -380,10 +428,11 @@ mod tests {
         assert!(problems_with("dead_rot_signals = 2", "dead_rot_signals = 6").is_empty());
         let found = problems_with("dead_rot_signals = 2", "dead_rot_signals = 7");
         assert!(has(&found, "between 1 and 6"));
-        let found = problems_with("min_signals = 2", "min_signals = 5");
+        assert!(problems_with("min_signals = 2", "min_signals = 5").is_empty());
+        let found = problems_with("min_signals = 2", "min_signals = 6");
         assert!(has(
             &found,
-            "app_featured.min_signals = 5 must be between 1 and 4"
+            "app_featured.min_signals = 6 must be between 1 and 5"
         ));
         let found = problems_with("min_signals = 2", "min_signals = 0");
         assert!(has(&found, "app_featured.min_signals = 0"));

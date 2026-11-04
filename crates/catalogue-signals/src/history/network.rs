@@ -35,8 +35,16 @@ pub enum RepoValues {
     Found {
         /// Whether the repo is archived.
         archived: bool,
-        /// The star count. Display only: no tier rule reads it.
+        /// The star count. A part of the repository route.
         stars: u32,
+        /// The fork count. A part of the repository route. Unknown in snapshots written before
+        /// the field existed.
+        #[serde(default)]
+        forks: Option<u32>,
+        /// The total commits on the default branch. Display only: no tier rule reads it.
+        /// Unknown in snapshots written before the field existed.
+        #[serde(default)]
+        commits: Option<u64>,
         /// The date of the newest human commit, when the sample holds one.
         #[serde(serialize_with = "plain_option")]
         last_human_commit: Option<Date>,
@@ -61,6 +69,14 @@ impl RepoValues {
         }
     }
 
+    /// The total commits on the default branch of an existing repo, when known.
+    pub fn commits(&self) -> Option<u64> {
+        match self {
+            Self::Found { commits, .. } => *commits,
+            Self::Gone => None,
+        }
+    }
+
     /// The license GitHub states for an existing repo.
     pub fn license(&self) -> Option<&RepoLicense> {
         match self {
@@ -75,6 +91,8 @@ impl From<&Facts> for RepoValues {
         Self::Found {
             archived: facts.archived,
             stars: facts.stars,
+            forks: facts.forks,
+            commits: facts.commits,
             last_human_commit: facts.last_human_commit.map(Date::from),
             oldest_unanswered_days: facts.oldest_unanswered_days,
             maintainer_replies_365: facts.maintainer_replies_365,
@@ -172,6 +190,8 @@ mod tests {
             facts: dated(RepoValues::Found {
                 archived: true,
                 stars: 12,
+                forks: Some(3),
+                commits: Some(450),
                 last_human_commit: Some(day(1)),
                 oldest_unanswered_days: None,
                 maintainer_replies_365: 7,
@@ -197,6 +217,11 @@ mod tests {
         assert_eq!(values.contributors, None);
         let facts = values.facts.expect("facts");
         assert_eq!(facts.value.license(), Some(&RepoLicense::NotMeasured));
+        assert_eq!(facts.value.commits(), None);
+        let RepoValues::Found { forks, .. } = facts.value else {
+            panic!("a found repo");
+        };
+        assert_eq!(forks, None, "an old snapshot reads as unknown forks");
     }
 
     #[test]
@@ -240,6 +265,7 @@ mod tests {
         let back: NetworkValues = serde_json::from_str(&text).expect("parses");
         assert_eq!(back, values);
         assert_eq!(RepoValues::Gone.stars(), None);
+        assert_eq!(RepoValues::Gone.commits(), None);
     }
 
     #[test]

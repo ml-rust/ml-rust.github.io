@@ -5,8 +5,8 @@ use std::collections::BTreeMap;
 use catalogue_core::{Catalogue, Date, EntryKind, Signals, Slug, Verdict, assess};
 use catalogue_signals::assemble::choice::{ChoiceFacts, ChoiceInputs, DependentIndex, measure};
 use catalogue_signals::assemble::{
-    Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_signals, context,
-    library_signals,
+    Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_signals,
+    apply_contributors, context, library_signals,
 };
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
 use catalogue_signals::history::{History, RepoValues, Row};
@@ -30,8 +30,8 @@ pub(crate) struct Assessment {
     pub(crate) signals: Signals,
     /// The source page and the data date of each signal.
     pub(crate) sources: FactSources,
-    /// The GitHub star count. Display only: no rule reads it.
-    pub(crate) stars: Option<u64>,
+    /// The total commits on the default branch. Display only: no rule reads it.
+    pub(crate) commits: Option<u64>,
     /// The facts a person reads to choose a project. No rule reads them.
     pub(crate) choice: ChoiceFacts,
 }
@@ -103,7 +103,7 @@ pub(crate) fn assess_entries(
             let docker = values.docker.as_ref();
             let docker_date = docker.map_or(today, |found| found.date);
             let baseline = history.docker_baseline(slug.as_str(), docker_date);
-            let Assembled { signals, notes } = match entry.kind {
+            let Assembled { mut signals, notes } = match entry.kind {
                 EntryKind::Library => library_signals(entry, &sources, facts, link, today),
                 EntryKind::App => app_signals(
                     facts,
@@ -114,6 +114,8 @@ pub(crate) fn assess_entries(
                     baseline,
                 ),
             };
+            let contributors = values.contributors.as_ref().map(|found| &found.value);
+            apply_contributors(contributors, &mut signals);
             let dates = FetchDates {
                 rustsec: advisories.archive_date,
                 github: values.facts.as_ref().map(|found| found.date),
@@ -125,11 +127,10 @@ pub(crate) fn assess_entries(
                 docker_baseline: baseline,
                 contributors: values.contributors.as_ref().map(|found| found.date),
             };
-            let contributors = values.contributors.as_ref().map(|found| &found.value);
-            let choice = measure(entry, &choice_inputs, facts, contributors);
+            let choice = measure(entry, &choice_inputs, facts);
             let repo = github_repo(entry).ok();
             let cited = FactSources::new(entry, repo.as_ref(), dump_date, dates);
-            let stars = facts.and_then(RepoValues::stars);
+            let commits = facts.and_then(RepoValues::commits);
             let ctx = context(slug, catalogue, history, today);
             let verdict = assess(&signals, &ctx, thresholds);
             let row = Row {
@@ -152,7 +153,7 @@ pub(crate) fn assess_entries(
                 notes: all,
                 signals,
                 sources: cited,
-                stars,
+                commits,
                 choice,
             }
         })

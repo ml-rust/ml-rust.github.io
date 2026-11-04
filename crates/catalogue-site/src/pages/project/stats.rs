@@ -1,8 +1,8 @@
 //! The stat strip at the top of an entry page.
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryKind, EntryReport, NOT_APPLICABLE,
-    NOT_MEASURED, TierReport,
+    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryKind, EntryReport,
+    FORKS_SIGNAL, NOT_APPLICABLE, NOT_MEASURED, STARS_SIGNAL, TierReport,
 };
 
 use super::sources::{SourceNote, distinct_sources, fact_named};
@@ -14,6 +14,13 @@ use crate::pages::shared::{
 const VERSION_SIGNAL: &str = "latest_version";
 /// The signal of the latest release date.
 const RELEASE_SIGNAL: &str = "last_release";
+/// The stats of the repository row: the label and the signal of each.
+const REPOSITORY_STATS: [(&str, &str); 4] = [
+    ("Stars", STARS_SIGNAL),
+    ("Forks", FORKS_SIGNAL),
+    ("Contributors", CONTRIBUTORS_SIGNAL),
+    ("Commits", COMMITS_SIGNAL),
+];
 
 /// One stat of the strip.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -47,6 +54,9 @@ impl Stat {
 pub(crate) struct StatStrip<'a> {
     /// The stats, with the check date last.
     pub stats: Vec<Stat>,
+    /// The repository stats: stars, forks, contributors and commits. Empty when the check
+    /// measured none of them.
+    pub repository: Vec<Stat>,
     /// The check date as an ISO date.
     pub checked: String,
     /// The check date as a person reads it.
@@ -85,25 +95,37 @@ impl<'a> StatStrip<'a> {
             ));
             names.push(VERSION_SIGNAL);
         }
-        if !library && record.value_of(CONTRIBUTORS_SIGNAL).is_some() {
-            stats.push(Stat::plain(
-                "Contributors",
-                whole_text(Some(record), CONTRIBUTORS_SIGNAL),
-            ));
-            names.push(CONTRIBUTORS_SIGNAL);
-        }
         if has_crates || record.value_of(RELEASE_SIGNAL).is_some() {
             stats.push(released(record, report));
             names.push(RELEASE_SIGNAL);
         }
+        let repository = repository_stats(record);
+        if !repository.is_empty() {
+            names.extend(REPOSITORY_STATS.map(|(_, name)| name));
+        }
         let checked = report.generated.to_string();
         Self {
             stats,
+            repository,
             checked_text: date_text(&checked).unwrap_or_else(|| checked.clone()),
             checked,
             sources: distinct_sources(names.iter().filter_map(|name| fact_named(record, name))),
         }
     }
+}
+
+/// The repository row, with the unmeasured values in place. Empty when none is measured.
+fn repository_stats(record: &EntryReport) -> Vec<Stat> {
+    let measured = REPOSITORY_STATS
+        .iter()
+        .any(|(_, name)| record.value_of(name).is_some());
+    if !measured {
+        return Vec::new();
+    }
+    REPOSITORY_STATS
+        .iter()
+        .map(|&(label, name)| Stat::plain(label, grouped(&whole_text(Some(record), name))))
+        .collect()
 }
 
 /// The release stat: how long ago, and the date.

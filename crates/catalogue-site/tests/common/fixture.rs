@@ -5,10 +5,11 @@
 use std::collections::BTreeMap;
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, Catalogue, DEPENDENTS_SIGNAL, DataSources, Date, EntryReport, FirstSeen,
-    LICENSE_SIGNAL, MeasuredMovement, Movement, NATIVE_CODE_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA,
-    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL, ReasonRecord, Rule, STARS_SIGNAL, SignalFact, Slug,
-    SourceRef, Tier, TierReport, UsersChange, never_counts,
+    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, Catalogue, DEPENDENTS_SIGNAL, DataSources, Date,
+    EntryReport, FORKS_SIGNAL, FirstSeen, LICENSE_SIGNAL, MeasuredMovement, Movement,
+    NATIVE_CODE_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
+    ReasonRecord, Rule, STARS_SIGNAL, SignalFact, Slug, SourceRef, Tier, TierReport, UsersChange,
+    never_counts,
 };
 use catalogue_site::{SiteInputs, TierChangeRow};
 use url::Url;
@@ -372,6 +373,13 @@ fn report() -> TierReport {
             ),
             signal("former_glory", "Former glory", None, DUMP),
             signal(STARS_SIGNAL, "GitHub stars", Some("1200"), alpha_repo),
+            signal(FORKS_SIGNAL, "GitHub forks", Some("80"), alpha_repo),
+            signal(
+                COMMITS_SIGNAL,
+                "Commits on the default branch",
+                Some("4200"),
+                alpha_repo,
+            ),
             signal(LICENSE_SIGNAL, "License", Some("Apache-2.0 OR MIT"), DUMP),
             signal(RUNS_ON_SIGNAL, "Runs on", Some("CUDA, Metal"), DUMP),
             signal(

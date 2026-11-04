@@ -1,14 +1,22 @@
 use super::fact::Fact;
 use super::featured::Gate;
+use super::repo_route::{repo_route, route_text};
 use super::signals::Signals;
-use crate::registry::AppFeaturedThresholds;
+use crate::registry::{AppFeaturedThresholds, RepoRouteThresholds};
 
 /// Number of app use signals the Featured rule counts.
-pub(crate) const APP_SIGNALS: u32 = 4;
+pub(crate) const APP_SIGNALS: u32 = 5;
 
-/// The app gate: at least `min_signals` of binary downloads, Homebrew installs,
-/// Repology families, and Docker pull growth reach their thresholds.
-pub(super) fn app_gate(signals: &Signals, t: &AppFeaturedThresholds) -> Gate {
+/// The app gate: at least `min_signals` of binary downloads, Homebrew installs, Repology
+/// families, Docker pull growth, and the repository route reach their thresholds.
+///
+/// An app has no dependents, so the route counts as one use signal. It never passes the gate
+/// alone unless `min_signals` is 1.
+pub(super) fn app_gate(
+    signals: &Signals,
+    t: &AppFeaturedThresholds,
+    route: &RepoRouteThresholds,
+) -> Gate {
     let uses = [
         Fact::of(
             "binary_downloads_last3",
@@ -28,6 +36,7 @@ pub(super) fn app_gate(signals: &Signals, t: &AppFeaturedThresholds) -> Gate {
             signals.docker_pull_growth_90d,
             |n| n >= t.docker_pull_growth_90d,
         ),
+        repo_route(signals, route),
     ];
     let count = |test: fn(&Fact) -> bool| {
         u32::try_from(uses.iter().filter(|fact| test(fact)).count()).unwrap_or(u32::MAX)
@@ -44,8 +53,9 @@ pub(super) fn app_gate(signals: &Signals, t: &AppFeaturedThresholds) -> Gate {
     Gate {
         fact,
         failure: format!(
-            "{passing} of {APP_SIGNALS} use signals pass, {} needed",
-            t.min_signals
+            "{passing} of {APP_SIGNALS} use signals pass, {} needed and {}",
+            t.min_signals,
+            route_text(signals, route)
         ),
     }
 }
@@ -56,11 +66,13 @@ mod tests {
     use crate::tier::fixtures::{featured_app, thresholds};
 
     fn check(signals: &Signals) -> Fact {
-        app_gate(signals, &thresholds().app_featured).fact
+        let t = thresholds();
+        app_gate(signals, &t.app_featured, &t.repo_route).fact
     }
 
     fn fails(signals: &Signals, needle: &str) {
-        let gate = app_gate(signals, &thresholds().app_featured);
+        let t = thresholds();
+        let gate = app_gate(signals, &t.app_featured, &t.repo_route);
         assert!(gate.fact.is_false(), "{:?}", gate.fact);
         assert!(gate.failure.contains(needle), "{}", gate.failure);
     }
@@ -84,7 +96,10 @@ mod tests {
             homebrew_on_request_365d: Some(499),
             ..two_at_limit
         };
-        fails(&one, "1 of 4 use signals pass, 2 needed");
+        fails(
+            &one,
+            "1 of 5 use signals pass, 2 needed and repository route stars 100 (needs 2000), forks 10 (needs 200), contributors 5 (needs 25)",
+        );
     }
 
     #[test]
@@ -113,6 +128,60 @@ mod tests {
             docker_pull_growth_90d: Some(0),
             ..open
         };
-        fails(&hopeless, "0 of 4 use signals pass");
+        fails(&hopeless, "0 of 5 use signals pass");
+    }
+
+    /// An app with no use signal but the ones it names here.
+    fn only(binary: u64, stars: u64, forks: u64, contributors: u64) -> Signals {
+        Signals {
+            binary_downloads_last3: Some(binary),
+            homebrew_on_request_365d: Some(0),
+            repology_families: Some(0),
+            docker_pull_growth_90d: Some(0),
+            stars: Some(stars),
+            forks: Some(forks),
+            contributors: Some(contributors),
+            ..featured_app()
+        }
+    }
+
+    #[test]
+    fn the_route_counts_as_one_use_signal_and_is_not_enough_alone() {
+        let t = thresholds();
+        let (binary, route) = (t.app_featured.binary_downloads, t.repo_route);
+        let (stars, forks, contributors) =
+            (route.min_stars, route.min_forks, route.min_contributors);
+        fails(
+            &only(0, stars, forks, contributors),
+            "1 of 5 use signals pass",
+        );
+        assert!(check(&only(binary, stars, forks, contributors)).is_true());
+        fails(
+            &only(binary, stars, forks - 1, contributors),
+            "1 of 5 use signals pass",
+        );
+    }
+
+    #[test]
+    fn stars_alone_add_no_use_signal() {
+        let binary = thresholds().app_featured.binary_downloads;
+        fails(&only(binary, u64::MAX, 0, 0), "1 of 5 use signals pass");
+    }
+
+    #[test]
+    fn an_unknown_route_part_leaves_an_undecided_app_unknown() {
+        let t = thresholds();
+        let signals = Signals {
+            forks: None,
+            ..only(
+                t.app_featured.binary_downloads,
+                t.repo_route.min_stars,
+                0,
+                t.repo_route.min_contributors,
+            )
+        };
+        let found = check(&signals);
+        assert_eq!(found.value, None);
+        assert_eq!(found.needs, ["forks"]);
     }
 }

@@ -4,6 +4,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 
 use super::core_crates;
+use super::terms::TermIndex;
 use super::types::{Candidate, Discovered, Reason, Rules};
 use crate::dump::{DependencyKind, DumpSnapshot, IdMap};
 
@@ -11,12 +12,13 @@ use crate::dump::{DependencyKind, DumpSnapshot, IdMap};
 ///
 /// A crate matches when it is a core crate, when one of its category slugs
 /// equals or extends a rule category, when one of its keywords equals a rule
-/// keyword, or when its default version has a normal or build dependency on a
-/// core crate. A core crate in the snapshot is a candidate with the reason
+/// keyword, when its name or description holds a rule term, or when its default
+/// version has a normal or build dependency on a core crate. A core crate in the snapshot is a candidate with the reason
 /// `core` even when no other rule matches it, and keeps its other reasons. A crate
 /// whose default version is missing or yanked is skipped. A crate with a
-/// deprecation notice stays and is flagged. The run reads the category, keyword
-/// and default-requirement tables once each and never reads the dependency edges.
+/// deprecation notice stays and is flagged. The run reads the crate, category,
+/// keyword and default-requirement tables once each and never reads the dependency edges.
+/// A term scan allocates only for a crate that matches.
 pub fn candidates(snapshot: &DumpSnapshot, rules: &Rules) -> Discovered {
     let core = core_crates::resolve(snapshot, &rules.core_crates);
     let mut reasons: IdMap<Vec<Reason>> = IdMap::default();
@@ -44,6 +46,19 @@ pub fn candidates(snapshot: &DumpSnapshot, rules: &Rules) -> Discovered {
                     .or_default()
                     .push(Reason::Keyword(lower.into_owned()));
             }
+        }
+    }
+
+    let terms = TermIndex::new(&rules.terms);
+    let mut word = String::new();
+    for (&id, row) in &snapshot.crates {
+        for text in std::iter::once(row.name.as_str()).chain(row.description.as_deref()) {
+            terms.each_term(text, &mut word, |term| {
+                reasons
+                    .entry(id)
+                    .or_default()
+                    .push(Reason::Term(term.to_owned()));
+            });
         }
     }
 
@@ -115,6 +130,7 @@ fn lowercase(text: &str) -> Cow<'_, str> {
 #[cfg(test)]
 mod tests {
     use catalogue_core::deprecation::{DeprecationNotice, Field};
+    use catalogue_core::{Categories, Topics};
     use jiff::Timestamp;
 
     use super::*;
@@ -131,7 +147,42 @@ mod tests {
             categories: own(categories),
             keywords: own(keywords),
             core_crates: own(core),
+            terms: Vec::new(),
         }
+    }
+
+    fn term_rules(terms: &[&str]) -> Rules {
+        Rules {
+            terms: terms.iter().map(|term| (*term).to_owned()).collect(),
+            ..Rules::default()
+        }
+    }
+
+    fn describe(snap: &mut DumpSnapshot, id: u32, text: &str) {
+        if let Some(row) = snap.crates.get_mut(&id) {
+            row.description = Some(text.to_owned());
+        }
+    }
+
+    /// The rules the published data files give: their keywords, categories and terms.
+    fn published_rules() -> Rules {
+        let topics: Topics =
+            toml::from_str(include_str!("../../../../data/topics.toml")).expect("topics parse");
+        let categories: Categories =
+            toml::from_str(include_str!("../../../../data/categories.toml"))
+                .expect("categories parse");
+        let mut rules = Rules::default();
+        for topic in topics.topic {
+            rules.keywords.extend(topic.keywords);
+            rules.categories.extend(topic.categories);
+            rules.terms.extend(topic.terms);
+        }
+        for category in categories.category {
+            rules.keywords.extend(category.keywords);
+            rules.categories.extend(category.categories);
+            rules.terms.extend(category.terms);
+        }
+        rules
     }
 
     /// Crates `ML` (id 1) to `OTHER` (id 4), each with an unyanked default version.
@@ -253,6 +304,171 @@ mod tests {
         );
         let found = candidates(&snap, &rules(&[], &["LLM"], &[]));
         assert_eq!(names(&found), ["ml-thing"]);
+    }
+
+    #[test]
+    fn a_description_term_makes_a_candidate_with_its_reason() {
+        let mut snap = snapshot();
+        describe(&mut snap, ML, "Rust bindings for whisper.cpp");
+        let found = candidates(&snap, &term_rules(&["whisper cpp"]));
+        assert_eq!(names(&found), ["ml-thing"]);
+        assert_eq!(
+            found.candidates[0].reasons,
+            [Reason::Term("whisper cpp".to_owned())]
+        );
+    }
+
+    #[test]
+    fn a_name_term_makes_a_candidate() {
+        let mut snap = snapshot();
+        add_crate(&mut snap, 9, "llama-cpp-2", false);
+        let found = candidates(&snap, &term_rules(&["llama cpp"]));
+        assert_eq!(names(&found), ["llama-cpp-2"]);
+        assert_eq!(
+            found.candidates[0].reasons,
+            [Reason::Term("llama cpp".to_owned())]
+        );
+    }
+
+    #[test]
+    fn a_term_found_in_the_name_and_the_description_gives_one_reason() {
+        let mut snap = snapshot();
+        add_crate(&mut snap, 9, "speech", false);
+        describe(&mut snap, 9, "Speech, and more speech.");
+        let found = candidates(&snap, &term_rules(&["speech"]));
+        assert_eq!(
+            found.candidates[0].reasons,
+            [Reason::Term("speech".to_owned())]
+        );
+    }
+
+    #[test]
+    fn a_term_never_spans_the_name_and_the_description() {
+        let mut snap = snapshot();
+        add_crate(&mut snap, 9, "vector", false);
+        describe(&mut snap, 9, "Database rows.");
+        let found = candidates(&snap, &term_rules(&["vector database"]));
+        assert!(found.candidates.is_empty());
+    }
+
+    #[test]
+    fn a_term_matches_whole_words_only() {
+        let mut snap = snapshot();
+        describe(&mut snap, ML, "Tensorial data and subtensors.");
+        describe(&mut snap, APP, "A tensor type.");
+        let found = candidates(&snap, &term_rules(&["tensor"]));
+        assert_eq!(names(&found), ["app"]);
+    }
+
+    #[test]
+    fn a_term_reason_sorts_between_keywords_and_dependencies() {
+        let mut snap = snapshot();
+        describe(&mut snap, ML, "An llm thing.");
+        snap.keywords.insert(ML, vec!["llm".to_owned()]);
+        snap.default_requirements
+            .insert(ML, vec![requirement(CORE, DependencyKind::Normal)]);
+        let mut rules = rules(&[], &["llm"], &["candle-core"]);
+        rules.terms = vec!["llm".to_owned()];
+        let found = candidates(&snap, &rules);
+        assert_eq!(
+            found.candidates[1].reasons,
+            [
+                Reason::Keyword("llm".to_owned()),
+                Reason::Term("llm".to_owned()),
+                Reason::DependsOn("candle-core".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_yanked_crate_with_a_term_is_skipped() {
+        let mut snap = snapshot();
+        add_crate(&mut snap, ML, "ml-thing", true);
+        describe(&mut snap, ML, "An llm thing.");
+        assert!(
+            candidates(&snap, &term_rules(&["llm"]))
+                .candidates
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn the_published_vocabulary_finds_crates_that_say_what_they_are() {
+        for (name, description) in [
+            ("whisper-rs", "Rust bindings for whisper.cpp"),
+            ("llama-cpp-2", "llama.cpp bindings for Rust"),
+            ("hf-hub", "Rust client for the Hugging Face Hub API"),
+            ("rmcp", "Rust SDK for Model Context Protocol"),
+            (
+                "usearch",
+                "Smaller & Faster Single-File Vector Search Engine from Unum",
+            ),
+            (
+                "arroy",
+                "Annoy-inspired Approximate Nearest Neighbors in Rust, based on LMDB",
+            ),
+            ("ocrs", "OCR engine"),
+            (
+                "genai",
+                "Multi-AI Providers Library for Rust. (OpenAI, Gemini)",
+            ),
+            ("wonnx", "Wonnx is an ONNX runtime based on wgpu."),
+            (
+                "vosk",
+                "Safe wrapper around the Vosk API Speech Recognition Toolkit",
+            ),
+            (
+                "llm-chain",
+                "A library for running chains of LLMs in series.",
+            ),
+            ("langchain-rust", "LangChain for Rust."),
+            (
+                "meilisearch-sdk",
+                "Rust wrapper for the Meilisearch API, a search engine.",
+            ),
+            ("xgboost", "Machine learning using XGBoost"),
+            ("lightgbm", "Machine learning using LightGBM"),
+            ("catboost", "Catboost inference library for Rust"),
+            ("luminal", "Deep learning at the speed of light."),
+        ] {
+            let mut snap = snapshot();
+            add_crate(&mut snap, 9, name, false);
+            describe(&mut snap, 9, description);
+            let found = candidates(&snap, &published_rules());
+            let reasons: Vec<&Reason> = found
+                .candidates
+                .iter()
+                .filter(|candidate| candidate.name == name)
+                .flat_map(|candidate| &candidate.reasons)
+                .collect();
+            assert!(
+                reasons
+                    .iter()
+                    .any(|reason| matches!(reason, Reason::Term(_))),
+                "{name}: {reasons:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_published_vocabulary_leaves_out_words_with_a_second_meaning() {
+        for (name, description) in [
+            ("lang-types", "Type inference for a small language."),
+            ("scripted", "Embedding a scripting language in Rust."),
+            ("wav-reader", "Reads audio files."),
+            ("note-taker", "A notebook for plain text notes."),
+            (
+                "battery",
+                "Cross-platform information about the notebook batteries",
+            ),
+            ("work-stealer", "A data parallelism library for Rust."),
+        ] {
+            let mut snap = snapshot();
+            add_crate(&mut snap, 9, name, false);
+            describe(&mut snap, 9, description);
+            let found = candidates(&snap, &published_rules());
+            assert!(!names(&found).contains(&name), "{name}");
+        }
     }
 
     #[test]
@@ -437,6 +653,10 @@ mod tests {
             "category:a::b"
         );
         assert_eq!(Reason::Keyword("llm".to_owned()).to_string(), "keyword:llm");
+        assert_eq!(
+            Reason::Term("llama cpp".to_owned()).to_string(),
+            "term:llama cpp"
+        );
         assert_eq!(
             Reason::DependsOn("burn".to_owned()).to_string(),
             "depends-on:burn"

@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::owners::Member;
-use crate::discover::Candidate;
+use crate::discover::{Candidate, text_words};
 use crate::dump::{DependencyKind, DumpSnapshot};
 
 /// Name segments of a crate that supports the project and is not the project itself.
@@ -50,10 +50,7 @@ const FILLER_WORDS: &[&str] = &["rs", "rust", "lib"];
 
 /// The lowercase words of `name`, split at every character that is not a letter or digit.
 pub(super) fn words(name: &str) -> Vec<String> {
-    name.split(|c: char| !c.is_alphanumeric())
-        .filter(|word| !word.is_empty())
-        .map(str::to_lowercase)
-        .collect()
+    text_words(name).map(str::to_lowercase).collect()
 }
 
 /// `words` without a language marker at either end, unless the marker is the only word.

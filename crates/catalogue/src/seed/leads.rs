@@ -16,14 +16,14 @@ const BYPASS: &str = "A lead bypasses the discovery rules and the active-user fl
 /// The first line of the `catalogue discover github` report.
 const DISCOVER_HEADER: &str = "github leads:";
 
-/// The result of one lead run.
+/// The result of one run with a lead list.
 #[derive(Debug, PartialEq, Eq)]
 pub struct LeadSeed {
     /// The drafts and the skips.
     pub drafts: Drafts,
     /// The report: the libraries, the apps, the listed leads, then the skips.
     pub text: String,
-    /// Channel lookups that failed.
+    /// Channel lookups and language list fetches that failed.
     pub warnings: Vec<String>,
 }
 

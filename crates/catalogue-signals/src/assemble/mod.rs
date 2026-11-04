@@ -27,6 +27,7 @@ mod versions;
 pub use app::app_signals;
 pub use assembled::Assembled;
 pub use context::context;
+pub use facts::apply_contributors;
 pub use index::CrateIndex;
 pub use library::library_signals;
 pub use link::{latest_release, primary_release};

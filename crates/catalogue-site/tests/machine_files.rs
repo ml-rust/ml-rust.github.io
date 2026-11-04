@@ -201,7 +201,7 @@ fn a_compare_file_holds_the_same_values_as_its_record_in_the_data_file() {
             let all = entry["signals"].as_array().expect("signals");
             for signal in file["signals"].as_array().expect("signals") {
                 assert!(all.contains(signal), "{slug}: {signal}");
-                assert_ne!(signal["name"], "stars", "{slug}");
+                assert_ne!(signal["name"], "former_glory", "{slug}");
             }
         }
     }
@@ -223,6 +223,10 @@ fn a_compare_file_holds_each_signal_the_page_reads() {
         "native_code",
         "license",
         "runs_on",
+        "stars",
+        "forks",
+        "contributors",
+        "commits",
     ] {
         assert!(names.contains(&name), "no {name} in {names:?}");
     }

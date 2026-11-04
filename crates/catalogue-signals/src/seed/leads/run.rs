@@ -19,7 +19,8 @@ use crate::usage;
 ///
 /// The run resolves every lead with one paced GitHub batch and reads the dump once. Then it
 /// decides each lead in list order and looks up the channels of each app draft. The `added` date
-/// is the date of the dump, as in the dump flow. Two leads that resolve to one repository make
+/// is the date of the dump, as in the dump flow. A repo whose primary language is not Rust adds
+/// one language list request. Two leads that resolve to one repository make
 /// one draft, and the first of two drafts with one slug keeps it.
 ///
 /// A lead that yields no draft appears in `drafts.skipped` with the reason. A lead an entry
@@ -55,8 +56,8 @@ pub fn seed_leads(
     let mut taken: BTreeMap<Slug, String> = BTreeMap::new();
     for (lead, answer) in unique.iter().zip(&answers) {
         let name = lead.to_string();
-        let profile = match answer {
-            Answer::Found(profile) => profile,
+        let found = match answer {
+            Answer::Found(found) => found,
             Answer::Gone => {
                 let reason = "GitHub holds no repository of this name".to_owned();
                 out.drafts.skipped.push((name, reason));
@@ -68,14 +69,15 @@ pub fn seed_leads(
                 continue;
             }
         };
-        let key = profile.name_with_owner.to_lowercase();
+        out.warnings.extend(found.warning.iter().cloned());
+        let key = found.profile.name_with_owner.to_lowercase();
         if let Some(first) = resolved_by.get(&key) {
             let reason = format!("resolves to `{key}`, the same repository as lead `{first}`");
             out.drafts.skipped.push((name, reason));
             continue;
         }
         resolved_by.insert(key, name.clone());
-        let decision = decide(&ctx, lead, profile);
+        let decision = decide(&ctx, lead, &found.profile, found.lists_rust);
         out.drafts.skipped.extend(decision.left_out);
         match decision.outcome {
             Outcome::Listed(text) => out.listed.push((name, text)),
@@ -124,8 +126,8 @@ fn unique_leads(leads: &[RepoRef], skipped: &mut Vec<(String, String)>) -> Vec<R
 fn wanted_keys(leads: &[RepoRef], answers: &[Answer]) -> HashSet<String> {
     let mut wanted: HashSet<String> = leads.iter().map(github_key).collect();
     for answer in answers {
-        if let Answer::Found(profile) = answer
-            && let Ok(canonical) = RepoRef::parse(&profile.name_with_owner)
+        if let Answer::Found(found) = answer
+            && let Ok(canonical) = RepoRef::parse(&found.profile.name_with_owner)
         {
             wanted.insert(github_key(&canonical));
         }

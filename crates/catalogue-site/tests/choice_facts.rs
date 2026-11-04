@@ -132,7 +132,7 @@ fn the_signal_table_keeps_the_precise_value_and_each_fact_shows_its_source() {
         &[
             "<th scope=\"row\">Contributors</th><td>38</td>",
             "https://github.com/ml-rust/alpha/graphs/contributors",
-            "<td>No</td>",
+            "<td>Yes — one part of the repository route</td>",
         ],
     );
 }
@@ -148,14 +148,55 @@ fn rows_on_topic_and_category_pages_show_the_facts_as_whole_numbers() {
                 "<tr class=\"entry-row\" data-slug=\"alpha\"",
                 "data-downloads=\"1840052\"",
                 "data-dependents=\"12\"",
+                "data-stars=\"1200\"",
                 "<td class=\"cell-downloads\" data-label=\"Downloads\"><span class=\"fact\" title=\"1,840,052 downloads over 30 days\"><span aria-hidden=\"true\">1.8M</span><span class=\"visually-hidden\">1,840,052 downloads over 30 days</span></span></td>",
                 "<td class=\"cell-dependents\" data-label=\"Dependents\"><span class=\"fact\">12</span></td>",
+                "<td class=\"cell-stars\" data-label=\"Stars\"><span class=\"fact\">1,200</span></td>",
                 "<td class=\"cell-release\" data-label=\"Latest release\"><span class=\"release-version\">0.4.2</span><time class=\"release-date\" datetime=\"2026-09-01\">1 Sep 2026</time></td>",
                 "<td class=\"cell-gpu\" data-label=\"Runs on (GPU)\"><span class=\"fact\">CUDA, Metal</span></td>",
                 "<td class=\"cell-license\" data-label=\"License\"><span class=\"fact\">Apache-2.0 OR MIT</span></td>",
             ],
         );
     }
+}
+
+#[test]
+fn the_entry_page_shows_the_repository_row_below_the_stat_strip() {
+    let site = tiered();
+    in_order(
+        &site[ALPHA],
+        &[
+            "<dt>Checked</dt>",
+            "<dl class=\"stat-strip stat-strip-repo\">",
+            "<dt>Stars</dt><dd><span class=\"stat-value\">1,200</span>",
+            "<dt>Forks</dt><dd><span class=\"stat-value\">80</span>",
+            "<dt>Contributors</dt><dd><span class=\"stat-value\">38</span>",
+            "<dt>Commits</dt><dd><span class=\"stat-value\">4,200</span>",
+            "<h2 id=\"compatibility\">",
+        ],
+    );
+    in_order(
+        &site[BETA],
+        &[
+            "<dt>Stars</dt><dd><span class=\"stat-value\">40</span>",
+            "<dt>Forks</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>",
+        ],
+    );
+}
+
+#[test]
+fn the_measurements_hold_a_repository_group() {
+    let site = tiered();
+    in_order(
+        &site[ALPHA],
+        &[
+            "id=\"signals-repository\"",
+            "1,200 stars, 80 forks, 38 contributors, 4,200 commits. Stars alone never qualify a project.",
+            "<th scope=\"row\">GitHub forks</th><td>80</td>",
+            "<th scope=\"row\">Commits on the default branch</th><td>4200</td>",
+            "<td>No</td>",
+        ],
+    );
 }
 
 #[test]
@@ -266,6 +307,10 @@ fn the_rules_page_says_these_facts_never_count_and_how_each_is_measured() {
     let site = tiered();
     let page = &site["rules/index.html"];
     assert!(page.contains("They never count toward a tier."), "{page}");
+    assert!(
+        page.contains("<strong>Commits</strong> The total commits on the default branch."),
+        "{page}"
+    );
     for label in [
         "License",
         "Runs on",

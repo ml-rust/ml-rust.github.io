@@ -73,6 +73,39 @@
       "counts_toward_tier": true
     },
     {
+      "name": "stars",
+      "label": "GitHub stars",
+      "value": "1200",
+      "source": {
+        "label": "GitHub",
+        "url": "https://github.com/ml-rust/alpha"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
+      "name": "forks",
+      "label": "GitHub forks",
+      "value": "80",
+      "source": {
+        "label": "GitHub",
+        "url": "https://github.com/ml-rust/alpha"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
+      "name": "commits",
+      "label": "Commits on the default branch",
+      "value": "4200",
+      "source": {
+        "label": "GitHub",
+        "url": "https://github.com/ml-rust/alpha"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": false
+    },
+    {
       "name": "license",
       "label": "License",
       "value": "Apache-2.0 OR MIT",
@@ -136,7 +169,7 @@
         "url": "https://github.com/ml-rust/alpha/graphs/contributors"
       },
       "fetched": "2026-11-03",
-      "counts_toward_tier": false
+      "counts_toward_tier": true
     }
   ]
 }

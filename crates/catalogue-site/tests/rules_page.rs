@@ -16,7 +16,9 @@ fn the_page_states_the_tier_principles_and_the_rot_signals() {
     let page = rules(Some(&thresholds(Some("2026-11-03"))));
     for text in [
         "Tiers come from fixed thresholds over raw signals. There is no composite score.",
-        "Stars never count toward a tier.",
+        "Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The repository route also needs forks and contributors.",
+        "The repository route passes when stars, forks and contributors each reach their limit on the same check.",
+        "An app counts it as one use signal.",
         "Thresholds version 3.",
         "Calibrated on <time datetime=\"2026-11-03\">3 Nov 2026</time>.",
         "Movement comes from the daily snapshots. It never affects a tier.",
@@ -45,6 +47,9 @@ fn every_threshold_appears_with_its_value() {
         ("app_featured.homebrew_on_request_365d", "500"),
         ("app_featured.repology_families", "2"),
         ("app_featured.docker_pull_growth_90d", "10000"),
+        ("repo_route.min_stars", "2000"),
+        ("repo_route.min_forks", "200"),
+        ("repo_route.min_contributors", "25"),
         ("dormancy.min_days", "365"),
         ("dormancy.dead_rot_signals", "2"),
         ("dormancy.dead_consecutive_checks", "2"),
@@ -94,7 +99,11 @@ fn without_thresholds_the_page_shows_no_values() {
         "{page}"
     );
     assert!(!page.contains("<table"), "{page}");
-    assert!(page.contains("Stars never count toward a tier."), "{page}");
+    assert!(
+        page.contains("Stars alone never qualify a project."),
+        "{page}"
+    );
+    assert!(!page.contains("Stars never count"), "{page}");
 }
 
 #[test]
@@ -103,6 +112,7 @@ fn the_contents_list_links_every_rule_and_each_tier_comes_before_its_inputs() {
     for id in [
         "featured-library",
         "featured-app",
+        "repository-route",
         "new",
         "listed",
         "archived",

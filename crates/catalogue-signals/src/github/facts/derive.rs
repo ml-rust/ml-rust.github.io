@@ -56,6 +56,10 @@ pub(super) fn derive_facts(repo: &Repository, requested: &RepoRef, today: Date) 
             .as_deref()
             .and_then(|text| text.parse::<Timestamp>().ok()),
         stars: repo.stargazer_count,
+        forks: repo.fork_count,
+        commits: latest
+            .map(|history| history.total_count)
+            .filter(|count| *count > 0),
         ci,
         license: RepoLicense::of(
             repo.license_info
@@ -110,10 +114,28 @@ mod tests {
         let facts = derive_facts(&repository("a/b"), &requested, date(2026, 11, 3));
         assert!(!facts.moved && facts.archived && !facts.fork);
         assert_eq!(facts.stars, 7);
+        assert_eq!(facts.forks, None, "an answer with no count stays unknown");
+        assert_eq!(facts.commits, None);
         assert_eq!(facts.ci, None);
         assert_eq!(facts.human_commits_365, 0);
         assert_eq!(facts.items_sampled, 0);
         assert!(facts.pushed_at.is_some());
+    }
+
+    #[test]
+    fn forks_and_the_total_commits_read_from_the_answer() {
+        let requested = RepoRef::parse("a/b").expect("parses");
+        let repo: Repository = serde_json::from_value(json!({
+            "nameWithOwner": "a/b",
+            "forkCount": 0,
+            "defaultBranchRef": {"target": {"latest": {"totalCount": 4321, "nodes": []}}},
+            "issues": null,
+            "pullRequests": null,
+        }))
+        .expect("repository");
+        let facts = derive_facts(&repo, &requested, date(2026, 11, 3));
+        assert_eq!(facts.forks, Some(0), "a real zero stays known");
+        assert_eq!(facts.commits, Some(4321));
     }
 
     #[test]

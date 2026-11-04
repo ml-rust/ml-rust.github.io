@@ -1,14 +1,17 @@
 //! Why an entry has its tier, and every signal behind it.
 
-use catalogue_core::{EntryKind, EntryReport, STARS_SIGNAL, SignalFact, Thresholds, TierReport};
+use catalogue_core::{
+    CONTRIBUTORS_SIGNAL, EntryKind, EntryReport, FORKS_SIGNAL, STARS_SIGNAL, SignalFact,
+    Thresholds, TierReport,
+};
 
 use super::measurements::{SignalGroup, signal_groups};
 use super::why::Why;
 use crate::href::SafeHref;
 use crate::pages::shared::{NamedLink, date_text};
 
-/// The counts-toward-tier text of the star count.
-const STARS_NEVER_COUNT: &str = "No — stars never count toward a tier";
+/// The counts-toward-tier text of stars, forks and contributors.
+const ROUTE_PART: &str = "Yes — one part of the repository route";
 
 /// The data the tier and signal sections of `project.html` read.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,12 +98,12 @@ impl<'a> SignalRow<'a> {
     pub(super) fn of(fact: &'a SignalFact) -> Self {
         let measured = fact.value.is_some();
         let source = fact.source.as_ref().filter(|_| measured);
-        let counts = if fact.counts_toward_tier {
-            "Yes"
-        } else if fact.name == STARS_SIGNAL {
-            STARS_NEVER_COUNT
-        } else {
-            "No"
+        let route_part =
+            [STARS_SIGNAL, FORKS_SIGNAL, CONTRIBUTORS_SIGNAL].contains(&fact.name.as_str());
+        let counts = match (fact.counts_toward_tier, route_part) {
+            (true, true) => ROUTE_PART,
+            (true, false) => "Yes",
+            (false, _) => "No",
         };
         let fetched = fact
             .fetched
@@ -150,9 +153,13 @@ mod tests {
     }
 
     #[test]
-    fn stars_say_they_never_count() {
-        let stars = fact(STARS_SIGNAL, Some("321"), false);
-        assert_eq!(SignalRow::of(&stars).counts, STARS_NEVER_COUNT);
+    fn the_route_facts_say_they_count_only_as_a_part_of_the_route() {
+        for name in [STARS_SIGNAL, FORKS_SIGNAL, CONTRIBUTORS_SIGNAL] {
+            let part = fact(name, Some("321"), true);
+            assert_eq!(SignalRow::of(&part).counts, ROUTE_PART, "{name}");
+        }
+        let commits = fact("commits", Some("321"), false);
+        assert_eq!(SignalRow::of(&commits).counts, "No");
         let other = fact("docs_present", Some("yes"), false);
         assert_eq!(SignalRow::of(&other).counts, "No");
         let counted = fact("last_release", Some("2026-09-01"), true);

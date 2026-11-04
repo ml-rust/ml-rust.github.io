@@ -26,7 +26,8 @@ pub(super) fn window_start(today: Date) -> Date {
 }
 
 /// The repo query. `$since` bounds the `recent` commit history. The `latest`
-/// history has no bound and reads [`LATEST_SAMPLE`] commits.
+/// history has no bound and reads [`LATEST_SAMPLE`] commits. Its `totalCount` is the total
+/// commits on the default branch, whatever the page size, so the total costs no second history.
 const QUERY: &str = "\
 query($owner: String!, $name: String!, $since: GitTimestamp!) {
   repository(owner: $owner, name: $name) {
@@ -35,6 +36,7 @@ query($owner: String!, $name: String!, $since: GitTimestamp!) {
     isFork
     pushedAt
     stargazerCount
+    forkCount
     licenseInfo { spdxId }
     defaultBranchRef {
       name
@@ -103,5 +105,8 @@ mod tests {
         assert!(!query.contains("rustlings"));
         assert!(query.contains("recent: history(first: 100, since: $since)"));
         assert!(query.contains(&format!("latest: history(first: {LATEST_SAMPLE})")));
+        assert!(query.contains("forkCount"));
+        let latest = query.split("latest: history").nth(1).expect("latest");
+        assert!(latest.contains("totalCount"), "{latest}");
     }
 }

@@ -13,8 +13,8 @@ fn day(when: Timestamp) -> String {
 
 /// The `key: value` lines of one repo, with no trailing newline.
 ///
-/// The keys are `repo`, `status`, `archived`, `fork`, `stars`, `pushed`, `ci`,
-/// `last_human_commit`, `human_commits_365`, `oldest_unanswered_days`,
+/// The keys are `repo`, `status`, `archived`, `fork`, `stars`, `forks`, `commits`, `pushed`,
+/// `ci`, `last_human_commit`, `human_commits_365`, `oldest_unanswered_days`,
 /// `maintainer_replies_365`, `median_first_response_days` and `items_sampled`.
 /// `repo` holds the requested name. `status` is `found`, `gone` or
 /// `moved:<new name>`. A `+` follows `human_commits_365` when the count is a
@@ -28,6 +28,8 @@ pub fn render_facts(requested: &RepoRef, facts: &RepoFacts) -> String {
             "archived",
             "fork",
             "stars",
+            "forks",
+            "commits",
             "pushed",
             "ci",
             "last_human_commit",
@@ -71,6 +73,8 @@ fn found_rows(facts: &Facts) -> Vec<(&'static str, String)> {
         ("archived", facts.archived.to_string()),
         ("fork", facts.fork.to_string()),
         ("stars", facts.stars.to_string()),
+        ("forks", or_none(facts.forks)),
+        ("commits", or_none(facts.commits)),
         ("pushed", or_none(facts.pushed_at.map(day))),
         ("ci", or_none(facts.ci.map(CiState::as_str))),
         ("last_human_commit", last_human),
@@ -122,6 +126,8 @@ mod tests {
             fork: true,
             pushed_at: "2026-10-26T17:14:42Z".parse().ok(),
             stars: 12,
+            forks: Some(3),
+            commits: Some(450),
             ci: Some(CiState::Failure),
             license: RepoLicense::NoneStated,
             last_human_commit: Some(date(2026, 10, 1)),
@@ -140,7 +146,7 @@ mod tests {
         let text = render_facts(&repo("a/b"), &RepoFacts::Found(facts()));
         assert_eq!(
             text,
-            "repo: a/b\nstatus: found\narchived: false\nfork: true\nstars: 12\n\
+            "repo: a/b\nstatus: found\narchived: false\nfork: true\nstars: 12\nforks: 3\ncommits: 450\n\
              pushed: 2026-10-26\nci: failure\nlast_human_commit: 2026-10-01\n\
              human_commits_365: 100+\noldest_unanswered_days: 40\n\
              maintainer_replies_365: 9\nmedian_first_response_days: -\nitems_sampled: 87"
@@ -194,7 +200,7 @@ mod tests {
             "{text}"
         );
         assert!(text.ends_with("\nitems_sampled: -"), "{text}");
-        assert_eq!(text.lines().count(), 13);
+        assert_eq!(text.lines().count(), 15);
     }
 
     #[test]

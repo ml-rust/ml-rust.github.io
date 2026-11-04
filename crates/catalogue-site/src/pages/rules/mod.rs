@@ -3,7 +3,7 @@
 //! The rule text follows the rule docs in `catalogue_core`'s tier modules.
 
 #[cfg(test)]
-mod fixtures;
+pub(crate) mod fixtures;
 mod page;
 mod rows;
 mod sections;

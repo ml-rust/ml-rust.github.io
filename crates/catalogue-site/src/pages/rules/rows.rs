@@ -222,7 +222,7 @@ pub(super) fn app_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "app_featured.min_signals",
             a.min_signals,
-            "How many of the four use signals must pass.",
+            "How many of the five use signals must pass. The repository route is one of them.",
         ),
         row(
             "app_featured.binary_downloads",
@@ -247,6 +247,24 @@ pub(super) fn app_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     ]
 }
 
+/// The repository route limits.
+pub(super) fn repo_route_rows(t: &Thresholds) -> Vec<ThresholdRow> {
+    let r = &t.repo_route;
+    vec![
+        row(
+            "repo_route.min_stars",
+            r.min_stars,
+            "Fewest GitHub stars. Never enough alone.",
+        ),
+        row("repo_route.min_forks", r.min_forks, "Fewest GitHub forks."),
+        row(
+            "repo_route.min_contributors",
+            r.min_contributors,
+            "Fewest contributors with a GitHub account.",
+        ),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::fixtures::thresholds;
@@ -262,6 +280,7 @@ mod tests {
             new_rows,
             library_rows,
             app_rows,
+            repo_route_rows,
         ]
         .into_iter()
         .flat_map(|make| make(t))
@@ -286,5 +305,8 @@ mod tests {
             value("app_featured.docker_pull_growth_90d").as_deref(),
             Some("10000")
         );
+        assert_eq!(value("repo_route.min_stars").as_deref(), Some("2000"));
+        assert_eq!(value("repo_route.min_forks").as_deref(), Some("200"));
+        assert_eq!(value("repo_route.min_contributors").as_deref(), Some("25"));
     }
 }

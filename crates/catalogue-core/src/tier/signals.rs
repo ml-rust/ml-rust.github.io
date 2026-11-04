@@ -58,6 +58,13 @@ pub struct Signals {
     pub oldest_unanswered_days: Option<u32>,
     /// Maintainer replies on issues over the reply window.
     pub maintainer_replies_365: Option<u32>,
+    /// GitHub stars. A part of the repository route.
+    pub stars: Option<u64>,
+    /// GitHub forks. A part of the repository route. Unknown in snapshots written before the
+    /// field existed.
+    pub forks: Option<u64>,
+    /// Contributors with a GitHub account. A part of the repository route.
+    pub contributors: Option<u64>,
     /// Whether published docs exist.
     pub docs_present: Option<bool>,
     /// Whether `.cargo_vcs_info.json` confirms the repository link.
@@ -103,6 +110,9 @@ impl Signals {
             last_human_commit: None,
             oldest_unanswered_days: None,
             maintainer_replies_365: None,
+            stars: None,
+            forks: None,
+            contributors: None,
             docs_present: None,
             repo_link_verified: None,
             binary_downloads_last3: None,
@@ -133,6 +143,9 @@ mod tests {
         assert!(signals.build_fails.is_none());
         assert!(signals.build_checked.is_none());
         assert!(signals.docker_pull_growth_90d.is_none());
+        assert!(signals.stars.is_none());
+        assert!(signals.forks.is_none());
+        assert!(signals.contributors.is_none());
         assert!(Signals::unknown(EntryKind::Library).is_library());
     }
 }

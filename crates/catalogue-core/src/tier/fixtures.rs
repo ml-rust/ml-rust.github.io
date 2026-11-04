@@ -33,7 +33,8 @@ pub(crate) fn context() -> Context {
     Context::new(today())
 }
 
-/// A library that passes every Featured gate. E is 2800 days.
+/// A library that passes every Featured gate on its dependents. E is 2800 days. Its repository
+/// numbers stay below the route, so a gate read here never turns on the route.
 pub(crate) fn featured_library() -> Signals {
     Signals {
         first_release: Some(day(2023, 1, 1)),
@@ -54,6 +55,9 @@ pub(crate) fn featured_library() -> Signals {
         last_human_commit: Some(day(2026, 10, 20)),
         oldest_unanswered_days: Some(10),
         maintainer_replies_365: Some(25),
+        stars: Some(100),
+        forks: Some(10),
+        contributors: Some(5),
         docs_present: Some(true),
         repo_link_verified: Some(true),
         build_fails: Some(false),
@@ -87,7 +91,8 @@ pub(crate) fn dead_library() -> Signals {
     }
 }
 
-/// An app that passes every Featured gate.
+/// An app that passes every Featured gate on its use signals. Its repository numbers stay below
+/// the route.
 pub(crate) fn featured_app() -> Signals {
     Signals {
         first_release: Some(day(2022, 1, 1)),
@@ -101,6 +106,9 @@ pub(crate) fn featured_app() -> Signals {
         last_human_commit: Some(day(2026, 10, 1)),
         oldest_unanswered_days: Some(5),
         maintainer_replies_365: Some(10),
+        stars: Some(100),
+        forks: Some(10),
+        contributors: Some(5),
         binary_downloads_last3: Some(5_000),
         binary_downloads_per_release: Some(1_500),
         homebrew_on_request_365d: Some(800),

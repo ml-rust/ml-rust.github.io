@@ -3,11 +3,11 @@
 use catalogue_core::{
     AppFeaturedThresholds, Date, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, MovementThresholds, NewThresholds,
-    RotThresholds, Thresholds,
+    RepoRouteThresholds, RotThresholds, Thresholds,
 };
 
 /// A thresholds file at version 3, calibrated on `calibrated`.
-pub(super) fn thresholds(calibrated: Option<Date>) -> Thresholds {
+pub(crate) fn thresholds(calibrated: Option<Date>) -> Thresholds {
     Thresholds {
         version: 3,
         calibrated,
@@ -23,6 +23,11 @@ pub(super) fn thresholds(calibrated: Option<Date>) -> Thresholds {
             homebrew_on_request_365d: 500,
             repology_families: 2,
             docker_pull_growth_90d: 10_000,
+        },
+        repo_route: RepoRouteThresholds {
+            min_stars: 2_000,
+            min_forks: 200,
+            min_contributors: 25,
         },
         dormancy: DormancyThresholds {
             min_days: 365,

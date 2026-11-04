@@ -61,7 +61,7 @@ fn the_golden_file_reads_back_as_the_same_report() {
 fn every_fact_cites_its_source_and_date() {
     let (_, run) = offline_run();
     for (slug, entry) in &run.report.entries {
-        assert_eq!(entry.signals.len(), 40, "{slug}");
+        assert_eq!(entry.signals.len(), 42, "{slug}");
         for fact in &entry.signals {
             assert!(fact.problems().is_empty(), "{slug}: {:?}", fact.problems());
             assert_eq!(
@@ -76,7 +76,13 @@ fn every_fact_cites_its_source_and_date() {
             .iter()
             .find(|fact| fact.name == "stars")
             .expect("stars row");
-        assert!(!stars.counts_toward_tier, "{slug}");
+        assert!(stars.counts_toward_tier, "{slug}");
+        let commits = entry
+            .signals
+            .iter()
+            .find(|fact| fact.name == "commits")
+            .expect("commits row");
+        assert!(!commits.counts_toward_tier, "{slug}");
     }
 }
 

@@ -4,17 +4,19 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use catalogue_core::{Catalogue, Categories, Diagnostics, Topics};
+use catalogue_signals::discover::Rules;
 use catalogue_signals::distribution::{DOCKER_INTERVAL, HOMEBREW_INTERVAL, REPOLOGY_INTERVAL};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
-use catalogue_signals::github::{GITHUB_INTERVAL, GithubError};
-use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
+use catalogue_signals::github::{GITHUB_INTERVAL, GithubError, RepoRef};
+use catalogue_signals::http::{IntervalPacer, ReqwestTransport, Transport};
 use catalogue_signals::seed::{Drafts, ExistingIndex, LeadInputs, LeadPacers, Mappings};
 use clap::Args;
 
 use super::build::build_seed;
 use super::error::SeedError;
-use super::leads::{build_lead_seed, read_leads};
+use super::leads::{LeadSeed, build_lead_seed, read_leads};
+use super::merge::build_merged_seed;
 use super::write::write_drafts;
 use crate::cache_dir::resolve_cache_dir;
 use crate::discover::{DiscoverError, crate_rules, load_catalogue};
@@ -27,9 +29,13 @@ const WINDOW_DAYS: u16 = 1;
 /// Fewest active dependents a crate has to draft when `--min-users` is unset.
 const DEFAULT_MIN_USERS: f64 = 2.0;
 
+/// The committed lead list, under the data directory.
+const LEAD_FILE: &str = "leads.txt";
+
 /// The arguments of `catalogue seed`.
 ///
-/// Reads the cached crates.io dump. Run `catalogue dump fetch` first.
+/// Reads the cached crates.io dump. Run `catalogue dump fetch` first. When the data directory
+/// holds `leads.txt`, the run also drafts from that list, which needs `GITHUB_TOKEN`.
 #[derive(Debug, Args)]
 pub struct SeedArgs {
     /// Directory that holds the data files.
@@ -40,13 +46,13 @@ pub struct SeedArgs {
     pub cache_dir: Option<PathBuf>,
     /// Fewest active dependents a crate has to draft. Default: 2.
     ///
-    /// With `--leads` it only labels a draft below it `below-floor`.
+    /// A lead draft only gets the label `below-floor` below it.
     #[arg(long, value_name = "N", value_parser = parse_min_users)]
     pub min_users: Option<f64>,
     /// Write `entries/<slug>.toml` for each draft. Without it the run prints only.
     #[arg(long)]
     pub write: bool,
-    /// Draft from this list of GitHub repos, one `owner/repo` per line.
+    /// Draft from this list of GitHub repos alone, one `owner/repo` per line.
     ///
     /// Reads the token from the `GITHUB_TOKEN` environment variable. The report of
     /// `catalogue discover github` also reads as a list. A lead bypasses the discovery rules and
@@ -54,6 +60,9 @@ pub struct SeedArgs {
     /// crate or only binary crates makes an app draft.
     #[arg(long, value_name = "FILE")]
     pub leads: Option<PathBuf>,
+    /// Leave `leads.txt` of the data directory out. The run then needs no token and no network.
+    #[arg(long, conflicts_with = "leads")]
+    pub no_leads: bool,
 }
 
 fn parse_min_users(text: &str) -> Result<f64, String> {
@@ -96,6 +105,10 @@ fn seed(args: &SeedArgs) -> Result<String, SeedError> {
         return seed_from_leads(args, &catalogue, file);
     }
     let rules = crate_rules(&catalogue, &args.data)?;
+    let lead_file = args.data.join(LEAD_FILE);
+    if !args.no_leads && lead_file.exists() {
+        return seed_merged(args, &catalogue, &rules, &lead_file);
+    }
     let min_users = args.min_users.unwrap_or(DEFAULT_MIN_USERS);
     let snapshot = cached_dump(args)?;
     let (topics, categories) = mapping_files(&catalogue);
@@ -116,6 +129,48 @@ fn seed_from_leads(
     args: &SeedArgs,
     catalogue: &Catalogue,
     file: &Path,
+) -> Result<String, SeedError> {
+    run_leads(
+        args,
+        catalogue,
+        file,
+        |inputs, leads, transport, token, pacers| {
+            build_lead_seed(inputs, leads, transport, token, pacers)
+        },
+    )
+}
+
+/// Drafts from the lead file and from discovery, and returns the merged report.
+///
+/// The lead run comes first, so a discovery draft never collides with a lead draft.
+fn seed_merged(
+    args: &SeedArgs,
+    catalogue: &Catalogue,
+    rules: &Rules,
+    file: &Path,
+) -> Result<String, SeedError> {
+    run_leads(
+        args,
+        catalogue,
+        file,
+        |inputs, leads, transport, token, pacers| {
+            build_merged_seed(inputs, rules, leads, transport, token, pacers)
+        },
+    )
+}
+
+/// Reads the lead file, the token and the dump, runs `build` and returns its report.
+fn run_leads(
+    args: &SeedArgs,
+    catalogue: &Catalogue,
+    file: &Path,
+    build: impl FnOnce(
+        &LeadInputs<'_>,
+        &[RepoRef],
+        &dyn Transport,
+        &str,
+        &mut LeadPacers<'_>,
+    ) -> Result<LeadSeed, SeedError>,
 ) -> Result<String, SeedError> {
     let leads = read_leads(file)?;
     let token = token_from_env()?;
@@ -143,7 +198,7 @@ fn seed_from_leads(
         docker: &mut docker,
         repology: &mut repology,
     };
-    let seeded = build_lead_seed(&inputs, &leads, &transport, &token, &mut pacers)?;
+    let seeded = build(&inputs, &leads, &transport, &token, &mut pacers)?;
     for warning in &seeded.warnings {
         eprintln!("warning: {warning}");
     }
@@ -202,6 +257,13 @@ mod tests {
         assert_eq!(args.min_users, None);
         assert!(!args.write);
         assert_eq!(args.leads, None);
+        assert!(!args.no_leads);
+    }
+
+    #[test]
+    fn no_leads_refuses_a_lead_file() {
+        assert!(args(&["--no-leads"]).expect("parses").no_leads);
+        assert!(args(&["--no-leads", "--leads", "leads.txt"]).is_err());
     }
 
     #[test]

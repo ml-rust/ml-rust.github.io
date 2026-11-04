@@ -49,6 +49,9 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Changed
 
+- Discovery matches description terms. `sort_only` lists words that admit no crate.
+- `data/leads.txt`: repositories that `catalogue seed` always drafts.
+- Featured gains a repository route: stars, forks and contributors together.
 - Lists lead with downloads and dependents, show versions, and order by downloads.
 - "Active users" now reads "active dependents".
 - Data file schema 2: adds install lines, docs links and plain tier reasons.

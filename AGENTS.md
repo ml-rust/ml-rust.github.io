@@ -13,7 +13,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks, the feed, `data/catalogue.json`, `data/compare/`, `llms.txt`, sitemap, robots and the page scripts. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off. A page stays complete without scripts: a script adds its own controls and NEVER sets `innerHTML`.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `deploy/`: systemd units and scripts for the bot VM. Secrets live only on the VM, under `/etc/catalogue-bot/`.
-- `data/`: entries, judgments, maintainers, topics, categories, backends, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
+- `data/`: entries, judgments, maintainers, topics, categories, backends, synonyms, discovery rules, seed leads, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.
 - `data/thresholds.toml` holds every tier number, and the movement limits that no tier reads. NEVER put either in code.
 - Discovery output is a list of leads. A lead becomes an entry only through a merged PR.
@@ -24,7 +24,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - No LLM decides a tier, writes a published claim, or merges anything. LLM output becomes comment text only.
 - Every published claim links its source.
 - A tier comes from published thresholds over raw signals. NEVER add a composite score.
-- Stars NEVER count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.
+- Stars alone NEVER qualify a project. GitHub hides stargazer lists, so stars cannot be screened for fakes. The repository route needs stars, forks and contributors together.
 - Each entry page shows every signal: raw value, source link, fetch date.
 - Entries with `org_affiliated = true` pass the same rules. An org member NEVER approves a judgment on them.
 - Human judgments enter only through an approved issue, then a bot PR into `data/judgments/`. NEVER hand-edit a tier.

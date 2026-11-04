@@ -55,10 +55,12 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
         ),
         "{alpha}"
     );
+    // Offline, the repository route is unknown, so the adoption gate stays unknown and never false.
     assert!(
-        alpha.contains("\n  featured: not featured: active_users 0 < 10 and new_adopters 0 < 5\n"),
+        alpha.contains("\n  featured: not featured: unknown stars, forks, contributors"),
         "{alpha}"
     );
+    assert!(!alpha.contains("active_users 0 < 10"), "{alpha}");
     assert!(alpha.contains("\ndemotion_pending: -\n"), "{alpha}");
     // An active entry lists no unknown rot fact: rot counts only when dormant.
     assert!(!alpha.contains("repo_gone"), "{alpha}");

@@ -13,7 +13,7 @@
 </div>
 <ul class="principles">
 <li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>Tiers come from fixed thresholds over raw signals. There is no composite score.</span></li>
-<li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</span></li>
+<li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The repository route also needs forks and contributors.</span></li>
 <li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</span></li>
 </ul>
 <p class="rules-file">Every threshold lives in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/thresholds.toml"><code>data/thresholds.toml</code><span class="icon" aria-hidden="true">{% include "icons/ui-external.svg" %}</span></a></p>

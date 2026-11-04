@@ -277,6 +277,7 @@ function resultRow(hit) {
     project,
     factCell("downloads", "Downloads", factSpan(found, "downloads")),
     factCell("dependents", "Dependents", factSpan(found, "dependents")),
+    factCell("stars", "Stars", factSpan(found, "stars")),
     releaseCell(found),
     factCell("gpu", "Runs on (GPU)", factSpan(found, "gpu")),
     factCell("native", "Native code", factSpan(found, "native")),

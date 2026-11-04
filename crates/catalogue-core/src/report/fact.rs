@@ -6,8 +6,15 @@ use url::Url;
 use crate::date::Date;
 use crate::date_text::plain_option;
 
-/// The id of the GitHub star count fact. Stars never count toward a tier.
+/// The id of the GitHub star count fact. Stars count only with forks and contributors, on the
+/// repository route. Stars alone never qualify a project.
 pub const STARS_SIGNAL: &str = "stars";
+
+/// The id of the GitHub fork count fact. A part of the repository route.
+pub const FORKS_SIGNAL: &str = "forks";
+
+/// The id of the total commits on the default branch. No tier rule reads it.
+pub const COMMITS_SIGNAL: &str = "commits";
 
 /// The id of the active dependents fact. A tier rule reads it.
 pub const ACTIVE_USERS_SIGNAL: &str = "active_users";
@@ -57,7 +64,7 @@ pub const PYTHON_SIGNAL: &str = "python_bindings";
 /// The id of the dependents fact.
 pub const DEPENDENTS_SIGNAL: &str = "dependents";
 
-/// The id of the contributors fact.
+/// The id of the contributors fact. A part of the repository route.
 pub const CONTRIBUTORS_SIGNAL: &str = "contributors";
 
 /// The text between two backend names in the [`RUNS_ON_SIGNAL`] value.
@@ -79,15 +86,14 @@ pub const NOT_MEASURED: &str = "Not measured";
 pub const NOT_APPLICABLE: &str = "Not applicable";
 
 /// The facts that help a person choose a project. No tier rule reads them.
-const NEVER_COUNT: [&str; 8] = [
-    STARS_SIGNAL,
+const NEVER_COUNT: [&str; 7] = [
+    COMMITS_SIGNAL,
     LICENSE_SIGNAL,
     RUNS_ON_SIGNAL,
     RUNS_ON_EVIDENCE_SIGNAL,
     NATIVE_CODE_SIGNAL,
     PYTHON_SIGNAL,
     DEPENDENTS_SIGNAL,
-    CONTRIBUTORS_SIGNAL,
 ];
 
 /// Whether the fact `name` stays out of every tier rule.
@@ -131,7 +137,7 @@ pub struct SignalFact {
     /// The date of the data behind the value. `None` when there is no value.
     #[serde(serialize_with = "plain_option")]
     pub fetched: Option<Date>,
-    /// Whether a tier rule reads the value. False for a display-only fact, such as stars.
+    /// Whether a tier rule reads the value. False for a display-only fact, such as commits.
     pub counts_toward_tier: bool,
 }
 
@@ -201,6 +207,15 @@ mod tests {
         assert_eq!(stale.shown_label(), "Active dependents");
         stale.name = NEW_ADOPTERS_SIGNAL.to_owned();
         assert_eq!(stale.shown_label(), "New dependents (365 days)");
+    }
+
+    #[test]
+    fn the_repository_route_facts_count_and_commits_do_not() {
+        for name in [STARS_SIGNAL, FORKS_SIGNAL, CONTRIBUTORS_SIGNAL] {
+            assert!(!never_counts(name), "{name}");
+        }
+        assert!(never_counts(COMMITS_SIGNAL));
+        assert!(never_counts(LICENSE_SIGNAL));
     }
 
     #[test]

@@ -24,14 +24,19 @@
         },
         {
           "rule": "featured",
-          "detail": "not featured: active_users 0 < 10 and new_adopters 0 < 5"
+          "detail": "not featured: unknown stars, forks, contributors, repo_link_verified"
         },
         {
           "rule": "listed",
           "detail": "listed: no archive, new or featured rule applies"
         }
       ],
-      "unknown": [],
+      "unknown": [
+        "stars",
+        "forks",
+        "contributors",
+        "repo_link_verified"
+      ],
       "notes": [],
       "signals": [
         {
@@ -347,6 +352,30 @@
           "value": null,
           "source": null,
           "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "forks",
+          "label": "GitHub forks",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "commits",
+          "label": "Commits on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
           "counts_toward_tier": false
         },
         {
@@ -414,14 +443,6 @@
           },
           "fetched": "2026-11-02",
           "counts_toward_tier": false
-        },
-        {
-          "name": "contributors",
-          "label": "Contributors with a GitHub account",
-          "value": null,
-          "source": null,
-          "fetched": null,
-          "counts_toward_tier": false
         }
       ]
     },
@@ -441,7 +462,7 @@
         },
         {
           "rule": "featured",
-          "detail": "not featured: unknown active_users, new_adopters, repo_link_verified, former_glory, docs_present, all_prerelease, last_release, last_human_commit"
+          "detail": "not featured: unknown active_users, new_adopters, stars, forks, contributors, repo_link_verified, former_glory, docs_present, all_prerelease, last_release, last_human_commit"
         },
         {
           "rule": "listed",
@@ -460,6 +481,9 @@
         "new_adopters",
         "first_release",
         "active_users",
+        "stars",
+        "forks",
+        "contributors",
         "repo_link_verified",
         "docs_present",
         "all_prerelease"
@@ -736,6 +760,30 @@
           "value": null,
           "source": null,
           "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "forks",
+          "label": "GitHub forks",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "commits",
+          "label": "Commits on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
           "counts_toward_tier": false
         },
         {
@@ -785,14 +833,6 @@
           "source": null,
           "fetched": null,
           "counts_toward_tier": false
-        },
-        {
-          "name": "contributors",
-          "label": "Contributors with a GitHub account",
-          "value": null,
-          "source": null,
-          "fetched": null,
-          "counts_toward_tier": false
         }
       ]
     },
@@ -812,7 +852,7 @@
         },
         {
           "rule": "featured",
-          "detail": "not featured: unknown binary_downloads_last3, homebrew_on_request_365d, repology_families, docker_pull_growth_90d, last_release, last_human_commit"
+          "detail": "not featured: unknown binary_downloads_last3, homebrew_on_request_365d, repology_families, docker_pull_growth_90d, stars, forks, contributors, last_release, last_human_commit"
         },
         {
           "rule": "listed",
@@ -831,7 +871,10 @@
         "binary_downloads_last3",
         "homebrew_on_request_365d",
         "repology_families",
-        "docker_pull_growth_90d"
+        "docker_pull_growth_90d",
+        "stars",
+        "forks",
+        "contributors"
       ],
       "notes": [],
       "signals": [
@@ -1097,6 +1140,30 @@
           "value": null,
           "source": null,
           "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "forks",
+          "label": "GitHub forks",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "commits",
+          "label": "Commits on the default branch",
+          "value": null,
+          "source": null,
+          "fetched": null,
           "counts_toward_tier": false
         },
         {
@@ -1142,14 +1209,6 @@
         {
           "name": "dependents",
           "label": "Crates that depend on a listed crate directly",
-          "value": null,
-          "source": null,
-          "fetched": null,
-          "counts_toward_tier": false
-        },
-        {
-          "name": "contributors",
-          "label": "Contributors with a GitHub account",
           "value": null,
           "source": null,
           "fetched": null,

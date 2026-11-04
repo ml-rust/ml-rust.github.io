@@ -1,8 +1,8 @@
 //! The choice facts of one entry as cited rows of the signal table.
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Date, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL,
-    PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL, SignalFact, SourceRef,
+    DEPENDENTS_SIGNAL, Date, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, PYTHON_SIGNAL,
+    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL, SignalFact, SourceRef,
 };
 use url::Url;
 
@@ -53,11 +53,6 @@ pub fn choice_signal_facts(facts: &ChoiceFacts, sources: &FactSources) -> Vec<Si
         ),
         _ => dump.clone(),
     };
-    let contributors = github_source(
-        "GitHub contributors",
-        sources.contributors_page.as_ref(),
-        sources.dates.contributors,
-    );
     vec![
         row(
             LICENSE_SIGNAL,
@@ -95,12 +90,6 @@ pub fn choice_signal_facts(facts: &ChoiceFacts, sources: &FactSources) -> Vec<Si
             facts.dependents.map(|count| count.to_string()),
             dump,
         ),
-        row(
-            CONTRIBUTORS_SIGNAL,
-            "Contributors with a GitHub account",
-            facts.contributors.map(|count| count.to_string()),
-            contributors,
-        ),
     ]
 }
 
@@ -122,7 +111,6 @@ mod tests {
         let repo = RepoRef::parse("ml-rust/tool").expect("repo");
         let dates = FetchDates {
             github: Some(day(1)),
-            contributors: Some(day(2)),
             ..FetchDates::default()
         };
         FactSources::new(&library(&["tool"]), Some(&repo), today(), dates)
@@ -138,7 +126,6 @@ mod tests {
             native_code: Some("No native code found".to_owned()),
             python: Some("No Python binding crate found".to_owned()),
             dependents: Some(4),
-            contributors: Some(38),
         }
     }
 
@@ -151,7 +138,7 @@ mod tests {
     #[test]
     fn every_measured_fact_is_cited_dated_and_never_counts() {
         let rows = choice_signal_facts(&full(LicenseOrigin::Dump), &sources());
-        assert_eq!(rows.len(), 7);
+        assert_eq!(rows.len(), 6);
         for fact in &rows {
             assert!(fact.value.is_some(), "{}", fact.name);
             assert!(fact.problems().is_empty(), "{:?}", fact.problems());
@@ -169,15 +156,6 @@ mod tests {
             Some("https://github.com/ml-rust/tool")
         );
         assert_eq!(license.fetched, Some(day(1)), "a fallback keeps its date");
-        let contributors = find(&rows, CONTRIBUTORS_SIGNAL);
-        assert_eq!(
-            contributors
-                .source
-                .as_ref()
-                .map(|source| source.url.as_str()),
-            Some("https://github.com/ml-rust/tool/graphs/contributors")
-        );
-        assert_eq!(contributors.fetched, Some(day(2)));
         let dependents = find(&rows, DEPENDENTS_SIGNAL);
         assert_eq!(
             dependents.source.as_ref().map(|source| source.url.as_str()),
@@ -197,7 +175,7 @@ mod tests {
     #[test]
     fn a_fact_with_no_value_has_no_source_and_no_date() {
         let rows = choice_signal_facts(&ChoiceFacts::default(), &sources());
-        assert_eq!(rows.len(), 7);
+        assert_eq!(rows.len(), 6);
         for fact in &rows {
             assert_eq!(fact.value, None, "{}", fact.name);
             assert_eq!(fact.source, None, "{}", fact.name);

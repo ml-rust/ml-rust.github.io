@@ -10,10 +10,13 @@
 # 2. When step 1 finds no topic, `terms` match the name and description of the primary crate.
 #    A term is whole lowercase words, separated by one space. `t sne` matches `t-SNE`.
 #
-# `catalogue seed --leads` bypasses the discovery rules, so these two steps alone remove non-ML repos.
+# Discovery reads these `keywords`, `categories` and `terms` too, so a match here also makes a crate a candidate.
+#
+# A lead bypasses the discovery rules, so these two steps alone remove non-ML repos.
 # Its step 2 also reads the repository name, description and GitHub topics.
 #
-# A term must name the job or a format. It never names one crate. A word with a second common
+# A term must name the job or a format. It never names one crate. It can name an upstream engine
+# that bindings and ports name in their descriptions: `whisper cpp`, `xgboost`. A word with a second common
 # meaning stays out: `inference` also means type inference, `embedding` also means embedding a
 # language, `audio` also covers plain file readers.
 #
@@ -31,7 +34,7 @@ terms = ["onnx", "stable diffusion", "gguf", "llama cpp", "model serving", "mode
 id = "llm-apps"
 name = "Build LLM apps and agents"
 keywords = ["llm", "agent", "agents", "ai-agent", "mcp", "openai", "anthropic", "gemini", "openrouter", "copilot", "rag", "langchain", "chatbot"]
-terms = ["llm", "llms", "large language model", "large language models", "openai", "anthropic", "gemini", "openrouter", "ollama", "chatgpt", "github copilot", "ai agent", "ai agents", "model context protocol"]
+terms = ["llm", "llms", "large language model", "large language models", "openai", "anthropic", "gemini", "openrouter", "ollama", "chatgpt", "github copilot", "ai agent", "ai agents", "model context protocol", "langchain"]
 
 [[topic]]
 id = "train-models"
@@ -43,13 +46,13 @@ terms = ["deep learning", "neural network", "neural networks", "reinforcement le
 id = "speech-audio"
 name = "Speech and audio"
 keywords = ["speech", "speech-recognition", "speech-to-text", "text-to-speech", "asr", "tts", "whisper", "audio-ml", "vad"]
-terms = ["speech", "transcribe", "transcription", "diarization", "spectrogram", "spectrograms", "voice activity", "audio denoising"]
+terms = ["speech", "transcribe", "transcription", "diarization", "spectrogram", "spectrograms", "voice activity", "audio denoising", "whisper cpp"]
 
 [[topic]]
 id = "text-search"
 name = "Text, embeddings and search"
 keywords = ["nlp", "tokenizer", "tokenizers", "embeddings", "embedding", "bm25", "chunking", "language-detection", "semantic-search"]
-terms = ["nlp", "natural language", "tokenizer", "tokenizers", "embeddings", "reranking", "vector database", "vector search", "semantic search", "full text search", "search engine", "word2vec", "word embeddings", "nearest neighbor", "nearest neighbors", "nearest neighbour"]
+terms = ["nlp", "natural language", "tokenizer", "tokenizers", "embeddings", "reranking", "vector database", "vector search", "vector search engine", "semantic search", "full text search", "search engine", "word2vec", "word embeddings", "nearest neighbor", "nearest neighbors", "nearest neighbour"]
 
 [[topic]]
 id = "vision-documents"
@@ -61,17 +64,17 @@ terms = ["computer vision", "ocr", "object detection", "image segmentation", "im
 id = "tabular-ml"
 name = "Tabular data and classic ML"
 keywords = ["clustering", "classification", "regression", "random-forest", "svm", "decision-tree", "gradient-boosting", "gbdt"]
-terms = ["random forest", "gradient boosting", "decision tree", "decision trees", "dimensionality reduction", "t sne", "clustering", "linear regression", "self organizing map", "genetic algorithm", "genetic algorithms", "evolutionary algorithms"]
+terms = ["random forest", "gradient boosting", "decision tree", "decision trees", "dimensionality reduction", "t sne", "clustering", "linear regression", "self organizing map", "genetic algorithm", "genetic algorithms", "evolutionary algorithms", "xgboost", "lightgbm", "catboost"]
 
 [[topic]]
 id = "math-gpu"
 name = "Tensors, math and GPU"
 keywords = ["tensor", "tensors", "ndarray", "linear-algebra", "gpu", "cuda", "fft"]
 categories = ["science::math"]
-terms = ["tensor", "tensors", "ndarray", "numpy", "linear algebra", "sparse matrix", "fft", "numerical optimization", "mathematical optimization", "statistical computation", "statistical distributions", "automatic differentiation"]
+terms = ["tensor", "tensors", "ndarray", "numpy", "linear algebra", "sparse matrix", "fft", "numerical optimization", "mathematical optimization", "statistical computation", "statistical distributions", "automatic differentiation", "differential equations", "scientific computing", "notebook environment", "reactive notebook", "reactive notebooks"]
 
 [[topic]]
 id = "data-formats"
 name = "Datasets and model formats"
 keywords = ["safetensors", "dataframe", "dataset", "datasets", "arrow", "hdf5", "npy", "data-format", "zarr"]
-terms = ["safetensors", "data format", "columnar", "parquet", "zarr", "hdf5", "netcdf", "dataframe", "dataframes", "dataset", "datasets", "data set"]
+terms = ["safetensors", "data format", "columnar", "parquet", "zarr", "hdf5", "netcdf", "dataframe", "dataframes", "dataset", "datasets", "data set", "hugging face", "huggingface"]

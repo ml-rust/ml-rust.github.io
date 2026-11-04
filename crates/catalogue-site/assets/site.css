@@ -911,6 +911,10 @@ h1 + .lede {
   width: 108px;
 }
 
+.col-stars {
+  width: 92px;
+}
+
 .col-release {
   width: 136px;
 }
@@ -1479,6 +1483,16 @@ h1 + .lede {
   border-top: 1px solid var(--border);
 }
 
+.stat-strip-repo {
+  margin-top: 0;
+  padding-top: var(--space-3);
+}
+
+.stat-strip-repo .stat-value {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
 .stat dt {
   color: var(--secondary);
   font-size: 0.875rem;
@@ -1857,6 +1871,15 @@ h1 + .lede {
 
 .rows-compact .col-release {
   width: 100px;
+}
+
+/* The compact table sits beside the action panel, where a Stars column leaves the project name
+   no room. The stat strip shows the stars of this project, and the stacked rows show them all. */
+@media (min-width: 901px) {
+  .rows-compact .col-stars,
+  .rows-compact .cell-stars {
+    display: none;
+  }
 }
 
 .rows-compact .col-gpu {
@@ -3006,6 +3029,37 @@ td.not-measured {
   }
 }
 
+/* Just above the stacked layout, the fixed columns narrow so the project name keeps its room. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .rows:not(.rows-compact) .col-downloads {
+    width: 96px;
+  }
+
+  .rows:not(.rows-compact) .col-dependents {
+    width: 96px;
+  }
+
+  .rows:not(.rows-compact) .col-stars {
+    width: 72px;
+  }
+
+  .rows:not(.rows-compact) .col-release {
+    width: 104px;
+  }
+
+  .rows:not(.rows-compact) .col-gpu {
+    width: 92px;
+  }
+
+  .rows:not(.rows-compact) .col-native {
+    width: 88px;
+  }
+
+  .rows:not(.rows-compact) .col-license {
+    width: 92px;
+  }
+}
+
 /* The table stacks into open rows, on the same markup. */
 @media (max-width: 900px) {
   :root {
@@ -3129,8 +3183,12 @@ td.not-measured {
 
   .cell-downloads,
   .cell-dependents,
-  .cell-release {
+  .cell-stars {
     grid-column: span 2;
+  }
+
+  .cell-release {
+    grid-column: span 3;
   }
 
   .cell-gpu,
@@ -3140,7 +3198,7 @@ td.not-measured {
   }
 
   .cell-license {
-    grid-column: 1 / -1;
+    grid-column: span 3;
     order: 2;
   }
 

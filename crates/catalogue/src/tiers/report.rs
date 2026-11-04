@@ -22,7 +22,7 @@ pub(crate) fn tier_report(
         .iter()
         .map(|assessment| {
             let mut facts =
-                signal_facts(&assessment.signals, &assessment.sources, assessment.stars);
+                signal_facts(&assessment.signals, &assessment.sources, assessment.commits);
             facts.extend(choice_signal_facts(&assessment.choice, &assessment.sources));
             let record = EntryReport::new(&assessment.verdict, assessment.notes.clone(), facts);
             (assessment.slug.clone(), record)

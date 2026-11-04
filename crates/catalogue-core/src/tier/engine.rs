@@ -133,6 +133,83 @@ mod tests {
         assert!(verdict.unknown.is_empty(), "{:?}", verdict.unknown);
     }
 
+    /// A library with too few dependents that passes the repository route.
+    fn route_library() -> Signals {
+        let t = thresholds().repo_route;
+        Signals {
+            active_users: Some(1.0),
+            new_adopters: Some(0.0),
+            stars: Some(t.min_stars),
+            forks: Some(t.min_forks),
+            contributors: Some(t.min_contributors),
+            ..featured_library()
+        }
+    }
+
+    #[test]
+    fn the_repository_route_yields_featured_with_every_signal_known() {
+        let verdict = run(&route_library(), &context());
+        assert_eq!(verdict.tier, Tier::Featured);
+        assert!(verdict.unknown.is_empty(), "{:?}", verdict.unknown);
+    }
+
+    #[test]
+    fn stars_alone_leave_a_library_listed() {
+        let signals = Signals {
+            forks: Some(0),
+            contributors: Some(0),
+            ..route_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Listed);
+    }
+
+    #[test]
+    fn a_failed_health_gate_blocks_the_repository_route() {
+        for signals in [
+            Signals {
+                unpatched_vulnerabilities: Some(vec!["RUSTSEC-2026-0004".to_owned()]),
+                ..route_library()
+            },
+            Signals {
+                former_glory: Some(0.1),
+                ..route_library()
+            },
+            Signals {
+                repo_link_verified: Some(false),
+                ..route_library()
+            },
+        ] {
+            let verdict = run(&signals, &context());
+            assert_eq!(verdict.tier, Tier::Listed, "{signals:?}");
+        }
+    }
+
+    #[test]
+    fn new_and_archived_take_precedence_over_the_repository_route() {
+        let young = Signals {
+            first_release: Some(days_ago(30)),
+            ..route_library()
+        };
+        assert_eq!(run(&young, &context()).tier, Tier::New);
+        let archived = Signals {
+            repo_archived: Some(true),
+            ..route_library()
+        };
+        assert_eq!(run(&archived, &context()).tier, Tier::Archived);
+    }
+
+    #[test]
+    fn an_unknown_route_part_keeps_a_library_listed_and_names_it() {
+        let signals = Signals {
+            forks: None,
+            ..route_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Listed);
+        assert_eq!(verdict.unknown, ["forks"]);
+    }
+
     #[test]
     fn instant_archive_ignores_statements_and_bypasses_the_guard() {
         let signals = Signals {

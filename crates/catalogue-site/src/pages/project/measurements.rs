@@ -5,8 +5,11 @@ use catalogue_core::{EntryReport, NOT_MEASURED, TierReport};
 use super::tier::SignalRow;
 use crate::pages::shared::{ago_text, grouped};
 
+/// What the repository group says after its numbers.
+const STARS_ALONE: &str = "Stars alone never qualify a project.";
+
 /// The groups, in page order, and the signals each one holds.
-const GROUPS: [(&str, &str, &[&str]); 5] = [
+const GROUPS: [(&str, &str, &[&str]); 6] = [
     (
         "adoption",
         "Adoption",
@@ -64,17 +67,20 @@ const GROUPS: [(&str, &str, &[&str]); 5] = [
         ],
     ),
     (
+        "repository",
+        "Repository",
+        &["stars", "forks", "contributors", "commits"],
+    ),
+    (
         "choice-facts",
         "Facts that never count",
         &[
-            "stars",
             "license",
             "runs_on",
             "runs_on_evidence",
             "native_code",
             "python_bindings",
             "dependents",
-            "contributors",
         ],
     ),
 ];
@@ -168,12 +174,14 @@ fn summary(id: &str, report: &TierReport, record: &EntryReport) -> String {
         "security" => value("unpatched_vulnerabilities")
             .map(|found| format!("Unpatched vulnerabilities: {found}")),
         "distribution" => distribution(record),
-        "choice-facts" => value("stars").map(|stars| {
-            format!(
-                "{} GitHub stars. Stars never count toward a tier.",
-                grouped(stars)
-            )
-        }),
+        "repository" => {
+            let parts: Vec<String> = ["stars", "forks", "contributors", "commits"]
+                .into_iter()
+                .filter_map(|name| whole(name).map(|count| format!("{} {name}", grouped(&count))))
+                .collect();
+            (!parts.is_empty()).then(|| format!("{}. {STARS_ALONE}", parts.join(", ")))
+        }
+        "choice-facts" => value("license").map(|license| format!("License: {license}")),
         _ => None,
     };
     text.unwrap_or_else(|| NOT_MEASURED.to_owned())
@@ -292,6 +300,7 @@ mod tests {
             fact("release_count", Some("38")),
             fact("downloads_per_month", Some("1840052")),
             fact("stars", Some("1200")),
+            fact("forks", Some("80")),
             fact("repo_gone", None),
         ]);
         let groups = signal_groups(&report(), &record);
@@ -303,11 +312,32 @@ mod tests {
                 "Latest human commit: 3 days ago",
                 "Unpatched vulnerabilities: RUSTSEC-1",
                 "38 releases, 1,840,052 downloads over 30 days",
-                "1,200 GitHub stars. Stars never count toward a tier.",
+                "1,200 stars, 80 forks. Stars alone never qualify a project.",
             ]
         );
         assert_eq!(groups[1].missing.as_deref(), Some("1 not measured"));
         assert_eq!(groups[0].missing, None);
+    }
+
+    #[test]
+    fn the_repository_group_holds_its_four_facts_and_never_counts_holds_none() {
+        let record = record(vec![
+            fact("stars", Some("1200")),
+            fact("forks", Some("80")),
+            fact("contributors", Some("38")),
+            fact("commits", Some("4200")),
+            fact("license", Some("MIT")),
+        ]);
+        let groups = signal_groups(&report(), &record);
+        assert_eq!(groups[0].id, "repository");
+        assert_eq!(groups[0].rows.len(), 4);
+        assert_eq!(
+            groups[0].summary,
+            "1,200 stars, 80 forks, 38 contributors, 4,200 commits. Stars alone never qualify a project."
+        );
+        assert_eq!(groups[1].id, "choice-facts");
+        assert_eq!(groups[1].summary, "License: MIT");
+        assert_eq!(groups[1].rows.len(), 1);
     }
 
     #[test]

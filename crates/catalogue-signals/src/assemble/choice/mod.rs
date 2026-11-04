@@ -1,5 +1,5 @@
 //! The facts a person reads to choose a project: license, backends, native code, Python
-//! bindings, dependents and contributors.
+//! bindings and dependents.
 //!
 //! Every value comes from measured data. No tier rule reads any of them. A negative value states
 //! only what its check found, and each check module lists what it cannot see.

@@ -140,6 +140,7 @@ mod tests {
                 Reason::Core,
                 Reason::Category("science::ml".to_owned()),
                 Reason::Keyword("llm".to_owned()),
+                Reason::Term("llama cpp".to_owned()),
                 Reason::DependsOn("burn".to_owned()),
             ],
             false,
@@ -162,7 +163,7 @@ mod tests {
         assert_eq!(
             render(&mut rows),
             "candidates: 2\n\
-             plain\t3.00\t0.46\tcore,category:science::ml,keyword:llm,depends-on:burn\tlisted:plain-entry\n\
+             plain\t3.00\t0.46\tcore,category:science::ml,keyword:llm,term:llama cpp,depends-on:burn\tlisted:plain-entry\n\
              old\t0.00\t0.00\tkeyword:llm,deprecated"
         );
     }
@@ -235,6 +236,7 @@ mod tests {
             categories: vec!["science".to_owned()],
             keywords: vec!["llm".to_owned()],
             core_crates: vec!["ghost".to_owned()],
+            terms: Vec::new(),
         };
         let listed: HashMap<String, &str> = [("blazr-core".to_owned(), "blazr")].into();
         let found = build_report(&snapshot(), &rules, &listed);

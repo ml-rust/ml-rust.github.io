@@ -52,8 +52,8 @@ pub use sandbox::{
     SandboxCommand, SandboxCommandError, SandboxList, read_build_checks, run_sandbox, sandbox_list,
 };
 pub use seed::{
-    LeadSeed, Seed, SeedArgs, SeedError, build_lead_seed, build_seed, parse_leads, run_seed,
-    write_drafts,
+    LeadSeed, Seed, SeedArgs, SeedError, build_lead_seed, build_merged_seed, build_seed,
+    parse_leads, run_seed, write_drafts,
 };
 pub use tiers::{Network, TiersArgs, TiersError, TiersRun, run_tiers, tiers_report};
 pub use token::NoToken;

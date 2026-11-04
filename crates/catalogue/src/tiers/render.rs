@@ -92,7 +92,7 @@ mod tests {
             notes: notes.iter().map(|note| (*note).to_owned()).collect(),
             signals: Signals::unknown(EntryKind::Library),
             sources,
-            stars: None,
+            commits: None,
             choice: ChoiceFacts::default(),
         }
     }

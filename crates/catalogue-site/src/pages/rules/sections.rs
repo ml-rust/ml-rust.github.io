@@ -4,7 +4,7 @@ use catalogue_core::Thresholds;
 
 use super::rows::{
     ThresholdRow, app_rows, dead_rows, fallback_rows, finished_rows, interval_rows, library_rows,
-    movement_rows, new_rows, rot_rows,
+    movement_rows, new_rows, repo_route_rows, rot_rows,
 };
 
 /// One rule with its text and thresholds.
@@ -78,7 +78,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     items: &[
                         Item {
                             label: "",
-                            text: "Active dependents or new dependents (365 days) reach their limit.",
+                            text: "Adoption passes on one of three routes: active dependents reach their limit, new dependents (365 days) reach their limit, or the repository route passes.",
                         },
                         Item {
                             label: "",
@@ -113,6 +113,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     }),
                     lead: &[
                         "An app is Featured when it is active and enough of these use signals pass.",
+                        "An app has no dependents, so the repository route counts as one use signal.",
                     ],
                     items: &[
                         Item {
@@ -131,12 +132,52 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                             label: "",
                             text: "Docker pull growth over 90 days.",
                         },
+                        Item {
+                            label: "",
+                            text: "The repository route.",
+                        },
                     ],
                     notes: &[
                         "An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.",
                         "Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.",
                     ],
                     rows: rows(app_rows),
+                },
+                RuleSection {
+                    id: "repository-route",
+                    title: "Repository route",
+                    tier: Some(TierWord {
+                        name: "Featured",
+                        class: "tier-featured",
+                    }),
+                    lead: &[
+                        "The repository route passes when stars, forks and contributors each reach their limit on the same check.",
+                        "Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.",
+                        "A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.",
+                        "This is a gate of separate limits. No page adds them into a score.",
+                    ],
+                    items: &[
+                        Item {
+                            label: "Stars",
+                            text: "The star count GitHub states. Raw key stars.",
+                        },
+                        Item {
+                            label: "Forks",
+                            text: "The fork count GitHub states. Raw key forks. A snapshot from before the check read forks reads as not measured.",
+                        },
+                        Item {
+                            label: "Contributors",
+                            text: "The contributors with a GitHub account, from one GitHub request. Raw key contributors. A list GitHub calls too large reads as not measured.",
+                        },
+                        Item {
+                            label: "Commits",
+                            text: "The total commits on the default branch. Raw key commits. Each entry page shows it, and no tier rule reads it.",
+                        },
+                    ],
+                    notes: &[
+                        "A value below its limit fails the route. Otherwise a value that is not measured leaves the route unknown, and an unknown route does not pass.",
+                    ],
+                    rows: rows(repo_route_rows),
                 },
                 RuleSection {
                     id: "new",
@@ -450,10 +491,6 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                             label: "Dependents",
                             text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.",
                         },
-                        Item {
-                            label: "Contributors",
-                            text: "The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.",
-                        },
                     ],
                     notes: &["An unknown value reads as not measured."],
                     rows: Vec::new(),
@@ -568,6 +605,46 @@ mod tests {
             assert!(section.tier.is_some(), "{}", section.id);
             assert!(!section.lead.is_empty(), "{}", section.id);
         }
+    }
+
+    #[test]
+    fn the_repository_route_states_the_rule_and_its_limits() {
+        let t = thresholds(None);
+        let all = sections(Some(&t));
+        let route = all
+            .iter()
+            .find(|section| section.id == "repository-route")
+            .expect("the route");
+        let lead = route.lead.join(" ");
+        assert!(
+            lead.contains("Stars alone never qualify a project."),
+            "{lead}"
+        );
+        assert!(lead.contains("GitHub hides who starred"), "{lead}");
+        assert!(lead.contains("forks and contributors"), "{lead}");
+        let keys: Vec<&str> = route.rows.iter().map(|row| row.key).collect();
+        assert_eq!(
+            keys,
+            [
+                "repo_route.min_stars",
+                "repo_route.min_forks",
+                "repo_route.min_contributors"
+            ]
+        );
+        let library = all
+            .iter()
+            .find(|section| section.id == "featured-library")
+            .expect("the library rule");
+        assert!(library.items[0].text.contains("repository route"));
+        let app = all
+            .iter()
+            .find(|section| section.id == "featured-app")
+            .expect("the app rule");
+        assert!(
+            app.items
+                .iter()
+                .any(|item| item.text == "The repository route.")
+        );
     }
 
     #[test]

@@ -22,8 +22,12 @@
 #
 # No match leaves `category` unset and never skips the draft. An install channel changes nothing.
 #
+# Discovery reads these `keywords`, `categories` and `terms` too, so a match here also makes a crate a
+# candidate. A candidate still needs a topic to draft.
+#
 # The term rules of `topics.toml` apply: whole lowercase words, separated by one space. A term names
-# what the project is or a format. It never names one crate. A word with a second common meaning
+# what the project is or a format. It never names one crate. It can name an upstream engine that
+# bindings and ports name in their descriptions: `whisper cpp`, `xgboost`. A word with a second common meaning
 # stays out: `inference` also means type inference. The `machine-learning` and `ml` keywords, the
 # `science::ml` category, and `machine learning` or `ai` alone map to no category.
 # A term maps to one category.
@@ -33,7 +37,7 @@ id = "speech-audio"
 name = "Speech and audio"
 blurb = "Libraries and programs that recognize speech, synthesize it, detect voice or clean up audio."
 keywords = ["speech", "speech-recognition", "speech-to-text", "text-to-speech", "speech-synthesis", "asr", "tts", "whisper", "audio-ml", "vad", "voice-activity-detection", "audio-denoising"]
-terms = ["speech recognition", "automatic speech recognition", "speech synthesis", "speech to text", "text to speech", "speech enhancement", "speaker diarization", "voice activity", "audio denoising", "transcription", "speech"]
+terms = ["speech recognition", "automatic speech recognition", "speech synthesis", "speech to text", "text to speech", "speech enhancement", "speaker diarization", "voice activity", "audio denoising", "transcription", "speech", "whisper cpp"]
 
 [[category]]
 id = "computer-vision"
@@ -62,14 +66,14 @@ id = "agent-frameworks"
 name = "Agents and LLM apps"
 blurb = "Frameworks and tools for building LLM apps, agents and retrieval pipelines."
 keywords = ["agent", "agents", "ai-agent", "ai-agents", "agent-protocol", "mcp", "model-context-protocol", "rag", "langchain", "chatbot", "coding-agent", "coding-assistant"]
-terms = ["agent framework", "agent frameworks", "ai agent", "ai agents", "llm agent", "llm agents", "llm app", "llm apps", "llm application", "llm applications", "retrieval augmented generation", "rag", "mcp", "mcp server", "mcp servers", "model context protocol", "agent protocol", "agent protocols", "coding agent", "coding agents", "coding assistant", "coding assistants"]
+terms = ["agent framework", "agent frameworks", "ai agent", "ai agents", "llm agent", "llm agents", "llm app", "llm apps", "llm application", "llm applications", "retrieval augmented generation", "rag", "mcp", "mcp server", "mcp servers", "model context protocol", "agent protocol", "agent protocols", "coding agent", "coding agents", "coding assistant", "coding assistants", "langchain"]
 
 [[category]]
 id = "vector-databases"
 name = "Vector databases"
 blurb = "Databases and indexes that store vectors and find the ones nearest to a query."
 keywords = ["vector-database", "vector-db", "vectordb", "vector-search", "vector-store", "nearest-neighbor", "nearest-neighbors", "nearest-neighbour", "approximate-nearest-neighbor", "hnsw"]
-terms = ["vector database", "vector databases", "vector store", "vector stores", "vector search", "vector similarity search", "nearest neighbor", "nearest neighbors", "nearest neighbour", "approximate nearest neighbor", "hnsw"]
+terms = ["vector database", "vector databases", "vector store", "vector stores", "vector search", "vector similarity search", "vector search engine", "nearest neighbor", "nearest neighbors", "nearest neighbour", "approximate nearest neighbor", "hnsw"]
 
 [[category]]
 id = "embeddings"
@@ -111,7 +115,7 @@ id = "classical-ml"
 name = "Classical ML"
 blurb = "Libraries of learning algorithms such as clustering, decision trees, boosting, regression and reinforcement learning."
 keywords = ["clustering", "k-means", "svm", "random-forest", "gradient-boosting", "gbdt", "decision-tree", "linear-regression", "logistic-regression", "genetic-algorithm", "genetic-algorithms", "evolutionary-algorithm", "reinforcement-learning"]
-terms = ["clustering algorithms", "cluster analysis", "k means", "support vector machine", "support vector machines", "random forest", "random forests", "gradient boosting", "decision tree", "decision trees", "linear regression", "logistic regression", "genetic algorithm", "genetic algorithms", "evolutionary algorithms", "reinforcement learning", "dimensionality reduction", "clustering", "t sne", "gradient boosted", "self organizing map"]
+terms = ["clustering algorithms", "cluster analysis", "k means", "support vector machine", "support vector machines", "random forest", "random forests", "gradient boosting", "decision tree", "decision trees", "linear regression", "logistic regression", "genetic algorithm", "genetic algorithms", "evolutionary algorithms", "reinforcement learning", "dimensionality reduction", "clustering", "t sne", "gradient boosted", "self organizing map", "xgboost", "lightgbm", "catboost"]
 
 [[category]]
 id = "ml-frameworks"
@@ -126,11 +130,11 @@ name = "Tensors and math"
 blurb = "Libraries for tensors, arrays, linear algebra, statistics, optimization and GPU compute."
 keywords = ["ndarray", "multidimensional-array", "linear-algebra", "matrix", "matrices", "sparse-matrix", "statistics", "numerical", "numerics", "scientific-computing", "fft", "numerical-optimization", "mathematical-optimization", "gpgpu", "gpu-computing"]
 categories = ["mathematics"]
-terms = ["tensor library", "tensor libraries", "tensor computation", "tensor operations", "tensor algebra", "n dimensional array", "n dimensional arrays", "multidimensional array", "multidimensional arrays", "linear algebra", "sparse matrix", "sparse matrices", "numerical computing", "numerical optimization", "mathematical optimization", "statistical computing", "statistical distributions", "numpy", "gpu compute", "gpu computing"]
+terms = ["tensor library", "tensor libraries", "tensor computation", "tensor operations", "tensor algebra", "n dimensional array", "n dimensional arrays", "multidimensional array", "multidimensional arrays", "linear algebra", "sparse matrix", "sparse matrices", "numerical computing", "numerical optimization", "mathematical optimization", "statistical computing", "statistical distributions", "numpy", "gpu compute", "gpu computing", "differential equations", "scientific computing"]
 
 [[category]]
 id = "developer-tools"
 name = "Developer tools"
 blurb = "Tools that help people build, test and manage machine learning projects."
 keywords = ["mlops", "experiment-tracking", "model-registry", "model-conversion", "model-monitoring", "hyperparameter-tuning", "hyperparameter-optimization"]
-terms = ["mlops", "experiment tracking", "model registry", "model management", "model monitoring", "model evaluation", "model conversion", "model converter", "hyperparameter tuning", "hyperparameter search", "hyperparameter optimization"]
+terms = ["mlops", "experiment tracking", "model registry", "model management", "model monitoring", "model evaluation", "model conversion", "model converter", "hyperparameter tuning", "hyperparameter search", "hyperparameter optimization", "hugging face", "huggingface", "notebook environment", "reactive notebook", "reactive notebooks"]

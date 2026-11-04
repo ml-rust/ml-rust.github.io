@@ -1,0 +1,35 @@
+# Repositories that `catalogue seed` drafts from, one `owner/repo` per line.
+#
+# A lead bypasses the discovery rules and the active-user floor. It still needs a topic, and a
+# human reviews every draft. An entry that holds the repository reports the lead as listed.
+# A repository here belongs to the Rust ML ecosystem. A tool with no ML use stays out.
+
+ml-rust/axp
+ml-rust/blazr
+ml-rust/boostr
+ml-rust/compressr
+ml-rust/nexar
+ml-rust/numr
+ml-rust/oxidizr
+ml-rust/regexr
+ml-rust/solvr
+ml-rust/splintr
+ml-rust/treeboost
+ml-rust/venus
+ml-rust/vidr
+ml-rust/voxr
+
+# General math that machine learning depends on, which `sort_only` keeps out of discovery.
+sarah-quinones/faer-rs
+dimforge/nalgebra
+statrs-dev/statrs
+argmin-rs/argmin
+ejmahler/RustFFT
+
+# Known machine learning projects with too few active dependents to pass the floor.
+Abraxas-365/langchain-rust
+Bear-03/vosk-rs
+davechallis/rust-xgboost
+meilisearch/arroy
+sobelio/llm-chain
+webonnx/wonnx

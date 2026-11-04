@@ -6,7 +6,7 @@ A catalogue of Rust ML libraries on crates.io and Rust ML apps outside it. Each 
 
 - A tier comes from fixed, published rules applied to raw signals.
 - No LLM decides a tier, writes a published claim, or merges anything.
-- GitHub stars never count toward a tier.
+- GitHub stars alone never qualify a project. GitHub hides who starred, so the repository route also needs forks and contributors.
 - Each entry page lists every signal with its raw value, source link, and fetch date.
 - Apps outside crates.io are covered.
 - Search runs in the browser.
@@ -19,8 +19,10 @@ The tier rules run in a fixed order on every check. Each entry gets one tier per
 | --- | --- |
 | Archived | The author or RustSec ends the project. Any one of these archives it: an archived repository, an `unmaintained` advisory, a deprecation notice, every version yanked, or a deleted crate. A dead entry also archives after enough consecutive dead checks. |
 | New | The first release is recent. New takes precedence over Featured. |
-| Featured | A library passes its adoption, health, and docs gates. An app passes enough of its four use signals: binary downloads, Homebrew installs, Repology packaging, and Docker pull growth. The entry must be active or finished. A library, or an app that ships a crate, needs at least one version that is neither a prerelease nor `0.0.x`. |
+| Featured | A library passes its adoption, health, and docs gates. Adoption means enough active dependents, enough new dependents, or the repository route. An app passes enough of its five use signals: binary downloads, Homebrew installs, Repology packaging, Docker pull growth, and the repository route. The entry must be active or finished. A library, or an app that ships a crate, needs at least one version that is neither a prerelease nor `0.0.x`. |
 | Listed | No other tier applies. |
+
+The repository route needs stars, forks, and contributors to each reach their limit on the same check. It is a gate of separate limits, never a score.
 
 Health covers unpatched vulnerabilities, a repository link that the crate package confirms, and the share of peak active dependents that stay active.
 

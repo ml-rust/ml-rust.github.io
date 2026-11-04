@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.f94d9d0e.css">
+<link rel="stylesheet" href="/assets/site.32319f8a.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -53,7 +53,7 @@
 </div>
 <ul class="principles">
 <li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>Tiers come from fixed thresholds over raw signals. There is no composite score.</span></li>
-<li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</span></li>
+<li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The repository route also needs forks and contributors.</span></li>
 <li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</span></li>
 </ul>
 <p class="rules-file">Every threshold lives in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/thresholds.toml"><code>data/thresholds.toml</code><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></p>
@@ -66,6 +66,7 @@
 <ul>
 <li><a href="#featured-library">Featured library</a></li>
 <li><a href="#featured-app">Featured app</a></li>
+<li><a href="#repository-route">Repository route</a></li>
 <li><a href="#new">New</a></li>
 <li><a href="#listed">Listed</a></li>
 <li><a href="#archived">Archived</a></li>
@@ -118,7 +119,7 @@
 <p>A library is Featured when it is active and passes every gate.</p>
 <p>Active means not dormant, or finished.</p>
 <ul>
-<li>Active dependents or new dependents (365 days) reach their limit.</li>
+<li>Adoption passes on one of three routes: active dependents reach their limit, new dependents (365 days) reach their limit, or the repository route passes.</li>
 <li>No vulnerability advisory is unpatched past the grace window.</li>
 <li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
 <li>Former glory reaches its floor.</li>
@@ -145,11 +146,13 @@
 <div class="rule-text">
 <h3 id="featured-app">Featured app <span class="tier-word tier-featured">Featured</span></h3>
 <p>An app is Featured when it is active and enough of these use signals pass.</p>
+<p>An app has no dependents, so the repository route counts as one use signal.</p>
 <ul>
 <li>Binary downloads over the last three releases.</li>
 <li>Homebrew installs on request over 365 days.</li>
 <li>Repology repository families that package the app.</li>
 <li>Docker pull growth over 90 days.</li>
+<li>The repository route.</li>
 </ul>
 <p class="why-note">An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.</p>
 <p class="why-note">Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
@@ -161,11 +164,40 @@
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
 <tbody>
-<tr><th scope="row"><code>app_featured.min_signals</code></th><td class="number">2</td><td>How many of the four use signals must pass.</td></tr>
+<tr><th scope="row"><code>app_featured.min_signals</code></th><td class="number">2</td><td>How many of the five use signals must pass. The repository route is one of them.</td></tr>
 <tr><th scope="row"><code>app_featured.binary_downloads</code></th><td class="number">884</td><td>Fewest binary downloads over the last three releases.</td></tr>
 <tr><th scope="row"><code>app_featured.homebrew_on_request_365d</code></th><td class="number">500</td><td>Fewest Homebrew installs on request over 365 days.</td></tr>
 <tr><th scope="row"><code>app_featured.repology_families</code></th><td class="number">2</td><td>Fewest Repology repository families that package the app.</td></tr>
 <tr><th scope="row"><code>app_featured.docker_pull_growth_90d</code></th><td class="number">10000</td><td>Smallest Docker pull growth over 90 days.</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="repository-route">
+<div class="rule-text">
+<h3 id="repository-route">Repository route <span class="tier-word tier-featured">Featured</span></h3>
+<p>The repository route passes when stars, forks and contributors each reach their limit on the same check.</p>
+<p>Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.</p>
+<p>A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.</p>
+<p>This is a gate of separate limits. No page adds them into a score.</p>
+<ul>
+<li><strong>Stars</strong> The star count GitHub states. Raw key stars.</li>
+<li><strong>Forks</strong> The fork count GitHub states. Raw key forks. A snapshot from before the check read forks reads as not measured.</li>
+<li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. Raw key contributors. A list GitHub calls too large reads as not measured.</li>
+<li><strong>Commits</strong> The total commits on the default branch. Raw key commits. Each entry page shows it, and no tier rule reads it.</li>
+</ul>
+<p class="why-note">A value below its limit fails the route. Otherwise a value that is not measured leaves the route unknown, and an unknown route does not pass.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Repository route</caption>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>repo_route.min_stars</code></th><td class="number">2000</td><td>Fewest GitHub stars. Never enough alone.</td></tr>
+<tr><th scope="row"><code>repo_route.min_forks</code></th><td class="number">200</td><td>Fewest GitHub forks.</td></tr>
+<tr><th scope="row"><code>repo_route.min_contributors</code></th><td class="number">25</td><td>Fewest contributors with a GitHub account.</td></tr>
 </tbody>
 </table>
 </div>
@@ -410,7 +442,6 @@
 <li><strong>Native code</strong> No native code found, or what the project binds. The check follows the normal dependencies of each listed crate, and theirs in turn. A hit is a crate named -sys or a crate with a links key. Crates that bind no foreign library never count. An optional dependency of a listed crate names the feature that enables it. A build dependency such as cc or cmake shows that the build uses a native toolchain. C built with no links key, no -sys crate and no such build dependency stays unseen. So does native code kept outside crates.io.</li>
 <li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it. No Python binding crate found means no such crate shows on crates.io. Bindings kept outside crates.io stay unseen.</li>
 <li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.</li>
-<li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
 </ul>
 <p class="why-note">An unknown value reads as not measured.</p>
 </div>

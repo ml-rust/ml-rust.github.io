@@ -53,6 +53,7 @@ pub struct LeadDrafts {
     pub listed: Vec<(String, String)>,
     /// The detail of each draft.
     pub details: BTreeMap<Slug, DraftDetail>,
-    /// Channel lookups that failed. Each channel stays empty.
+    /// Channel lookups that failed, each with an empty channel, and language list fetches that
+    /// failed, each reading as no Rust.
     pub warnings: Vec<String>,
 }

@@ -68,6 +68,7 @@ impl RepoBody {
                     "isFork": true,
                     "pushedAt": "2026-10-26T17:14:42Z",
                     "stargazerCount": 64548,
+                    "forkCount": 8123,
                     "defaultBranchRef": {
                         "name": "main",
                         "target": {

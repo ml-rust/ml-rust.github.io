@@ -14,6 +14,9 @@ pub struct Rules {
     /// Names resolve the way crates.io resolves them: ASCII case and `-`
     /// against `_` do not matter.
     pub core_crates: Vec<String>,
+    /// Terms: lowercase words separated by one space. A crate matches when its name or
+    /// description holds a term as whole words in order.
+    pub terms: Vec<String>,
 }
 
 /// Why a crate is a candidate.
@@ -27,17 +30,20 @@ pub enum Reason {
     Category(String),
     /// The crate lists this lowercase keyword, which equals a rule keyword.
     Keyword(String),
+    /// The crate's name or description holds this term.
+    Term(String),
     /// The crate's default version depends on this core crate, as written in the rules.
     DependsOn(String),
 }
 
 impl fmt::Display for Reason {
-    /// Writes `core`, `category:<slug>`, `keyword:<kw>` or `depends-on:<crate>`.
+    /// Writes `core`, `category:<slug>`, `keyword:<kw>`, `term:<term>` or `depends-on:<crate>`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Core => f.write_str("core"),
             Self::Category(slug) => write!(f, "category:{slug}"),
             Self::Keyword(keyword) => write!(f, "keyword:{keyword}"),
+            Self::Term(term) => write!(f, "term:{term}"),
             Self::DependsOn(name) => write!(f, "depends-on:{name}"),
         }
     }

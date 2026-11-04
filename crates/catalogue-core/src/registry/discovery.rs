@@ -22,6 +22,9 @@ pub struct Discovery {
     /// crates.io keywords, lowercase and trimmed.
     #[serde(default)]
     pub keywords: Vec<String>,
+    /// Words of the topic and category files that sort a project and never admit one.
+    #[serde(default)]
+    pub sort_only: Vec<String>,
     /// Crates whose dependents become candidates.
     #[serde(default)]
     pub core_crates: Vec<CrateName>,

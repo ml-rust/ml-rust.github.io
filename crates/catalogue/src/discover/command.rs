@@ -22,7 +22,8 @@ use crate::token::NoToken;
 /// The `catalogue discover` actions.
 #[derive(Debug, Subcommand)]
 pub enum DiscoverCommand {
-    /// List crates.io crates that match `discovery.toml`, with their adoption signals.
+    /// List crates.io crates that match `discovery.toml` or the vocabulary of `topics.toml` and
+    /// `categories.toml`, with their adoption signals.
     Crates {
         /// Directory that holds the data files.
         #[arg(long, value_name = "DIR", default_value = "data")]
@@ -142,7 +143,8 @@ pub(crate) fn load_catalogue(data: &Path) -> Result<Catalogue, DiscoverError> {
     data_dir::load_catalogue(data)?.map_err(DiscoverError::Invalid)
 }
 
-/// The crates.io candidate rules of `discovery.toml` in `catalogue`.
+/// The crates.io candidate rules of `catalogue`: `discovery.toml`, then the `keywords`,
+/// `categories` and `terms` of `topics.toml` and `categories.toml`, sorted and without repeats.
 ///
 /// `data` only names the rules file in the error.
 pub(crate) fn crate_rules(catalogue: &Catalogue, data: &Path) -> Result<Rules, DiscoverError> {
@@ -151,14 +153,39 @@ pub(crate) fn crate_rules(catalogue: &Catalogue, data: &Path) -> Result<Rules, D
             path: data.join("discovery.toml"),
         });
     };
+    let mut categories = discovery.categories.clone();
+    let mut keywords = discovery.keywords.clone();
+    let mut terms = Vec::new();
+    for topic in catalogue.topics() {
+        categories.extend_from_slice(&topic.categories);
+        keywords.extend_from_slice(&topic.keywords);
+        terms.extend_from_slice(&topic.terms);
+    }
+    for category in catalogue.categories() {
+        categories.extend_from_slice(&category.categories);
+        keywords.extend_from_slice(&category.keywords);
+        terms.extend_from_slice(&category.terms);
+    }
+    let own: Vec<String> = discovery
+        .keywords
+        .iter()
+        .chain(&discovery.categories)
+        .cloned()
+        .collect();
+    for list in [&mut categories, &mut keywords, &mut terms] {
+        list.retain(|word| own.contains(word) || !discovery.sort_only.contains(word));
+        list.sort_unstable();
+        list.dedup();
+    }
     Ok(Rules {
-        categories: discovery.categories.clone(),
-        keywords: discovery.keywords.clone(),
+        categories,
+        keywords,
         core_crates: discovery
             .core_crates
             .iter()
             .map(ToString::to_string)
             .collect(),
+        terms,
     })
 }
 
@@ -187,6 +214,50 @@ mod tests {
 
     use super::*;
     use crate::cli::{Cli, Command};
+
+    fn manifest_path(relative: &str) -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)
+    }
+
+    #[test]
+    fn the_rules_add_the_vocabulary_to_discovery_toml() {
+        let data = manifest_path("tests/fixtures/valid");
+        let catalogue = load_catalogue(&data).expect("valid");
+        let rules = crate_rules(&catalogue, &data).expect("rules");
+        assert!(rules.keywords.contains(&"llm".to_owned()));
+        assert!(rules.keywords.contains(&"tensor".to_owned()));
+        assert!(rules.categories.contains(&"science::ml".to_owned()));
+        assert!(rules.terms.contains(&"ml framework".to_owned()));
+        assert!(rules.terms.contains(&"tensor library".to_owned()));
+        assert_eq!(rules.core_crates, ["burn", "candle-core"]);
+        let mut sorted = rules.keywords.clone();
+        sorted.dedup();
+        assert_eq!(sorted, rules.keywords);
+    }
+
+    #[test]
+    fn the_committed_rules_hold_the_terms_a_project_says_it_is() {
+        let data = manifest_path("../../data");
+        let catalogue = load_catalogue(&data).expect("valid");
+        let rules = crate_rules(&catalogue, &data).expect("rules");
+        for term in [
+            "whisper cpp",
+            "llama cpp",
+            "hugging face",
+            "huggingface",
+            "model context protocol",
+            "vector search engine",
+            "xgboost",
+            "lightgbm",
+            "catboost",
+            "langchain",
+            "notebook environment",
+        ] {
+            assert!(rules.terms.contains(&term.to_owned()), "{term}");
+        }
+        assert!(rules.categories.contains(&"science::ml".to_owned()));
+        assert!(!rules.categories.contains(&"science::math".to_owned()));
+    }
 
     #[test]
     fn errors_carry_their_exit_codes() {
@@ -270,5 +341,19 @@ mod tests {
             (data, cache_dir, window_days),
             (PathBuf::from("d"), Some(PathBuf::from("c")), 30)
         );
+    }
+
+    #[test]
+    fn a_sort_only_word_admits_no_crate_and_other_words_do() {
+        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data");
+        let catalogue = load_catalogue(&data).expect("the data directory is valid");
+        let rules = crate_rules(&catalogue, &data).expect("rules");
+        let has = |list: &[String], word: &str| list.iter().any(|found| found == word);
+        assert!(!has(&rules.terms, "pdf"));
+        assert!(!has(&rules.keywords, "pdf"));
+        assert!(!has(&rules.keywords, "numerics"));
+        assert!(has(&rules.terms, "model context protocol"));
+        assert!(has(&rules.terms, "whisper cpp"));
+        assert!(has(&rules.keywords, "llm"));
     }
 }

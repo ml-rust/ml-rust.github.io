@@ -14,6 +14,7 @@ pub(super) fn row_tags(kind: EntryKind, record: Option<&EntryReport>) -> Vec<(St
     for (name, fact) in [
         ("row_downloads", Some(&choice.downloads_cell)),
         ("row_dependents", Some(&choice.dependents_cell)),
+        ("row_stars", Some(&choice.stars_cell)),
         ("row_released", Some(&choice.latest_release)),
         ("row_gpu", Some(&choice.runs_on)),
         ("row_native", Some(&choice.native_code)),

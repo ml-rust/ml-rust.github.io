@@ -13,14 +13,17 @@ use crate::build::OutputFile;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
 
-/// The signals the compare page shows. Stars are not one of them.
-const SHOWN_SIGNALS: [&str; 13] = [
+/// The signals the compare page shows.
+const SHOWN_SIGNALS: [&str; 16] = [
     "downloads_per_month",
     "binary_downloads_per_release",
     "dependents",
     "active_users",
     "new_adopters",
+    "stars",
+    "forks",
     "contributors",
+    "commits",
     "latest_version",
     "last_release",
     "last_human_commit",

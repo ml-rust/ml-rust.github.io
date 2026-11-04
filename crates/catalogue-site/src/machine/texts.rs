@@ -108,7 +108,7 @@ Each signal
 - value: the raw value as text, or null when not measured.
 - source: label and url of the page that holds the value. Null when not measured.
 - fetched: the date of the data behind the value. Null when not measured.
-- counts_toward_tier: whether a tier rule reads the value.
+- counts_toward_tier: whether a tier rule reads the value. A rule reads stars, forks and contributors only together, on the repository route. Stars alone never qualify a project.
 
 Smaller files for the compare page
 - {SITE_URL}/data/compare/index.json: slug and name of every entry, sorted by slug.

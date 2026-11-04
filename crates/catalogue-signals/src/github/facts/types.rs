@@ -98,6 +98,11 @@ pub struct Facts {
     pub pushed_at: Option<Timestamp>,
     /// The star count.
     pub stars: u32,
+    /// The fork count. `None` when the answer lacks it.
+    pub forks: Option<u32>,
+    /// The total commits on the default branch. `None` when the repo has no head commit or the
+    /// answer lacks the count.
+    pub commits: Option<u64>,
     /// The check state of the default branch head. `None` when it has no checks.
     pub ci: Option<CiState>,
     /// The license GitHub states.

@@ -25,6 +25,8 @@ const SORTS = [
     label: "Downloads", words: { desc: "most first", asc: "fewest first" } },
   { key: "dependents", column: ".col-dependents", attr: "dependents", first: "desc", numeric: true,
     label: "Dependents", words: { desc: "most first", asc: "fewest first" } },
+  { key: "stars", column: ".col-stars", attr: "stars", first: "desc", numeric: true,
+    label: "Stars", words: { desc: "most first", asc: "fewest first" } },
   { key: "released", column: ".col-release", attr: "released", first: "desc",
     label: "Latest release", words: { desc: "newest first", asc: "oldest first" } },
 ];

@@ -13,6 +13,11 @@ homebrew_on_request_365d = 500
 repology_families = 2
 docker_pull_growth_90d = 10000
 
+[repo_route]
+min_stars = 2000
+min_forks = 200
+min_contributors = 25
+
 [dormancy]
 min_days = 365
 dead_rot_signals = 2

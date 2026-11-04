@@ -4,7 +4,7 @@ use catalogue_core::amount_text::{compact, whole};
 use catalogue_core::{
     BINARY_PER_RELEASE_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, DOWNLOADS_SIGNAL, EntryKind,
     EntryReport, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NOT_APPLICABLE, NOT_MEASURED,
-    PYTHON_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL,
+    PYTHON_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, STARS_SIGNAL,
 };
 
 use super::date_text::{date_text, grouped};
@@ -223,6 +223,8 @@ pub(crate) struct ChoiceText {
     pub downloads_line: String,
     /// The dependents, or the word for why the row has none.
     pub dependents_cell: CellFact,
+    /// The GitHub stars.
+    pub stars_cell: CellFact,
     /// The latest version. `None` when not measured.
     pub version: Option<String>,
     /// The latest release date, as a person reads it.
@@ -233,6 +235,8 @@ pub(crate) struct ChoiceText {
     pub downloads: Option<String>,
     /// The dependents for a data attribute. `None` when not measured.
     pub dependents: Option<String>,
+    /// The GitHub stars for a data attribute. `None` when not measured.
+    pub stars: Option<String>,
     /// The contributors for a data attribute. `None` when not measured.
     pub contributors: Option<String>,
     /// The GPU backends for a data attribute, joined by `|`.
@@ -255,6 +259,7 @@ impl ChoiceText {
         let downloads = whole_value(record, downloads_signal(kind));
         let downloads_cell = downloads_fact(kind, downloads.as_deref());
         let dependents = whole_value(record, DEPENDENTS_SIGNAL);
+        let stars = whole_value(record, STARS_SIGNAL);
         let release = value(LATEST_RELEASE_SIGNAL);
         Self {
             license: value(LICENSE_SIGNAL).map_or_else(CellFact::not_measured, CellFact::plain),
@@ -270,6 +275,11 @@ impl ChoiceText {
                 },
                 |count| CellFact::plain(grouped(count)),
             ),
+            stars_cell: stars
+                .as_deref()
+                .map_or_else(CellFact::not_measured, |count| {
+                    CellFact::plain(grouped(count))
+                }),
             version: value(VERSION_SIGNAL).map(str::to_owned),
             latest_release: release.map_or_else(CellFact::not_measured, |text| {
                 CellFact::plain(date_text(text).unwrap_or_else(|| text.to_owned()))
@@ -279,6 +289,7 @@ impl ChoiceText {
                 .map(str::to_owned),
             downloads,
             dependents,
+            stars,
             contributors: whole_value(record, CONTRIBUTORS_SIGNAL),
             gpu_values: gpu_values(value(RUNS_ON_SIGNAL)),
             license_family: license_family(value(LICENSE_SIGNAL)),

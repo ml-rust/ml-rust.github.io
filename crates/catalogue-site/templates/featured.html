@@ -12,7 +12,7 @@
 {%- else if groups.is_empty() %}
 <p class="lede">No entry is Featured.</p>
 {%- else %}
-<p class="lede">{{ meaning }} The <a href="/rules/">published rules</a> name each gate, and stars never count.</p>
+<p class="lede">{{ meaning }} The <a href="/rules/">published rules</a> name each gate.</p>
 <div class="list-bar">
 <p class="list-count"><strong>{{ count }}</strong>{% if let Some(date) = checked %}{% if let Some(text) = checked_text %}. Checked <time datetime="{{ date }}">{{ text }}</time>{% endif %}{% endif %}.</p>
 <p class="order-note">{{ order }}</p>

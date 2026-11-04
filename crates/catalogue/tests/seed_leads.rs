@@ -3,12 +3,14 @@ mod lead_transport;
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 
 use catalogue::{
-    LeadSeed, Outcome, SeedError, build_lead_seed, load_catalogue, parse_leads, validate,
-    write_drafts,
+    LeadSeed, Outcome, SeedError, build_lead_seed, build_merged_seed, load_catalogue, parse_leads,
+    validate, write_drafts,
 };
 use catalogue_core::{Categories, CrateName, DescriptionSource, Entry, EntryKind, Topics};
+use catalogue_signals::discover::Rules;
 use catalogue_signals::dump::{CrateRow, DumpMeta, DumpSnapshot, Owner, OwnerKind, VersionRow};
 use catalogue_signals::http::{Headers, Pacer};
 use catalogue_signals::seed::{ExistingIndex, LeadInputs, LeadPacers, Mappings};
@@ -708,6 +710,243 @@ fn two_drafts_with_one_slug_keep_the_first() {
         skip_reason(&seed, "two/tool"),
         "slug `tool` is already drafted for `one/tool`"
     );
+}
+
+#[test]
+fn a_shell_repo_that_lists_rust_drafts_as_an_app() {
+    let answer = found("acme/vidr", "Shell", Some("A tensor engine."), &[]);
+    let script = Script::default().repo("acme/vidr", 200, &answer).url(
+        "api.github.com/repos/acme/vidr/languages",
+        200,
+        r#"{"Shell":90,"Rust":10}"#,
+    );
+    let seed = run("acme/vidr\n", &script, &[]);
+    let entry = only_entry(&seed);
+    assert_eq!(entry.kind, EntryKind::App);
+    assert!(entry.crates.is_empty());
+    assert!(seed.text.contains("language:Shell"), "{}", seed.text);
+    assert!(seed.text.contains("language-list:rust"), "{}", seed.text);
+}
+
+#[test]
+fn a_shell_repo_that_lists_no_rust_is_skipped() {
+    let answer = found("acme/vidr", "Shell", Some("A tensor engine."), &[]);
+    let script = Script::default().repo("acme/vidr", 200, &answer).url(
+        "api.github.com/repos/acme/vidr/languages",
+        200,
+        r#"{"Shell":90}"#,
+    );
+    let seed = run("acme/vidr\n", &script, &[]);
+    let reason = skip_reason(&seed, "acme/vidr");
+    assert!(reason.contains("`Shell`"), "{reason}");
+    assert!(seed.warnings.is_empty(), "{:?}", seed.warnings);
+}
+
+#[test]
+fn a_failed_language_list_warns_and_the_primary_language_decides() {
+    let answer = found("acme/vidr", "Shell", Some("A tensor engine."), &[]);
+    let script = Script::default().repo("acme/vidr", 200, &answer).url(
+        "api.github.com/repos/acme/vidr/languages",
+        500,
+        "",
+    );
+    let seed = run("acme/vidr\n", &script, &[]);
+    assert!(skip_reason(&seed, "acme/vidr").contains("`Shell`"));
+    let [warning] = seed.warnings.as_slice() else {
+        panic!("one warning expected: {:?}", seed.warnings);
+    };
+    assert!(warning.contains("acme/vidr"), "{warning}");
+}
+
+#[test]
+fn a_rust_repo_asks_for_no_language_list() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    run(
+        "acme/tool\n",
+        &script,
+        &[library(1, "tool", "https://github.com/acme/tool")],
+    );
+    assert!(
+        !script.requests().iter().any(|r| r.contains("/languages")),
+        "{:?}",
+        script.requests()
+    );
+}
+
+/// Rules that select every crate of the test dump: each carries the `tensor` keyword.
+fn tensor_rules() -> Rules {
+    Rules {
+        keywords: vec!["tensor".to_owned()],
+        ..Rules::default()
+    }
+}
+
+/// A run of discovery and leads with no active-user floor, so only a merge can drop a crate.
+fn merged(list: &str, script: &Script, specs: &[Spec]) -> LeadSeed {
+    let catalogue = load_catalogue(&fixture()).expect("reads").expect("valid");
+    let topics: Topics = toml::from_str(TOPICS).expect("topics parse");
+    let categories: Categories = toml::from_str(CATEGORIES).expect("categories parse");
+    let existing = ExistingIndex::from_catalogue(&catalogue);
+    let dump = snapshot(specs);
+    let inputs = LeadInputs {
+        snapshot: &dump,
+        mappings: Mappings {
+            topics: &topics,
+            categories: &categories,
+        },
+        existing: &existing,
+        min_active_users: 0.0,
+    };
+    let leads = parse_leads(Path::new("leads.txt"), list).expect("the list parses");
+    let mut waits = Waits::default();
+    let mut pacers = LeadPacers {
+        github: &mut waits.github,
+        homebrew: &mut waits.homebrew,
+        docker: &mut waits.docker,
+        repology: &mut waits.repology,
+    };
+    build_merged_seed(&inputs, &tensor_rules(), &leads, script, TOKEN, &mut pacers)
+        .expect("the run ends")
+}
+
+fn slugs(seed: &LeadSeed) -> Vec<&str> {
+    seed.drafts
+        .entries
+        .iter()
+        .map(|(slug, _)| slug.as_str())
+        .collect()
+}
+
+#[test]
+fn a_crate_of_a_lead_draft_stays_out_of_discovery() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    let seed = merged(
+        "acme/tool\n",
+        &script,
+        &[library(1, "tool", "https://github.com/acme/tool")],
+    );
+    assert_eq!(slugs(&seed), ["tool"]);
+    assert!(seed.text.contains("lead:acme/tool"), "{}", seed.text);
+}
+
+#[test]
+fn a_crate_that_claims_the_repository_of_a_lead_draft_is_skipped() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    let seed = merged(
+        "acme/tool\n",
+        &script,
+        &[library(1, "stray", "https://github.com/acme/tool")],
+    );
+    assert_eq!(slugs(&seed), ["tool"]);
+    assert!(only_entry(&seed).crates.is_empty());
+    assert!(
+        seed.drafts
+            .skipped
+            .iter()
+            .any(|(name, reason)| name == "stray" && reason == "entry `tool` holds the repository"),
+        "{}",
+        seed.text
+    );
+}
+
+#[test]
+fn a_lead_draft_keeps_its_slug_against_another_repository() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    let seed = merged(
+        "acme/tool\n",
+        &script,
+        &[library(1, "tool", "https://github.com/other/tool")],
+    );
+    assert_eq!(slugs(&seed), ["tool"]);
+    assert_eq!(
+        only_entry(&seed).repo.as_str(),
+        "https://github.com/acme/tool"
+    );
+    assert_eq!(
+        skip_reason(&seed, "tool"),
+        "slug `tool` is already an entry"
+    );
+}
+
+#[test]
+fn drafts_of_both_runs_merge_and_pass_validation() {
+    let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
+    let seed = merged(
+        "acme/tool\n",
+        &script,
+        &[
+            library(1, "tool", "https://github.com/acme/tool"),
+            library(2, "other-lib", "https://github.com/someone/other-lib"),
+        ],
+    );
+    assert_eq!(slugs(&seed), ["other-lib", "tool"]);
+    assert!(
+        seed.text.starts_with("total drafts: 2\nleads:\ndrafts: 1."),
+        "{}",
+        seed.text
+    );
+    assert!(
+        seed.text
+            .contains("discovery:\ndrafts: 1\nother-lib\t0.00\ttensors"),
+        "{}",
+        seed.text
+    );
+    let data = data_copy("seed-merged");
+    let paths = write_drafts(&data, &seed.drafts).expect("writes");
+    assert_eq!(paths.len(), 2);
+    assert!(matches!(validate(&data).expect("reads"), Outcome::Valid(_)));
+}
+
+/// Runs `catalogue seed` over a copy of the `valid` fixture with no token and an empty cache.
+fn seed_command(name: &str, leads: Option<&str>, extra: &[&str]) -> Output {
+    let data = data_copy(name);
+    if let Some(text) = leads {
+        fs::write(data.join("leads.txt"), text).expect("writes the lead list");
+    }
+    let cache = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("{name}-cache"));
+    fs::create_dir_all(&cache).expect("creates the cache directory");
+    Command::new(env!("CARGO_BIN_EXE_catalogue"))
+        .args(["seed", "--data"])
+        .arg(&data)
+        .arg("--cache-dir")
+        .arg(&cache)
+        .args(extra)
+        .env_remove("GITHUB_TOKEN")
+        .output()
+        .expect("runs")
+}
+
+fn stderr_of(output: &Output) -> String {
+    String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+#[test]
+fn seed_picks_up_the_lead_file_of_the_data_directory() {
+    let output = seed_command("seed-pickup-token", Some("acme/tool\n"), &[]);
+    let stderr = stderr_of(&output);
+    assert_eq!(output.status.code(), Some(1), "{stderr}");
+    assert!(stderr.contains("GITHUB_TOKEN"), "{stderr}");
+
+    let output = seed_command("seed-pickup-bad", Some("# a note\nnot a repo\n"), &[]);
+    let stderr = stderr_of(&output);
+    assert_eq!(output.status.code(), Some(1), "{stderr}");
+    assert!(stderr.contains("leads.txt:2: `not a repo`"), "{stderr}");
+}
+
+#[test]
+fn seed_without_a_lead_file_needs_no_token() {
+    let output = seed_command("seed-pickup-none", None, &[]);
+    let stderr = stderr_of(&output);
+    assert!(!output.status.success());
+    assert!(!stderr.contains("GITHUB_TOKEN"), "{stderr}");
+}
+
+#[test]
+fn no_leads_leaves_the_lead_file_out() {
+    let output = seed_command("seed-pickup-off", Some("acme/tool\n"), &["--no-leads"]);
+    let stderr = stderr_of(&output);
+    assert!(!output.status.success());
+    assert!(!stderr.contains("GITHUB_TOKEN"), "{stderr}");
 }
 
 /// A fresh copy of the `valid` fixture under the build directory.

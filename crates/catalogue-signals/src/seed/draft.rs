@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Date, Slug};
+use catalogue_core::{Date, Slug, normalize_repo_url};
 
 use super::family::families;
 use super::family_draft::draft_family;
@@ -47,9 +47,9 @@ use crate::usage::Usage;
 /// Any https host is accepted. GitHub-only signals stay unknown for other
 /// hosts, so such entries can be Listed but not Featured. A family whose
 /// primary lacks an https repository with an owner and a name, whose members
-/// all lack a usable description, that matches no topic or that has an
-/// invalid or taken slug appears in [`Drafts::skipped`] under the primary's
-/// name with the reason.
+/// all lack a usable description, that matches no topic, whose repository an
+/// entry holds or that has an invalid or taken slug appears in
+/// [`Drafts::skipped`] under the primary's name with the reason.
 ///
 /// A draft gets `part_of` only with evidence: a name match and a shared crate owner.
 pub fn draft_entries(
@@ -66,6 +66,11 @@ pub fn draft_entries(
     for family in families(snapshot, candidates, usage, existing, min_active_users) {
         drafts.skipped.extend(family.left_out.iter().cloned());
         let outcome = draft_family(snapshot, &family, mappings, today).and_then(|(slug, entry)| {
+            let holder = normalize_repo_url(entry.repo.as_str())
+                .and_then(|key| existing.repo_slug(&key).map(str::to_owned));
+            if let Some(holder) = holder {
+                return Err(format!("entry `{holder}` holds the repository"));
+            }
             if existing.has_slug(&slug) {
                 return Err(format!("slug `{slug}` is already an entry"));
             }
@@ -91,7 +96,7 @@ pub fn draft_entries(
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::{CrateName, DescriptionSource, EntryKind};
+    use catalogue_core::{Categories, CrateName, DescriptionSource, EntryKind, Topics};
     use url::Url;
 
     use super::super::fixtures::{Spec, World, categories, today, topics};
@@ -304,6 +309,85 @@ mod tests {
             skipped(&drafts),
             [("tool", "slug `tool` is already an entry")]
         );
+    }
+
+    #[test]
+    fn a_repository_an_entry_holds_blocks_the_draft() {
+        let world = World::new(vec![Spec::new(1, "tool")]);
+        let existing = ExistingIndex::default().with_repo("github.com/someone/tool", "other");
+        let drafts = run(&world, &existing, 2.0);
+        assert!(drafts.entries.is_empty());
+        assert_eq!(
+            skipped(&drafts),
+            [("tool", "entry `other` holds the repository")]
+        );
+    }
+
+    #[test]
+    fn a_draft_given_to_the_index_blocks_its_crates_slug_and_repository() {
+        let first = plain(&World::new(vec![Spec::new(1, "tool")]));
+        let existing = ExistingIndex::default().with_drafts(&first.entries);
+        let again = run(&World::new(vec![Spec::new(1, "tool")]), &existing, 2.0);
+        assert!(again.entries.is_empty());
+        assert!(again.skipped.is_empty(), "{:?}", again.skipped);
+
+        let mut other_crate = Spec::new(2, "tool-extra");
+        other_crate.repository = Some("https://github.com/someone/tool".to_owned());
+        let drafts = run(&World::new(vec![other_crate]), &existing, 2.0);
+        assert_eq!(
+            skipped(&drafts),
+            [("tool-extra", "entry `tool` holds the repository")]
+        );
+
+        let mut same_slug = Spec::new(3, "other-crate");
+        same_slug.repository = Some("https://github.com/other/tool".to_owned());
+        assert_eq!(
+            skipped(&run(&World::new(vec![same_slug]), &existing, 2.0)),
+            [("other-crate", "slug `tool` is already an entry")]
+        );
+    }
+
+    #[test]
+    fn a_crate_on_another_host_drafts_with_that_link() {
+        let mut spec = Spec::new(1, "whisper-rs");
+        spec.repository = Some("https://codeberg.org/tazz4843/whisper-rs".to_owned());
+        spec.keywords = Vec::new();
+        spec.description = Some("Rust bindings for whisper.cpp".to_owned());
+        let world = World::new(vec![spec]);
+        let topics: Topics =
+            toml::from_str(include_str!("../../../../data/topics.toml")).expect("topics parse");
+        let categories: Categories =
+            toml::from_str(include_str!("../../../../data/categories.toml"))
+                .expect("categories parse");
+        let drafts = draft_entries(
+            &world.snapshot,
+            &world.candidates,
+            &world.usage,
+            &Mappings {
+                topics: &topics,
+                categories: &categories,
+            },
+            &ExistingIndex::default(),
+            2.0,
+            today(),
+        );
+        assert!(drafts.skipped.is_empty(), "{:?}", drafts.skipped);
+        let [(slug, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected");
+        };
+        assert_eq!(slug.as_str(), "whisper-rs");
+        assert_eq!(
+            entry.repo.as_str(),
+            "https://codeberg.org/tazz4843/whisper-rs"
+        );
+        assert!(!entry.org_affiliated);
+        let found: Vec<&str> = entry.topics.iter().map(Slug::as_str).collect();
+        assert_eq!(found, ["speech-audio"]);
+        assert_eq!(
+            entry.category.as_ref().map(Slug::as_str),
+            Some("speech-audio")
+        );
+        assert_eq!(entry.problems(), Vec::<String>::new());
     }
 
     #[test]

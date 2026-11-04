@@ -16,6 +16,7 @@ mod interval;
 mod level;
 mod new;
 mod notes;
+mod repo_route;
 mod rot;
 mod signals;
 mod verdict;

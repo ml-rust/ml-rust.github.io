@@ -568,12 +568,53 @@ mod tests {
     }
 
     #[test]
+    fn a_library_on_the_repository_route_says_so() {
+        let record = record(
+            Tier::Featured,
+            vec![reason(
+                Rule::Featured,
+                "featured: repository route stars 3000 (needs 2000), forks 300 (needs 200), contributors 40 (needs 25), active_users 1, new_adopters 0, former_glory 1",
+            )],
+            Vec::new(),
+        );
+        let why = Why::new(&record, EntryKind::Library, None);
+        assert!(
+            why.meets[0].text.starts_with(
+                "It passes the repository route: 3,000 stars, 300 forks and 40 contributors."
+            ),
+            "{:?}",
+            why.meets
+        );
+    }
+
+    #[test]
+    fn a_listed_library_states_the_route_numbers_it_misses() {
+        let detail = "not featured: active_users 2 < 11 and new_adopters 2 < 9 and repository route stars 3000 (needs 2000), forks 10 (needs 200), contributors 5 (needs 25)";
+        let found = record(
+            Tier::Listed,
+            vec![reason(Rule::Featured, detail)],
+            Vec::new(),
+        );
+        let why = Why::new(&found, EntryKind::Library, None);
+        assert_eq!(
+            texts(&why.lacks),
+            [
+                "It has 2 active dependents and 2 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days. The repository route reads 3,000 stars, 10 forks and 5 contributors. It needs 2,000 stars, 200 forks and 25 contributors together."
+            ]
+        );
+        assert_eq!(
+            WhyText::of(&found, EntryKind::Library, None).verdict,
+            "It has too few dependents for Featured, and it does not pass the repository route."
+        );
+    }
+
+    #[test]
     fn signals_outside_the_rules_are_not_rule_sources() {
         let record = record(
             Tier::Listed,
             Vec::new(),
             vec![
-                fact("stars", Some("9"), "GitHub", false),
+                fact("commits", Some("9"), "GitHub", false),
                 fact("docs_present", Some("true"), "dump", true),
             ],
         );

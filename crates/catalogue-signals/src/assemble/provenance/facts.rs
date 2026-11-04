@@ -4,8 +4,9 @@ use std::fmt::Display;
 
 use catalogue_core::amount_text::precise;
 use catalogue_core::{
-    ACTIVE_DEPENDENTS_LABEL, Date, EntryKind, FORMER_GLORY_LABEL, NEW_DEPENDENTS_LABEL,
-    PEAK_DEPENDENTS_LABEL, STARS_SIGNAL, SignalFact, Signals, SourceRef,
+    ACTIVE_DEPENDENTS_LABEL, COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, Date, EntryKind, FORKS_SIGNAL,
+    FORMER_GLORY_LABEL, NEW_DEPENDENTS_LABEL, PEAK_DEPENDENTS_LABEL, STARS_SIGNAL, SignalFact,
+    Signals, SourceRef, never_counts,
 };
 use url::Url;
 
@@ -24,6 +25,7 @@ enum Origin {
     Rustsec,
     Build,
     Repo,
+    Contributors,
     Link,
     Releases,
     Homebrew,
@@ -61,6 +63,10 @@ fn cite(
         Origin::Repo => (
             source("GitHub repository", &sources.repo_page),
             dates.github,
+        ),
+        Origin::Contributors => (
+            source("GitHub contributors", &sources.contributors_page),
+            dates.contributors,
         ),
         Origin::Link => (
             source(
@@ -384,11 +390,15 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 /// | `docker_pull_growth_90d` | Docker Hub page | Docker fetch date |
 ///
 /// `last_release` cites the dump for a library and the GitHub releases page for an app.
-/// Two rows follow the [`Signals`] fields:
+/// The rows of the repository route and the commit total close the table:
 ///
 /// - `docker_pull_baseline`: the pull count growth measures against, dated by
 ///   its history snapshot. Present only with a growth value.
-/// - `stars`: the GitHub star count, cited like the repo rows. It never counts toward a tier.
+/// - `stars`, `forks`: the GitHub counts, cited like the repo rows. A tier reads them only
+///   together with `contributors`, on the repository route.
+/// - `contributors`: the contributors with a GitHub account, citing the GitHub contributors page.
+/// - `commits`: the total commits on the default branch, cited like the repo rows. No tier rule
+///   reads it, so it comes in as `commits` and not through [`Signals`].
 ///
 /// A `None` signal is a row with no value, no source and no date. A finding
 /// field reads `none` when its source was read and holds no finding: the
@@ -397,9 +407,9 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 pub fn signal_facts(
     signals: &Signals,
     sources: &FactSources,
-    stars: Option<u64>,
+    commits: Option<u64>,
 ) -> Vec<SignalFact> {
-    let mut rows: Vec<Row> = Vec::with_capacity(33);
+    let mut rows: Vec<Row> = Vec::with_capacity(36);
     rows.extend(dump_rows(signals));
     rows.extend(rustsec_rows(signals));
     rows.extend(deprecation_rows(signals));
@@ -407,7 +417,30 @@ pub fn signal_facts(
     rows.extend(github_rows(signals));
     rows.extend(publication_rows(signals));
     rows.extend(distribution_rows(signals, sources));
-    rows.push((STARS_SIGNAL, "GitHub stars", text(stars), Origin::Repo));
+    rows.push((
+        STARS_SIGNAL,
+        "GitHub stars",
+        text(signals.stars),
+        Origin::Repo,
+    ));
+    rows.push((
+        FORKS_SIGNAL,
+        "GitHub forks",
+        text(signals.forks),
+        Origin::Repo,
+    ));
+    rows.push((
+        CONTRIBUTORS_SIGNAL,
+        "Contributors with a GitHub account",
+        text(signals.contributors),
+        Origin::Contributors,
+    ));
+    rows.push((
+        COMMITS_SIGNAL,
+        "Commits on the default branch",
+        text(commits),
+        Origin::Repo,
+    ));
     rows.into_iter()
         .map(|(name, label, value, origin)| {
             let (source, fetched) = match value {
@@ -420,7 +453,7 @@ pub fn signal_facts(
                 value,
                 source,
                 fetched,
-                counts_toward_tier: name != STARS_SIGNAL,
+                counts_toward_tier: !never_counts(name),
             }
         })
         .collect()
@@ -492,6 +525,9 @@ mod tests {
             last_human_commit: Some(Date::new(2026, 10, 1).expect("date")),
             oldest_unanswered_days: Some(12),
             maintainer_replies_365: Some(7),
+            stars: Some(321),
+            forks: Some(45),
+            contributors: Some(38),
             docs_present: Some(true),
             repo_link_verified: Some(true),
             binary_downloads_last3: Some(900),
@@ -513,8 +549,8 @@ mod tests {
     fn every_known_signal_is_cited_and_dated() {
         let sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
         for kind in [EntryKind::App, EntryKind::Library] {
-            let facts = signal_facts(&full(kind), &sources, Some(321));
-            assert_eq!(facts.len(), 33);
+            let facts = signal_facts(&full(kind), &sources, Some(9_876));
+            assert_eq!(facts.len(), 36);
             for fact in &facts {
                 assert!(fact.value.is_some(), "{}", fact.name);
                 assert!(fact.problems().is_empty(), "{:?}", fact.problems());
@@ -526,7 +562,7 @@ mod tests {
     fn unknown_signals_have_no_value_source_or_date() {
         let sources = FactSources::new(&library(&["main"]), None, day(2), FetchDates::default());
         let facts = signal_facts(&Signals::unknown(EntryKind::Library), &sources, None);
-        assert_eq!(facts.len(), 33);
+        assert_eq!(facts.len(), 36);
         for fact in &facts {
             assert_eq!(fact.value, None, "{}", fact.name);
             assert_eq!(fact.source, None, "{}", fact.name);
@@ -535,9 +571,9 @@ mod tests {
     }
 
     #[test]
-    fn rows_follow_the_signal_order_and_stars_never_count() {
+    fn rows_follow_the_signal_order_and_only_commits_stay_out_of_the_tier() {
         let sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
-        let facts = signal_facts(&full(EntryKind::App), &sources, Some(321));
+        let facts = signal_facts(&full(EntryKind::App), &sources, Some(9_876));
         let names: Vec<&str> = facts.iter().map(|fact| fact.name.as_str()).collect();
         assert_eq!(
             names[..4],
@@ -548,16 +584,57 @@ mod tests {
                 "last_release"
             ]
         );
-        assert_eq!(names[names.len() - 2..], ["docker_pull_baseline", "stars"]);
+        assert_eq!(
+            names[names.len() - 5..],
+            [
+                "docker_pull_baseline",
+                "stars",
+                "forks",
+                "contributors",
+                "commits"
+            ]
+        );
         let stars = value(&facts, "stars");
         assert_eq!(stars.value.as_deref(), Some("321"));
-        assert!(!stars.counts_toward_tier);
+        assert!(stars.counts_toward_tier);
+        let forks = value(&facts, "forks");
+        assert_eq!(forks.value.as_deref(), Some("45"));
+        assert!(forks.counts_toward_tier);
+        let commits = value(&facts, "commits");
+        assert_eq!(commits.value.as_deref(), Some("9876"));
+        assert!(!commits.counts_toward_tier);
         assert!(
             facts
                 .iter()
-                .filter(|fact| fact.name != "stars")
+                .filter(|fact| fact.name != "commits")
                 .all(|fact| fact.counts_toward_tier)
         );
+    }
+
+    #[test]
+    fn the_repository_rows_cite_their_own_pages_and_dates() {
+        let mut dates = every_date();
+        dates.contributors = Some(day(2));
+        let sources = FactSources::new(&app(), Some(&repo()), day(2), dates);
+        let facts = signal_facts(&full(EntryKind::App), &sources, Some(9_876));
+        let url = |fact: &SignalFact| fact.source.as_ref().map(|source| source.url.to_string());
+        let contributors = value(&facts, "contributors");
+        assert_eq!(contributors.value.as_deref(), Some("38"));
+        assert!(contributors.counts_toward_tier);
+        assert_eq!(
+            url(contributors).as_deref(),
+            Some("https://github.com/ml-rust/tool/graphs/contributors")
+        );
+        assert_eq!(contributors.fetched, Some(day(2)));
+        for name in ["forks", "commits"] {
+            let fact = value(&facts, name);
+            assert_eq!(
+                url(fact).as_deref(),
+                Some("https://github.com/ml-rust/tool"),
+                "{name}"
+            );
+            assert_eq!(fact.fetched, Some(today()), "{name}");
+        }
     }
 
     #[test]
@@ -642,7 +719,7 @@ mod tests {
             release.source.as_ref().map(|s| s.url.as_str()),
             Some(DUMP_PAGE)
         );
-        assert_eq!(value(&facts, "stars").value, None);
+        assert_eq!(value(&facts, "stars").value.as_deref(), Some("321"));
     }
 
     #[test]

@@ -44,10 +44,13 @@ fn a_found_repo_reports_its_state() {
     ];
     body.issues = vec![item("2026-10-27T11:53:29Z", "OPEN", "NONE", "u", vec![])];
     body.pulls = vec![item("2026-10-27T10:53:22Z", "CLOSED", "NONE", "u", vec![])];
+    body.latest_total = 4321;
     let facts = found(&body);
+    assert_eq!(facts.commits, Some(4321));
     assert_eq!(facts.name_with_owner, "a/b");
     assert!(!facts.moved && !facts.archived && facts.fork);
     assert_eq!(facts.stars, 64548);
+    assert_eq!(facts.forks, Some(8123));
     assert_eq!(
         facts.pushed_at.map(|t| t.to_string()).as_deref(),
         Some("2026-10-26T17:14:42Z")

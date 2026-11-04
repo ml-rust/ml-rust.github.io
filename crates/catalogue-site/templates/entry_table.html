@@ -1,12 +1,12 @@
 <table class="rows" data-sortable data-filterable>
 <caption class="visually-hidden">{{ caption }}</caption>
 <thead>
-<tr><th scope="col" class="col-project">Project</th><th scope="col" class="col-downloads">Downloads</th><th scope="col" class="col-dependents">Dependents</th><th scope="col" class="col-release">Latest release</th><th scope="col" class="col-gpu">Runs on (GPU)</th><th scope="col" class="col-native">Native code</th><th scope="col" class="col-license">License</th></tr>
+<tr><th scope="col" class="col-project">Project</th><th scope="col" class="col-downloads">Downloads</th><th scope="col" class="col-dependents">Dependents</th><th scope="col" class="col-stars">Stars</th><th scope="col" class="col-release">Latest release</th><th scope="col" class="col-gpu">Runs on (GPU)</th><th scope="col" class="col-native">Native code</th><th scope="col" class="col-license">License</th></tr>
 </thead>
 {%- for group in groups %}
 <tbody{% if let Some(class) = group.tier_class %} class="rows-group-{{ class }}"{% endif %}>
 {%- if let Some(heading) = group.heading %}
-<tr class="rows-group"{% if let Some(class) = group.tier_class %} id="{{ class }}"{% endif %}><th colspan="7" scope="rowgroup"><span class="rows-group-title">
+<tr class="rows-group"{% if let Some(class) = group.tier_class %} id="{{ class }}"{% endif %}><th colspan="8" scope="rowgroup"><span class="rows-group-title">
 {%- if group.tier_class.is_some() %}<span class="icon" aria-hidden="true">{% if group.tier_class == Some("tier-featured") %}{% include "icons/tier-featured.svg" %}{% else if group.tier_class == Some("tier-listed") %}{% include "icons/tier-listed.svg" %}{% else if group.tier_class == Some("tier-new") %}{% include "icons/tier-new.svg" %}{% else %}{% include "icons/tier-archived.svg" %}{% endif %}</span>{% endif -%}
 {{ heading }}</span> <span class="rows-group-count">{{ group.count }}</span></th></tr>
 {%- endif %}

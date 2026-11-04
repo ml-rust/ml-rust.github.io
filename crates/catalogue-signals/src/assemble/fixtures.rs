@@ -70,6 +70,8 @@ pub(crate) fn found_facts() -> Facts {
         fork: false,
         pushed_at: None,
         stars: 0,
+        forks: Some(0),
+        commits: Some(0),
         ci: None,
         license: RepoLicense::Stated("MIT".to_owned()),
         last_human_commit: Some(day(2026, 10, 1)),

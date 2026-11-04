@@ -32,20 +32,34 @@ impl ExistingIndex {
     pub fn from_catalogue(catalogue: &Catalogue) -> Self {
         let mut index = Self::default();
         for (slug, entry) in catalogue.entries() {
-            index.slugs.insert(slug.as_str().to_owned());
-            if let Some(key) = normalize_repo_url(entry.repo.as_str()) {
-                index.repos.insert(key, slug.as_str().to_owned());
-            }
-            for name in &entry.crates {
-                index.crates.insert(name.normalized());
-            }
-            if entry.part_of.is_none()
-                && let Some(primary) = entry.crates.first()
-            {
-                index.parents.push((slug.clone(), primary.normalized()));
-            }
+            index.add(slug, entry);
         }
         index
+    }
+
+    /// Adds `drafts` as if they were entries, so a later drafting run leaves their crates,
+    /// slugs and repositories alone.
+    #[must_use]
+    pub fn with_drafts(mut self, drafts: &[(Slug, Entry)]) -> Self {
+        for (slug, entry) in drafts {
+            self.add(slug, entry);
+        }
+        self
+    }
+
+    fn add(&mut self, slug: &Slug, entry: &Entry) {
+        self.slugs.insert(slug.as_str().to_owned());
+        if let Some(key) = normalize_repo_url(entry.repo.as_str()) {
+            self.repos.insert(key, slug.as_str().to_owned());
+        }
+        for name in &entry.crates {
+            self.crates.insert(name.normalized());
+        }
+        if entry.part_of.is_none()
+            && let Some(primary) = entry.crates.first()
+        {
+            self.parents.push((slug.clone(), primary.normalized()));
+        }
     }
 
     /// Indexes the given crate names and entry slugs.

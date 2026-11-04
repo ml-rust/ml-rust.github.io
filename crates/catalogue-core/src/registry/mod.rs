@@ -20,6 +20,6 @@ pub use synonyms::{SynonymGroup, Synonyms};
 pub use thresholds::{
     AppFeaturedThresholds, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, MovementThresholds, NewThresholds,
-    RotThresholds, Thresholds,
+    RepoRouteThresholds, RotThresholds, Thresholds,
 };
 pub use topics::{Topic, TopicSummary, Topics};

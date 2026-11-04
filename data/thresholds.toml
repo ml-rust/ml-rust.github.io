@@ -6,8 +6,8 @@
 # recalibration. Any change to the file raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 6
-calibrated = 2026-11-03
+version = 7
+calibrated = 2026-11-04
 
 [new]
 max_age_days = 180
@@ -29,6 +29,11 @@ homebrew_on_request_365d = 500
 repology_families = 2
 docker_pull_growth_90d = 10000
 
+[repo_route]
+# Calibrated: p90 of each value over the seeded entries. Every part has to pass together.
+min_stars = 4539
+min_forks = 434
+min_contributors = 79
 [dormancy]
 min_days = 365
 dead_rot_signals = 2

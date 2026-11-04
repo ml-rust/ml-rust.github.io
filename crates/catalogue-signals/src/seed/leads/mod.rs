@@ -9,6 +9,7 @@ mod claims;
 mod decide;
 mod entry;
 mod kind;
+mod languages;
 mod resolve;
 mod run;
 mod types;
