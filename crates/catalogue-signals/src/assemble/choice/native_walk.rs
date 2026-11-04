@@ -81,13 +81,15 @@ impl Finds {
         }
     }
 
-    /// The names with the direct ones first, each group sorted.
+    /// The names with the required ones first, then direct before deeper, each group sorted.
+    ///
+    /// A value caps how many names it prints. This order keeps every required name ahead of the
+    /// cap, so the first printed name says whether anything is required.
     fn ordered(self) -> Vec<Found> {
-        let (direct, deeper): (Vec<_>, Vec<_>) =
-            self.0.into_iter().partition(|(_, slot)| slot.direct);
-        direct
+        let mut found: Vec<(String, Slot)> = self.0.into_iter().collect();
+        found.sort_by_key(|(_, slot)| (slot.feature.is_some(), !slot.direct));
+        found
             .into_iter()
-            .chain(deeper)
             .map(|(name, slot)| Found {
                 name,
                 feature: slot.feature,
@@ -149,7 +151,7 @@ impl<'a> Walk<'a> {
     }
 }
 
-/// The native code that `members` reach, direct hits first, then the rest, each sorted.
+/// The native code that `members` reach, in the order of [`Finds::ordered`].
 pub(super) fn native_hits(
     members: &[Member<'_>],
     dump: &DumpSnapshot,

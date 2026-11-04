@@ -37,8 +37,9 @@ const MOST_NAMES: usize = 5;
 /// The native code value of `members`. `None` without a member.
 ///
 /// The value names each `links` key and each `*-sys` crate that the listed crates reach through
-/// normal dependencies, direct ones first. `not_native` in the table lists the crates to skip. A
-/// name behind an optional dependency of a listed crate carries the feature that enables it.
+/// normal dependencies, required ones first, then direct ones. `not_native` in the table lists the
+/// crates to skip. A name behind an optional dependency of a listed crate carries the feature that
+/// enables it, so a value whose first name has no feature label requires native code.
 /// The build tools that `native_build` lists follow, for the listed crates only.
 pub(super) fn native_code(
     members: &[Member<'_>],
@@ -213,6 +214,26 @@ mod tests {
             native(&dump, &["tool"]).as_deref(),
             Some("Binds native code: a-sys, b-sys, c-sys, d-sys, e-sys and 2 more")
         );
+    }
+
+    #[test]
+    fn a_required_name_comes_before_every_optional_name_past_the_cap() {
+        let mut dump = dump();
+        for (offset, name) in ["a", "b", "c", "d", "e", "f"].into_iter().enumerate() {
+            let id = 30 + u32::try_from(offset).expect("small");
+            dump.add_crate(id, &format!("{name}-sys"));
+            dump.add_optional(1, id);
+        }
+        // Reached only below a required dependency, so not direct, and last by name.
+        dump.add_crate(40, "z-sys");
+        dump.add_requirement(1, 13, "^1", DependencyKind::Normal);
+        dump.add_requirement(13, 40, "^1", DependencyKind::Normal);
+        let value = native(&dump, &["tool"]).expect("a value");
+        assert!(
+            value.starts_with("Binds native code: z-sys, a-sys (feature a-sys)"),
+            "{value}"
+        );
+        assert!(value.ends_with(" and 2 more"), "{value}");
     }
 
     #[test]
