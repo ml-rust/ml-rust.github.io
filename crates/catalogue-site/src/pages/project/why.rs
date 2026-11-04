@@ -162,7 +162,8 @@ impl<'a> Why<'a> {
             return;
         }
         let label = |name: &str| {
-            fact_named(record, name).map_or_else(|| name.to_owned(), |fact| fact.label.clone())
+            fact_named(record, name)
+                .map_or_else(|| name.to_owned(), |fact| fact.shown_label().to_owned())
         };
         let Some(lacks) = featured_lacks(detail, label) else {
             self.lacks.push(WhyLine::new(verbatim(detail), None));
@@ -363,7 +364,7 @@ mod tests {
         assert_eq!(verdict("2"), verdict("5"));
         assert_eq!(
             verdict("2"),
-            "It has too few active users and new adopters for Featured."
+            "It has too few active dependents and new dependents for Featured."
         );
     }
 
@@ -428,7 +429,7 @@ mod tests {
         assert_eq!(
             texts(&why.lacks),
             [
-                "It has 2 active users and 2 new adopters. Featured needs 11 active users or 9 new adopters.",
+                "It has 2 active dependents and 2 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days.",
                 "Docs are missing: the primary crate publishes no README.",
             ]
         );
@@ -483,7 +484,7 @@ mod tests {
         assert_eq!(why.lead, ["It passes every Featured gate."]);
         assert_eq!(
             why.meets[0].text,
-            "It has 312 active users and 289 new adopters."
+            "It has 312 active dependents and 289 new dependents in 365 days."
         );
         assert!(
             why.meets

@@ -24,13 +24,13 @@ pub struct Signals {
     pub crate_deleted: Option<bool>,
     /// Whether every version is a prerelease or `0.0.x`.
     pub all_prerelease: Option<bool>,
-    /// Active external users.
+    /// Active dependents: crates from other owners, weighted so one owner adds at most 1.
     pub active_users: Option<f64>,
-    /// New adopters over the last 12 months.
+    /// Active dependents whose dependency began in the last 365 days.
     pub new_adopters: Option<f64>,
-    /// The highest active user count on record.
+    /// The highest active dependents count on record.
     pub peak_users: Option<f64>,
-    /// Active users as a share of the peak, in `[0, 1]`.
+    /// Active dependents as a share of the peak, in `[0, 1]`.
     pub former_glory: Option<f64>,
     /// Cleaned downloads per month.
     pub downloads_per_month: Option<u64>,

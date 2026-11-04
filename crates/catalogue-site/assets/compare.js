@@ -7,6 +7,7 @@
 const DATA_DIR = "/data/compare/";
 const INDEX_FILE = `${DATA_DIR}index.json`;
 const NOT_MEASURED = "Not measured";
+const NOT_APPLICABLE = "Not applicable";
 const COMPARE_LIMIT = 4;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -90,6 +91,26 @@ function textCell(text) {
 function amountCell(entry, name) {
   const value = Number.parseFloat(signal(entry, name) ?? "");
   return textCell(Number.isFinite(value) ? String(Math.round(value)) : null);
+}
+
+// The downloads of `entry` with their unit: 30 days for a library, per release for an app.
+function downloadsCell(entry) {
+  const app = entry.kind === "app";
+  const raw = signal(entry, app ? "binary_downloads_per_release" : "downloads_per_month");
+  const value = Number.parseFloat(raw ?? "");
+  if (!Number.isFinite(value)) {
+    return textCell(null);
+  }
+  const count = Math.round(value).toLocaleString("en-US");
+  return textCell(app ? `${count} per release` : `${count} over 30 days`);
+}
+
+// The dependents of `entry`. An app with no crate cannot have any.
+function dependentsCell(entry) {
+  if (entry.kind === "app" && signal(entry, "dependents") === null) {
+    return { text: NOT_APPLICABLE, node: element("span", "fact fact-quiet", NOT_APPLICABLE) };
+  }
+  return amountCell(entry, "dependents");
 }
 
 // `iso` as the lists print it, or null when it is no date.
@@ -247,9 +268,10 @@ const FACTS = [
   { label: "Kind", cell: (entry) => textCell(KIND_NAMES.get(entry.kind)) },
   { label: "Description", cell: (entry) => textCell(entry.description?.text) },
   { label: "Why", cell: whyCell },
-  { label: "Active users", cell: (entry) => amountCell(entry, "active_users") },
-  { label: "New adopters", cell: (entry) => amountCell(entry, "new_adopters") },
-  { label: "Dependents", cell: (entry) => amountCell(entry, "dependents") },
+  { label: "Downloads", cell: downloadsCell },
+  { label: "Dependents", cell: dependentsCell },
+  { label: "Active dependents", cell: (entry) => amountCell(entry, "active_users") },
+  { label: "New dependents (365 days)", cell: (entry) => amountCell(entry, "new_adopters") },
   { label: "Contributors", cell: (entry) => amountCell(entry, "contributors") },
   { label: "Latest version", cell: (entry) => textCell(signal(entry, "latest_version")) },
   { label: "Latest release", cell: (entry) => dateCell(entry, "last_release") },

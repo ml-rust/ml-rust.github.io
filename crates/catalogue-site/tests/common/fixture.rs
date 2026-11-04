@@ -354,7 +354,7 @@ fn report() -> TierReport {
         Tier::Featured,
         vec![
             reason(Rule::ExpectedInterval, "expected interval 80 days"),
-            reason(Rule::Featured, "fails: active users 9 below 11"),
+            reason(Rule::Featured, "fails: active dependents 9 below 11"),
             reason(
                 Rule::DemotionPending,
                 "stays Featured until a demotion judgment is approved",
@@ -362,7 +362,14 @@ fn report() -> TierReport {
         ],
         vec![
             signal("last_release", "Latest release", Some("2026-09-01"), DUMP),
-            signal("active_users", "Active users", Some("9.36"), DUMP),
+            signal("latest_version", "Latest version", Some("0.4.2"), DUMP),
+            signal("active_users", "Active dependents", Some("9.36"), DUMP),
+            signal(
+                "downloads_per_month",
+                "Downloads over 30 days",
+                Some("1840052"),
+                DUMP,
+            ),
             signal("former_glory", "Former glory", None, DUMP),
             signal(STARS_SIGNAL, "GitHub stars", Some("1200"), alpha_repo),
             signal(LICENSE_SIGNAL, "License", Some("Apache-2.0 OR MIT"), DUMP),

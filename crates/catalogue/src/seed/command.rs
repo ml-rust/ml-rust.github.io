@@ -24,7 +24,7 @@ use crate::token::token_from_env;
 /// Days of download history read from the dump. The signals need none.
 const WINDOW_DAYS: u16 = 1;
 
-/// Fewest active users a crate has to draft when `--min-users` is unset.
+/// Fewest active dependents a crate has to draft when `--min-users` is unset.
 const DEFAULT_MIN_USERS: f64 = 2.0;
 
 /// The arguments of `catalogue seed`.
@@ -38,7 +38,7 @@ pub struct SeedArgs {
     /// Directory that holds the cache. Default: the user cache directory.
     #[arg(long, value_name = "DIR")]
     pub cache_dir: Option<PathBuf>,
-    /// Fewest active users a crate has to draft. Default: 2.
+    /// Fewest active dependents a crate has to draft. Default: 2.
     ///
     /// With `--leads` it only labels a draft below it `below-floor`.
     #[arg(long, value_name = "N", value_parser = parse_min_users)]

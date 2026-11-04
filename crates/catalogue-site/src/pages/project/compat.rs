@@ -6,7 +6,7 @@ use catalogue_core::{
 };
 
 use super::sources::{SourceNote, fact_named};
-use crate::pages::shared::{ChoiceText, fact_text, whole_text};
+use crate::pages::shared::{fact_text, native_code_fact, whole_text};
 
 /// The separator between the backends of a runs-on evidence value.
 const EVIDENCE_SEPARATOR: &str = "; ";
@@ -112,7 +112,7 @@ fn python(record: Option<&EntryReport>) -> CompatRow<'_> {
 
 /// The native code row: the plain word first, then the exact statements of the check.
 fn native_code(record: Option<&EntryReport>) -> CompatRow<'_> {
-    let fact = ChoiceText::of(record).native_code;
+    let fact = native_code_fact(record);
     let lines = fact
         .full
         .as_deref()

@@ -7,6 +7,7 @@
 {%- endfor %}
 </dl>
 <p>Tiers come from <a href="/rules/">published rules</a> over raw signals. Stars never count toward a tier.</p>
+<p>Active dependents: crates from other owners that depend on this project in a current release. One owner counts at most once.</p>
 {%- if let Some(note) = movement_note %}
 <p>{{ note }}</p>
 {%- endif %}

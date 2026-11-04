@@ -155,9 +155,9 @@ fn summary(id: &str, report: &TierReport, record: &EntryReport) -> String {
     };
     let text = match id {
         "adoption" => match (whole("active_users"), whole("new_adopters")) {
-            (Some(users), Some(adopters)) => {
-                Some(format!("{users} active users, {adopters} new adopters"))
-            }
+            (Some(users), Some(adopters)) => Some(format!(
+                "{users} active dependents, {adopters} new dependents in 365 days"
+            )),
             _ => value("binary_downloads_per_release")
                 .map(|count| format!("{} binary downloads per release", grouped(count))),
         },
@@ -251,7 +251,7 @@ mod tests {
     #[test]
     fn every_signal_lands_in_exactly_one_group() {
         let names = [
-            "active_users",
+            "binary_downloads_per_release",
             "last_release",
             "stars",
             "docs_present",
@@ -299,7 +299,7 @@ mod tests {
         assert_eq!(
             summaries,
             [
-                "38 active users, 2 new adopters",
+                "38 active dependents, 2 new dependents in 365 days",
                 "Latest human commit: 3 days ago",
                 "Unpatched vulnerabilities: RUSTSEC-1",
                 "38 releases, 1,840,052 downloads over 30 days",

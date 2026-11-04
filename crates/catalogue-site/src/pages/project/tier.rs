@@ -107,7 +107,7 @@ impl<'a> SignalRow<'a> {
             .filter(|_| measured)
             .map(|date| date.to_string());
         Self {
-            label: &fact.label,
+            label: fact.shown_label(),
             value: fact.value.as_deref(),
             source: source.map(|source| NamedLink {
                 name: &source.label,
@@ -125,7 +125,7 @@ fn label_of<'a>(signals: &'a [SignalFact], name: &'a str) -> &'a str {
     signals
         .iter()
         .find(|fact| fact.name == name)
-        .map_or(name, |fact| fact.label.as_str())
+        .map_or(name, SignalFact::shown_label)
 }
 
 #[cfg(test)]
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn unknown_signals_show_their_labels() {
         let signals = [fact("active_users", None, true)];
-        assert_eq!(label_of(&signals, "active_users"), "ACTIVE_USERS");
+        assert_eq!(label_of(&signals, "active_users"), "Active dependents");
         assert_eq!(label_of(&signals, "repo_gone"), "repo_gone");
     }
 }

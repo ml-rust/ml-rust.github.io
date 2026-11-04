@@ -9,8 +9,35 @@ use crate::date_text::plain_option;
 /// The id of the GitHub star count fact. Stars never count toward a tier.
 pub const STARS_SIGNAL: &str = "stars";
 
-/// The id of the active users fact. A tier rule reads it.
+/// The id of the active dependents fact. A tier rule reads it.
 pub const ACTIVE_USERS_SIGNAL: &str = "active_users";
+
+/// The id of the new dependents fact. A tier rule reads it.
+pub const NEW_ADOPTERS_SIGNAL: &str = "new_adopters";
+
+/// The id of the peak active dependents fact. A tier rule reads it.
+pub const PEAK_USERS_SIGNAL: &str = "peak_users";
+
+/// The id of the share of the peak that stays active. A tier rule reads it.
+pub const FORMER_GLORY_SIGNAL: &str = "former_glory";
+
+/// The id of the crates.io downloads over 30 days of a library.
+pub const DOWNLOADS_SIGNAL: &str = "downloads_per_month";
+
+/// The id of the GitHub release downloads per release of an app.
+pub const BINARY_PER_RELEASE_SIGNAL: &str = "binary_downloads_per_release";
+
+/// What a person reads for [`ACTIVE_USERS_SIGNAL`].
+pub const ACTIVE_DEPENDENTS_LABEL: &str = "Active dependents";
+
+/// What a person reads for [`NEW_ADOPTERS_SIGNAL`].
+pub const NEW_DEPENDENTS_LABEL: &str = "New dependents (365 days)";
+
+/// What a person reads for [`PEAK_USERS_SIGNAL`].
+pub const PEAK_DEPENDENTS_LABEL: &str = "Peak active dependents";
+
+/// What a person reads for [`FORMER_GLORY_SIGNAL`].
+pub const FORMER_GLORY_LABEL: &str = "Active dependents as a share of the peak";
 
 /// The id of the license fact: an SPDX expression or [`NONE_STATED`].
 pub const LICENSE_SIGNAL: &str = "license";
@@ -47,6 +74,9 @@ pub const NONE_STATED: &str = "None stated";
 
 /// What a page shows for a fact with no value.
 pub const NOT_MEASURED: &str = "Not measured";
+
+/// What a page shows for a fact the entry kind cannot have, such as the dependents of an app.
+pub const NOT_APPLICABLE: &str = "Not applicable";
 
 /// The facts that help a person choose a project. No tier rule reads them.
 const NEVER_COUNT: [&str; 8] = [
@@ -106,6 +136,18 @@ pub struct SignalFact {
 }
 
 impl SignalFact {
+    /// The name a page prints. A report written before a label changed keeps its old text, so
+    /// the four adoption signals always read their current label.
+    pub fn shown_label(&self) -> &str {
+        match self.name.as_str() {
+            ACTIVE_USERS_SIGNAL => ACTIVE_DEPENDENTS_LABEL,
+            NEW_ADOPTERS_SIGNAL => NEW_DEPENDENTS_LABEL,
+            PEAK_USERS_SIGNAL => PEAK_DEPENDENTS_LABEL,
+            FORMER_GLORY_SIGNAL => FORMER_GLORY_LABEL,
+            _ => &self.label,
+        }
+    }
+
     /// Every provenance rule this fact breaks, one line each.
     ///
     /// - A value needs a source and a fetch date.
@@ -148,6 +190,17 @@ mod tests {
             fetched: fetched.then(|| Date::new(2026, 11, 2).expect("date")),
             counts_toward_tier: true,
         }
+    }
+
+    #[test]
+    fn an_adoption_signal_reads_its_current_label_and_any_other_keeps_its_own() {
+        let mut stale = fact(None, None, false);
+        assert_eq!(stale.shown_label(), "Latest release");
+        stale.name = ACTIVE_USERS_SIGNAL.to_owned();
+        stale.label = "Active users".to_owned();
+        assert_eq!(stale.shown_label(), "Active dependents");
+        stale.name = NEW_ADOPTERS_SIGNAL.to_owned();
+        assert_eq!(stale.shown_label(), "New dependents (365 days)");
     }
 
     #[test]

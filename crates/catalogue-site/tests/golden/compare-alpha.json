@@ -22,7 +22,7 @@
     ],
     "meets": [],
     "lacks": [
-      "Fails: active users 9 below 11."
+      "Fails: active dependents 9 below 11."
     ],
     "found": []
   },
@@ -40,9 +40,31 @@
       "counts_toward_tier": true
     },
     {
+      "name": "latest_version",
+      "label": "Latest version",
+      "value": "0.4.2",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
       "name": "active_users",
-      "label": "Active users",
+      "label": "Active dependents",
       "value": "9.36",
+      "source": {
+        "label": "crates.io database dump",
+        "url": "https://crates.io/data-access"
+      },
+      "fetched": "2026-11-03",
+      "counts_toward_tier": true
+    },
+    {
+      "name": "downloads_per_month",
+      "label": "Downloads over 30 days",
+      "value": "1840052",
       "source": {
         "label": "crates.io database dump",
         "url": "https://crates.io/data-access"

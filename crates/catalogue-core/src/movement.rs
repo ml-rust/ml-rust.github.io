@@ -10,9 +10,9 @@ use crate::ids::Slug;
 pub enum MovementKind {
     /// First seen inside the window.
     New,
-    /// Active users rose by at least the set share and number.
+    /// Active dependents rose by at least the set share and number.
     Rising,
-    /// Active users fell by at least the set share and number.
+    /// Active dependents fell by at least the set share and number.
     Falling,
 }
 
@@ -25,14 +25,14 @@ pub struct FirstSeen {
     pub date: Date,
 }
 
-/// An entry whose active users changed enough to count.
+/// An entry whose active dependents changed enough to count.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UsersChange {
     /// The entry slug.
     pub slug: Slug,
-    /// The active users in the baseline snapshot.
+    /// The active dependents in the baseline snapshot.
     pub from: f64,
-    /// The active users in the newest snapshot.
+    /// The active dependents in the newest snapshot.
     pub to: f64,
 }
 
@@ -45,9 +45,9 @@ pub struct MeasuredMovement {
     pub baseline: Date,
     /// The entries first seen inside the window.
     pub new: Vec<FirstSeen>,
-    /// The entries whose active users rose.
+    /// The entries whose active dependents rose.
     pub rising: Vec<UsersChange>,
-    /// The entries whose active users fell.
+    /// The entries whose active dependents fell.
     pub falling: Vec<UsersChange>,
 }
 

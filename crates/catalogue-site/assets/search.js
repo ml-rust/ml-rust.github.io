@@ -14,6 +14,7 @@ const RESULT_SLUG = /^\/projects\/([a-z0-9-]+)\/$/;
 const TIER_VALUE = /^[a-z]+$/;
 // The word a row prints for a fact with no value.
 const NOT_MEASURED = "Not measured";
+const NOT_APPLICABLE = "Not applicable";
 
 const form = document.getElementById("search-form");
 const input = document.getElementById("search-q");
@@ -193,7 +194,8 @@ function tagsOf(hit) {
 function factSpan(found, name) {
   const short = found[`row_${name}`] ?? NOT_MEASURED;
   const full = found[`row_${name}_full`];
-  const quiet = short === NOT_MEASURED || (full !== undefined && short.startsWith("None"));
+  const quiet = short === NOT_MEASURED || short === NOT_APPLICABLE
+    || (full !== undefined && short.startsWith("None"));
   const span = element("span", quiet ? "fact fact-quiet" : "fact");
   if (full === undefined) {
     span.textContent = short;
@@ -214,14 +216,21 @@ function factCell(name, label, ...content) {
   return cell;
 }
 
-// The cell of the latest release, with its date in a time element when it has one.
+// The cell of the latest release: the version, then its date in a time element.
 function releaseCell(found) {
-  if (!found.row_released_iso) {
-    return factCell("release", "Latest release", factSpan(found, "released"));
+  const parts = [];
+  if (found.row_version) {
+    parts.push(element("span", "release-version", found.row_version));
   }
-  const time = element("time", "", found.row_released ?? "");
-  time.setAttribute("datetime", found.row_released_iso);
-  return factCell("release", "Latest release", time);
+  if (found.row_released_iso) {
+    const time = element("time", "release-date", found.row_released ?? "");
+    time.setAttribute("datetime", found.row_released_iso);
+    parts.push(time);
+  }
+  if (parts.length === 0) {
+    parts.push(factSpan(found, "released"));
+  }
+  return factCell("release", "Latest release", ...parts);
 }
 
 // The table row of `hit`, in the markup of every other list.
@@ -266,7 +275,8 @@ function resultRow(hit) {
   }
   row.append(
     project,
-    factCell("users", "Active users", factSpan(found, "users")),
+    factCell("downloads", "Downloads", factSpan(found, "downloads")),
+    factCell("dependents", "Dependents", factSpan(found, "dependents")),
     releaseCell(found),
     factCell("gpu", "Runs on (GPU)", factSpan(found, "gpu")),
     factCell("native", "Native code", factSpan(found, "native")),

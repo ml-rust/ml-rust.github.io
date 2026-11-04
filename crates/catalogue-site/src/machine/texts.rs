@@ -103,7 +103,7 @@ Each entry
 - signals: every signal of the check.
 
 Each signal
-- name: the stable id.
+- name: the stable id. active_users is the raw id of Active dependents: crates from other owners that depend on this project in a current release, where one owner counts at most once. new_adopters is the raw id of New dependents (365 days): the same count, limited to dependencies that began in the last 365 days.
 - label: the name the page shows.
 - value: the raw value as text, or null when not measured.
 - source: label and url of the page that holds the value. Null when not measured.

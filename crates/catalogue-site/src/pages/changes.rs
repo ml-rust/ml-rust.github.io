@@ -44,9 +44,9 @@ pub(crate) struct MovementSection<'a> {
     pub order: &'static str,
     /// The entries first seen inside the window.
     pub new: Vec<FirstSeenRow<'a>>,
-    /// The entries whose active users rose.
+    /// The entries whose active dependents rose.
     pub rising: Vec<UsersRow<'a>>,
-    /// The entries whose active users fell.
+    /// The entries whose active dependents fell.
     pub falling: Vec<UsersRow<'a>>,
 }
 
@@ -61,14 +61,14 @@ pub(crate) struct FirstSeenRow<'a> {
     pub date_text: String,
 }
 
-/// One entry whose active users changed enough to count.
+/// One entry whose active dependents changed enough to count.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct UsersRow<'a> {
     /// The link to the entry.
     pub entry: NamedLink<'a>,
-    /// The active users in the baseline snapshot.
+    /// The active dependents in the baseline snapshot.
     pub from: String,
-    /// The active users in the newest snapshot.
+    /// The active dependents in the newest snapshot.
     pub to: String,
 }
 

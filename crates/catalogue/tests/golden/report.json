@@ -113,7 +113,7 @@
         },
         {
           "name": "active_users",
-          "label": "Active users",
+          "label": "Active dependents",
           "value": "0",
           "source": {
             "label": "crates.io database dump",
@@ -124,7 +124,7 @@
         },
         {
           "name": "new_adopters",
-          "label": "New adopters over 12 months",
+          "label": "New dependents (365 days)",
           "value": "0",
           "source": {
             "label": "crates.io database dump",
@@ -135,7 +135,7 @@
         },
         {
           "name": "peak_users",
-          "label": "Peak active users",
+          "label": "Peak active dependents",
           "value": "0",
           "source": {
             "label": "crates.io database dump",
@@ -146,7 +146,7 @@
         },
         {
           "name": "former_glory",
-          "label": "Active users as a share of the peak",
+          "label": "Active dependents as a share of the peak",
           "value": "1",
           "source": {
             "label": "crates.io database dump",
@@ -526,7 +526,7 @@
         },
         {
           "name": "active_users",
-          "label": "Active users",
+          "label": "Active dependents",
           "value": null,
           "source": null,
           "fetched": null,
@@ -534,7 +534,7 @@
         },
         {
           "name": "new_adopters",
-          "label": "New adopters over 12 months",
+          "label": "New dependents (365 days)",
           "value": null,
           "source": null,
           "fetched": null,
@@ -542,7 +542,7 @@
         },
         {
           "name": "peak_users",
-          "label": "Peak active users",
+          "label": "Peak active dependents",
           "value": null,
           "source": null,
           "fetched": null,
@@ -550,7 +550,7 @@
         },
         {
           "name": "former_glory",
-          "label": "Active users as a share of the peak",
+          "label": "Active dependents as a share of the peak",
           "value": null,
           "source": null,
           "fetched": null,
@@ -893,7 +893,7 @@
         },
         {
           "name": "active_users",
-          "label": "Active users",
+          "label": "Active dependents",
           "value": null,
           "source": null,
           "fetched": null,
@@ -901,7 +901,7 @@
         },
         {
           "name": "new_adopters",
-          "label": "New adopters over 12 months",
+          "label": "New dependents (365 days)",
           "value": null,
           "source": null,
           "fetched": null,
@@ -909,7 +909,7 @@
         },
         {
           "name": "peak_users",
-          "label": "Peak active users",
+          "label": "Peak active dependents",
           "value": null,
           "source": null,
           "fetched": null,
@@ -917,7 +917,7 @@
         },
         {
           "name": "former_glory",
-          "label": "Active users as a share of the peak",
+          "label": "Active dependents as a share of the peak",
           "value": null,
           "source": null,
           "fetched": null,

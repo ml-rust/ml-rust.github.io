@@ -39,7 +39,7 @@ fn parse_version(text: &str) -> (u64, u64, u64) {
 /// A library with a known latest version starts from the first matching base:
 /// patch > 3 and major >= 1, patch > 3, patch > 0, major >= 1, minor > 3, else other.
 /// E is at most `release_count * days_per_release_cap`. E doubles when downloads
-/// per month exceed `downloads_per_month_double`, and again when active users exceed
+/// per month exceed `downloads_per_month_double`, and again when active dependents exceed
 /// `active_users_double`. E is never below `dormancy.min_days`. An app, or a library
 /// without a known latest version, uses `dormancy.min_days`. An unknown cap or
 /// doubling input leaves that step out and is named in `needs`.

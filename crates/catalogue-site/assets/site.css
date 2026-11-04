@@ -903,8 +903,12 @@ h1 + .lede {
   border-top-right-radius: var(--radius-l);
 }
 
-.col-users {
-  width: 120px;
+.col-downloads {
+  width: 112px;
+}
+
+.col-dependents {
+  width: 108px;
 }
 
 .col-release {
@@ -912,15 +916,28 @@ h1 + .lede {
 }
 
 .col-gpu {
-  width: 148px;
+  width: 136px;
 }
 
 .col-native {
-  width: 124px;
+  width: 112px;
 }
 
 .col-license {
-  width: 140px;
+  width: 128px;
+}
+
+/* The latest release: the version, with its date beneath it. */
+.release-version,
+.release-date {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.release-version + .release-date {
+  color: var(--secondary);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
 }
 
 .rows .rows-group th {
@@ -1830,24 +1847,28 @@ h1 + .lede {
   width: auto;
 }
 
-.rows-compact .col-users {
-  width: 78px;
+.rows-compact .col-downloads {
+  width: 100px;
+}
+
+.rows-compact .col-dependents {
+  width: 104px;
 }
 
 .rows-compact .col-release {
-  width: 102px;
+  width: 100px;
 }
 
 .rows-compact .col-gpu {
-  width: 110px;
+  width: 92px;
 }
 
 .rows-compact .col-native {
-  width: 80px;
+  width: 88px;
 }
 
 .rows-compact .col-license {
-  width: 112px;
+  width: 92px;
 }
 
 .rows-compact thead th:not(:first-child),
@@ -3106,9 +3127,9 @@ td.not-measured {
     line-height: 1rem;
   }
 
-  .cell-users,
-  .cell-release,
-  .cell-license {
+  .cell-downloads,
+  .cell-dependents,
+  .cell-release {
     grid-column: span 2;
   }
 
@@ -3116,6 +3137,11 @@ td.not-measured {
   .cell-native {
     grid-column: span 3;
     order: 1;
+  }
+
+  .cell-license {
+    grid-column: 1 / -1;
+    order: 2;
   }
 
   /* The whole row opens the project. Links inside it stay on top. */

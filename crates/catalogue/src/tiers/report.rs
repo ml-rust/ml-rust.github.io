@@ -119,7 +119,7 @@ mod tests {
         let path = dir.path().join("report.json");
         let fact = catalogue_core::SignalFact {
             name: "active_users".to_owned(),
-            label: "Active users".to_owned(),
+            label: "Active dependents".to_owned(),
             value: Some("3".to_owned()),
             source: None,
             fetched: None,

@@ -12,7 +12,7 @@
 
 <section class="start-here" aria-labelledby="start-here">
 <h2 id="start-here">Start here</h2>
-<p class="start-note">The Featured projects with the most active users.</p>
+<p class="start-note">The Featured projects with the most downloads.</p>
 <ul class="start-list">
 {%- for row in head.start %}
 <li class="start-card">
@@ -22,7 +22,7 @@
 <p class="start-install">{% if let Some(command) = install.command %}<code>{{ command }}</code>{% else %}<a href="{{ install.href }}">{{ install.text }}</a>{% endif %}</p>
 {%- endif %}
 {%- if let Some(choice) = row.choice %}
-<p class="start-facts"><span>{% if choice.users.is_some() %}{{ choice.active_users.short }} active users{% else %}Active users: {{ choice.active_users.short }}{% endif %}</span> <span>Latest release: {{ choice.latest_release.short }}</span></p>
+<p class="start-facts"><span>{{ choice.downloads_line }}</span> <span>Latest release: {% if let Some(version) = choice.version %}{{ version }}, {% endif %}{{ choice.latest_release.short }}</span></p>
 {%- endif %}
 </li>
 {%- endfor %}

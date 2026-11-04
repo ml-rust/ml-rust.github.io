@@ -1,6 +1,6 @@
 //! One entry as a list row: name link, tier badge, description, and the facts a person compares.
 
-use catalogue_core::{Entry, EntryReport, Slug, Tier, TierReport};
+use catalogue_core::{Entry, EntryKind, EntryReport, Slug, Tier, TierReport};
 
 use super::badge::TierBadge;
 use super::choice::ChoiceText;
@@ -34,6 +34,8 @@ pub(crate) struct EntryRow<'a> {
     pub kind: &'static str,
     /// The kind id, for the row's data attribute.
     pub kind_id: &'static str,
+    /// The entry kind, which picks the download signal of the row.
+    entry_kind: EntryKind,
     /// The tier badge. `None` without a report.
     pub badge: Option<TierBadge>,
     /// The tier id, for the row's data attribute. `None` without a report.
@@ -100,6 +102,7 @@ impl<'a> EntryRow<'a> {
             href: project_href(slug),
             kind: kind_name(entry.kind),
             kind_id: entry.kind.as_str(),
+            entry_kind: entry.kind,
             badge: tier.map(TierBadge::of),
             tier_id: tier.map(Tier::as_str),
             description: &entry.description.text,
@@ -125,7 +128,7 @@ impl<'a> EntryRow<'a> {
 
     /// The row with the facts of `record`. Without a record, each fact reads as not measured.
     pub(crate) fn with_choice(mut self, record: Option<&EntryReport>) -> Self {
-        self.choice = Some(ChoiceText::of(record));
+        self.choice = Some(ChoiceText::of(self.entry_kind, record));
         self.statuses = record.map(row_statuses).unwrap_or_default();
         self
     }

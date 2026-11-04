@@ -3,7 +3,10 @@
 use std::fmt::Display;
 
 use catalogue_core::amount_text::precise;
-use catalogue_core::{Date, EntryKind, STARS_SIGNAL, SignalFact, Signals, SourceRef};
+use catalogue_core::{
+    ACTIVE_DEPENDENTS_LABEL, Date, EntryKind, FORMER_GLORY_LABEL, NEW_DEPENDENTS_LABEL,
+    PEAK_DEPENDENTS_LABEL, STARS_SIGNAL, SignalFact, Signals, SourceRef,
+};
 use url::Url;
 
 use super::sources::{BUILD_CHECK_PAGE, DUMP_PAGE, DUMP_SOURCE, FactSources};
@@ -169,25 +172,25 @@ fn dump_rows(signals: &Signals) -> Vec<Row> {
         ),
         (
             "active_users",
-            "Active users",
+            ACTIVE_DEPENDENTS_LABEL,
             amount(signals.active_users),
             Origin::Dump,
         ),
         (
             "new_adopters",
-            "New adopters over 12 months",
+            NEW_DEPENDENTS_LABEL,
             amount(signals.new_adopters),
             Origin::Dump,
         ),
         (
             "peak_users",
-            "Peak active users",
+            PEAK_DEPENDENTS_LABEL,
             amount(signals.peak_users),
             Origin::Dump,
         ),
         (
             "former_glory",
-            "Active users as a share of the peak",
+            FORMER_GLORY_LABEL,
             amount(signals.former_glory),
             Origin::Dump,
         ),

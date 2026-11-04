@@ -14,7 +14,7 @@ use crate::build::OutputFile;
 use crate::error::SiteError;
 use crate::href::SafeHref;
 use crate::inputs::SiteInputs;
-use crate::pages::{ChoiceText, WhyText, docs_href, install_line};
+use crate::pages::{WhyText, docs_href, install_line, native_code_fact};
 
 /// The path of the file below the site root.
 pub(crate) const CATALOGUE_FILE: &str = "data/catalogue.json";
@@ -122,7 +122,7 @@ impl<'a> SignalRecord<'a> {
         let measured = fact.value.is_some();
         Self {
             name: &fact.name,
-            label: &fact.label,
+            label: fact.shown_label(),
             value: fact.value.as_deref(),
             source: fact
                 .source
@@ -171,7 +171,7 @@ impl<'a> EntryRecord<'a> {
             docs: docs_href(entry).as_ref().and_then(href_text),
             tier: record.map(|record| record.tier),
             why: record.map(|record| WhyText::of(record, entry.kind, thresholds).into()),
-            native_word: ChoiceText::of(record).native_code.short,
+            native_word: native_code_fact(record).short,
             reasons: record
                 .map(|record| record.reasons.as_slice())
                 .unwrap_or_default(),
@@ -306,7 +306,7 @@ mod tests {
         assert!(core["reasons"].as_array().expect("reasons").is_empty());
         let signal = &core["signals"][0];
         assert_eq!(signal["name"], "active_users");
-        assert_eq!(signal["label"], "Active users");
+        assert_eq!(signal["label"], "Active dependents");
         assert_eq!(signal["value"], "12.5");
         assert_eq!(signal["source"]["label"], "dump");
         assert_eq!(signal["source"]["url"], "https://crates.io/data-access");
@@ -373,6 +373,7 @@ mod tests {
     fn markup_in_a_value_stays_escaped_and_parses_back() {
         let data = catalogue(vec![entry("alpha", "")]);
         let mut found = record(Tier::Listed, Some("3"));
+        found.signals[0].name = "a_later_signal".to_owned();
         found.signals[0].label = "<script>&".to_owned();
         let tiers = report(vec![("alpha", found)]);
         let file = built(&data, Some(&tiers));

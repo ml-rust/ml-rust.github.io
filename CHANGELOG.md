@@ -49,6 +49,8 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Changed
 
+- Lists lead with downloads and dependents, show versions, and order by downloads.
+- "Active users" now reads "active dependents".
 - Data file schema 2: adds install lines, docs links and plain tier reasons.
 - New site theme on every page. Project pages explain each tier and compare neighbours.
 - The New tier now means a recent first release only.

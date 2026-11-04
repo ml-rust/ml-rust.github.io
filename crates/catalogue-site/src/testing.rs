@@ -3,15 +3,15 @@
 use std::collections::BTreeMap;
 
 use catalogue_core::{
-    ACTIVE_USERS_SIGNAL, Catalogue, DataSources, Date, EntryReport, REPORT_SCHEMA, SignalFact,
-    Slug, SourceFile, SourceRef, Tier, TierReport,
+    ACTIVE_USERS_SIGNAL, Catalogue, DOWNLOADS_SIGNAL, DataSources, Date, EntryReport,
+    REPORT_SCHEMA, SignalFact, Slug, SourceFile, SourceRef, Tier, TierReport,
 };
 use url::Url;
 
 /// One topic that every test entry names.
 const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\n";
 
-fn source(path: &str, contents: String) -> SourceFile {
+pub(crate) fn source(path: &str, contents: String) -> SourceFile {
     SourceFile {
         path: path.to_owned(),
         contents,
@@ -45,21 +45,23 @@ pub(crate) fn catalogue(entries: Vec<SourceFile>) -> Catalogue {
     .unwrap_or_else(|diagnostics| panic!("invalid data: {diagnostics}"))
 }
 
-/// A record with `tier`, and an active users fact when `users` is given.
-pub(crate) fn record(tier: Tier, users: Option<&str>) -> EntryReport {
-    let signals = users
-        .map(|value| SignalFact {
-            name: ACTIVE_USERS_SIGNAL.to_owned(),
-            label: "Active users".to_owned(),
-            value: Some(value.to_owned()),
-            source: Some(SourceRef::new(
-                "dump",
-                Url::parse("https://crates.io/data-access").expect("url"),
-            )),
-            fetched: Date::new(2026, 11, 2).ok(),
-            counts_toward_tier: true,
-        })
+/// A record with `tier`. A given `amount` is both its active dependents and its downloads.
+pub(crate) fn record(tier: Tier, amount: Option<&str>) -> EntryReport {
+    let signals = amount
         .into_iter()
+        .flat_map(|value| {
+            [ACTIVE_USERS_SIGNAL, DOWNLOADS_SIGNAL].map(|name| SignalFact {
+                name: name.to_owned(),
+                label: name.to_owned(),
+                value: Some(value.to_owned()),
+                source: Some(SourceRef::new(
+                    "dump",
+                    Url::parse("https://crates.io/data-access").expect("url"),
+                )),
+                fetched: Date::new(2026, 11, 2).ok(),
+                counts_toward_tier: true,
+            })
+        })
         .collect();
     EntryReport {
         tier,

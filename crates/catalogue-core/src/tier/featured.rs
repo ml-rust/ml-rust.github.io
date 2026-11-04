@@ -17,7 +17,7 @@ pub(super) struct Gate {
     pub failure: String,
 }
 
-/// The library gates: adoption by active users or new adopters, no unpatched
+/// The library gates: adoption by active or new dependents, no unpatched
 /// vulnerability, a verified repository link, `former_glory`, and docs.
 fn library_gates(signals: &Signals, t: &LibraryFeaturedThresholds) -> Vec<Gate> {
     vec![

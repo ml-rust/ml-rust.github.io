@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.7e7f8034.css">
+<link rel="stylesheet" href="/assets/site.f94d9d0e.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -90,6 +90,8 @@
 </li>
 <li><a href="#facts">Facts, lists and movement</a>
 <ul>
+<li><a href="#active-dependents">Active dependents</a></li>
+<li><a href="#downloads">Downloads</a></li>
 <li><a href="#choice-facts">Facts that never count</a></li>
 <li><a href="#list-order">List order</a></li>
 <li><a href="#movement">Movement</a></li>
@@ -116,7 +118,7 @@
 <p>A library is Featured when it is active and passes every gate.</p>
 <p>Active means not dormant, or finished.</p>
 <ul>
-<li>Active users or new adopters reach their limit.</li>
+<li>Active dependents or new dependents (365 days) reach their limit.</li>
 <li>No vulnerability advisory is unpatched past the grace window.</li>
 <li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
 <li>Former glory reaches its floor.</li>
@@ -132,8 +134,8 @@
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
 <tbody>
-<tr><th scope="row"><code>library_featured.min_active_users</code></th><td class="number">11</td><td>Fewest active users. This gate or the new-adopter gate passes.</td></tr>
-<tr><th scope="row"><code>library_featured.min_new_adopters</code></th><td class="number">9</td><td>Fewest new adopters over 12 months. This gate or the active-user gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_active_users</code></th><td class="number">11</td><td>Fewest active dependents. This gate or the new-dependents gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_new_adopters</code></th><td class="number">9</td><td>Fewest new dependents (365 days). This gate or the active-dependents gate passes.</td></tr>
 <tr><th scope="row"><code>library_featured.min_former_glory</code></th><td class="number">0.5</td><td>Lowest former glory, a share from 0 to 1.</td></tr>
 </tbody>
 </table>
@@ -172,7 +174,7 @@
 <div class="rule-text">
 <h3 id="new">New <span class="tier-word tier-new">New</span></h3>
 <p>An entry is New when its first release is younger than the age limit.</p>
-<p class="why-note">Age alone decides. An old entry with few users or only prerelease versions is not New.</p>
+<p class="why-note">Age alone decides. An old entry with few dependents or only prerelease versions is not New.</p>
 </div>
 <div class="table-scroll rule-rows">
 <table class="data-table threshold-table">
@@ -241,7 +243,7 @@
 <p>Each entry gets an expected update interval E, in days.</p>
 <p>A library starts from a base chosen by its latest version. The first matching base in the table applies.</p>
 <p class="why-note">Then E is capped at the release count times the days-per-release cap.</p>
-<p class="why-note">Then E doubles when monthly downloads pass their limit. It doubles again when active users pass theirs.</p>
+<p class="why-note">Then E doubles when monthly downloads pass their limit. It doubles again when active dependents pass theirs.</p>
 <p class="why-note">E is never below the dormancy floor.</p>
 <p class="why-note">An app, or a library with no known latest version, uses the dormancy floor.</p>
 <p class="why-note">A step that lacks its signal is left out.</p>
@@ -261,7 +263,7 @@
 <tr><th scope="row"><code>interval.other</code></th><td class="number">80</td><td>Base in days: every other version.</td></tr>
 <tr><th scope="row"><code>interval.days_per_release_cap</code></th><td class="number">50</td><td>Days per release. E is at most the release count times this.</td></tr>
 <tr><th scope="row"><code>interval.downloads_per_month_double</code></th><td class="number">50000</td><td>Monthly downloads above this double E.</td></tr>
-<tr><th scope="row"><code>interval.active_users_double</code></th><td class="number">10</td><td>Active users above this double E.</td></tr>
+<tr><th scope="row"><code>interval.active_users_double</code></th><td class="number">10</td><td>Active dependents above this double E.</td></tr>
 <tr><th scope="row"><code>dormancy.min_days</code></th><td class="number">365</td><td>The dormancy floor: smallest E in days, and E for every app.</td></tr>
 </tbody>
 </table>
@@ -287,7 +289,7 @@
 <li><strong>R5</strong> The repository no longer exists.</li>
 <li><strong>R6</strong> A library’s latest release fails cargo check on current stable Rust.</li>
 </ul>
-<p class="why-note">Former glory is active users as a share of their peak.</p>
+<p class="why-note">Former glory is active dependents as a share of their peak.</p>
 <p class="why-note">R3 and R6 apply to libraries only. Apps have no former glory and no crate release to check.</p>
 <p class="why-note">A sandbox build check older than its age limit counts as unknown.</p>
 <p class="why-note">A rot check that lacks a signal counts neither way.</p>
@@ -314,7 +316,7 @@
 <p>A dormant entry with no rot signal that is still adopted is finished.</p>
 <p>A “finished” maintainer statement with no rot signal also makes an entry finished.</p>
 <p>No rot signal means every rot check is known and none fires.</p>
-<p class="why-note">A library stays adopted on new adopters or on former glory.</p>
+<p class="why-note">A library stays adopted on new dependents (365 days) or on former glory.</p>
 <p class="why-note">An app stays adopted on binary downloads per release.</p>
 <p class="why-note">A finished entry carries a stable label. It counts as active for Featured.</p>
 </div>
@@ -326,7 +328,7 @@
 </thead>
 <tbody>
 <tr><th scope="row"><code>finished.min_former_glory</code></th><td class="number">0.8</td><td>Lowest former glory of a finished library.</td></tr>
-<tr><th scope="row"><code>finished.min_new_adopters</code></th><td class="number">1</td><td>Fewest new adopters of a finished library.</td></tr>
+<tr><th scope="row"><code>finished.min_new_adopters</code></th><td class="number">1</td><td>Fewest new dependents (365 days) of a finished library.</td></tr>
 <tr><th scope="row"><code>finished.min_binary_downloads_per_release</code></th><td class="number">200</td><td>Fewest binary downloads per release of a finished app.</td></tr>
 </tbody>
 </table>
@@ -373,6 +375,30 @@
 </section>
 <section class="rule-group" aria-labelledby="facts">
 <h2 id="facts">Facts, lists and movement</h2>
+<article class="rule" aria-labelledby="active-dependents">
+<div class="rule-text">
+<h3 id="active-dependents">Active dependents</h3>
+<p>Active dependents: crates from other owners that depend on this project in a current release. One owner counts at most once.</p>
+<p>A crate with several owners splits its count among them, so the raw value can hold a fraction. Lists and sentences round it.</p>
+<p>The project&#39;s own owners, its publishers and shared maintenance accounts never count. A dependency stops counting when the crate publishes a release without it, or when its latest release grows too old.</p>
+<ul>
+<li><strong>Active dependents</strong> Raw key active_users. The Featured rule reads this number.</li>
+<li><strong>New dependents (365 days)</strong> Raw key new_adopters. Active dependents whose dependency began in the last 365 days.</li>
+<li><strong>Peak active dependents</strong> Raw key peak_users. The highest level on record, from monthly samples.</li>
+<li><strong>Former glory</strong> Raw key former_glory. Active dependents as a share of the peak.</li>
+</ul>
+<p class="why-note">The raw keys keep their names in the data files and the rule outcomes.</p>
+</div>
+</article>
+<article class="rule" aria-labelledby="downloads">
+<div class="rule-text">
+<h3 id="downloads">Downloads</h3>
+<p>A library reads the downloads of its primary crate over the last 30 days, from the crates.io database dump. Raw key downloads_per_month.</p>
+<p>An app has no 30-day count. It reads binary downloads per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.</p>
+<p>An app with no release reads as not measured, never as 0.</p>
+<p class="why-note">Lists sort by these numbers. The tier rules read only the limits this page names.</p>
+</div>
+</article>
 <article class="rule" aria-labelledby="choice-facts">
 <div class="rule-text">
 <h3 id="choice-facts">Facts that never count</h3>
@@ -383,7 +409,7 @@
 <li><strong>Runs on</strong> Each listed crate&#39;s default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. No GPU feature found means the dump holds the crates and no row matches. It does not prove the project runs on a CPU only. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.</li>
 <li><strong>Native code</strong> No native code found, or what the project binds. The check follows the normal dependencies of each listed crate, and theirs in turn. A hit is a crate named -sys or a crate with a links key. Crates that bind no foreign library never count. An optional dependency of a listed crate names the feature that enables it. A build dependency such as cc or cmake shows that the build uses a native toolchain. C built with no links key, no -sys crate and no such build dependency stays unseen. So does native code kept outside crates.io.</li>
 <li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it. No Python binding crate found means no such crate shows on crates.io. Bindings kept outside crates.io stay unseen.</li>
-<li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.</li>
+<li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.</li>
 <li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
 </ul>
 <p class="why-note">An unknown value reads as not measured.</p>
@@ -392,8 +418,9 @@
 <article class="rule" aria-labelledby="list-order">
 <div class="rule-text">
 <h3 id="list-order">List order</h3>
-<p>Lists show the strongest tier first, then the most active users, then the name. A value not measured sorts last.</p>
-<p>This is an order and never a score. No page prints a rank.</p>
+<p>Lists show the strongest tier first, then the most downloads, then the name. A value not measured sorts last.</p>
+<p>A library counts downloads over 30 days. An app counts binary downloads per release. The two units differ, and each row names its own.</p>
+<p>This is an order and never a score. No page prints a rank, and no tier reads it.</p>
 <p>A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.</p>
 </div>
 </article>
@@ -403,8 +430,8 @@
 <p>Movement comes from the daily snapshots. It never affects a tier.</p>
 <ul>
 <li><strong>New</strong> The entry first appears in the history inside the window. The first day of history does not count, because every entry appears then.</li>
-<li><strong>Rising</strong> Active users rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.</li>
-<li><strong>Falling</strong> Active users fell by at least the set share and the set number, over the same two snapshots.</li>
+<li><strong>Rising</strong> Active dependents rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.</li>
+<li><strong>Falling</strong> Active dependents fell by at least the set share and the set number, over the same two snapshots.</li>
 </ul>
 <p class="why-note">A value missing at either end gives no movement. History shorter than the window gives none, and pages say movement needs more history.</p>
 </div>
@@ -417,7 +444,7 @@
 <tbody>
 <tr><th scope="row"><code>movement.window_days</code></th><td class="number">30</td><td>Days between the newest snapshot and the window start.</td></tr>
 <tr><th scope="row"><code>movement.min_share</code></th><td class="number">0.25</td><td>Smallest change, as a share of the value at the window start.</td></tr>
-<tr><th scope="row"><code>movement.min_users</code></th><td class="number">5</td><td>Smallest change in active users.</td></tr>
+<tr><th scope="row"><code>movement.min_users</code></th><td class="number">5</td><td>Smallest change in active dependents.</td></tr>
 </tbody>
 </table>
 </div>

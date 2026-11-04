@@ -1,17 +1,23 @@
 //! The facts a person reads to choose a project, as text for list rows and the data files.
 
-use catalogue_core::amount_text::whole;
+use catalogue_core::amount_text::{compact, whole};
 use catalogue_core::{
-    ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, EntryReport, LICENSE_SIGNAL,
-    NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_SEPARATOR,
-    RUNS_ON_SIGNAL,
+    BINARY_PER_RELEASE_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, DOWNLOADS_SIGNAL, EntryKind,
+    EntryReport, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NOT_APPLICABLE, NOT_MEASURED,
+    PYTHON_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL,
 };
 
-use super::date_text::date_text;
+use super::date_text::{date_text, grouped};
 use super::license_family::license_family;
 
 /// The id of the latest release fact.
 const LATEST_RELEASE_SIGNAL: &str = "last_release";
+
+/// The id of the latest version fact.
+const VERSION_SIGNAL: &str = "latest_version";
+
+/// The words after the downloads of an app in a list cell.
+const PER_RELEASE: &str = " per release";
 
 /// The value of a measured project where the check finds no native code.
 const NO_NATIVE_CODE: &str = "No native code found";
@@ -68,6 +74,85 @@ fn whole_value(record: Option<&EntryReport>, name: &str) -> Option<String> {
         .and_then(whole)
 }
 
+/// The signal that holds the downloads of an entry of `kind`.
+///
+/// An app has no 30-day count. GitHub reports totals per release asset, so an app reads downloads
+/// per release, and every page names that unit.
+pub(crate) fn downloads_signal(kind: EntryKind) -> &'static str {
+    match kind {
+        EntryKind::Library => DOWNLOADS_SIGNAL,
+        EntryKind::App => BINARY_PER_RELEASE_SIGNAL,
+    }
+}
+
+/// The downloads of an entry of `kind` as a number for ordering. `None` when not measured.
+pub(crate) fn download_count(kind: EntryKind, record: Option<&EntryReport>) -> Option<f64> {
+    record
+        .and_then(|record| record.value_of(downloads_signal(kind)))
+        .and_then(|text| text.parse::<f64>().ok())
+        .filter(|value| value.is_finite())
+}
+
+/// The dependents of an entry of `kind` for a person to read.
+///
+/// An app without a crate on crates.io cannot have dependents, which differs from a value the
+/// check failed to measure. An app that ships a crate keeps its measured count.
+pub(crate) fn dependents_text(kind: EntryKind, record: Option<&EntryReport>) -> String {
+    whole_value(record, DEPENDENTS_SIGNAL).map_or_else(
+        || missing_dependents(kind).to_owned(),
+        |count| grouped(&count),
+    )
+}
+
+/// What the dependents of an entry of `kind` read with no value.
+fn missing_dependents(kind: EntryKind) -> &'static str {
+    match kind {
+        EntryKind::Library => NOT_MEASURED,
+        EntryKind::App => NOT_APPLICABLE,
+    }
+}
+
+/// The downloads cell: the short form with its unit, and the exact number in the full wording.
+fn downloads_fact(kind: EntryKind, count: Option<&str>) -> CellFact {
+    let parts = count.and_then(|count| Some((compact(count)?, grouped(count))));
+    let Some((short, exact)) = parts else {
+        return CellFact::not_measured();
+    };
+    match kind {
+        EntryKind::Library => CellFact {
+            short,
+            full: Some(format!("{exact} downloads over 30 days")),
+            quiet: false,
+        },
+        EntryKind::App => CellFact {
+            short: format!("{short}{PER_RELEASE}"),
+            full: Some(format!("{exact} binary downloads per release")),
+            quiet: false,
+        },
+    }
+}
+
+/// The downloads as one line of text, for a place with no column heading.
+fn downloads_line(kind: EntryKind, cell: &CellFact) -> String {
+    if cell.quiet {
+        return format!("Downloads: {}", cell.short);
+    }
+    match kind {
+        EntryKind::Library => format!("{} downloads (30 days)", cell.short),
+        EntryKind::App => {
+            let count = cell.short.strip_suffix(PER_RELEASE).unwrap_or(&cell.short);
+            format!("{count} downloads per release")
+        }
+    }
+}
+
+/// The native code fact of `record` in short form, with the exact wording kept.
+pub(crate) fn native_code_fact(record: Option<&EntryReport>) -> CellFact {
+    record
+        .and_then(|record| record.value_of(NATIVE_CODE_SIGNAL))
+        .map_or_else(CellFact::not_measured, native_fact)
+}
+
 /// One value in a row: short text, with the full wording when the two differ.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CellFact {
@@ -85,6 +170,14 @@ impl CellFact {
             short: text.into(),
             full: None,
             quiet: false,
+        }
+    }
+
+    fn not_applicable() -> Self {
+        Self {
+            short: NOT_APPLICABLE.to_owned(),
+            full: None,
+            quiet: true,
         }
     }
 
@@ -124,14 +217,20 @@ pub(crate) struct ChoiceText {
     pub native_code: CellFact,
     /// The Python bindings tag, with the exact fact as `full`. `None` without Python bindings.
     pub python: Option<CellFact>,
-    /// The active users, as a whole number.
-    pub active_users: CellFact,
+    /// The downloads in short form, with the unit of an app and the exact number as `full`.
+    pub downloads_cell: CellFact,
+    /// The downloads as one line, for a place with no column heading.
+    pub downloads_line: String,
+    /// The dependents, or the word for why the row has none.
+    pub dependents_cell: CellFact,
+    /// The latest version. `None` when not measured.
+    pub version: Option<String>,
     /// The latest release date, as a person reads it.
     pub latest_release: CellFact,
     /// The latest release as an ISO date. `None` when not measured.
     pub released: Option<String>,
-    /// The active users for a data attribute. `None` when not measured.
-    pub users: Option<String>,
+    /// The downloads for a data attribute. `None` when not measured.
+    pub downloads: Option<String>,
     /// The dependents for a data attribute. `None` when not measured.
     pub dependents: Option<String>,
     /// The contributors for a data attribute. `None` when not measured.
@@ -147,27 +246,39 @@ pub(crate) struct ChoiceText {
 }
 
 impl ChoiceText {
-    /// The facts of `record`. Without a record, every value is [`NOT_MEASURED`].
-    pub(crate) fn of(record: Option<&EntryReport>) -> Self {
+    /// The facts of an entry of `kind` from `record`.
+    ///
+    /// Without a record, every value is [`NOT_MEASURED`], apart from the dependents an app cannot
+    /// have.
+    pub(crate) fn of(kind: EntryKind, record: Option<&EntryReport>) -> Self {
         let value = |name| record.and_then(|record| record.value_of(name));
-        let users = whole_value(record, ACTIVE_USERS_SIGNAL);
+        let downloads = whole_value(record, downloads_signal(kind));
+        let downloads_cell = downloads_fact(kind, downloads.as_deref());
+        let dependents = whole_value(record, DEPENDENTS_SIGNAL);
         let release = value(LATEST_RELEASE_SIGNAL);
         Self {
             license: value(LICENSE_SIGNAL).map_or_else(CellFact::not_measured, CellFact::plain),
             runs_on: value(RUNS_ON_SIGNAL).map_or_else(CellFact::not_measured, runs_on_fact),
-            native_code: value(NATIVE_CODE_SIGNAL).map_or_else(CellFact::not_measured, native_fact),
+            native_code: native_code_fact(record),
             python: value(PYTHON_SIGNAL).and_then(python_fact),
-            active_users: users
-                .clone()
-                .map_or_else(CellFact::not_measured, CellFact::plain),
+            downloads_line: downloads_line(kind, &downloads_cell),
+            downloads_cell,
+            dependents_cell: dependents.as_deref().map_or_else(
+                || match kind {
+                    EntryKind::Library => CellFact::not_measured(),
+                    EntryKind::App => CellFact::not_applicable(),
+                },
+                |count| CellFact::plain(grouped(count)),
+            ),
+            version: value(VERSION_SIGNAL).map(str::to_owned),
             latest_release: release.map_or_else(CellFact::not_measured, |text| {
                 CellFact::plain(date_text(text).unwrap_or_else(|| text.to_owned()))
             }),
             released: release
                 .filter(|text| date_text(text).is_some())
                 .map(str::to_owned),
-            users,
-            dependents: whole_value(record, DEPENDENTS_SIGNAL),
+            downloads,
+            dependents,
             contributors: whole_value(record, CONTRIBUTORS_SIGNAL),
             gpu_values: gpu_values(value(RUNS_ON_SIGNAL)),
             license_family: license_family(value(LICENSE_SIGNAL)),
@@ -298,42 +409,104 @@ mod tests {
         let found = record(vec![
             fact(LICENSE_SIGNAL, Some("MIT")),
             fact(RUNS_ON_SIGNAL, Some("CUDA, Metal")),
-            fact(ACTIVE_USERS_SIGNAL, Some("38.36")),
-            fact(DEPENDENTS_SIGNAL, Some("12")),
+            fact(DOWNLOADS_SIGNAL, Some("1840052")),
+            fact(DEPENDENTS_SIGNAL, Some("1234.5")),
+            fact(VERSION_SIGNAL, Some("0.4.2")),
             fact(LATEST_RELEASE_SIGNAL, Some("2026-10-31")),
         ]);
-        let text = ChoiceText::of(Some(&found));
+        let text = ChoiceText::of(EntryKind::Library, Some(&found));
         assert_eq!(text.license, CellFact::plain("MIT"));
         assert_eq!(text.runs_on, CellFact::plain("CUDA, Metal"));
-        assert_eq!(text.active_users, CellFact::plain("38"));
-        assert_eq!(text.users.as_deref(), Some("38"));
-        assert_eq!(text.dependents.as_deref(), Some("12"));
+        assert_eq!(text.downloads_cell.short, "1.8M");
+        assert_eq!(
+            text.downloads_cell.full.as_deref(),
+            Some("1,840,052 downloads over 30 days")
+        );
+        assert_eq!(text.downloads_line, "1.8M downloads (30 days)");
+        assert_eq!(text.downloads.as_deref(), Some("1840052"));
+        assert_eq!(text.dependents_cell, CellFact::plain("1,235"));
+        assert_eq!(text.dependents.as_deref(), Some("1235"));
+        assert_eq!(text.version.as_deref(), Some("0.4.2"));
         assert_eq!(text.latest_release, CellFact::plain("31 Oct 2026"));
         assert_eq!(text.released.as_deref(), Some("2026-10-31"));
     }
 
     #[test]
+    fn an_app_counts_downloads_per_release_and_names_the_unit() {
+        let found = record(vec![
+            fact(DOWNLOADS_SIGNAL, Some("9")),
+            fact(BINARY_PER_RELEASE_SIGNAL, Some("12400")),
+            fact("binary_downloads_last3", Some("37200")),
+        ]);
+        let text = ChoiceText::of(EntryKind::App, Some(&found));
+        assert_eq!(text.downloads_cell.short, "12k per release");
+        assert_eq!(
+            text.downloads_cell.full.as_deref(),
+            Some("12,400 binary downloads per release")
+        );
+        assert_eq!(text.downloads_line, "12k downloads per release");
+        assert_eq!(text.downloads.as_deref(), Some("12400"));
+        assert_eq!(download_count(EntryKind::App, Some(&found)), Some(12400.0));
+        assert_eq!(download_count(EntryKind::Library, Some(&found)), Some(9.0));
+    }
+
+    #[test]
+    fn an_app_with_no_release_download_reads_not_measured_and_never_zero() {
+        let found = record(vec![fact(BINARY_PER_RELEASE_SIGNAL, None)]);
+        let text = ChoiceText::of(EntryKind::App, Some(&found));
+        assert_eq!(text.downloads_cell, CellFact::not_measured());
+        assert_eq!(text.downloads, None);
+        assert_eq!(download_count(EntryKind::App, Some(&found)), None);
+        let zero = record(vec![fact(BINARY_PER_RELEASE_SIGNAL, Some("0"))]);
+        let text = ChoiceText::of(EntryKind::App, Some(&zero));
+        assert_eq!(text.downloads_cell.short, "0 per release");
+    }
+
+    #[test]
+    fn dependents_of_an_app_are_not_applicable_and_of_a_library_not_measured() {
+        let none = record(Vec::new());
+        let app = ChoiceText::of(EntryKind::App, Some(&none));
+        assert_eq!(app.dependents_cell, CellFact::not_applicable());
+        assert_eq!(app.dependents, None);
+        let library = ChoiceText::of(EntryKind::Library, Some(&none));
+        assert_eq!(library.dependents_cell, CellFact::not_measured());
+        let ships_a_crate = record(vec![fact(DEPENDENTS_SIGNAL, Some("0"))]);
+        let app = ChoiceText::of(EntryKind::App, Some(&ships_a_crate));
+        assert_eq!(app.dependents_cell, CellFact::plain("0"));
+        assert_eq!(dependents_text(EntryKind::App, Some(&none)), NOT_APPLICABLE);
+        assert_eq!(dependents_text(EntryKind::Library, None), NOT_MEASURED);
+    }
+
+    #[test]
     fn an_unknown_value_reads_not_measured() {
         let found = record(vec![fact(LICENSE_SIGNAL, None)]);
-        for text in [ChoiceText::of(Some(&found)), ChoiceText::of(None)] {
+        for text in [
+            ChoiceText::of(EntryKind::Library, Some(&found)),
+            ChoiceText::of(EntryKind::Library, None),
+        ] {
             for cell in [
                 &text.license,
                 &text.runs_on,
                 &text.native_code,
-                &text.active_users,
+                &text.downloads_cell,
+                &text.dependents_cell,
                 &text.latest_release,
             ] {
                 assert_eq!(cell, &CellFact::not_measured());
             }
             assert_eq!(text.python, None);
-            assert_eq!(text.users, None);
+            assert_eq!(text.downloads, None);
+            assert_eq!(text.version, None);
+            assert_eq!(text.downloads_line, "Downloads: Not measured");
         }
     }
 
     #[test]
     fn an_amount_that_is_no_number_reads_not_measured() {
-        let found = record(vec![fact(ACTIVE_USERS_SIGNAL, Some("many"))]);
-        assert_eq!(whole_text(Some(&found), ACTIVE_USERS_SIGNAL), NOT_MEASURED);
+        let found = record(vec![fact(DOWNLOADS_SIGNAL, Some("many"))]);
+        assert_eq!(whole_text(Some(&found), DOWNLOADS_SIGNAL), NOT_MEASURED);
+        let text = ChoiceText::of(EntryKind::Library, Some(&found));
+        assert_eq!(text.downloads_cell, CellFact::not_measured());
     }
 
     #[test]

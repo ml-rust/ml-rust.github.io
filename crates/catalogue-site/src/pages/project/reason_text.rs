@@ -153,7 +153,7 @@ fn parse_glory(detail: &str, limit_words: &str) -> Option<Sentence> {
     let rest = detail.strip_prefix("former_glory ")?;
     let (share, limit) = rest.split_once(" < ")?;
     Some(Sentence::plain(format!(
-        "Active users are at {} of their peak, {limit_words} {}.",
+        "Active dependents are at {} of their peak, {limit_words} {}.",
         percent(share),
         percent(limit)
     )))
@@ -247,7 +247,7 @@ pub(super) fn finished(detail: &str) -> Sentence {
             return verbatim(detail);
         };
         format!(
-            "{adopters} new adopters, and active users at {} of their peak",
+            "{adopters} new dependents in 365 days, and active dependents at {} of their peak",
             percent(glory)
         )
     };
@@ -304,9 +304,9 @@ pub(super) fn featured_lacks(detail: &str, label: impl Fn(&str) -> String) -> Op
 fn one_failure(failure: &str) -> Lack {
     let dormant = failure == "dormant and not stable";
     let measured = if parse_adoption(failure).is_some() {
-        Some("It has too few active users and new adopters for Featured.")
+        Some("It has too few active dependents and new dependents for Featured.")
     } else if parse_glory(failure, "below the Featured floor of").is_some() {
-        Some("Its active users are too far below their peak for Featured.")
+        Some("Its active dependents are too far below their peak for Featured.")
     } else if parse_use_signals(failure).is_some() {
         Some("Too few use signals pass for Featured.")
     } else {
@@ -344,7 +344,7 @@ fn parse_adoption(failure: &str) -> Option<Sentence> {
     let (users_limit, rest) = rest.split_once(" and new_adopters ")?;
     let (adopters, adopters_limit) = rest.split_once(" < ")?;
     Some(Sentence::plain(format!(
-        "It has {users} active users and {adopters} new adopters. Featured needs {users_limit} active users or {adopters_limit} new adopters."
+        "It has {users} active dependents and {adopters} new dependents in 365 days. Featured needs {users_limit} active dependents or {adopters_limit} new dependents in 365 days."
     )))
 }
 
@@ -374,7 +374,7 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
     let limits = thresholds.map(|t| &t.library_featured);
     let adoption_limit = limits.map_or_else(String::new, |t| {
         format!(
-            " Featured needs {} active users or {} new adopters.",
+            " Featured needs {} active dependents or {} new dependents in 365 days.",
             t.min_active_users, t.min_new_adopters
         )
     });
@@ -386,12 +386,12 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
     });
     Some(vec![
         Sentence::plain(format!(
-            "It has {} active users and {} new adopters.{adoption_limit}",
+            "It has {} active dependents and {} new dependents in 365 days.{adoption_limit}",
             shown(users),
             shown(adopters)
         )),
         Sentence::plain(format!(
-            "Active users are at {} of their peak.{glory_limit}",
+            "Active dependents are at {} of their peak.{glory_limit}",
             percent(glory)
         )),
         Sentence::plain(
@@ -494,7 +494,7 @@ mod tests {
         );
         assert_eq!(
             text(rot("former_glory 0.25 < 0.5")),
-            "Active users are at 25% of their peak, below the lost-glory limit of 50%."
+            "Active dependents are at 25% of their peak, below the lost-glory limit of 50%."
         );
         assert_eq!(
             text(rot("unpatched past 60 days: RUSTSEC-1, RUSTSEC-2")),
@@ -550,7 +550,7 @@ mod tests {
             text(finished(
                 "dormant, no rot, still adopted (new_adopters 3, former_glory 0.9): stable"
             )),
-            "The project is dormant with no rot signal and is still adopted: 3 new adopters, and active users at 90% of their peak."
+            "The project is dormant with no rot signal and is still adopted: 3 new dependents in 365 days, and active dependents at 90% of their peak."
         );
         assert_eq!(
             text(finished(
@@ -589,7 +589,7 @@ mod tests {
                 "not featured: active_users 2 < 11 and new_adopters 2 < 9; repository link not verified; docs missing; every version is a prerelease or 0.0.x; dormant and not stable"
             ),
             [
-                "It has 2 active users and 2 new adopters. Featured needs 11 active users or 9 new adopters.",
+                "It has 2 active dependents and 2 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days.",
                 "The check finds no release commit on a branch or tag of the repository.",
                 "Docs are missing: the primary crate publishes no README.",
                 "Every version is a prerelease or 0.0.x.",
@@ -599,7 +599,7 @@ mod tests {
         assert_eq!(
             lacks("not featured: former_glory 0.3 < 0.5; unpatched vulnerabilities exist"),
             [
-                "Active users are at 30% of their peak, below the Featured floor of 50%.",
+                "Active dependents are at 30% of their peak, below the Featured floor of 50%.",
                 "A vulnerability advisory stays unpatched past the grace window.",
             ]
         );
@@ -638,8 +638,11 @@ mod tests {
             None,
         )
         .expect("a pass");
-        assert_eq!(meets[0].text, "It has 40 active users and 23 new adopters.");
-        assert_eq!(meets[1].text, "Active users are at 99% of their peak.");
+        assert_eq!(
+            meets[0].text,
+            "It has 40 active dependents and 23 new dependents in 365 days."
+        );
+        assert_eq!(meets[1].text, "Active dependents are at 99% of their peak.");
         let app = featured_meets(
             "featured: binary downloads 900, Homebrew 600, Repology families unknown, Docker growth unknown",
             None,

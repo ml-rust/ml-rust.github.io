@@ -5,24 +5,23 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
-use catalogue_core::{ACTIVE_USERS_SIGNAL, Catalogue, Slug, Tier, TierReport};
+use catalogue_core::{Catalogue, Slug, Tier, TierReport};
 
+use super::choice::download_count;
 use super::entry_row::tier_of;
 
 /// The sentence a list with tiers shows.
-const STRONGEST_FIRST: &str =
-    "Order: strongest tier first, then most active users, then name, with unmeasured values last.";
+const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
 
 /// The sentence a list without tiers shows.
 const BY_NAME: &str = "Entries are sorted by name.";
 
 /// The sentence a list of one tier shows.
-const MOST_USERS_FIRST: &str =
-    "Order: most active users first, then name, with unmeasured values last.";
+const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
 
 /// The sentence that states the order of the Featured list.
 pub(crate) fn featured_order_text() -> &'static str {
-    MOST_USERS_FIRST
+    MOST_DOWNLOADS_FIRST
 }
 
 /// The sentence that states the order of a list built with `report`.
@@ -38,8 +37,8 @@ pub(crate) fn order_text(report: Option<&TierReport>) -> &'static str {
 struct Strength<'s> {
     /// The tier's place in [`Tier::ALL`]. An entry with no tier comes last.
     tier: usize,
-    /// The active users. `None` when not measured.
-    users: Option<f64>,
+    /// The downloads the entry kind reports. `None` when not measured.
+    downloads: Option<f64>,
     /// The entry name in lowercase.
     name: String,
     slug: &'s Slug,
@@ -50,17 +49,13 @@ impl<'s> Strength<'s> {
         let tier = tier_of(report, slug)
             .and_then(|tier| Tier::ALL.iter().position(|listed| *listed == tier))
             .unwrap_or(Tier::ALL.len());
-        let users = report
-            .and_then(|report| report.entries.get(slug))
-            .and_then(|record| record.value_of(ACTIVE_USERS_SIGNAL))
-            .and_then(|text| text.parse::<f64>().ok())
-            .filter(|value| value.is_finite());
-        let name = catalogue
-            .entry(slug)
-            .map_or_else(String::new, |entry| entry.name.to_lowercase());
+        let record = report.and_then(|report| report.entries.get(slug));
+        let entry = catalogue.entry(slug);
+        let downloads = entry.and_then(|entry| download_count(entry.kind, record));
+        let name = entry.map_or_else(String::new, |entry| entry.name.to_lowercase());
         Self {
             tier,
-            users,
+            downloads,
             name,
             slug,
         }
@@ -69,14 +64,14 @@ impl<'s> Strength<'s> {
     fn order(&self, other: &Self) -> Ordering {
         self.tier
             .cmp(&other.tier)
-            .then_with(|| most_users_first(self.users, other.users))
+            .then_with(|| most_first(self.downloads, other.downloads))
             .then_with(|| self.name.cmp(&other.name))
             .then_with(|| self.slug.cmp(other.slug))
     }
 }
 
 /// The larger count first. A value not measured comes after every measured one.
-fn most_users_first(a: Option<f64>, b: Option<f64>) -> Ordering {
+fn most_first(a: Option<f64>, b: Option<f64>) -> Ordering {
     match (a, b) {
         (Some(a), Some(b)) => b.total_cmp(&a),
         (Some(_), None) => Ordering::Less,
@@ -85,7 +80,10 @@ fn most_users_first(a: Option<f64>, b: Option<f64>) -> Ordering {
     }
 }
 
-/// `slugs` in the order of every list: tier, then active users from most to fewest, then name.
+/// `slugs` in the order of every list: tier, then downloads from most to fewest, then name.
+///
+/// A library counts downloads over 30 days and an app counts binary downloads per release. The
+/// list states both units, and no rule reads this order.
 ///
 /// A value not measured sorts last. Without a report, the name alone decides.
 pub(crate) fn strongest_first<'s>(
@@ -150,10 +148,21 @@ pub(crate) fn family_heads<'s>(
 
 #[cfg(test)]
 mod tests {
-    use catalogue_core::Tier;
+    use catalogue_core::{BINARY_PER_RELEASE_SIGNAL, SignalFact, Tier};
 
     use super::*;
-    use crate::testing::{catalogue, entry, record, report, slug};
+    use crate::testing::{catalogue, entry, record, report, slug, source};
+
+    fn fact(name: &str, value: &str) -> SignalFact {
+        SignalFact {
+            name: name.to_owned(),
+            label: name.to_owned(),
+            value: Some(value.to_owned()),
+            source: None,
+            fetched: None,
+            counts_toward_tier: true,
+        }
+    }
 
     fn sorted(data: &Catalogue, tiers: Option<&TierReport>, slugs: &[Slug]) -> Vec<String> {
         strongest_first(data, tiers, slugs)
@@ -167,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn tier_comes_first_then_users_then_name_with_unmeasured_last() {
+    fn tier_comes_first_then_downloads_then_name_with_unmeasured_last() {
         let data = catalogue(vec![
             entry("archived", ""),
             entry("few", ""),
@@ -204,6 +213,38 @@ mod tests {
     }
 
     #[test]
+    fn an_app_sorts_by_downloads_per_release_and_without_them_sorts_last() {
+        let app = |name: &str| {
+            source(
+                &format!("entries/{name}.toml"),
+                format!(
+                    "name = \"{name}\"\nkind = \"app\"\nrepo = \"https://github.com/o/{name}\"\n\
+                     crates = []\ntopics = [\"one\"]\nadded = 2026-01-01\n\
+                     [description]\ntext = \"A thing.\"\nsource = \"human\"\n"
+                ),
+            )
+        };
+        let data = catalogue(vec![
+            entry("few", ""),
+            entry("many", ""),
+            app("big-app"),
+            app("no-signal"),
+        ]);
+        let mut big_app = record(Tier::Listed, None);
+        big_app.signals.push(fact(BINARY_PER_RELEASE_SIGNAL, "50"));
+        let tiers = report(vec![
+            ("few", record(Tier::Listed, Some("2"))),
+            ("many", record(Tier::Listed, Some("100"))),
+            ("big-app", big_app),
+            ("no-signal", record(Tier::Listed, None)),
+        ]);
+        assert_eq!(
+            sorted(&data, Some(&tiers), &all(&data)),
+            ["many", "big-app", "few", "no-signal"]
+        );
+    }
+
+    #[test]
     fn an_entry_with_no_record_sorts_after_every_tier() {
         let data = catalogue(vec![entry("alone", ""), entry("archived", "")]);
         let tiers = report(vec![("archived", record(Tier::Archived, None))]);
@@ -222,7 +263,9 @@ mod tests {
     #[test]
     fn the_order_sentence_names_the_order_and_no_score() {
         let tiers = report(Vec::new());
-        assert!(order_text(Some(&tiers)).contains("most active users"));
+        assert!(order_text(Some(&tiers)).contains("most downloads"));
+        assert!(order_text(Some(&tiers)).contains("An app counts binary downloads per release."));
+        assert!(featured_order_text().contains("An app counts binary downloads per release."));
         assert_eq!(order_text(None), BY_NAME);
     }
 

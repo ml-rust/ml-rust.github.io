@@ -156,7 +156,7 @@ fn record(
         for id in runs_on_values(runs_on, catalogue.backends()) {
             record.tags.push(tag(RUNS_ON_TAG, id));
         }
-        record.tags.extend(row_tags(found));
+        record.tags.extend(row_tags(entry.kind, found));
     }
     let tier = found.map(|found| found.tier);
     if let Some(tier) = tier {

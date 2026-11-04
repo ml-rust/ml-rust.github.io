@@ -162,7 +162,7 @@ fn a_row_holds_each_fact_the_scripts_read() {
         "data-name=\"Alpha\"",
         "data-kind-name=\"Library\"",
         "data-tier-name=\"Featured\"",
-        "data-users=\"9\"",
+        "data-downloads=\"1840052\"",
         "data-released=\"2026-09-01\"",
         "data-gpu=\"CUDA|Metal\"",
         "data-native=\"Required\"",
@@ -182,7 +182,8 @@ fn a_found_nothing_value_and_a_missing_value_stay_two_answers() {
     assert!(delta.contains("data-gpu=\"None found\""), "{delta}");
     assert!(delta.contains("data-native=\"Not measured\""), "{delta}");
     assert!(delta.contains("data-python=\"Not measured\""), "{delta}");
-    assert!(!delta.contains("data-users="), "{delta}");
+    assert!(!delta.contains("data-downloads="), "{delta}");
+    assert!(!delta.contains("data-dependents="), "{delta}");
     let gamma = row_tag(page, "gamma");
     for part in [
         "data-gpu=\"Not measured\"",
@@ -200,7 +201,7 @@ fn a_build_with_no_tiers_prints_no_tier_and_no_measured_fact() {
     let site = untiered();
     let alpha = row_tag(&site["topics/tensors/index.html"], "alpha");
     assert!(!alpha.contains("data-tier"), "{alpha}");
-    assert!(!alpha.contains("data-users"), "{alpha}");
+    assert!(!alpha.contains("data-downloads"), "{alpha}");
     for part in [
         "data-gpu=\"Not measured\"",
         "data-native=\"Not measured\"",

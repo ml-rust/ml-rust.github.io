@@ -1,6 +1,6 @@
 //! A weighted signal amount as text for people.
 //!
-//! Active users and new adopters are sums of fractional weights, so a value
+//! Active dependents and new dependents are sums of fractional weights, so a value
 //! such as 3 can arrive as `2.9999999999999996`. These functions change only
 //! the text. Rules compare the raw value.
 
@@ -51,9 +51,70 @@ pub fn whole(text: &str) -> Option<String> {
     })
 }
 
+/// The units [`compact`] prints, smallest first.
+const COMPACT_UNITS: [(f64, &str); 3] = [(1e3, "k"), (1e6, "M"), (1e9, "B")];
+
+/// The published count `text` in a short form for a list: `987`, `1.5k`, `24k`, `1.8M`.
+///
+/// Rounds to the nearest shown digit, with one decimal place below 10 of a unit. `None` when
+/// `text` is no finite count of zero or more.
+pub fn compact(text: &str) -> Option<String> {
+    let value = text
+        .parse::<f64>()
+        .ok()
+        .filter(|value| value.is_finite() && *value >= 0.0)?;
+    if value.round() < 1e3 {
+        return whole(text);
+    }
+    let mut out = None;
+    for (size, unit) in COMPACT_UNITS {
+        let scaled = value / size;
+        let shown = if scaled < 10.0 {
+            (scaled * 10.0).round() / 10.0
+        } else {
+            scaled.round()
+        };
+        out = Some(format!("{}{unit}", trimmed(format!("{shown:.1}"))));
+        if shown < 1e3 {
+            break;
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_compact_count_keeps_the_first_digits_and_names_its_unit() {
+        for (text, shown) in [
+            ("0", "0"),
+            ("987", "987"),
+            ("999.6", "1k"),
+            ("1000", "1k"),
+            ("1500", "1.5k"),
+            ("9949", "9.9k"),
+            ("9950", "10k"),
+            ("24312", "24k"),
+            ("999499", "999k"),
+            ("999500", "1M"),
+            ("1840052", "1.8M"),
+            ("12400000", "12M"),
+            ("999500000", "1B"),
+            ("2300000000", "2.3B"),
+            ("5000000000000", "5000B"),
+        ] {
+            assert_eq!(compact(text).as_deref(), Some(shown), "{text}");
+        }
+    }
+
+    #[test]
+    fn text_that_is_no_count_has_no_compact_form() {
+        for bad in ["", "yes", "NaN", "inf", "-5"] {
+            assert_eq!(compact(bad), None, "{bad}");
+        }
+    }
 
     #[test]
     fn a_whole_amount_drops_the_fraction() {

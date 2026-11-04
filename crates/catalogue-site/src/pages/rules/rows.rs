@@ -71,7 +71,7 @@ pub(super) fn interval_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "interval.active_users_double",
             i.active_users_double,
-            "Active users above this double E.",
+            "Active dependents above this double E.",
         ),
         row(
             "dormancy.min_days",
@@ -142,7 +142,7 @@ pub(super) fn finished_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "finished.min_new_adopters",
             f.min_new_adopters,
-            "Fewest new adopters of a finished library.",
+            "Fewest new dependents (365 days) of a finished library.",
         ),
         row(
             "finished.min_binary_downloads_per_release",
@@ -178,7 +178,7 @@ pub(super) fn movement_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "movement.min_users",
             m.min_users,
-            "Smallest change in active users.",
+            "Smallest change in active dependents.",
         ),
     ]
 }
@@ -200,12 +200,12 @@ pub(super) fn library_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "library_featured.min_active_users",
             l.min_active_users,
-            "Fewest active users. This gate or the new-adopter gate passes.",
+            "Fewest active dependents. This gate or the new-dependents gate passes.",
         ),
         row(
             "library_featured.min_new_adopters",
             l.min_new_adopters,
-            "Fewest new adopters over 12 months. This gate or the active-user gate passes.",
+            "Fewest new dependents (365 days). This gate or the active-dependents gate passes.",
         ),
         row(
             "library_featured.min_former_glory",

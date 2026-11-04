@@ -24,7 +24,9 @@ pub(crate) use change_row::{
     ChangeDay, ChangeRow, FirstCheckLine, change_days, change_rows, first_check_line,
     is_first_check,
 };
-pub(crate) use choice::{ChoiceText, fact_text, whole_text};
+pub(crate) use choice::{
+    ChoiceText, dependents_text, downloads_signal, fact_text, native_code_fact, whole_text,
+};
 pub(crate) use date_text::{ago_text, date_text, grouped};
 pub(crate) use entry_row::{
     DORMANT, DORMANT_MEANING, EntryRow, RelatedLink, row_statuses, tier_of,

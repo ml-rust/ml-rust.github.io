@@ -134,3 +134,16 @@ fn the_contents_list_links_every_rule_and_each_tier_comes_before_its_inputs() {
     let input = page.find("<h3 id=\"interval\">").expect("input rule");
     assert!(tier < input, "a tier rule comes first");
 }
+
+#[test]
+fn the_page_defines_active_dependents_and_prints_each_raw_key() {
+    let page = rules(None);
+    assert!(page.contains("Active dependents: crates from other owners that depend on this project in a current release. One owner counts at most once."), "{page}");
+    assert!(page.contains("Raw key active_users."), "{page}");
+    assert!(page.contains("Raw key new_adopters."), "{page}");
+    assert!(page.contains("Raw key downloads_per_month."), "{page}");
+    assert!(
+        page.contains("Raw key binary_downloads_per_release."),
+        "{page}"
+    );
+}

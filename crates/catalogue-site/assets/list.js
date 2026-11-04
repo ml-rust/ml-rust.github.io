@@ -20,9 +20,11 @@ const WIDE_BAR = window.matchMedia("(min-width: 761px)");
 // Each sort: its URL key, column, row attribute, first direction and words.
 const SORTS = [
   { key: "name", column: ".col-project", attr: "name", first: "asc", hidden: " name",
-    label: "Name", words: { asc: "A to Z", desc: "Z to A" } },
-  { key: "users", column: ".col-users", attr: "users", first: "desc", numeric: true,
-    label: "Active users", words: { desc: "most first", asc: "fewest first" } },
+    label: "Project", words: { asc: "A to Z", desc: "Z to A" } },
+  { key: "downloads", column: ".col-downloads", attr: "downloads", first: "desc", numeric: true,
+    label: "Downloads", words: { desc: "most first", asc: "fewest first" } },
+  { key: "dependents", column: ".col-dependents", attr: "dependents", first: "desc", numeric: true,
+    label: "Dependents", words: { desc: "most first", asc: "fewest first" } },
   { key: "released", column: ".col-release", attr: "released", first: "desc",
     label: "Latest release", words: { desc: "newest first", asc: "oldest first" } },
 ];

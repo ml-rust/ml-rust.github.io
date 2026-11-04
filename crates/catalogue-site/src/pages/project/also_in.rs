@@ -118,7 +118,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use catalogue_core::{
-        ACTIVE_USERS_SIGNAL, Catalogue, DataSources, Date, EntryReport, Movement, REPORT_SCHEMA,
+        Catalogue, DOWNLOADS_SIGNAL, DataSources, Date, EntryReport, Movement, REPORT_SCHEMA,
         SignalFact, SourceFile, SourceRef, Tier, TierReport,
     };
     use url::Url;
@@ -167,11 +167,11 @@ mod tests {
         .unwrap_or_else(|diagnostics| panic!("invalid data: {diagnostics}"))
     }
 
-    fn record(tier: Tier, users: Option<&str>) -> EntryReport {
-        let signals = users
+    fn record(tier: Tier, downloads: Option<&str>) -> EntryReport {
+        let signals = downloads
             .map(|value| SignalFact {
-                name: ACTIVE_USERS_SIGNAL.to_owned(),
-                label: "Active users".to_owned(),
+                name: DOWNLOADS_SIGNAL.to_owned(),
+                label: "Downloads over 30 days".to_owned(),
                 value: Some(value.to_owned()),
                 source: Some(SourceRef::new(
                     "dump",
@@ -315,7 +315,7 @@ mod tests {
         assert_eq!(names, [("page", true), ("other", false)]);
         assert_eq!(rows[0].also_in, None);
         let facts = rows[1].choice.as_ref().expect("facts");
-        assert_eq!(facts.active_users.short, "1200");
+        assert_eq!(facts.downloads_cell.short, "1.2k");
     }
 
     #[test]

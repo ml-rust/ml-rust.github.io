@@ -14,7 +14,7 @@ pub(super) struct Finished {
     pub needs: Vec<&'static str>,
 }
 
-/// Adoption that keeps a dormant entry finished. A library passes on new adopters or on
+/// Adoption that keeps a dormant entry finished. A library passes on new dependents or on
 /// `former_glory`. An app passes on binary downloads per release.
 fn adopted(signals: &Signals, t: &FinishedThresholds) -> Fact {
     if signals.is_library() {

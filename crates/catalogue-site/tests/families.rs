@@ -11,11 +11,9 @@ use catalogue_core::{EntryReport, Movement, Slug, Tier};
 use catalogue_site::{SiteInputs, search_records};
 
 /// The sentence the Featured lists show.
-const MOST_USERS_FIRST: &str =
-    "Order: most active users first, then name, with unmeasured values last.";
+const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
 
-const STRONGEST_FIRST: &str =
-    "Order: strongest tier first, then most active users, then name, with unmeasured values last.";
+const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
 
 /// A library on the `tensors` topic and in the tensor category, with `extra` as more fields.
 fn extra_entry(name: &str, extra: &str) -> (String, String) {
@@ -152,7 +150,7 @@ fn the_home_page_shows_eight_families_and_links_the_full_list() {
         "{block}"
     );
     assert!(block.contains("and 1 related project"), "{block}");
-    assert!(block.contains(MOST_USERS_FIRST), "{block}");
+    assert!(block.contains(MOST_DOWNLOADS_FIRST), "{block}");
     let full = &site["featured/index.html"];
     assert_eq!(full.matches("class=\"entry-row\"").count(), 10, "{full}");
     assert!(!full.contains(">extra-0-child</a>"), "{full}");

@@ -38,7 +38,9 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
     in_order(
         &site[ALPHA],
         &[
-            "<dt>Active users</dt><dd><span class=\"stat-value\">9</span>",
+            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value\">1,840,052</span>",
+            "<dt>Dependents</dt><dd><span class=\"stat-value\">12</span>",
+            "<dt>Version</dt><dd><span class=\"stat-value\">0.4.2</span>",
             "<dt>Released</dt>",
             "<time class=\"stat-sub\" datetime=\"2026-09-01\">1 Sep 2026</time>",
             "<dt>Checked</dt>",
@@ -99,7 +101,14 @@ fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
     );
     assert!(!page.contains("<dt>Runs on</dt>"), "{page}");
     assert!(!page.contains("<dt>Native code</dt>"), "{page}");
-    assert!(!page.contains("<dt>Active users</dt>"), "{page}");
+    in_order(
+        page,
+        &[
+            "<dt>Downloads per release</dt><dd><span class=\"stat-value\">1,500</span>",
+            "<dt>Dependents</dt><dd><span class=\"stat-value fact-quiet\">Not applicable</span>",
+        ],
+    );
+    assert!(!page.contains("<dt>Active dependents</dt>"), "{page}");
     assert!(
         page.contains("<code data-install-command=\"brew install beta\">brew install beta</code>"),
         "{page}"
@@ -107,7 +116,7 @@ fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
     let delta = &site["projects/delta/index.html"];
     assert!(
         delta.contains(
-            "<dt>Active users</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>"
+            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>"
         ),
         "{delta}"
     );
@@ -137,14 +146,43 @@ fn rows_on_topic_and_category_pages_show_the_facts_as_whole_numbers() {
             &site[page],
             &[
                 "<tr class=\"entry-row\" data-slug=\"alpha\"",
-                "data-users=\"9\"",
+                "data-downloads=\"1840052\"",
                 "data-dependents=\"12\"",
-                "<td class=\"cell-users\" data-label=\"Active users\"><span class=\"fact\">9</span></td>",
+                "<td class=\"cell-downloads\" data-label=\"Downloads\"><span class=\"fact\" title=\"1,840,052 downloads over 30 days\"><span aria-hidden=\"true\">1.8M</span><span class=\"visually-hidden\">1,840,052 downloads over 30 days</span></span></td>",
+                "<td class=\"cell-dependents\" data-label=\"Dependents\"><span class=\"fact\">12</span></td>",
+                "<td class=\"cell-release\" data-label=\"Latest release\"><span class=\"release-version\">0.4.2</span><time class=\"release-date\" datetime=\"2026-09-01\">1 Sep 2026</time></td>",
                 "<td class=\"cell-gpu\" data-label=\"Runs on (GPU)\"><span class=\"fact\">CUDA, Metal</span></td>",
                 "<td class=\"cell-license\" data-label=\"License\"><span class=\"fact\">Apache-2.0 OR MIT</span></td>",
             ],
         );
     }
+}
+
+#[test]
+fn the_tier_explainer_of_a_list_defines_active_dependents() {
+    let site = tiered();
+    assert!(
+        site[TOPIC].contains(
+            "Active dependents: crates from other owners that depend on this project in a current release. One owner counts at most once."
+        ),
+        "{}",
+        site[TOPIC]
+    );
+}
+
+#[test]
+fn an_app_row_names_its_download_unit_and_has_no_dependents() {
+    let site = tiered();
+    let page = &site["topics/ml/index.html"];
+    in_order(
+        page,
+        &[
+            "data-slug=\"beta\"",
+            "data-downloads=\"1500\"",
+            "<td class=\"cell-downloads\" data-label=\"Downloads\"><span class=\"fact\" title=\"1,500 binary downloads per release\"><span aria-hidden=\"true\">1.5k per release</span>",
+            "<td class=\"cell-dependents\" data-label=\"Dependents\"><span class=\"fact fact-quiet\">Not applicable</span></td>",
+        ],
+    );
 }
 
 #[test]

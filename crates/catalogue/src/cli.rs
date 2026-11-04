@@ -103,7 +103,7 @@ pub enum Command {
     /// Draft entries from discovery for human review.
     ///
     /// Drafts one library entry per crate that matches `discovery.toml`, has
-    /// enough active users, is not listed yet, and maps to a topic in
+    /// enough active dependents, is not listed yet, and maps to a topic in
     /// `topics.toml`. A draft takes its category from `categories.toml` when one
     /// matches. A reviewer merges crate families and checks every draft.
     /// Without `--write` the command prints the drafts and the skipped crates.

@@ -45,9 +45,9 @@ pub struct NewThresholds {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LibraryFeaturedThresholds {
-    /// Fewest active users. Either this or `min_new_adopters` passes.
+    /// Fewest active dependents. Either this or `min_new_adopters` passes.
     pub min_active_users: f64,
-    /// Fewest new adopters. Either this or `min_active_users` passes.
+    /// Fewest new dependents over 365 days. Either this or `min_active_users` passes.
     pub min_new_adopters: f64,
     /// Lowest `former_glory`, a share in `[0, 1]`.
     pub min_former_glory: f64,
@@ -101,7 +101,7 @@ pub struct IntervalThresholds {
     pub days_per_release_cap: u32,
     /// Downloads per month above this double the interval.
     pub downloads_per_month_double: u64,
-    /// Active users above this double the interval.
+    /// Active dependents above this double the interval.
     pub active_users_double: f64,
 }
 
@@ -127,7 +127,7 @@ pub struct RotThresholds {
 pub struct FinishedThresholds {
     /// Lowest `former_glory` of a finished library, a share in `[0, 1]`.
     pub min_former_glory: f64,
-    /// Fewest new adopters of a finished library.
+    /// Fewest new dependents over 365 days of a finished library.
     pub min_new_adopters: f64,
     /// Fewest binary downloads per release of a finished app.
     pub min_binary_downloads_per_release: u64,
@@ -142,7 +142,7 @@ pub struct FallbackThresholds {
     pub max_age_days: u32,
 }
 
-/// What counts as movement in active users. No tier rule reads these values.
+/// What counts as movement in active dependents. No tier rule reads these values.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MovementThresholds {
@@ -150,7 +150,7 @@ pub struct MovementThresholds {
     pub window_days: u32,
     /// Smallest change, as a share of the value at the window start.
     pub min_share: f64,
-    /// Smallest change in active users.
+    /// Smallest change in active dependents.
     pub min_users: f64,
 }
 

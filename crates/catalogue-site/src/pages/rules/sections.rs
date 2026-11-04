@@ -78,7 +78,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     items: &[
                         Item {
                             label: "",
-                            text: "Active users or new adopters reach their limit.",
+                            text: "Active dependents or new dependents (365 days) reach their limit.",
                         },
                         Item {
                             label: "",
@@ -150,7 +150,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     ],
                     items: &[],
                     notes: &[
-                        "Age alone decides. An old entry with few users or only prerelease versions is not New.",
+                        "Age alone decides. An old entry with few dependents or only prerelease versions is not New.",
                     ],
                     rows: rows(new_rows),
                 },
@@ -246,7 +246,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     items: &[],
                     notes: &[
                         "Then E is capped at the release count times the days-per-release cap.",
-                        "Then E doubles when monthly downloads pass their limit. It doubles again when active users pass theirs.",
+                        "Then E doubles when monthly downloads pass their limit. It doubles again when active dependents pass theirs.",
                         "E is never below the dormancy floor.",
                         "An app, or a library with no known latest version, uses the dormancy floor.",
                         "A step that lacks its signal is left out.",
@@ -298,7 +298,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                     ],
                     notes: &[
-                        "Former glory is active users as a share of their peak.",
+                        "Former glory is active dependents as a share of their peak.",
                         "R3 and R6 apply to libraries only. Apps have no former glory and no crate release to check.",
                         "A sandbox build check older than its age limit counts as unknown.",
                         "A rot check that lacks a signal counts neither way.",
@@ -316,7 +316,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     ],
                     items: &[],
                     notes: &[
-                        "A library stays adopted on new adopters or on former glory.",
+                        "A library stays adopted on new dependents (365 days) or on former glory.",
                         "An app stays adopted on binary downloads per release.",
                         "A finished entry carries a stable label. It counts as active for Featured.",
                     ],
@@ -375,6 +375,53 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
             title: "Facts, lists and movement",
             sections: vec![
                 RuleSection {
+                    id: "active-dependents",
+                    title: "Active dependents",
+                    tier: None,
+                    lead: &[
+                        "Active dependents: crates from other owners that depend on this project in a current release. One owner counts at most once.",
+                        "A crate with several owners splits its count among them, so the raw value can hold a fraction. Lists and sentences round it.",
+                        "The project's own owners, its publishers and shared maintenance accounts never count. A dependency stops counting when the crate publishes a release without it, or when its latest release grows too old.",
+                    ],
+                    items: &[
+                        Item {
+                            label: "Active dependents",
+                            text: "Raw key active_users. The Featured rule reads this number.",
+                        },
+                        Item {
+                            label: "New dependents (365 days)",
+                            text: "Raw key new_adopters. Active dependents whose dependency began in the last 365 days.",
+                        },
+                        Item {
+                            label: "Peak active dependents",
+                            text: "Raw key peak_users. The highest level on record, from monthly samples.",
+                        },
+                        Item {
+                            label: "Former glory",
+                            text: "Raw key former_glory. Active dependents as a share of the peak.",
+                        },
+                    ],
+                    notes: &[
+                        "The raw keys keep their names in the data files and the rule outcomes.",
+                    ],
+                    rows: Vec::new(),
+                },
+                RuleSection {
+                    id: "downloads",
+                    title: "Downloads",
+                    tier: None,
+                    lead: &[
+                        "A library reads the downloads of its primary crate over the last 30 days, from the crates.io database dump. Raw key downloads_per_month.",
+                        "An app has no 30-day count. It reads binary downloads per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.",
+                        "An app with no release reads as not measured, never as 0.",
+                    ],
+                    items: &[],
+                    notes: &[
+                        "Lists sort by these numbers. The tier rules read only the limits this page names.",
+                    ],
+                    rows: Vec::new(),
+                },
+                RuleSection {
                     id: "choice-facts",
                     title: "Facts that never count",
                     tier: None,
@@ -401,7 +448,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "Dependents",
-                            text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.",
+                            text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.",
                         },
                         Item {
                             label: "Contributors",
@@ -416,8 +463,9 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     title: "List order",
                     tier: None,
                     lead: &[
-                        "Lists show the strongest tier first, then the most active users, then the name. A value not measured sorts last.",
-                        "This is an order and never a score. No page prints a rank.",
+                        "Lists show the strongest tier first, then the most downloads, then the name. A value not measured sorts last.",
+                        "A library counts downloads over 30 days. An app counts binary downloads per release. The two units differ, and each row names its own.",
+                        "This is an order and never a score. No page prints a rank, and no tier reads it.",
                         "A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.",
                     ],
                     items: &[],
@@ -436,11 +484,11 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "Rising",
-                            text: "Active users rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.",
+                            text: "Active dependents rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.",
                         },
                         Item {
                             label: "Falling",
-                            text: "Active users fell by at least the set share and the set number, over the same two snapshots.",
+                            text: "Active dependents fell by at least the set share and the set number, over the same two snapshots.",
                         },
                     ],
                     notes: &[
