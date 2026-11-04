@@ -57,6 +57,7 @@ fn list<T: AsRef<str>>(items: &[T]) -> String {
 #[cfg(test)]
 mod tests {
     use catalogue_core::{Date, EntryKind, Reason, Rule, Signals, Slug, Tier, Verdict};
+    use catalogue_signals::assemble::choice::ChoiceFacts;
     use catalogue_signals::assemble::{FactSources, FetchDates};
     use catalogue_signals::history::Row;
 
@@ -81,6 +82,7 @@ mod tests {
             homebrew_page: None,
             repology_page: None,
             docker_page: None,
+            contributors_page: None,
             dates: FetchDates::default(),
         };
         Assessment {
@@ -91,6 +93,7 @@ mod tests {
             signals: Signals::unknown(EntryKind::Library),
             sources,
             stars: None,
+            choice: ChoiceFacts::default(),
         }
     }
 

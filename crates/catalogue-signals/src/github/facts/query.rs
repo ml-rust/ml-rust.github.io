@@ -35,6 +35,7 @@ query($owner: String!, $name: String!, $since: GitTimestamp!) {
     isFork
     pushedAt
     stargazerCount
+    licenseInfo { spdxId }
     defaultBranchRef {
       name
       target {

@@ -88,6 +88,15 @@ fn stats_dump(cache_dir: Option<PathBuf>, window_days: u16) -> Result<String, Du
 
 /// Reads the dump file at `path`, keeping `window_days` of downloads.
 pub(crate) fn read_cached(path: &Path, window_days: u16) -> Result<DumpSnapshot, DumpCommandError> {
+    read_cached_with_details(path, window_days, &[])
+}
+
+/// [`read_cached`], and the details of the default version of each crate in `names`.
+pub(crate) fn read_cached_with_details(
+    path: &Path,
+    window_days: u16,
+    names: &[&str],
+) -> Result<DumpSnapshot, DumpCommandError> {
     let file = File::open(path).map_err(|source| {
         if source.kind() == io::ErrorKind::NotFound {
             DumpCommandError::Missing {
@@ -100,11 +109,10 @@ pub(crate) fn read_cached(path: &Path, window_days: u16) -> Result<DumpSnapshot,
             }
         }
     })?;
-    dump::read(BufReader::with_capacity(READ_BUFFER, file), window_days).map_err(|source| {
-        DumpCommandError::Read {
-            path: path.to_path_buf(),
-            source,
-        }
+    let reader = BufReader::with_capacity(READ_BUFFER, file);
+    dump::read_with_details(reader, window_days, names).map_err(|source| DumpCommandError::Read {
+        path: path.to_path_buf(),
+        source,
     })
 }
 

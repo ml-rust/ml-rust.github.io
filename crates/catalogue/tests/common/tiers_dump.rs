@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use catalogue_signals::dump::{
-    CrateRow, DependencyKind, DumpMeta, DumpSnapshot, IdMap, Requirement, VersionRow,
+    CrateDetails, CrateRow, DependencyKind, DumpMeta, DumpSnapshot, IdMap, Requirement, VersionRow,
 };
 use jiff::Timestamp;
 
@@ -46,6 +46,16 @@ fn version(crate_id: u32, num: &str, created_at: &str) -> VersionRow {
     }
 }
 
+/// The default version of `alpha-crate`: a license and one feature the backend table names.
+fn alpha_details() -> CrateDetails {
+    CrateDetails {
+        license: Some("MIT/Apache-2.0".to_owned()),
+        links: None,
+        features: [("cuda".to_owned(), Vec::new())].into_iter().collect(),
+        renames: Vec::new(),
+    }
+}
+
 /// `alpha-crate` with two releases and a requirement on `tokio 0.1`, which the curated list deprecates. `beta-crate` is absent.
 pub fn snapshot() -> DumpSnapshot {
     let crates: IdMap<CrateRow> = [(1, crate_row("alpha-crate")), (2, crate_row("tokio"))]
@@ -75,6 +85,7 @@ pub fn snapshot() -> DumpSnapshot {
         default_version: [(1, 11), (2, 20)].into_iter().collect(),
         edges: Vec::new(),
         default_requirements: [(1, vec![requirement])].into_iter().collect(),
+        details: [(1, alpha_details())].into_iter().collect(),
         owners: IdMap::default(),
         users: IdMap::default(),
         teams: IdMap::default(),

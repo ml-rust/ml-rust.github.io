@@ -1,8 +1,9 @@
 //! One entry as a list row: name link, kind, tier badge and description.
 
-use catalogue_core::{Entry, Slug, Tier, TierReport};
+use catalogue_core::{Entry, EntryReport, Slug, Tier, TierReport};
 
 use super::badge::TierBadge;
+use super::choice::ChoiceText;
 use super::install::{InstallLine, install_line};
 use super::labels::kind_name;
 use super::paths::project_href;
@@ -25,6 +26,8 @@ pub(crate) struct EntryRow<'a> {
     pub added: Option<String>,
     /// The description text.
     pub description: &'a str,
+    /// The facts a person reads to choose, for lists that compare projects.
+    pub choice: Option<ChoiceText>,
 }
 
 impl<'a> EntryRow<'a> {
@@ -38,7 +41,14 @@ impl<'a> EntryRow<'a> {
             badge: tier.map(TierBadge::of),
             added: None,
             description: &entry.description.text,
+            choice: None,
         }
+    }
+
+    /// The row with the facts of `record`. Without a record, each fact reads as not measured.
+    pub(crate) fn with_choice(mut self, record: Option<&EntryReport>) -> Self {
+        self.choice = Some(ChoiceText::of(record));
+        self
     }
 
     /// The row with how to get the project.

@@ -9,6 +9,59 @@ use crate::date_text::plain_option;
 /// The id of the GitHub star count fact. Stars never count toward a tier.
 pub const STARS_SIGNAL: &str = "stars";
 
+/// The id of the active users fact. A tier rule reads it.
+pub const ACTIVE_USERS_SIGNAL: &str = "active_users";
+
+/// The id of the license fact: an SPDX expression or [`NONE_STATED`].
+pub const LICENSE_SIGNAL: &str = "license";
+
+/// The id of the backends fact: names joined with [`RUNS_ON_SEPARATOR`], or [`CPU_ONLY`].
+pub const RUNS_ON_SIGNAL: &str = "runs_on";
+
+/// The id of the fact that names the crate and the feature or dependency behind each backend.
+pub const RUNS_ON_EVIDENCE_SIGNAL: &str = "runs_on_evidence";
+
+/// The id of the native code fact.
+pub const NATIVE_CODE_SIGNAL: &str = "native_code";
+
+/// The id of the Python bindings fact.
+pub const PYTHON_SIGNAL: &str = "python_bindings";
+
+/// The id of the dependents fact.
+pub const DEPENDENTS_SIGNAL: &str = "dependents";
+
+/// The id of the contributors fact.
+pub const CONTRIBUTORS_SIGNAL: &str = "contributors";
+
+/// The text between two backend names in the [`RUNS_ON_SIGNAL`] value.
+pub const RUNS_ON_SEPARATOR: &str = ", ";
+
+/// The [`RUNS_ON_SIGNAL`] value of a measured project with no backend row.
+pub const CPU_ONLY: &str = "CPU";
+
+/// The [`LICENSE_SIGNAL`] value of a project that states no license.
+pub const NONE_STATED: &str = "None stated";
+
+/// What a page shows for a fact with no value.
+pub const NOT_MEASURED: &str = "Not measured";
+
+/// The facts that help a person choose a project. No tier rule reads them.
+const NEVER_COUNT: [&str; 8] = [
+    STARS_SIGNAL,
+    LICENSE_SIGNAL,
+    RUNS_ON_SIGNAL,
+    RUNS_ON_EVIDENCE_SIGNAL,
+    NATIVE_CODE_SIGNAL,
+    PYTHON_SIGNAL,
+    DEPENDENTS_SIGNAL,
+    CONTRIBUTORS_SIGNAL,
+];
+
+/// Whether the fact `name` stays out of every tier rule.
+pub fn never_counts(name: &str) -> bool {
+    NEVER_COUNT.contains(&name)
+}
+
 /// Where a signal value comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

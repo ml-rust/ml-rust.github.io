@@ -1,6 +1,7 @@
 //! Registry files: maintainers, topics, categories, synonyms, discovery rules,
-//! tier thresholds and deprecated requirements.
+//! tier thresholds, deprecated requirements and the backend table.
 
+mod backends;
 mod categories;
 mod deprecated;
 mod discovery;
@@ -10,6 +11,7 @@ mod synonyms;
 mod thresholds;
 mod topics;
 
+pub use backends::{Backend, Backends, CPU_ONLY_ID, NOT_MEASURED_ID};
 pub use categories::{Categories, Category};
 pub use deprecated::{Deprecated, DeprecatedRequirement, RequirementCheck};
 pub use discovery::Discovery;

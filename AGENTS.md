@@ -13,7 +13,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `deploy/`: systemd units and scripts for the bot VM. Secrets live only on the VM, under `/etc/catalogue-bot/`.
-- `data/`: entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
+- `data/`: entries, judgments, maintainers, topics, categories, backends, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.
 - `data/thresholds.toml` holds every tier number. NEVER put a tier threshold in code.
 - Discovery output is a list of leads. A lead becomes an entry only through a merged PR.

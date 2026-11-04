@@ -5,7 +5,7 @@
 //! `User-Agent`. It adds only the headers the caller passes and reads no
 //! environment variable. [`Pacer`] holds requests back to an API's rate limit.
 //! [`Paced`] sends through a pacer and retries rate-limit answers.
-//! [`next_link`] reads the next page from a `Link` header.
+//! [`next_link`] and [`last_link`] read a page from a `Link` header.
 
 mod client;
 mod encode;
@@ -20,7 +20,7 @@ pub use client::ReqwestTransport;
 pub use encode::percent_encode;
 pub use error::HttpError;
 pub use headers::Headers;
-pub use link::next_link;
+pub use link::{last_link, next_link};
 pub use pace::{IntervalPacer, Pacer};
 pub use paced::{Answer, Paced, PacedError};
 pub use transport::{Response, Transport};

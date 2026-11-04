@@ -6,6 +6,7 @@ use std::fs;
 
 use cache::cache;
 use catalogue_core::{Date, EntryKind, Tier};
+use catalogue_signals::github::RepoLicense;
 use catalogue_signals::history::{
     Dated, HistoryError, NetworkValues, RepoValues, Row, Snapshot, read_all, write,
 };
@@ -215,6 +216,7 @@ fn with_network() -> Row {
                     last_human_commit: Some(date(2026, 9, 1)),
                     oldest_unanswered_days: None,
                     maintainer_replies_365: 7,
+                    license: RepoLicense::Stated("MIT".to_owned()),
                 },
             }),
             link: Some(Dated {

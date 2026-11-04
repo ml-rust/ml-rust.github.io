@@ -22,7 +22,7 @@ use super::step_summary::{STEP_SUMMARY_VAR, append_step_summary};
 use crate::cache_dir::resolve_cache_dir;
 use crate::clock::today_utc;
 use crate::data_dir::load_catalogue;
-use crate::dump::read_cached;
+use crate::dump::read_cached_with_details;
 use crate::exit::INVALID;
 use crate::rustsec::read_cached as read_advisories;
 use crate::sandbox::read_build_checks;
@@ -126,7 +126,14 @@ fn tiers(
     required(&catalogue)?;
     let token = if args.offline { None } else { Some(token()?) };
     let cache_dir = resolve_cache_dir(args.cache_dir.clone())?;
-    let snapshot = read_cached(&fetch::dump_path(&cache_dir), DOWNLOAD_WINDOW_DAYS)?;
+    let listed: Vec<&str> = catalogue
+        .entries()
+        .values()
+        .flat_map(|entry| &entry.crates)
+        .map(|name| name.as_str())
+        .collect();
+    let snapshot =
+        read_cached_with_details(&fetch::dump_path(&cache_dir), DOWNLOAD_WINDOW_DAYS, &listed)?;
     let advisories = read_advisories(&fetch::rustsec_path(&cache_dir))?;
     let build_checks = match &args.build_checks {
         Some(path) => read_build_checks(path)?,

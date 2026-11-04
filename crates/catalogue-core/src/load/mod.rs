@@ -1,5 +1,6 @@
 //! Parsing and validation of a whole data set.
 
+mod backends;
 mod categories;
 mod deprecated;
 mod diagnostics;

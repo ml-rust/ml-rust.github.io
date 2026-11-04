@@ -105,6 +105,7 @@ pub fn render_all(results: &[(RepoRef, RepoFacts)]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use catalogue_signals::github::RepoLicense;
     use jiff::civil::date;
 
     use super::*;
@@ -122,6 +123,7 @@ mod tests {
             pushed_at: "2026-10-26T17:14:42Z".parse().ok(),
             stars: 12,
             ci: Some(CiState::Failure),
+            license: RepoLicense::NoneStated,
             last_human_commit: Some(date(2026, 10, 1)),
             last_human_commit_beyond_sample: false,
             human_commits_365: 100,

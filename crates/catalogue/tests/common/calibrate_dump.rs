@@ -128,6 +128,7 @@ pub fn snapshot() -> DumpSnapshot {
         default_version: [(1, 10), (5, 51), (6, 60)].into_iter().collect(),
         edges,
         default_requirements: IdMap::default(),
+        details: IdMap::default(),
         owners,
         users: IdMap::default(),
         teams: IdMap::default(),

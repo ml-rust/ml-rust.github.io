@@ -4,7 +4,7 @@ use std::io::{self, Write};
 use std::path::Path;
 
 use catalogue_core::{Date, EntryReport, Thresholds, TierReport};
-use catalogue_signals::assemble::signal_facts;
+use catalogue_signals::assemble::{choice_signal_facts, signal_facts};
 use catalogue_signals::atomic::write_atomic;
 
 use super::assess::Assessment;
@@ -21,7 +21,9 @@ pub(crate) fn tier_report(
     let entries = assessments
         .iter()
         .map(|assessment| {
-            let facts = signal_facts(&assessment.signals, &assessment.sources, assessment.stars);
+            let mut facts =
+                signal_facts(&assessment.signals, &assessment.sources, assessment.stars);
+            facts.extend(choice_signal_facts(&assessment.choice, &assessment.sources));
             let record = EntryReport::new(&assessment.verdict, assessment.notes.clone(), facts);
             (assessment.slug.clone(), record)
         })

@@ -6,7 +6,7 @@ const BASE = "/search/";
 const MAX_RESULTS = 30;
 const DEBOUNCE_MS = 200;
 // The filter tags in URL order. The checkboxes submit under the same names.
-const FILTER_KEYS = ["kind", "topic", "category", "tier", "org"];
+const FILTER_KEYS = ["kind", "topic", "category", "license", "runs_on", "tier", "org"];
 // Every record links an entry page. Any other link is dropped.
 const RESULT_PREFIX = "/projects/";
 const TIER_VALUE = /^[a-z]+$/;
@@ -153,6 +153,17 @@ function tagsOf(hit) {
   return found;
 }
 
+// Every value of tag `key` of `hit`.
+function valuesOf(hit, key) {
+  const found = [];
+  for (const [name, value] of Array.isArray(hit.tags) ? hit.tags : []) {
+    if (name === key && typeof value === "string") {
+      found.push(value);
+    }
+  }
+  return found;
+}
+
 // Replaces the result list with `hits`.
 function showResults(text, hits) {
   const items = [];
@@ -176,6 +187,16 @@ function showResults(text, hits) {
     const tier = found.tier ? labelText("tier", found.tier) : null;
     if (tier && TIER_VALUE.test(found.tier)) {
       line.append(" ", element("span", `tier-badge tier-${found.tier}`, tier));
+    }
+    const license = found.license ? labelText("license", found.license) : null;
+    if (license) {
+      line.append(" ", element("span", "entry-license", `License: ${license}`));
+    }
+    const backends = valuesOf(hit, "runs_on")
+      .map((value) => labelText("runs_on", value))
+      .filter(Boolean);
+    if (backends.length > 0) {
+      line.append(" ", element("span", "entry-runs-on", `Runs on: ${backends.join(", ")}`));
     }
     if (line.childNodes.length > 0) {
       item.append(line);

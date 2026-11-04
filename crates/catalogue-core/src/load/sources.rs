@@ -33,6 +33,8 @@ pub struct DataSources {
     pub thresholds: Option<SourceFile>,
     /// `data/deprecated.toml`.
     pub deprecated: Option<SourceFile>,
+    /// `data/backends.toml`.
+    pub backends: Option<SourceFile>,
 }
 
 /// Where one file of the data directory goes in [`DataSources`].
@@ -59,6 +61,8 @@ pub enum DataPlace {
     Thresholds,
     /// `deprecated.toml`.
     Deprecated,
+    /// `backends.toml`.
+    Backends,
 }
 
 /// The extension of every data file.
@@ -69,7 +73,7 @@ impl DataPlace {
     pub const LISTS: [Self; 2] = [Self::Entries, Self::Judgments];
 
     /// The places that hold one file, in load order.
-    pub const FILES: [Self; 7] = [
+    pub const FILES: [Self; 8] = [
         Self::Maintainers,
         Self::Topics,
         Self::Categories,
@@ -77,6 +81,7 @@ impl DataPlace {
         Self::Discovery,
         Self::Thresholds,
         Self::Deprecated,
+        Self::Backends,
     ];
 
     /// The name inside the data directory: a directory name for a list place,
@@ -92,6 +97,7 @@ impl DataPlace {
             Self::Discovery => "discovery.toml",
             Self::Thresholds => "thresholds.toml",
             Self::Deprecated => "deprecated.toml",
+            Self::Backends => "backends.toml",
         }
     }
 
@@ -127,6 +133,7 @@ impl DataSources {
             DataPlace::Discovery => self.discovery = Some(file),
             DataPlace::Thresholds => self.thresholds = Some(file),
             DataPlace::Deprecated => self.deprecated = Some(file),
+            DataPlace::Backends => self.backends = Some(file),
         }
     }
 
@@ -186,7 +193,7 @@ mod tests {
             .collect();
         names.sort_unstable();
         names.dedup();
-        assert_eq!(names.len(), 9);
+        assert_eq!(names.len(), 10);
     }
 
     #[test]

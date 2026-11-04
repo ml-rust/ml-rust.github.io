@@ -10,10 +10,10 @@ use super::index::CrateIndex;
 use super::library::library_signals;
 use super::sources::LibrarySources;
 use crate::dump::{
-    CrateRow, DailyDownloads, DeletedCrate, DependencyKind, DumpMeta, DumpSnapshot, IdMap,
-    Requirement, VersionRow,
+    CrateDetails, CrateRow, DailyDownloads, DeletedCrate, DependencyKind, DumpMeta, DumpSnapshot,
+    IdMap, Requirement, VersionRow,
 };
-use crate::github::{Facts, RepoFacts};
+use crate::github::{Facts, RepoFacts, RepoLicense};
 use crate::history::RepoValues;
 use crate::link::LinkCheck;
 use crate::rustsec::{Advisories, Advisory, AdvisoryKind};
@@ -71,6 +71,7 @@ pub(crate) fn found_facts() -> Facts {
         pushed_at: None,
         stars: 0,
         ci: None,
+        license: RepoLicense::Stated("MIT".to_owned()),
         last_human_commit: Some(day(2026, 10, 1)),
         last_human_commit_beyond_sample: false,
         human_commits_365: 4,
@@ -106,6 +107,7 @@ impl Dump {
                 default_version: Default::default(),
                 edges: Vec::new(),
                 default_requirements: Default::default(),
+                details: Default::default(),
                 owners: Default::default(),
                 users: Default::default(),
                 teams: Default::default(),
@@ -163,6 +165,26 @@ impl Dump {
     /// Makes version `version_id` the default version of crate `crate_id`.
     pub(crate) fn set_default(&mut self, crate_id: u32, version_id: u32) {
         self.snapshot.default_version.insert(crate_id, version_id);
+    }
+
+    /// Sets the details of crate `crate_id`'s default version.
+    pub(crate) fn set_details(&mut self, crate_id: u32, details: CrateDetails) {
+        self.snapshot.details.insert(crate_id, details);
+    }
+
+    /// Adds an optional normal requirement on crate `on` to crate `crate_id`'s default version.
+    pub(crate) fn add_optional(&mut self, crate_id: u32, on: u32) {
+        let requirement = Requirement {
+            req: "^1".to_owned(),
+            crate_id: on,
+            kind: DependencyKind::Normal,
+            optional: true,
+        };
+        self.snapshot
+            .default_requirements
+            .entry(crate_id)
+            .or_default()
+            .push(requirement);
     }
 
     /// Adds a requirement `req` of kind `kind` on crate `on` to crate `crate_id`'s default version.

@@ -38,9 +38,39 @@ pub fn rounded_below(value: f64, limit: f64) -> String {
     }
 }
 
+/// The published amount `text` as a whole number, for a list a person scans.
+///
+/// `None` when `text` is no finite amount.
+pub fn whole(text: &str) -> Option<String> {
+    let value = text.parse::<f64>().ok().filter(|value| value.is_finite())?;
+    let rounded = value.round();
+    Some(if rounded == 0.0 {
+        "0".to_owned()
+    } else {
+        format!("{rounded:.0}")
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_whole_amount_drops_the_fraction() {
+        assert_eq!(whole("38.36").as_deref(), Some("38"));
+        assert_eq!(whole("38.5").as_deref(), Some("39"));
+        assert_eq!(whole("38").as_deref(), Some("38"));
+        assert_eq!(whole("100").as_deref(), Some("100"));
+        assert_eq!(whole("0").as_deref(), Some("0"));
+        assert_eq!(whole("0.2").as_deref(), Some("0"));
+    }
+
+    #[test]
+    fn text_that_is_no_amount_has_no_whole_form() {
+        for bad in ["", "yes", "NaN", "inf"] {
+            assert_eq!(whole(bad), None, "{bad}");
+        }
+    }
 
     #[test]
     fn a_published_value_keeps_its_precision_without_the_noise() {

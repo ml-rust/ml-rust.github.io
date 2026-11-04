@@ -3,6 +3,8 @@
 use askama::Template;
 use catalogue_core::{Catalogue, EffectiveEntry, TierReport};
 
+use super::also_in::{AlsoInRow, also_in};
+use super::glance::Glance;
 use super::header::Header;
 use super::judgments::{CorrectionRow, JudgmentRow};
 use super::links::{DescriptionView, LinkRow, link_rows};
@@ -17,6 +19,8 @@ pub(crate) struct ProjectPage<'a> {
     pub layout: Layout,
     /// Name, kind, tier and notices.
     pub header: Header<'a>,
+    /// The facts a person reads first.
+    pub glance: Glance,
     /// The description with its source.
     pub description: DescriptionView<'a>,
     /// The repo, homepage, crate and install channel links.
@@ -27,6 +31,8 @@ pub(crate) struct ProjectPage<'a> {
     pub corrections: Vec<CorrectionRow<'a>>,
     /// Every judgment, newest first.
     pub judgments: Vec<JudgmentRow<'a>>,
+    /// Other entries that share a topic, strongest first.
+    pub also_in: Vec<AlsoInRow<'a>>,
 }
 
 impl<'a> ProjectPage<'a> {
@@ -44,6 +50,7 @@ impl<'a> ProjectPage<'a> {
         Self {
             layout,
             header: Header::new(catalogue, effective, found.map(|(_, record)| record)),
+            glance: Glance::new(effective.entry, found.map(|(_, record)| record)),
             description: DescriptionView::of(effective.entry),
             links: link_rows(effective.entry),
             tier: found.map(|(report, record)| TierSection::new(report, record)),
@@ -57,6 +64,7 @@ impl<'a> ProjectPage<'a> {
                 .iter()
                 .map(|&(issue, judgment)| JudgmentRow::new(catalogue, issue, judgment))
                 .collect(),
+            also_in: also_in(catalogue, report, effective),
         }
     }
 }

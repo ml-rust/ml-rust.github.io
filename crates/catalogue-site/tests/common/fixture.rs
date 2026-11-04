@@ -5,8 +5,10 @@
 use std::collections::BTreeMap;
 
 use catalogue_core::{
-    Catalogue, DataSources, Date, EntryReport, REPORT_SCHEMA, ReasonRecord, Rule, STARS_SIGNAL,
-    SignalFact, Slug, SourceRef, Tier, TierReport,
+    CONTRIBUTORS_SIGNAL, Catalogue, DEPENDENTS_SIGNAL, DataSources, Date, EntryReport,
+    LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, PYTHON_SIGNAL, REPORT_SCHEMA, RUNS_ON_EVIDENCE_SIGNAL,
+    RUNS_ON_SIGNAL, ReasonRecord, Rule, STARS_SIGNAL, SignalFact, Slug, SourceRef, Tier,
+    TierReport, never_counts,
 };
 use catalogue_site::TierChangeRow;
 use url::Url;
@@ -47,6 +49,21 @@ blurb = "Libraries for multidimensional arrays and their math."
 id = "vector-databases"
 name = "Vector databases"
 blurb = "Databases that store vectors and find the ones nearest to a query."
+"#;
+
+/// Two backends and one crate that shows Python bindings.
+const BACKENDS: &str = r#"python = ["pyo3"]
+
+[[backend]]
+id = "cuda"
+name = "CUDA"
+dependencies = ["cudarc"]
+features = ["cuda"]
+
+[[backend]]
+id = "metal"
+name = "Metal"
+features = ["metal"]
 "#;
 
 /// An org member and an outside maintainer.
@@ -208,6 +225,7 @@ pub fn files() -> Vec<(String, String)> {
     [
         ("topics.toml", TOPICS),
         ("categories.toml", CATEGORIES),
+        ("backends.toml", BACKENDS),
         ("maintainers.toml", MAINTAINERS),
         ("synonyms.toml", SYNONYMS),
         ("entries/alpha.toml", ALPHA),
@@ -255,6 +273,8 @@ fn load(files: &[(String, String)]) -> Catalogue {
             sources.topics = Some(file);
         } else if path == "categories.toml" {
             sources.categories = Some(file);
+        } else if path == "backends.toml" {
+            sources.backends = Some(file);
         } else if path == "maintainers.toml" {
             sources.maintainers = Some(file);
         } else if path == "synonyms.toml" {
@@ -291,7 +311,7 @@ fn signal(name: &str, label: &str, value: Option<&str>, source: (&str, &str)) ->
         value: value.map(str::to_owned),
         source: value.map(|_| SourceRef::new(source_label, Url::parse(url).expect("url"))),
         fetched: value.map(|_| day(11, 3)),
-        counts_toward_tier: name != STARS_SIGNAL,
+        counts_toward_tier: !never_counts(name),
     }
 }
 
@@ -326,9 +346,41 @@ fn report() -> TierReport {
         ],
         vec![
             signal("last_release", "Latest release", Some("2026-09-01"), DUMP),
-            signal("active_users", "Active users", Some("9"), DUMP),
+            signal("active_users", "Active users", Some("9.36"), DUMP),
             signal("former_glory", "Former glory", None, DUMP),
             signal(STARS_SIGNAL, "GitHub stars", Some("1200"), alpha_repo),
+            signal(LICENSE_SIGNAL, "License", Some("Apache-2.0 OR MIT"), DUMP),
+            signal(RUNS_ON_SIGNAL, "Runs on", Some("CUDA, Metal"), DUMP),
+            signal(
+                RUNS_ON_EVIDENCE_SIGNAL,
+                "What shows each backend",
+                Some(
+                    "CUDA: alpha-crate feature cuda (dependency cudarc); Metal: alpha-extra feature metal",
+                ),
+                DUMP,
+            ),
+            signal(
+                NATIVE_CODE_SIGNAL,
+                "Native code",
+                Some("Binds native code: openssl-sys"),
+                DUMP,
+            ),
+            signal(
+                PYTHON_SIGNAL,
+                "Python bindings",
+                Some("Has Python bindings: alpha-extra needs Python"),
+                DUMP,
+            ),
+            signal(DEPENDENTS_SIGNAL, "Dependents", Some("12"), DUMP),
+            signal(
+                CONTRIBUTORS_SIGNAL,
+                "Contributors",
+                Some("38"),
+                (
+                    "GitHub contributors",
+                    "https://github.com/ml-rust/alpha/graphs/contributors",
+                ),
+            ),
         ],
     );
     alpha.demotion_pending = Some(Tier::Listed);
@@ -354,6 +406,8 @@ fn report() -> TierReport {
                 beta_releases,
             ),
             signal("repology_families", "Repology families", None, DUMP),
+            signal(LICENSE_SIGNAL, "License", Some("None stated"), DUMP),
+            signal(RUNS_ON_SIGNAL, "Runs on", None, DUMP),
             signal(
                 STARS_SIGNAL,
                 "GitHub stars",
@@ -379,12 +433,11 @@ fn report() -> TierReport {
     let delta = record(
         Tier::New,
         vec![reason(Rule::New, "first release 30 days ago, under 180")],
-        vec![signal(
-            "first_release",
-            "First release",
-            Some("2026-10-05"),
-            DUMP,
-        )],
+        vec![
+            signal("first_release", "First release", Some("2026-10-05"), DUMP),
+            signal(LICENSE_SIGNAL, "License", Some("MIT"), DUMP),
+            signal(RUNS_ON_SIGNAL, "Runs on", Some("CPU"), DUMP),
+        ],
     );
     let entries = [
         ("alpha", alpha),

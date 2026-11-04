@@ -1,13 +1,20 @@
 //! `/search/`: the search form, its filters, and the results the script fills in.
 
+use std::borrow::Cow;
+use std::collections::BTreeSet;
+
 use askama::Template;
-use catalogue_core::{Catalogue, EntryKind, Tier, TierReport};
+use catalogue_core::{
+    CPU_ONLY, CPU_ONLY_ID, Catalogue, EntryKind, LICENSE_SIGNAL, NONE_STATED, NOT_MEASURED,
+    NOT_MEASURED_ID, Tier, TierReport,
+};
 
 use super::layout::Layout;
 use super::shared::{NamedLink, kind_name, tier_name, topic_href};
 use crate::href::SafeHref;
 use crate::search::{
-    CATEGORY_TAG, KIND_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, TIER_TAG, TOPIC_TAG,
+    CATEGORY_TAG, KIND_TAG, LICENSE_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, RUNS_ON_TAG,
+    TIER_TAG, TOPIC_TAG, is_stated_license, license_value,
 };
 
 /// The label of the [`ORG_AFFILIATED`] filter.
@@ -44,9 +51,9 @@ pub(crate) struct FilterGroup<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FilterOption<'a> {
     /// The tag value.
-    pub value: &'a str,
+    pub value: Cow<'a, str>,
     /// The text beside the checkbox.
-    pub label: &'a str,
+    pub label: Cow<'a, str>,
     /// The element id of the checkbox: `filter-<key>-<value>`.
     pub id: String,
 }
@@ -54,8 +61,8 @@ pub(crate) struct FilterOption<'a> {
 impl<'a> SearchPage<'a> {
     /// The search page in `layout`, loading the script at `script`.
     ///
-    /// The groups are kind, topic, category, tier and organization. The tier
-    /// group is left out without `report`.
+    /// The groups are kind, topic, category, license, runs on, tier and organization.
+    /// The license, runs-on and tier groups are left out without `report`.
     pub(crate) fn new(
         layout: Layout,
         script: SafeHref,
@@ -85,7 +92,9 @@ impl<'a> SearchPage<'a> {
             group(TOPIC_TAG, "Topic", topics),
             group(CATEGORY_TAG, "Category", categories),
         ];
-        if report.is_some() {
+        if let Some(report) = report {
+            groups.push(group(LICENSE_TAG, "License", license_options(report)));
+            groups.push(group(RUNS_ON_TAG, "Runs on", runs_on_options(catalogue)));
             groups.push(group(TIER_TAG, "Tier", tiers));
         }
         groups.push(group(ORG_TAG, "Organization", orgs));
@@ -106,21 +115,54 @@ impl<'a> SearchPage<'a> {
     }
 }
 
+/// Every license the report states, by name, then none stated and not measured.
+fn license_options(report: &TierReport) -> Vec<(String, String)> {
+    let stated: BTreeSet<&str> = report
+        .entries
+        .values()
+        .filter_map(|record| record.value_of(LICENSE_SIGNAL))
+        .filter(|text| is_stated_license(text))
+        .collect();
+    stated
+        .into_iter()
+        .chain([NONE_STATED, NOT_MEASURED])
+        .map(|text| (license_value(Some(text)), text.to_owned()))
+        .collect()
+}
+
+/// Every backend of the table in file order, then CPU and not measured.
+fn runs_on_options(catalogue: &Catalogue) -> Vec<(&str, &str)> {
+    catalogue
+        .backends()
+        .backend
+        .iter()
+        .map(|row| (row.id.as_str(), row.name.as_str()))
+        .chain([(CPU_ONLY_ID, CPU_ONLY), (NOT_MEASURED_ID, NOT_MEASURED)])
+        .collect()
+}
+
 /// The group `key` headed `legend`, with one checkbox per `(value, label)`.
-fn group<'a>(
+fn group<'a, V, L>(
     key: &'static str,
     legend: &'static str,
-    values: impl IntoIterator<Item = (&'a str, &'a str)>,
-) -> FilterGroup<'a> {
+    values: impl IntoIterator<Item = (V, L)>,
+) -> FilterGroup<'a>
+where
+    V: Into<Cow<'a, str>>,
+    L: Into<Cow<'a, str>>,
+{
     FilterGroup {
         key,
         legend,
         options: values
             .into_iter()
-            .map(|(value, label)| FilterOption {
-                value,
-                label,
-                id: format!("filter-{key}-{value}"),
+            .map(|(value, label)| {
+                let value = value.into();
+                FilterOption {
+                    id: format!("filter-{key}-{value}"),
+                    value,
+                    label: label.into(),
+                }
             })
             .collect(),
     }

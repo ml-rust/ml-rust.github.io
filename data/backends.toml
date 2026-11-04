@@ -1,0 +1,55 @@
+# What a project runs on, and what it binds.
+#
+# `catalogue tiers` reads this table against the crates.io dump. The facts it gives help a person
+# choose a project. None of them counts toward a tier.
+#
+# A `[[backend]]` row shows a backend when, on a listed crate's default version:
+#
+# 1. `dependencies` names the crate itself, or one of its normal dependencies. An optional
+#    dependency reports the feature that enables it.
+# 2. `features` names one of its features. A feature name matches whole, so `cuda-tests` is no match.
+#
+# A row names what the crate uses. It holds no claim about how well the backend works.
+# The dump covers each listed crate and its direct dependencies. A deeper dependency stays unseen.
+# A project with no match reads as CPU only when the dump holds its crates, and as not measured otherwise.
+#
+# Each dependency and each feature maps to one row. A name holds no comma. `cpu` and `not-measured`
+# are reserved ids. `CPU` and `Not measured` are reserved names.
+
+# Normal dependencies that show Python bindings.
+python = ["pyo3"]
+
+# Crates named `*-sys` that bind no foreign library, so they never read as native code.
+# `js-sys` and `web-sys` bind browser APIs. `linux-raw-sys` holds system call numbers.
+# `windows-sys` declares the APIs of the operating system.
+not_native = ["js-sys", "web-sys", "linux-raw-sys", "windows-sys"]
+
+[[backend]]
+id = "cuda"
+name = "CUDA"
+dependencies = ["cudarc", "cuda-sys", "cuda-driver-sys", "cuda-runtime-sys", "rustacuda", "cust"]
+features = ["cuda"]
+
+[[backend]]
+id = "webgpu"
+name = "WebGPU"
+dependencies = ["wgpu", "wgpu-core", "wgpu-hal", "wgpu-native"]
+features = ["wgpu", "webgpu"]
+
+[[backend]]
+id = "metal"
+name = "Metal"
+dependencies = ["metal", "objc2-metal"]
+features = ["metal"]
+
+[[backend]]
+id = "rocm"
+name = "ROCm"
+dependencies = ["hip-sys", "hip-runtime-sys", "rocm-sys"]
+features = ["rocm"]
+
+[[backend]]
+id = "vulkan"
+name = "Vulkan"
+dependencies = ["ash", "vulkano", "vulkanalia", "erupt"]
+features = ["vulkan"]

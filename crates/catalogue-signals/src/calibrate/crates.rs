@@ -131,6 +131,7 @@ mod tests {
             default_version: IdMap::default(),
             edges: Vec::new(),
             default_requirements: IdMap::default(),
+            details: IdMap::default(),
             owners: IdMap::default(),
             users: IdMap::default(),
             teams: IdMap::default(),

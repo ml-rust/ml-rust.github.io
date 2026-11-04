@@ -193,14 +193,15 @@ pub(crate) fn valid() -> DataSources {
         discovery: None,
         thresholds: None,
         deprecated: None,
+        backends: None,
     }
 }
 
 /// Replaces the file at `path`, or adds it when absent.
 ///
 /// A path that contains `entries/` or `judgments/` goes to that list.
-/// `maintainers.toml`, `topics.toml`, `categories.toml`, `discovery.toml`, `thresholds.toml` and
-/// `deprecated.toml` replace the optional file of that name.
+/// `maintainers.toml`, `topics.toml`, `categories.toml`, `discovery.toml`, `thresholds.toml`,
+/// `deprecated.toml` and `backends.toml` replace the optional file of that name.
 /// Any other path replaces the synonyms file.
 pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
     let list = if path.contains("entries/") {
@@ -215,6 +216,7 @@ pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
             "discovery.toml" => &mut sources.discovery,
             "thresholds.toml" => &mut sources.thresholds,
             "deprecated.toml" => &mut sources.deprecated,
+            "backends.toml" => &mut sources.backends,
             _ => &mut sources.synonyms,
         };
         *slot = Some(file(path, contents));

@@ -9,6 +9,7 @@ use std::path::Path;
 use catalogue::{Network, TiersError, TiersRun, load_catalogue, tiers_report};
 use catalogue_core::{Date, EntryKind, EntryReport, SignalFact, Slug, Tier};
 use catalogue_signals::fallback::Source;
+use catalogue_signals::github::{Contributors, RepoLicense};
 use catalogue_signals::history::{
     Dated, NetworkValues, ReleaseValues, RepoValues, Row, Snapshot, read_all, write,
 };
@@ -65,6 +66,7 @@ fn archived_facts(date: Date, of: &str) -> NetworkValues {
                 last_human_commit: Some(day(9, 1)),
                 oldest_unanswered_days: Some(3),
                 maintainer_replies_365: 7,
+                license: RepoLicense::Stated("MIT".to_owned()),
             },
         ),
         ..NetworkValues::default()
@@ -591,6 +593,144 @@ fn a_run_where_most_fetches_fail_warns_and_still_succeeds() {
     assert!(last.starts_with("WARNING: "), "{last}");
     assert!(last.contains("1 fell back"), "{last}");
     assert!(dirs.history().join("2026-11-03.jsonl.gz").is_file());
+}
+
+/// The contributor listing of `ml-rust/beta`.
+const BETA_CONTRIBUTORS: &str = "ml-rust/beta/contributors";
+
+#[test]
+fn a_contributor_count_joins_the_report_and_the_snapshot_and_never_counts() {
+    let dirs = Dirs::new();
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(BETA_CONTRIBUTORS, answer(200, r#"[{"login":"a"}]"#));
+    let found = run(&dirs, &rules).expect("runs");
+    let contributors = fact(entry(&found, "beta"), "contributors");
+    assert_eq!(contributors.value.as_deref(), Some("1"));
+    assert_eq!(contributors.fetched, Some(today()));
+    assert!(!contributors.counts_toward_tier);
+    assert_eq!(
+        contributors
+            .source
+            .as_ref()
+            .map(|source| source.url.as_str()),
+        Some("https://github.com/ml-rust/beta/graphs/contributors")
+    );
+    let written = todays_row(&dirs, "beta");
+    let stored = written
+        .network
+        .expect("network")
+        .contributors
+        .expect("count");
+    assert_eq!(stored.value, Contributors::Counted { count: 1 });
+    assert_eq!(stored.of, "ml-rust/beta");
+}
+
+#[test]
+fn a_failed_contributor_fetch_falls_back_with_the_old_date_and_a_note() {
+    let dirs = Dirs::new();
+    let old = day(10, 30);
+    let network = NetworkValues {
+        contributors: dated(old, "ml-rust/beta", Contributors::Counted { count: 38 }),
+        ..NetworkValues::default()
+    };
+    seed(
+        &dirs.history(),
+        day(11, 2),
+        vec![("beta", row(EntryKind::Library, Some(network)))],
+    );
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(BETA_CONTRIBUTORS, answer(500, ""));
+    let found = run(&dirs, &rules).expect("the run goes on");
+    let beta = entry(&found, "beta");
+    let contributors = fact(beta, "contributors");
+    assert_eq!(contributors.value.as_deref(), Some("38"));
+    assert_eq!(contributors.fetched, Some(old));
+    assert!(
+        has_note(
+            beta,
+            "GitHub contributors failed: using the value from 2026-10-30."
+        ),
+        "{:?}",
+        beta.notes
+    );
+    assert_eq!(found.summary.fallback_count(), 1);
+    assert_eq!(found.summary.failures[0].source, Source::Contributors);
+    assert!(
+        found
+            .text
+            .contains("beta: GitHub contributors (from 2026-10-30)"),
+        "{}",
+        found.text
+    );
+    let written = todays_row(&dirs, "beta");
+    let stored = written
+        .network
+        .expect("network")
+        .contributors
+        .expect("count");
+    assert_eq!(stored.date, old, "the value keeps its first date");
+}
+
+#[test]
+fn a_failed_contributor_fetch_with_no_earlier_value_reads_as_not_measured() {
+    let dirs = Dirs::new();
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(BETA_CONTRIBUTORS, answer(500, ""));
+    let found = run(&dirs, &rules).expect("the run goes on");
+    let contributors = fact(entry(&found, "beta"), "contributors");
+    assert_eq!(contributors.value, None);
+    assert_eq!(contributors.source, None);
+    assert_eq!(found.summary.fallback_count(), 0);
+    assert_eq!(found.summary.failures[0].source, Source::Contributors);
+}
+
+#[test]
+fn a_list_too_large_reads_as_not_measured_with_a_note_and_no_fallback() {
+    let dirs = Dirs::new();
+    let old = day(11, 1);
+    let network = NetworkValues {
+        contributors: dated(old, "ml-rust/beta", Contributors::Counted { count: 38 }),
+        ..NetworkValues::default()
+    };
+    seed(
+        &dirs.history(),
+        day(11, 2),
+        vec![("beta", row(EntryKind::Library, Some(network)))],
+    );
+    let rules = Rules::default()
+        .repo("beta", answer(200, &found_repo("beta", 40)))
+        .url(
+            BETA_CONTRIBUTORS,
+            answer(
+                403,
+                r#"{"message":"The history or contributor list is too large"}"#,
+            ),
+        );
+    let found = run(&dirs, &rules).expect("the run goes on");
+    let beta = entry(&found, "beta");
+    assert_eq!(fact(beta, "contributors").value, None);
+    assert!(has_note(beta, "too large to read"), "{:?}", beta.notes);
+    assert!(found.summary.failures.is_empty(), "{:?}", found.summary);
+    let written = todays_row(&dirs, "beta");
+    let stored = written
+        .network
+        .expect("network")
+        .contributors
+        .expect("answer");
+    assert_eq!(stored.value, Contributors::TooLarge);
+    assert_eq!(stored.date, today());
+}
+
+#[test]
+fn a_gone_repo_asks_for_no_contributors() {
+    let dirs = Dirs::new();
+    let found = run(&dirs, &Rules::default()).expect("runs");
+    let alpha = entry(&found, "alpha");
+    assert_eq!(fact(alpha, "contributors").value, None);
+    assert!(!has_note(alpha, "contributors"), "{:?}", alpha.notes);
 }
 
 #[test]

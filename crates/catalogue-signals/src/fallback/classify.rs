@@ -6,7 +6,7 @@
 //! | HTTP client start, invalid header, link cache IO, date range | fatal |
 //! | 404, unusable crate name | definitive |
 //! | network error, other status, 401 from a source with no token | fallback |
-//! | broken body, bad JSON, rate limit retries exhausted | fallback |
+//! | broken body, bad JSON, bad `Link` header, rate limit retries exhausted | fallback |
 //! | GraphQL error other than a missing repo, unreadable package | fallback |
 //!
 //! A missing repo in a GraphQL answer is no error here: `repo_facts` returns it
@@ -78,6 +78,7 @@ pub fn github_failure(error: &GithubError) -> Failure {
         | GithubError::Body { .. }
         | GithubError::Json { .. }
         | GithubError::RetriesExhausted { .. }
+        | GithubError::BadLink { .. }
         | GithubError::Graphql { .. } => Failure::Fallback,
     }
 }

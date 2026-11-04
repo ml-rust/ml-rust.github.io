@@ -22,6 +22,20 @@
 <p>Category: <a href="{{ link.href }}">{{ link.name }}</a></p>
 {%- endif %}
 
+<h2 id="at-a-glance">At a glance</h2>
+<ul class="glance-list">
+{%- if let Some(badge) = glance.tier %}
+<li>Tier: {% include "tier_badge.html" %}</li>
+{%- endif %}
+<li>License: {{ glance.license }}</li>
+<li>Runs on: {{ glance.runs_on }}</li>
+<li>Native code: {{ glance.native_code }}{% if let Some(python) = glance.python %}. {{ python }}{% endif %}</li>
+<li>Active users: {{ glance.active_users }}</li>
+<li>Dependents: {{ glance.dependents }}</li>
+<li>Contributors: {{ glance.contributors }}</li>
+<li>Install: {% if let Some(command) = glance.install.command %}<code>{{ command }}</code> {% endif %}<a href="{{ glance.install.href }}">{{ glance.install.text }}</a></li>
+</ul>
+
 <h2 id="description">Description</h2>
 <p>{{ description.text }}</p>
 <p class="sources">Source: {% if let Some(href) = description.href %}<a href="{{ href }}">{{ description.source }}</a>{% else %}{{ description.source }}{% endif %}.</p>
@@ -110,5 +124,14 @@
 {%- endfor %}
 </tbody>
 </table>
+{%- endif %}
+{%- if !also_in.is_empty() %}
+
+<h2 id="also-in">Also in these topics</h2>
+<ul class="also-in-list">
+{%- for row in also_in %}
+<li><a href="{{ row.entry.href }}">{{ row.entry.name }}</a>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}. Also in <a href="{{ row.topic.href }}">{{ row.topic.name }}</a>.</li>
+{%- endfor %}
+</ul>
 {%- endif %}
 {% endblock %}

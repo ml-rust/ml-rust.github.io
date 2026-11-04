@@ -115,7 +115,9 @@ fn the_script_keeps_every_filter_group_in_the_url() {
         .find(|line| line.starts_with("const FILTER_KEYS"))
         .expect("the filter keys");
     let site = site(true);
-    for key in ["kind", "topic", "category", "tier", "org"] {
+    for key in [
+        "kind", "topic", "category", "license", "runs_on", "tier", "org",
+    ] {
         assert!(keys.contains(&format!("\"{key}\"")), "{keys}");
         assert!(site[PAGE].contains(&format!("name=\"{key}\"")), "{key}");
     }
@@ -128,6 +130,32 @@ fn without_a_report_the_page_has_no_tier_filter() {
     assert!(!page.contains("name=\"tier\""), "{page}");
     assert!(!page.contains("<legend>Tier</legend>"), "{page}");
     assert!(page.contains(&checkbox("kind", "library")));
+}
+
+#[test]
+fn the_license_and_runs_on_filters_come_from_the_report_and_the_table() {
+    let site = site(true);
+    let page = &site[PAGE];
+    for found in [
+        checkbox("license", "apache-2-0-or-mit"),
+        checkbox("license", "mit"),
+        checkbox("license", "none-stated"),
+        checkbox("license", "not-measured"),
+        checkbox("runs_on", "cuda"),
+        checkbox("runs_on", "metal"),
+        checkbox("runs_on", "cpu"),
+        checkbox("runs_on", "not-measured"),
+    ] {
+        assert!(page.contains(found.as_str()), "no {found} in:\n{page}");
+    }
+    assert!(
+        page.contains("<label for=\"filter-license-apache-2-0-or-mit\">Apache-2.0 OR MIT</label>"),
+        "{page}"
+    );
+    assert!(page.contains("<label for=\"filter-runs_on-cuda\">CUDA</label>"));
+    let untiered = self::site(false);
+    assert!(!untiered[PAGE].contains("name=\"license\""));
+    assert!(!untiered[PAGE].contains("name=\"runs_on\""));
 }
 
 #[test]

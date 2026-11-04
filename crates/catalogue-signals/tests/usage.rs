@@ -152,6 +152,7 @@ fn snapshot() -> DumpSnapshot {
         default_version: IdMap::default(),
         edges,
         default_requirements: IdMap::default(),
+        details: IdMap::default(),
         owners,
         users: logins,
         teams: [(30, "github:pear:core".to_owned())].into_iter().collect(),

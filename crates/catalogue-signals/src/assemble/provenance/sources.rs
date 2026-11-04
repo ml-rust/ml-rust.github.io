@@ -45,6 +45,8 @@ pub struct FactSources {
     pub repology_page: Option<Url>,
     /// The Docker Hub page of the first image the entry lists.
     pub docker_page: Option<Url>,
+    /// The GitHub contributors page of the repo. `None` when the repo is not on GitHub.
+    pub contributors_page: Option<Url>,
     /// The date of the data behind each fetched source.
     pub dates: FetchDates,
 }
@@ -71,6 +73,8 @@ pub struct FetchDates {
     pub docker: Option<Date>,
     /// The snapshot date and pull count that Docker growth measures against.
     pub docker_baseline: Option<(Date, u64)>,
+    /// The date of the GitHub contributor count.
+    pub contributors: Option<Date>,
 }
 
 impl FactSources {
@@ -83,6 +87,17 @@ impl FactSources {
             page_url(
                 GITHUB,
                 &[repo.owner.as_str(), repo.name.as_str(), "releases"],
+            )
+        });
+        let contributors_page = repo.and_then(|repo| {
+            page_url(
+                GITHUB,
+                &[
+                    repo.owner.as_str(),
+                    repo.name.as_str(),
+                    "graphs",
+                    "contributors",
+                ],
             )
         });
         let distribution = entry.distribution.as_ref();
@@ -101,6 +116,7 @@ impl FactSources {
             homebrew_page: homebrew.and_then(homebrew_page),
             repology_page: repology.and_then(repology_page),
             docker_page: docker.and_then(docker_page),
+            contributors_page,
             dates,
         }
     }

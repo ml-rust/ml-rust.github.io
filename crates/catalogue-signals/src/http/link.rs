@@ -7,6 +7,18 @@
 /// types match without regard to case. A link without a closing `>` ends the
 /// parse.
 pub fn next_link(value: &str) -> Option<&str> {
+    link_with_relation(value, "next")
+}
+
+/// The URL of the `rel="last"` link in a `Link` header value, or `None`.
+///
+/// It reads the value as [`next_link`] does.
+pub fn last_link(value: &str) -> Option<&str> {
+    link_with_relation(value, "last")
+}
+
+/// The URL of the first link in `value` whose `rel` lists `relation`.
+fn link_with_relation<'a>(value: &'a str, relation: &str) -> Option<&'a str> {
     let mut rest = value;
     loop {
         let start = rest.find('<')?;
@@ -15,7 +27,7 @@ pub fn next_link(value: &str) -> Option<&str> {
         let url = &after[..end];
         let params_and_rest = &after[end + 1..];
         let (params, next) = split_link(params_and_rest);
-        if params.split(';').any(is_next_rel) {
+        if params.split(';').any(|param| has_relation(param, relation)) {
             return Some(url);
         }
         rest = next;
@@ -36,8 +48,8 @@ fn split_link(text: &str) -> (&str, &str) {
     (text, "")
 }
 
-/// Whether one `name=value` parameter is a `rel` that lists `next`.
-fn is_next_rel(param: &str) -> bool {
+/// Whether one `name=value` parameter is a `rel` that lists `relation`.
+fn has_relation(param: &str, relation: &str) -> bool {
     let Some((name, value)) = param.split_once('=') else {
         return false;
     };
@@ -46,12 +58,24 @@ fn is_next_rel(param: &str) -> bool {
             .trim()
             .trim_matches('"')
             .split_ascii_whitespace()
-            .any(|relation| relation.eq_ignore_ascii_case("next"))
+            .any(|listed| listed.eq_ignore_ascii_case(relation))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_last_link_of_a_github_header_is_found() {
+        let value = "<https://api.github.com/repositories/1/contributors?per_page=1&page=2>; rel=\"next\", \
+                     <https://api.github.com/repositories/1/contributors?per_page=1&page=38>; rel=\"last\"";
+        assert_eq!(
+            last_link(value),
+            Some("https://api.github.com/repositories/1/contributors?per_page=1&page=38")
+        );
+        assert_eq!(last_link("<https://x/1>; rel=\"prev\""), None);
+        assert_eq!(last_link(""), None);
+    }
 
     #[test]
     fn the_next_link_of_a_github_header_is_found() {

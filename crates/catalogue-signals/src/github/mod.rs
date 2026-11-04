@@ -10,7 +10,9 @@
 //! its state, its human commits and how fast its maintainers answer issues and
 //! pull requests. [`repo_profile`] reads what a lead needs: the canonical name,
 //! the state, the description, the homepage, the topics, the language and the license.
+//! [`repo_contributors`] counts the contributors of one repo with a single REST request.
 
+mod contributors;
 mod error;
 mod facts;
 mod headers;
@@ -21,11 +23,12 @@ mod repo;
 mod search;
 
 pub use crate::http::Pacer;
+pub use contributors::{Contributors, repo_contributors};
 pub use error::GithubError;
 pub(crate) use facts::{ApiError, GRAPHQL_ENDPOINT, NOT_FOUND, is_missing_repository};
 pub use facts::{
-    CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoProfile, RepoRef, RepoRefError, repo_facts,
-    repo_profile,
+    CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoLicense, RepoProfile, RepoRef, RepoRefError,
+    repo_facts, repo_profile,
 };
 pub use headers::rest_headers;
 pub(crate) use json::parse_json;

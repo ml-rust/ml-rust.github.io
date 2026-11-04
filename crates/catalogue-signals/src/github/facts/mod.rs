@@ -23,4 +23,4 @@ pub(crate) use query::ENDPOINT as GRAPHQL_ENDPOINT;
 pub use query::LATEST_SAMPLE;
 pub use repo_ref::{RepoRef, RepoRefError};
 pub(crate) use response::ApiError;
-pub use types::{CiState, Facts, RepoFacts};
+pub use types::{CiState, Facts, RepoFacts, RepoLicense};

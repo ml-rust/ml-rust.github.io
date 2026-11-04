@@ -1,5 +1,7 @@
 //! `/projects/<slug>/`: one entry with its links, tier reasons, signals and judgments.
 
+mod also_in;
+mod glance;
 mod header;
 mod judgments;
 mod links;

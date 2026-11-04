@@ -1,0 +1,14 @@
+python = ["pyo3"]
+not_native = ["js-sys"]
+
+[[backend]]
+id = "cuda"
+name = "CUDA"
+dependencies = ["cudarc"]
+features = ["cuda"]
+
+[[backend]]
+id = "metal"
+name = "Metal"
+dependencies = ["objc2-metal"]
+features = ["metal"]

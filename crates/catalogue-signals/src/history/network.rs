@@ -9,7 +9,7 @@ use catalogue_core::date_text::{plain, plain_option};
 use serde::{Deserialize, Serialize};
 
 use crate::distribution::ReleaseDownloads;
-use crate::github::{Facts, RepoFacts};
+use crate::github::{Contributors, Facts, RepoFacts, RepoLicense};
 use crate::link::LinkCheck;
 
 /// A fetched value with the date of its data and what it describes.
@@ -45,6 +45,10 @@ pub enum RepoValues {
         oldest_unanswered_days: Option<u32>,
         /// The maintainer comments over the reply window.
         maintainer_replies_365: u32,
+        /// The license GitHub states. Display only: no tier rule reads it. Not measured in
+        /// snapshots written before the field existed.
+        #[serde(default)]
+        license: RepoLicense,
     },
 }
 
@@ -53,6 +57,14 @@ impl RepoValues {
     pub fn stars(&self) -> Option<u64> {
         match self {
             Self::Found { stars, .. } => Some(u64::from(*stars)),
+            Self::Gone => None,
+        }
+    }
+
+    /// The license GitHub states for an existing repo.
+    pub fn license(&self) -> Option<&RepoLicense> {
+        match self {
+            Self::Found { license, .. } => Some(license),
             Self::Gone => None,
         }
     }
@@ -66,6 +78,7 @@ impl From<&Facts> for RepoValues {
             last_human_commit: facts.last_human_commit.map(Date::from),
             oldest_unanswered_days: facts.oldest_unanswered_days,
             maintainer_replies_365: facts.maintainer_replies_365,
+            license: facts.license.clone(),
         }
     }
 }
@@ -125,6 +138,9 @@ pub struct NetworkValues {
     /// The Docker Hub pulls summed over the listed images.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub docker: Option<Dated<u64>>,
+    /// The GitHub contributor count. Absent in snapshots written before the field existed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contributors: Option<Dated<Contributors>>,
 }
 
 impl NetworkValues {
@@ -159,6 +175,7 @@ mod tests {
                 last_human_commit: Some(day(1)),
                 oldest_unanswered_days: None,
                 maintainer_replies_365: 7,
+                license: RepoLicense::Stated("MIT".to_owned()),
             }),
             link: dated(LinkCheck::NoVcsInfo),
             releases: dated(ReleaseValues {
@@ -169,7 +186,32 @@ mod tests {
             homebrew: dated(640),
             repology: dated(2),
             docker: dated(5_000),
+            contributors: dated(Contributors::Counted { count: 38 }),
         }
+    }
+
+    #[test]
+    fn a_snapshot_from_before_the_new_fields_reads_as_not_measured() {
+        let text = r#"{"facts":{"date":"2026-10-02","of":"a/b","value":{"state":"found","archived":false,"stars":1,"last_human_commit":null,"oldest_unanswered_days":null,"maintainer_replies_365":0}}}"#;
+        let values: NetworkValues = serde_json::from_str(text).expect("parses");
+        assert_eq!(values.contributors, None);
+        let facts = values.facts.expect("facts");
+        assert_eq!(facts.value.license(), Some(&RepoLicense::NotMeasured));
+    }
+
+    #[test]
+    fn a_contributor_list_too_large_to_read_round_trips() {
+        let values = NetworkValues {
+            contributors: dated(Contributors::TooLarge),
+            ..NetworkValues::default()
+        };
+        let text = serde_json::to_string(&values).expect("serializes");
+        assert_eq!(
+            text,
+            r#"{"contributors":{"date":"2026-10-02","of":"a/b","value":{"state":"too-large"}}}"#
+        );
+        let back: NetworkValues = serde_json::from_str(&text).expect("parses");
+        assert_eq!(back, values);
     }
 
     #[test]

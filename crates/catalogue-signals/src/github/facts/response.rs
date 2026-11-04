@@ -52,9 +52,17 @@ pub(super) struct Repository {
     pub(super) pushed_at: Option<String>,
     #[serde(default)]
     pub(super) stargazer_count: u32,
+    pub(super) license_info: Option<LicenseInfo>,
     pub(super) default_branch_ref: Option<Branch>,
     pub(super) issues: Option<Connection<Item>>,
     pub(super) pull_requests: Option<Connection<Item>>,
+}
+
+/// The license GitHub detects in the repo.
+#[derive(Debug, Deserialize)]
+pub(super) struct LicenseInfo {
+    #[serde(rename = "spdxId")]
+    pub(super) spdx_id: Option<String>,
 }
 
 /// The default branch.

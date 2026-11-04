@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use catalogue_core::{Catalogue, Date, EntryKind, Signals, Slug, Verdict, assess};
+use catalogue_signals::assemble::choice::{ChoiceFacts, ChoiceInputs, DependentIndex, measure};
 use catalogue_signals::assemble::{
     Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_signals, context,
     library_signals,
@@ -31,6 +32,8 @@ pub(crate) struct Assessment {
     pub(crate) sources: FactSources,
     /// The GitHub star count. Display only: no rule reads it.
     pub(crate) stars: Option<u64>,
+    /// The facts a person reads to choose a project. No rule reads them.
+    pub(crate) choice: ChoiceFacts,
 }
 
 /// Assesses every entry in slug order.
@@ -75,6 +78,19 @@ pub(crate) fn assess_entries(
         thresholds,
         build_checks,
     };
+    let listed: IdSet = catalogue
+        .entries()
+        .values()
+        .flat_map(|entry| &entry.crates)
+        .filter_map(|name| index.id(name.as_str()))
+        .collect();
+    let dependents = DependentIndex::new(snapshot, &listed);
+    let choice_inputs = ChoiceInputs {
+        dump: snapshot,
+        index: &index,
+        backends: catalogue.backends(),
+        dependents: &dependents,
+    };
     let none = Fetched::default();
     let assessments = catalogue
         .entries()
@@ -107,7 +123,10 @@ pub(crate) fn assess_entries(
                 repology: values.repology.as_ref().map(|found| found.date),
                 docker: docker.map(|found| found.date),
                 docker_baseline: baseline,
+                contributors: values.contributors.as_ref().map(|found| found.date),
             };
+            let contributors = values.contributors.as_ref().map(|found| &found.value);
+            let choice = measure(entry, &choice_inputs, facts, contributors);
             let repo = github_repo(entry).ok();
             let cited = FactSources::new(entry, repo.as_ref(), dump_date, dates);
             let stars = facts.and_then(RepoValues::stars);
@@ -134,6 +153,7 @@ pub(crate) fn assess_entries(
                 signals,
                 sources: cited,
                 stars,
+                choice,
             }
         })
         .collect();

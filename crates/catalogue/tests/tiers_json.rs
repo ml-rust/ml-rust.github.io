@@ -41,6 +41,11 @@ fn the_offline_report_matches_the_golden_file() {
     let (_, run) = offline_run();
     let mut text = serde_json::to_string_pretty(&run.report).expect("serializes");
     text.push('\n');
+    if std::env::var_os("CATALOGUE_UPDATE_GOLDEN").is_some() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/golden/report.json");
+        std::fs::write(path, &text).expect("writes the golden file");
+        return;
+    }
     assert_eq!(text, GOLDEN);
 }
 
@@ -56,9 +61,15 @@ fn the_golden_file_reads_back_as_the_same_report() {
 fn every_fact_cites_its_source_and_date() {
     let (_, run) = offline_run();
     for (slug, entry) in &run.report.entries {
-        assert_eq!(entry.signals.len(), 33, "{slug}");
+        assert_eq!(entry.signals.len(), 40, "{slug}");
         for fact in &entry.signals {
             assert!(fact.problems().is_empty(), "{slug}: {:?}", fact.problems());
+            assert_eq!(
+                fact.counts_toward_tier,
+                !catalogue_core::never_counts(&fact.name),
+                "{slug}: {}",
+                fact.name
+            );
         }
         let stars = entry
             .signals
@@ -66,6 +77,33 @@ fn every_fact_cites_its_source_and_date() {
             .find(|fact| fact.name == "stars")
             .expect("stars row");
         assert!(!stars.counts_toward_tier, "{slug}");
+    }
+}
+
+#[test]
+fn the_choice_facts_read_the_dump_and_an_absent_crate_reads_as_not_measured() {
+    let (_, run) = offline_run();
+    let alpha = run
+        .report
+        .entries
+        .iter()
+        .find(|(slug, _)| slug.as_str() == "alpha")
+        .map(|(_, entry)| entry)
+        .expect("alpha");
+    assert_eq!(alpha.value_of("license"), Some("Apache-2.0 OR MIT"));
+    assert_eq!(alpha.value_of("runs_on"), Some("CUDA"));
+    assert_eq!(alpha.value_of("native_code"), Some("Pure Rust"));
+    assert_eq!(alpha.value_of("dependents"), Some("0"));
+    assert_eq!(alpha.value_of("contributors"), None, "an offline run");
+    let beta = run
+        .report
+        .entries
+        .iter()
+        .find(|(slug, _)| slug.as_str() == "beta")
+        .map(|(_, entry)| entry)
+        .expect("beta");
+    for name in ["license", "runs_on", "native_code", "dependents"] {
+        assert_eq!(beta.value_of(name), None, "{name}");
     }
 }
 

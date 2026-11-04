@@ -1,6 +1,6 @@
 //! The data kept from one crates.io database dump.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use catalogue_core::deprecation::DeprecationNotice;
 use jiff::{Timestamp, civil};
@@ -30,6 +30,9 @@ pub struct DumpSnapshot {
     pub edges: Vec<DependencyEdge>,
     /// The requirements of each crate's default version, by depender crate id.
     pub default_requirements: IdMap<Vec<Requirement>>,
+    /// The details of the default version of each crate the caller named, by crate id.
+    /// Empty unless the dump was read with [`read_with_details`](super::read_with_details).
+    pub details: IdMap<CrateDetails>,
     /// Owners by crate id.
     pub owners: IdMap<Vec<Owner>>,
     /// User login by user id.
@@ -101,6 +104,32 @@ pub struct VersionRow {
     pub has_lib: Option<bool>,
     /// Whether the version names a binary target. A NULL or empty list reads as `false`.
     pub has_bin: bool,
+}
+
+/// What the dump states about one version of a named crate, beyond its [`VersionRow`].
+///
+/// The reader keeps these only for crates the caller names, because the dump holds
+/// millions of versions.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CrateDetails {
+    /// The `license` column as published. A NULL or empty value reads as `None`.
+    pub license: Option<String>,
+    /// The `links` key, the native library the crate links. A NULL or empty value reads as `None`.
+    pub links: Option<String>,
+    /// The feature map: each feature name with what it enables. Items take the forms
+    /// `name`, `dep:name`, `name/feature` and `name?/feature`.
+    pub features: BTreeMap<String, Vec<String>>,
+    /// The dependencies of the version that use another name.
+    pub renames: Vec<Rename>,
+}
+
+/// A dependency that a crate uses under another name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rename {
+    /// The crate id depended on.
+    pub crate_id: u32,
+    /// The `explicit_name` column: the name feature lists use for it.
+    pub name: String,
 }
 
 /// The `dependencies.kind` code.

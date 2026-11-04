@@ -1,11 +1,12 @@
 //! One search record per entry.
 
-use catalogue_core::{Catalogue, EffectiveEntry, TierReport};
+use catalogue_core::{Catalogue, EffectiveEntry, LICENSE_SIGNAL, RUNS_ON_SIGNAL, TierReport};
 use oxidoc_search::records::NAME_FIELD;
 use oxidoc_search::{Field, Record};
 
 use super::aliases::alias_terms;
 use super::boost::tier_boost;
+use super::choice_tags::{LICENSE_TAG, RUNS_ON_TAG, license_value, runs_on_values};
 use crate::pages::{category_link, project_href, topic_link};
 
 /// The field of the effective topic names.
@@ -56,9 +57,11 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 ///   [`Catalogue::synonyms`]. Left out when there are none.
 ///
 /// Tags: `kind`, `org` (`ml-rust` or `community`), one `topic` per effective
-/// topic id, `category` when the entry has one, and `tier` when `report` is
-/// given. The boost comes from the tier through [`super::TIER_BOOSTS`]. Without
-/// `report` there is no `tier` tag and the boost is [`super::NO_TIER_BOOST`].
+/// topic id, `category` when the entry has one, and `license`, one `runs_on` per
+/// backend and `tier` when `report` is given. An unknown license or backend tags
+/// as `not-measured`. The boost comes from the tier through [`super::TIER_BOOSTS`].
+/// Without `report` none of those three tags exists and the boost is
+/// [`super::NO_TIER_BOOST`].
 pub fn search_records(catalogue: &Catalogue, report: Option<&TierReport>) -> Vec<Record> {
     catalogue
         .entries()
@@ -141,9 +144,16 @@ fn record(
     if let Some((id, _)) = category {
         record.tags.push(tag(CATEGORY_TAG, id.as_str()));
     }
-    let tier = report
-        .and_then(|report| report.entries.get(effective.slug))
-        .map(|found| found.tier);
+    let found = report.and_then(|report| report.entries.get(effective.slug));
+    if report.is_some() {
+        let license = found.and_then(|found| found.value_of(LICENSE_SIGNAL));
+        record.tags.push(tag(LICENSE_TAG, &license_value(license)));
+        let runs_on = found.and_then(|found| found.value_of(RUNS_ON_SIGNAL));
+        for id in runs_on_values(runs_on, catalogue.backends()) {
+            record.tags.push(tag(RUNS_ON_TAG, id));
+        }
+    }
+    let tier = found.map(|found| found.tier);
     if let Some(tier) = tier {
         record.tags.push(tag(TIER_TAG, tier.as_str()));
     }

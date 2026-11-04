@@ -13,7 +13,9 @@ use catalogue_signals::fallback::{
     Failed, FetchFailure, FetchSummary, Source, attempt, distribution_failure, github_failure,
     recover,
 };
-use catalogue_signals::github::{GITHUB_INTERVAL, RepoRef, repo_facts};
+use catalogue_signals::github::{
+    Contributors, GITHUB_INTERVAL, RepoRef, repo_contributors, repo_facts,
+};
 use catalogue_signals::history::{Dated, History, NetworkValues, ReleaseValues, RepoValues};
 use catalogue_signals::http::{IntervalPacer, Transport};
 
@@ -141,7 +143,8 @@ impl Collector<'_> {
 
 /// Fetches the network signals of every entry, keyed by slug, with the run summary.
 ///
-/// Every entry with a GitHub repo gets its repo facts. Every app with a GitHub
+/// Every entry with a GitHub repo gets its repo facts, then its contributor count unless the
+/// facts find the repo gone. Every app with a GitHub
 /// repo gets its release downloads, then the Homebrew and Repology counts its
 /// `distribution` names, then the Docker Hub pulls of its listed images. Every
 /// library gets its repo link check, which `snapshot` supplies the release for.
@@ -190,6 +193,7 @@ pub(crate) fn fetch_all(
     }
     collect_facts(&mut run, &repos, transport, token)?;
     collect_links(&mut run, catalogue, snapshot, transport, token, cache_dir)?;
+    collect_contributors(&mut run, &repos, transport, token)?;
     let apps: Vec<(Slug, RepoRef)> = repos
         .into_iter()
         .filter(|(slug, _)| kind(catalogue, slug) == Some(EntryKind::App))
@@ -257,6 +261,58 @@ fn collect_links(
         run.fell_back(&fetch, &failure.error);
     }
     Ok(())
+}
+
+/// Counts the contributors of every repo the facts did not find gone: one request per repo.
+///
+/// A list GitHub calls too large is an answer, so it adds a note and never falls back.
+fn collect_contributors(
+    run: &mut Collector<'_>,
+    repos: &[(Slug, RepoRef)],
+    transport: &dyn Transport,
+    token: &str,
+) -> Result<(), TiersError> {
+    let live: Vec<(Slug, RepoRef)> = repos
+        .iter()
+        .filter(|(slug, _)| !is_gone(run, slug))
+        .cloned()
+        .collect();
+    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
+    let found = batch::each(&live, &mut pacer, |(_, repo), pacer| {
+        attempt(
+            repo_contributors(transport, token, repo, pacer),
+            github_failure,
+        )
+    })?;
+    run.out.summary.fetches += live.len();
+    for ((slug, repo), result) in live.iter().zip(found) {
+        let of = repo.to_string();
+        let fetch = Fetch {
+            slug,
+            source: Source::Contributors,
+            of: &of,
+            slot: |values| &mut values.contributors,
+        };
+        if matches!(result, Ok(Contributors::TooLarge)) {
+            run.note(
+                slug,
+                format!(
+                    "GitHub calls the contributor list of {repo} too large to read: not measured"
+                ),
+            );
+        }
+        run.settle(&fetch, result.map(Some), String::new);
+    }
+    Ok(())
+}
+
+/// Whether this run found the repo of `slug` gone.
+fn is_gone(run: &Collector<'_>, slug: &Slug) -> bool {
+    run.out
+        .entries
+        .get(slug)
+        .and_then(|fetched| fetched.values.facts.as_ref())
+        .is_some_and(|facts| facts.value == RepoValues::Gone)
 }
 
 fn collect_releases(

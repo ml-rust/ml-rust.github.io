@@ -17,6 +17,8 @@ pub enum Source {
     Repology,
     /// The Docker Hub pull count.
     Docker,
+    /// The GitHub contributor count.
+    Contributors,
 }
 
 impl Source {
@@ -29,12 +31,16 @@ impl Source {
             Self::Homebrew => "Homebrew",
             Self::Repology => "Repology",
             Self::Docker => "Docker Hub",
+            Self::Contributors => "GitHub contributors",
         }
     }
 
     /// Whether requests to this source send the GitHub token.
     pub fn sends_token(self) -> bool {
-        matches!(self, Self::RepoFacts | Self::RepoLink | Self::Releases)
+        matches!(
+            self,
+            Self::RepoFacts | Self::RepoLink | Self::Releases | Self::Contributors
+        )
     }
 }
 

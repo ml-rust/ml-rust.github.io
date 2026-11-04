@@ -131,6 +131,9 @@ fn a_record_links_names_and_weights_the_entry() {
             ("org", "community"),
             ("topic", "tensors"),
             ("category", "tensor-libraries"),
+            ("license", "apache-2-0-or-mit"),
+            ("runs_on", "cuda"),
+            ("runs_on", "metal"),
             ("tier", "featured"),
         ]
     );
@@ -159,6 +162,8 @@ fn synonyms_of_the_entry_text_become_aliases() {
             ("org", "ml-rust"),
             ("topic", "ml"),
             ("category", "inference-runtimes"),
+            ("license", "none-stated"),
+            ("runs_on", "not-measured"),
             ("tier", "listed"),
         ]
     );
@@ -206,6 +211,47 @@ fn the_category_filter_and_its_facets_work_like_the_topic_filter() {
 }
 
 #[test]
+fn the_license_and_runs_on_filters_and_their_facets_work_like_the_category_filter() {
+    let (catalogue, report) = data();
+    let files = build(&catalogue, Some(&report));
+    assert_eq!(
+        hits(&files, "tensor", &[("runs_on", "cuda")]),
+        ["/projects/alpha/"]
+    );
+    assert!(hits(&files, "tensor", &[("license", "none-stated")]).is_empty());
+    assert_eq!(
+        hits(&files, "command", &[("license", "none-stated")]),
+        ["/projects/beta/"]
+    );
+    let facets = searcher(&files, "").facets("", &[]);
+    let counts = |name: &str| {
+        let (_, found) = facets
+            .iter()
+            .find(|(key, _)| key == name)
+            .unwrap_or_else(|| panic!("no {name} facet"));
+        found.clone()
+    };
+    let license = counts("license");
+    for expected in [
+        ("apache-2-0-or-mit".to_owned(), 1),
+        ("mit".to_owned(), 1),
+        ("none-stated".to_owned(), 1),
+        ("not-measured".to_owned(), 1),
+    ] {
+        assert!(license.contains(&expected), "{expected:?}: {license:?}");
+    }
+    let runs_on = counts("runs_on");
+    for expected in [
+        ("cuda".to_owned(), 1),
+        ("metal".to_owned(), 1),
+        ("cpu".to_owned(), 1),
+        ("not-measured".to_owned(), 2),
+    ] {
+        assert!(runs_on.contains(&expected), "{expected:?}: {runs_on:?}");
+    }
+}
+
+#[test]
 fn judgments_set_the_topics_and_tiers_set_the_boost() {
     let (catalogue, report) = data();
     let records = search_records(&catalogue, Some(&report));
@@ -222,7 +268,10 @@ fn a_build_without_a_report_has_no_tier() {
     let (catalogue, _) = data();
     for record in search_records(&catalogue, None) {
         assert!(
-            record.tags.iter().all(|(name, _)| name != "tier"),
+            record
+                .tags
+                .iter()
+                .all(|(name, _)| !["tier", "license", "runs_on"].contains(&name.as_str())),
             "{}",
             record.id
         );

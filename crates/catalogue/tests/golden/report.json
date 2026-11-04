@@ -344,6 +344,80 @@
           "source": null,
           "fetched": null,
           "counts_toward_tier": false
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": "Apache-2.0 OR MIT",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on, from listed crates and their direct dependencies",
+          "value": "CUDA",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on_evidence",
+          "label": "What shows each backend",
+          "value": "CUDA: alpha-crate feature cuda",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "native_code",
+          "label": "Native code, from listed crates and their direct dependencies",
+          "value": "Pure Rust",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "python_bindings",
+          "label": "Python bindings, from direct dependencies of listed crates",
+          "value": "No Python bindings",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "dependents",
+          "label": "Crates that depend on a listed crate directly",
+          "value": "0",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": false
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
         }
       ]
     },
@@ -659,6 +733,62 @@
           "source": null,
           "fetched": null,
           "counts_toward_tier": false
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on, from listed crates and their direct dependencies",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on_evidence",
+          "label": "What shows each backend",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "native_code",
+          "label": "Native code, from listed crates and their direct dependencies",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "python_bindings",
+          "label": "Python bindings, from direct dependencies of listed crates",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "dependents",
+          "label": "Crates that depend on a listed crate directly",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
         }
       ]
     },
@@ -961,6 +1091,62 @@
         {
           "name": "stars",
           "label": "GitHub stars",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "license",
+          "label": "License",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on",
+          "label": "Runs on, from listed crates and their direct dependencies",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "runs_on_evidence",
+          "label": "What shows each backend",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "native_code",
+          "label": "Native code, from listed crates and their direct dependencies",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "python_bindings",
+          "label": "Python bindings, from direct dependencies of listed crates",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "dependents",
+          "label": "Crates that depend on a listed crate directly",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": false
+        },
+        {
+          "name": "contributors",
+          "label": "Contributors with a GitHub account",
           "value": null,
           "source": null,
           "fetched": null,

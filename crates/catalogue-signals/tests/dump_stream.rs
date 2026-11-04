@@ -4,7 +4,8 @@ mod common;
 
 use catalogue_core::deprecation::Field;
 use catalogue_signals::dump::{
-    self, DependencyEdge, DependencyKind, DumpError, DumpSnapshot, Owner, OwnerKind, Requirement,
+    self, DependencyEdge, DependencyKind, DumpError, DumpSnapshot, Owner, OwnerKind, Rename,
+    Requirement,
 };
 use jiff::{Timestamp, civil::date};
 
@@ -287,6 +288,56 @@ fn repeated_table_is_rejected() {
     let error = error_of(valid().appended("data/teams.csv", "id,login\n"));
     assert!(
         matches!(error, DumpError::DuplicateTable { table: "teams" }),
+        "{error}"
+    );
+}
+
+#[test]
+fn details_stay_empty_unless_a_crate_is_named() {
+    assert!(snapshot().details.is_empty());
+}
+
+#[test]
+fn details_come_from_the_default_version_of_each_named_crate() {
+    let found = dump::read_with_details(
+        valid().build().as_slice(),
+        WINDOW_DAYS,
+        &["numr", "HELPER", "absent"],
+    )
+    .expect("valid dump");
+    assert_eq!(found.details.len(), 2);
+    let numr = found.details.get(&1).expect("numr");
+    assert_eq!(numr.license.as_deref(), Some("MIT"));
+    assert!(
+        numr.features.is_empty(),
+        "version 10 holds features, and the default version 11 holds none"
+    );
+    let helper = found.details.get(&3).expect("helper");
+    assert_eq!(
+        helper.renames,
+        [Rename {
+            crate_id: 2,
+            name: "old".to_owned()
+        }]
+    );
+}
+
+#[test]
+fn a_named_crate_needs_the_crates_table_first() {
+    let error = dump::read_with_details(
+        valid().moved_last("data/crates.csv").build().as_slice(),
+        WINDOW_DAYS,
+        &["numr"],
+    )
+    .expect_err("invalid order");
+    assert!(
+        matches!(
+            error,
+            DumpError::OrderViolation {
+                table: "versions",
+                needs: "crates"
+            }
+        ),
         "{error}"
     );
 }

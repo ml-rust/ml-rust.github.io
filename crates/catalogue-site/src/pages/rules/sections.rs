@@ -287,6 +287,42 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
             notes: &[],
             rows: Vec::new(),
         },
+        RuleSection {
+            id: "choice-facts",
+            title: "Facts that never count",
+            lead: &[
+                "These facts help a person choose a project. They never count toward a tier.",
+                "Each comes from measured data, and each row in the signal table links its source.",
+            ],
+            items: &[
+                Item {
+                    label: "License",
+                    text: "A library reads the license of its primary crate's default version on crates.io, as an SPDX expression. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license reads as none stated.",
+                },
+                Item {
+                    label: "Runs on",
+                    text: "Each listed crate's default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. CPU means the dump holds the crates and no row matches. A backend behind a deeper dependency stays unseen.",
+                },
+                Item {
+                    label: "Native code",
+                    text: "Pure Rust, or what the project binds: the links key of each listed crate and every listed crate or direct dependency named -sys. A deeper dependency stays unseen. So does C built with no links key.",
+                },
+                Item {
+                    label: "Python bindings",
+                    text: "A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it.",
+                },
+                Item {
+                    label: "Dependents",
+                    text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.",
+                },
+                Item {
+                    label: "Contributors",
+                    text: "The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.",
+                },
+            ],
+            notes: &["An unknown value reads as not measured."],
+            rows: Vec::new(),
+        },
     ]
 }
 

@@ -1,0 +1,4 @@
+[[backend]]
+id = "cuda"
+name = "CUDA"
+features = ["cuda"]

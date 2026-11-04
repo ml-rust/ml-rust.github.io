@@ -64,6 +64,14 @@ impl EntryReport {
             signals,
         }
     }
+
+    /// The value of the signal `name`. `None` when no fact carries it, or the fact has no value.
+    pub fn value_of(&self, name: &str) -> Option<&str> {
+        self.signals
+            .iter()
+            .find(|fact| fact.name == name)
+            .and_then(|fact| fact.value.as_deref())
+    }
 }
 
 #[cfg(test)]

@@ -51,7 +51,8 @@ fn group_rows<'a>(
         .filter_map(|&slug| {
             let entry = catalogue.entry(slug)?;
             let tier = tier_of(report, slug);
-            Some((tier, row(slug, entry, tier)))
+            let record = report.and_then(|report| report.entries.get(slug));
+            Some((tier, row(slug, entry, tier).with_choice(record)))
         })
         .collect();
     if report.is_none() {

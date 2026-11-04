@@ -263,6 +263,21 @@
 <p>An instant archive skips this guard.</p>
 </section>
 
+<section aria-labelledby="choice-facts">
+<h2 id="choice-facts">Facts that never count</h2>
+<p>These facts help a person choose a project. They never count toward a tier.</p>
+<p>Each comes from measured data, and each row in the signal table links its source.</p>
+<ul>
+<li><strong>License</strong> A library reads the license of its primary crate&#39;s default version on crates.io, as an SPDX expression. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license reads as none stated.</li>
+<li><strong>Runs on</strong> Each listed crate&#39;s default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. CPU means the dump holds the crates and no row matches. A backend behind a deeper dependency stays unseen.</li>
+<li><strong>Native code</strong> Pure Rust, or what the project binds: the links key of each listed crate and every listed crate or direct dependency named -sys. A deeper dependency stays unseen. So does C built with no links key.</li>
+<li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it.</li>
+<li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.</li>
+<li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
+</ul>
+<p>An unknown value reads as not measured.</p>
+</section>
+
 </main>
 <footer class="site-footer">
 <p>Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>. Source: <a href="https://github.com/ml-rust/ml-rust.github.io">ml-rust/ml-rust.github.io</a>.</p>

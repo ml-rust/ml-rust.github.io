@@ -42,7 +42,7 @@ pub struct DataDir {
 
 /// Reads `entries/*.toml`, `judgments/*.toml`, `maintainers.toml`,
 /// `topics.toml`, `categories.toml`, `synonyms.toml`, `discovery.toml`,
-/// `thresholds.toml` and `deprecated.toml` from `root`.
+/// `thresholds.toml`, `deprecated.toml` and `backends.toml` from `root`.
 ///
 /// A missing `entries/` or `judgments/` directory reads as empty. A missing
 /// optional file reads as absent.

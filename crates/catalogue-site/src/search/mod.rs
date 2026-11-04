@@ -2,10 +2,12 @@
 
 mod aliases;
 mod boost;
+mod choice_tags;
 mod files;
 mod records;
 
 pub use boost::{NO_TIER_BOOST, TIER_BOOSTS};
+pub(crate) use choice_tags::{LICENSE_TAG, RUNS_ON_TAG, is_stated_license, license_value};
 pub use files::SEARCH_DIR;
 pub(crate) use files::search_files;
 pub use records::search_records;

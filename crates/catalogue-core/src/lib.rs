@@ -43,13 +43,16 @@ pub use judgment::{ISSUE_URL_PREFIX, Judgment, JudgmentKind, MaintainerStatus, P
 pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
-    AppFeaturedThresholds, Categories, Category, Deprecated, DeprecatedRequirement, Discovery,
-    DormancyThresholds, FallbackThresholds, FinishedThresholds, IntervalThresholds,
-    LibraryFeaturedThresholds, Maintainer, Maintainers, NewThresholds, RequirementCheck,
-    RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
+    AppFeaturedThresholds, Backend, Backends, CPU_ONLY_ID, Categories, Category, Deprecated,
+    DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
+    IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, NOT_MEASURED_ID,
+    NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic,
+    TopicSummary, Topics,
 };
 pub use report::{
-    EntryReport, REPORT_SCHEMA, ReasonRecord, ReportMismatch, STARS_SIGNAL, SignalFact, SourceRef,
-    TierReport,
+    ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, CPU_ONLY, DEPENDENTS_SIGNAL, EntryReport,
+    LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, NONE_STATED, NOT_MEASURED, PYTHON_SIGNAL, REPORT_SCHEMA,
+    RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, ReasonRecord, ReportMismatch,
+    STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
 };
 pub use tier::{Context, Reason, Rule, Signals, Tier, Verdict, assess};

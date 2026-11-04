@@ -1,16 +1,18 @@
 //! The single pass over the archive entries.
 
+use std::collections::HashSet;
 use std::io::{self, Read};
 use std::path::Path;
 
+use catalogue_core::{canonical_crate_name, push_canonical_crate_name};
 use flate2::read::MultiGzDecoder;
 
 use super::error::DumpError;
 use super::names::{Seen, TableName};
 use super::parse::utc_date;
 use super::snapshot::{
-    CrateRow, DailyDownloads, DeletedCrate, DependencyEdge, DumpMeta, DumpSnapshot, DumpWarnings,
-    IdMap, Owner, Requirement, VersionRow,
+    CrateDetails, CrateRow, DailyDownloads, DeletedCrate, DependencyEdge, DumpMeta, DumpSnapshot,
+    DumpWarnings, IdMap, IdSet, Owner, Rename, Requirement, VersionRow,
 };
 use super::tables::downloads::Window;
 use super::tables::{crates, dependencies, downloads, metadata, owners, taxonomy, versions};
@@ -31,8 +33,26 @@ use crate::archive::{is_file, name_parts};
 /// table or column is absent, a field does not parse, an id exceeds `u32`, or
 /// a table comes before a table it joins against.
 pub fn read(reader: impl Read, window_days: u16) -> Result<DumpSnapshot, DumpError> {
+    read_with_details(reader, window_days, &[])
+}
+
+/// [`read`], and the [`CrateDetails`] of the default version of each crate in `names`.
+///
+/// Names match the way crates.io compares them. A row of any other crate allocates nothing
+/// beyond what [`read`] allocates, because these columns are large and the dump holds millions
+/// of rows. The `crates` table must come before `versions`, as it does in a crates.io dump.
+///
+/// # Errors
+///
+/// Returns a [`DumpError`] as [`read`] does. With names, the `license`, `links` and `features`
+/// columns of `versions` and the `explicit_name` column of `dependencies` are needed too.
+pub fn read_with_details(
+    reader: impl Read,
+    window_days: u16,
+    names: &[&str],
+) -> Result<DumpSnapshot, DumpError> {
     let mut archive = tar::Archive::new(MultiGzDecoder::new(reader));
-    let mut state = State::new(window_days);
+    let mut state = State::new(window_days, names);
     for entry in archive.entries().map_err(archive_error)? {
         let entry = entry.map_err(archive_error)?;
         if !is_file(entry.header().entry_type()) {
@@ -95,11 +115,26 @@ struct State {
     deleted: Vec<DeletedCrate>,
     downloads: IdMap<DailyDownloads>,
     warnings: DumpWarnings,
+    /// The canonical names of the crates whose details the reader keeps.
+    detail_names: HashSet<String>,
+    /// The ids of those crates, set when `versions` starts.
+    detail_crates: IdSet,
+    /// The details of every version of those crates, by version id.
+    version_details: IdMap<CrateDetails>,
+    /// The renamed dependencies of their default versions, by crate id.
+    renames: IdMap<Vec<Rename>>,
 }
 
 impl State {
-    fn new(window_days: u16) -> Self {
+    fn new(window_days: u16, names: &[&str]) -> Self {
         Self {
+            detail_names: names
+                .iter()
+                .map(|name| canonical_crate_name(name))
+                .collect(),
+            detail_crates: IdSet::default(),
+            version_details: IdMap::default(),
+            renames: IdMap::default(),
             window_days,
             seen: Seen::default(),
             meta: None,
@@ -170,14 +205,38 @@ impl State {
             TableName::Users => self.users = owners::read_users(input)?,
             TableName::Teams => self.teams = owners::read_teams(input)?,
             TableName::CrateOwners => self.owners = owners::read_owners(input)?,
-            TableName::Versions => self.versions = versions::read_versions(input)?,
+            TableName::Versions if self.detail_names.is_empty() => {
+                self.versions = versions::read_versions(input)?;
+            }
+            TableName::Versions => {
+                if !self.seen.contains(TableName::Crates) {
+                    return Err(DumpError::OrderViolation {
+                        table: name,
+                        needs: TableName::Crates.name(),
+                    });
+                }
+                self.detail_crates = self.named_crates();
+                let (rows, details) =
+                    versions::read_versions_with_details(input, &self.detail_crates)?;
+                self.versions = rows;
+                self.version_details = details;
+            }
             TableName::DefaultVersions => {
                 self.default_version = versions::read_default_versions(input)?;
             }
             TableName::Dependencies => {
-                let found = dependencies::read(input, &self.default_version)?;
+                let found = if self.detail_crates.is_empty() {
+                    dependencies::read(input, &self.default_version)?
+                } else {
+                    dependencies::read_with_renames(
+                        input,
+                        &self.default_version,
+                        &self.detail_crates,
+                    )?
+                };
                 self.edges = found.edges;
                 self.default_requirements = found.default_requirements;
+                self.renames = found.renames;
             }
             TableName::VersionDownloads => {
                 let meta = self.meta.as_ref().ok_or(DumpError::OrderViolation {
@@ -197,7 +256,38 @@ impl State {
         Ok(())
     }
 
-    fn finish(self) -> Result<DumpSnapshot, DumpError> {
+    /// The ids of the crates [`Self::detail_names`] names.
+    fn named_crates(&self) -> IdSet {
+        let mut canonical = String::new();
+        let mut found = IdSet::default();
+        for (&id, row) in &self.crates {
+            canonical.clear();
+            push_canonical_crate_name(&mut canonical, &row.name);
+            if self.detail_names.contains(&canonical) {
+                found.insert(id);
+            }
+        }
+        found
+    }
+
+    /// The details of each kept crate's default version, by crate id.
+    fn default_details(&mut self) -> IdMap<CrateDetails> {
+        let mut out = IdMap::default();
+        for &crate_id in &self.detail_crates {
+            let details = self
+                .default_version
+                .get(&crate_id)
+                .and_then(|version| self.version_details.remove(version));
+            if let Some(mut details) = details {
+                details.renames = self.renames.remove(&crate_id).unwrap_or_default();
+                out.insert(crate_id, details);
+            }
+        }
+        out
+    }
+
+    fn finish(mut self) -> Result<DumpSnapshot, DumpError> {
+        let details = self.default_details();
         let meta = self.meta.ok_or_else(|| DumpError::Metadata {
             reason: "the archive holds no `<directory>/metadata.json`".to_owned(),
         })?;
@@ -216,6 +306,7 @@ impl State {
             default_version: self.default_version,
             edges: self.edges,
             default_requirements: self.default_requirements,
+            details,
             owners: self.owners,
             users: self.users,
             teams: self.teams,

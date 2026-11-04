@@ -147,7 +147,31 @@ impl<'a> Paced<'a> {
         send: impl FnMut() -> Result<Response, HttpError>,
         accepted: &[u16],
     ) -> Result<Answer, PacedError> {
-        match self.exchange(url, send, accepted, &[])? {
+        match self.exchange(url, send, accepted, &[], &[])? {
+            Some(answer) => Ok(answer),
+            None => Err(PacedError::Status {
+                url: url.to_owned(),
+                status: 404,
+            }),
+        }
+    }
+
+    /// Like [`send`](Self::send), but also gives an answer with a status in `refused`, so a
+    /// caller can read why the server refused.
+    ///
+    /// A status in `refused` that carries a wait hint stays a rate limit and is retried.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PacedError`] as [`send`](Self::send) does.
+    pub fn send_or_refused(
+        &mut self,
+        url: &str,
+        send: impl FnMut() -> Result<Response, HttpError>,
+        accepted: &[u16],
+        refused: &[u16],
+    ) -> Result<Answer, PacedError> {
+        match self.exchange(url, send, accepted, &[], refused)? {
             Some(answer) => Ok(answer),
             None => Err(PacedError::Status {
                 url: url.to_owned(),
@@ -163,18 +187,19 @@ impl<'a> Paced<'a> {
         absent: &[u16],
     ) -> Result<Option<Vec<u8>>, PacedError> {
         Ok(self
-            .exchange(url, send, &[200], absent)?
+            .exchange(url, send, &[200], absent, &[])?
             .map(|answer| answer.body))
     }
 
-    /// Sends until an answer arrives. A status in `accepted` gives the
-    /// answer, a status in `absent` gives `None`.
+    /// Sends until an answer arrives. A status in `accepted` gives the answer, a status in
+    /// `absent` gives `None`, a status in `refused` without a wait hint gives the answer.
     fn exchange(
         &mut self,
         url: &str,
         mut send: impl FnMut() -> Result<Response, HttpError>,
         accepted: &[u16],
         absent: &[u16],
+        refused: &[u16],
     ) -> Result<Option<Answer>, PacedError> {
         let mut retries = 0;
         loop {
@@ -184,7 +209,10 @@ impl<'a> Paced<'a> {
             self.requests += 1;
             let response = send()?;
             let headers = response.headers;
-            if accepted.contains(&response.status) {
+            let limited = is_rate_limited(response.status, &headers);
+            if accepted.contains(&response.status)
+                || (refused.contains(&response.status) && !limited)
+            {
                 self.previous = Some(headers.clone());
                 let body = read_body(url, response.body)?;
                 return Ok(Some(Answer {
@@ -197,7 +225,7 @@ impl<'a> Paced<'a> {
                 self.previous = Some(headers);
                 return Ok(None);
             }
-            if !is_rate_limited(response.status, &headers) {
+            if !limited {
                 return Err(PacedError::Status {
                     url: url.to_owned(),
                     status: response.status,
@@ -287,6 +315,30 @@ mod tests {
             .send("u", || response(200), &[201])
             .expect_err("rejected");
         assert!(matches!(error, PacedError::Status { status: 200, .. }));
+    }
+
+    #[test]
+    fn a_refusal_gives_its_answer_and_a_rate_limit_is_retried() {
+        let mut pacer = Counting::default();
+        let mut paced = Paced::new(&mut pacer);
+        let answer = paced
+            .send_or_refused("u", || response(403), &[200], &[403])
+            .expect("refused");
+        assert_eq!(answer.status, 403);
+        let limited = || {
+            Ok(Response {
+                status: 403,
+                headers: Headers::new([("Retry-After", "1")]),
+                body: Box::new(Cursor::new(Vec::new())),
+            })
+        };
+        let error = paced
+            .send_or_refused("u", limited, &[200], &[403])
+            .expect_err("still limited");
+        assert!(matches!(
+            error,
+            PacedError::RetriesExhausted { retries: 3, .. }
+        ));
     }
 
     #[test]

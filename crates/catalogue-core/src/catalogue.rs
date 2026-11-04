@@ -5,7 +5,7 @@ use crate::ids::Slug;
 use crate::judgment::Judgment;
 use crate::load::{self, DataSources, Diagnostics};
 use crate::registry::{
-    Category, Deprecated, Discovery, Maintainer, SynonymGroup, Thresholds, Topic,
+    Backends, Category, Deprecated, Discovery, Maintainer, SynonymGroup, Thresholds, Topic,
 };
 
 /// A checked data set.
@@ -22,6 +22,7 @@ pub struct Catalogue {
     pub(crate) discovery: Option<Discovery>,
     pub(crate) thresholds: Option<Thresholds>,
     pub(crate) deprecated: Option<Deprecated>,
+    pub(crate) backends: Backends,
 }
 
 impl Catalogue {
@@ -55,6 +56,11 @@ impl Catalogue {
     /// Categories in file order.
     pub fn categories(&self) -> &[Category] {
         &self.categories
+    }
+
+    /// The backend table. Empty when `backends.toml` is absent.
+    pub fn backends(&self) -> &Backends {
+        &self.backends
     }
 
     /// The slugs of the entries in category `id`, sorted by slug.

@@ -123,6 +123,7 @@ mod tests {
             default_version: Default::default(),
             edges: Vec::new(),
             default_requirements: Default::default(),
+            details: Default::default(),
             owners: Default::default(),
             users: Default::default(),
             teams: Default::default(),

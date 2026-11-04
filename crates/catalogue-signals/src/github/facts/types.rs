@@ -2,8 +2,46 @@
 
 use jiff::Timestamp;
 use jiff::civil;
+use serde::{Deserialize, Serialize};
 
 use super::repo_ref::RepoRef;
+
+/// The `spdxId` values GitHub gives a license it cannot name. Compared without regard to case.
+const UNNAMED_LICENSES: [&str; 2] = ["NOASSERTION", "other"];
+
+/// The license GitHub states for a repo.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum RepoLicense {
+    /// An SPDX identifier.
+    Stated(String),
+    /// GitHub finds no license file.
+    NoneStated,
+    /// GitHub finds a license file and cannot name it, or a snapshot predates this field.
+    #[default]
+    NotMeasured,
+}
+
+impl RepoLicense {
+    /// The license of an answer. `info` is the `licenseInfo` object, read as its `spdxId`.
+    pub(super) fn of(info: Option<Option<&str>>) -> Self {
+        match info {
+            None => Self::NoneStated,
+            Some(None) => Self::NotMeasured,
+            Some(Some(spdx)) => {
+                let unnamed = spdx.trim().is_empty()
+                    || UNNAMED_LICENSES
+                        .iter()
+                        .any(|value| spdx.eq_ignore_ascii_case(value));
+                if unnamed {
+                    Self::NotMeasured
+                } else {
+                    Self::Stated(spdx.to_owned())
+                }
+            }
+        }
+    }
+}
 
 /// The combined state of the checks on the default branch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -62,6 +100,8 @@ pub struct Facts {
     pub stars: u32,
     /// The check state of the default branch head. `None` when it has no checks.
     pub ci: Option<CiState>,
+    /// The license GitHub states.
+    pub license: RepoLicense,
     /// The date of the newest human commit, however old. `None` when the
     /// repo has no human commit or when [`Facts::last_human_commit_beyond_sample`] is set.
     pub last_human_commit: Option<civil::Date>,

@@ -46,6 +46,16 @@ pub enum GithubError {
         /// The retries made after the first request.
         retries: u32,
     },
+    /// A `Link` header names a last page that holds no page number.
+    #[error(
+        "the Link header from {url} names no page number: `{value}`. Rerun later. If the error persists, report it"
+    )]
+    BadLink {
+        /// The requested URL.
+        url: String,
+        /// The header value.
+        value: String,
+    },
     /// The GraphQL API answers a query with an error.
     #[error(
         "GitHub rejected the query for {repo}: {message}. Check the token and the repo name, then rerun"

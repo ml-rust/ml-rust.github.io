@@ -1,0 +1,17 @@
+//! The facts a person reads to choose a project: license, backends, native code, Python
+//! bindings, dependents and contributors.
+//!
+//! Every value comes from measured data. No tier rule reads any of them.
+
+mod dependents;
+mod family;
+mod license;
+mod measure;
+mod native;
+mod reach;
+mod runs_on;
+
+pub use dependents::DependentIndex;
+pub use license::{LicenseOrigin, Licensed};
+pub use measure::{ChoiceFacts, ChoiceInputs, measure};
+pub use runs_on::{BackendHits, Hit, RunsOn, Shows};

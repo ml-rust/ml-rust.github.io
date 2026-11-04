@@ -8,7 +8,7 @@ use super::query::window_start;
 use super::repo_ref::RepoRef;
 use super::response::{Item, Repository};
 use super::threads::thread_facts;
-use super::types::{CiState, Facts};
+use super::types::{CiState, Facts, RepoLicense};
 
 /// Maps a GitHub check state to a [`CiState`]. Other values map to `None`.
 fn ci_state(state: &str) -> Option<CiState> {
@@ -57,6 +57,11 @@ pub(super) fn derive_facts(repo: &Repository, requested: &RepoRef, today: Date) 
             .and_then(|text| text.parse::<Timestamp>().ok()),
         stars: repo.stargazer_count,
         ci,
+        license: RepoLicense::of(
+            repo.license_info
+                .as_ref()
+                .map(|info| info.spdx_id.as_deref()),
+        ),
         last_human_commit: last_human.date,
         last_human_commit_beyond_sample: last_human.beyond_sample,
         human_commits_365: commits.human_count,
@@ -109,6 +114,31 @@ mod tests {
         assert_eq!(facts.human_commits_365, 0);
         assert_eq!(facts.items_sampled, 0);
         assert!(facts.pushed_at.is_some());
+    }
+
+    #[test]
+    fn the_license_reads_as_stated_none_or_not_measured() {
+        let requested = RepoRef::parse("a/b").expect("parses");
+        let license = |info: serde_json::Value| {
+            let repo: Repository = serde_json::from_value(json!({
+                "nameWithOwner": "a/b",
+                "licenseInfo": info,
+                "defaultBranchRef": null,
+                "issues": null,
+                "pullRequests": null,
+            }))
+            .expect("repository");
+            derive_facts(&repo, &requested, date(2026, 11, 3)).license
+        };
+        assert_eq!(
+            license(json!({"spdxId": "Apache-2.0"})),
+            RepoLicense::Stated("Apache-2.0".to_owned())
+        );
+        assert_eq!(license(json!(null)), RepoLicense::NoneStated);
+        for unnamed in [json!({"spdxId": "NOASSERTION"}), json!({"spdxId": "other"})] {
+            assert_eq!(license(unnamed), RepoLicense::NotMeasured);
+        }
+        assert_eq!(license(json!({"spdxId": null})), RepoLicense::NotMeasured);
     }
 
     #[test]

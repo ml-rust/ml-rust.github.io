@@ -453,6 +453,7 @@ mod tests {
             repology: Some(today()),
             docker: Some(today()),
             docker_baseline: Some((Date::new(2026, 8, 1).expect("date"), 1_000)),
+            contributors: Some(today()),
         }
     }
 

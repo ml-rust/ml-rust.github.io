@@ -4,7 +4,7 @@ mod command;
 mod error;
 mod render;
 
-pub(crate) use command::read_cached;
 pub use command::{DumpCommand, run_dump};
+pub(crate) use command::{read_cached, read_cached_with_details};
 pub use error::DumpCommandError;
 pub use render::{render_outcome, render_stats};
