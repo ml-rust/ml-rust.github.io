@@ -1,0 +1,36 @@
+[Unit]
+Description=Run one catalogue bot pass
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=catalogue-bot
+Environment=CATALOGUE_BOT_CONFIG=/etc/catalogue-bot/bot.toml
+EnvironmentFile=-/etc/catalogue-bot/env
+StateDirectory=catalogue-bot
+ExecStart=/opt/catalogue/current/catalogue bot run --labels /opt/catalogue/current/labels.toml
+TimeoutStartSec=30min
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+UMask=0077

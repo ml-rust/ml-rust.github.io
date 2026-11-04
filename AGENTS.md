@@ -12,6 +12,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-triage`: the bot's advisory LLM link check: provider fallback, Ollama `web_fetch` reads, GitHub page reads. The bot host NEVER fetches an evidence link itself.
 - `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
+- `deploy/`: systemd units and scripts for the bot VM. Secrets live only on the VM, under `/etc/catalogue-bot/`.
 - `data/`: entries, judgments, maintainers, topics, synonyms, discovery rules, tier thresholds, deprecated requirements. Licensed CC-BY-4.0 (`data/LICENSE`).
 - A `data/deprecated.toml` row needs a `source` link to the crate authors' own deprecation statement.
 - `data/thresholds.toml` holds every tier number. NEVER put a tier threshold in code.
@@ -46,7 +47,8 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `cargo fmt --all --check`
 - `cargo deny --exclude-dev check`, then `cargo deny --exclude-dev --manifest-path crates/catalogue-search-wasm/Cargo.toml --target wasm32-unknown-unknown check`
 - `scripts/ci/build_search_wasm.sh OUT_DIR`: needs the wasm-bindgen CLI at the version `Cargo.lock` pins.
-- `shellcheck scripts/ci/*.sh`
+- `shellcheck scripts/ci/*.sh deploy/*.sh`
+- `bash deploy/test_update.sh`
 - `cargo run -p catalogue -- validate --data data`
 - `cargo run -p catalogue -- build --no-tiers`: writes the site to `dist/`. The deploy adds the search wasm files.
 - Until `oxidoc-search` is on crates.io, `--locked` fails. Copy `.cargo/config.toml.example` to `.cargo/config.toml` for the local patch. NEVER commit the `Cargo.lock` change that patch causes.

@@ -20,9 +20,10 @@ app_id = 123456
 installation_id = 12345678
 
 # The App private key in PEM form. Run `chmod 600` on it: the bot refuses a key
-# that group or other can read. Under systemd `LoadCredential=app.pem:...`,
-# write the credentials directory path here, such as
-# /run/credentials/catalogue-bot.service/app.pem. The bot expands no variable.
+# that group or other can read. The deploy keeps the key at
+# /etc/catalogue-bot/app.pem, owned by the bot user, mode 0400.
+# A key file with a user ACL reads as group-readable, so the bot refuses it.
+# The bot expands no variable in this path.
 private_key_path = "/etc/catalogue-bot/app.pem"
 
 # Optional. The directory for the bot lock and state cache.
@@ -48,7 +49,8 @@ retry_after_secs = 3600
 # The providers, tried in order. Each model is tried in order within its provider.
 # Keys never go in this file. `api_key_env` names a variable, and the bot reads
 # it at the start of each run. Under systemd, set the variables in a file named
-# by `EnvironmentFile=` that only the bot user can read.
+# by `EnvironmentFile=`. The deploy reads /etc/catalogue-bot/env, owned by
+# root, mode 0600. Systemd reads it before it drops to the bot user.
 # A provider whose variable is unset or empty is skipped with a warning.
 [[triage.providers]]
 name = "ollama"

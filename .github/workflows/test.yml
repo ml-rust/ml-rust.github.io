@@ -11,6 +11,7 @@
 #
 # Jobs:
 #   lint      — rustfmt, rustdoc with warnings denied, shellcheck on scripts/ci
+#               and deploy, and the update script test
 #   clippy    — `-D warnings` on every target in the workspace
 #   test      — the workspace test suites, run with cargo-nextest
 #   msrv      — the MSRV from `[workspace.package]` in Cargo.toml
@@ -63,7 +64,10 @@ jobs:
       # shellcheck is preinstalled on ubuntu-latest. The release workflows
       # run these scripts, so a quoting error surfaces here and not at a tag.
       - name: Lint shell scripts
-        run: shellcheck scripts/ci/*.sh
+        run: shellcheck scripts/ci/*.sh deploy/*.sh
+
+      - name: Test the update script
+        run: bash deploy/test_update.sh
 
       # Warnings are denied: a link to a private item renders as plain text
       # rather than an error, so the docs lose it with no report.

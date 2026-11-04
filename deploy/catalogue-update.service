@@ -1,0 +1,36 @@
+[Unit]
+Description=Install the latest catalogue release
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=catalogue-update
+EnvironmentFile=/etc/catalogue-bot/update.env
+StateDirectory=catalogue-update
+Environment=HOME=%S/catalogue-update
+ReadWritePaths=/opt/catalogue
+ExecStart=/usr/local/libexec/catalogue-update
+TimeoutStartSec=15min
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+UMask=0022

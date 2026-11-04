@@ -102,8 +102,9 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: cargo build --release --locked -p catalogue --target "$TARGET"
 
-      # The tarball holds one directory with the binary, the licence, and the
-      # README when the repository has one. The .sha256 file sits beside it and
+      # The tarball holds one directory with the binary, the licence, the
+      # labels file that bot passes read, and the README when the repository
+      # has one. The .sha256 file sits beside it and
       # names the tarball relative to its own directory, so `sha256sum -c`
       # works after download.
       - name: Package
@@ -119,6 +120,7 @@ jobs:
           mkdir -p "$DIST" "$STAGE"
           cp "target/${TARGET}/release/catalogue" "$STAGE/"
           cp LICENSE "$STAGE/"
+          cp .github/labels.toml "$STAGE/labels.toml"
           if [[ -f README.md ]]; then
             cp README.md "$STAGE/"
           fi
