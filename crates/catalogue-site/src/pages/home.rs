@@ -1,19 +1,14 @@
-//! `/`: what the catalogue is, the topic grid, the categories, Featured entries, new entries and
-//! tier changes.
-
-use std::cmp::Reverse;
+//! `/`: the search, the jobs, the categories, the top Featured projects and one line on changes.
 
 use askama::Template;
 
 use super::layout::Layout;
 use super::shared::{
-    ChangeRow, EntryRow, FirstCheckLine, NamedLink, TopicCard, category_links, change_rows,
-    featured_rows, first_check_line, order_text, tier_of, topic_cards,
+    CategoryCard, ChangeRow, EntryGroup, ExampleSearch, FirstCheckLine, TopicCard, category_cards,
+    change_rows, checked_dates, date_text, example_searches, featured_order_text, featured_rows,
+    featured_slugs, first_check_line, project_count, topic_cards,
 };
 use crate::inputs::SiteInputs;
-
-/// How many recently added entries and recent tier changes the home page lists.
-const RECENT: usize = 10;
 
 /// How many project families the Featured list of the home page shows.
 const FEATURED_FAMILIES: usize = 8;
@@ -26,20 +21,30 @@ pub(crate) struct HomePage<'a> {
     pub layout: Layout,
     /// The run date of the check behind the tiers. `None` without a report.
     pub checked: Option<String>,
-    /// One card per top-level topic, in file order.
+    /// The run date as a person reads it. `None` without a report.
+    pub checked_text: Option<String>,
+    /// The counts of the catalogue, as the start of the sentence below the headline.
+    pub counts: String,
+    /// The example searches.
+    pub examples: Vec<ExampleSearch>,
+    /// One tile per top-level topic, in file order.
     pub topics: Vec<TopicCard<'a>>,
-    /// The link to every category, in file order.
-    pub categories: Vec<NamedLink<'a>>,
+    /// One tile per category, in file order.
+    pub categories: Vec<CategoryCard<'a>>,
     /// The first Featured project families. Empty without a report.
-    pub featured: Vec<EntryRow<'a>>,
+    pub groups: Vec<EntryGroup<'a>>,
+    /// How many entries are Featured.
+    pub featured_total: usize,
     /// The sentence that states the order of the Featured list.
     pub order: &'static str,
-    /// The entries added last, newest first.
-    pub recent: Vec<EntryRow<'a>>,
-    /// The latest tier changes, newest first. Empty without a report.
-    pub changes: Vec<ChangeRow<'a>>,
+    /// The latest tier change. `None` without a report or without a change.
+    pub latest_change: Option<ChangeRow<'a>>,
+    /// The latest tier change date as a person reads it.
+    pub latest_change_date: Option<String>,
     /// The line that stands for the first check. `None` without a report.
     pub first_check: Option<FirstCheckLine>,
+    /// The first check date as a person reads it.
+    pub first_check_date: Option<String>,
 }
 
 impl<'a> HomePage<'a> {
@@ -47,31 +52,46 @@ impl<'a> HomePage<'a> {
     pub(crate) fn new(layout: Layout, inputs: &SiteInputs<'a>) -> Self {
         let catalogue = inputs.catalogue;
         let report = inputs.report;
-        let mut featured = featured_rows(inputs, EntryRow::new);
+        let (checked, checked_text) = checked_dates(inputs);
+        let mut featured = featured_rows(inputs);
         featured.truncate(FEATURED_FAMILIES);
-        let mut added: Vec<_> = catalogue.entries().iter().collect();
-        added.sort_by_cached_key(|(slug, entry)| {
-            (Reverse(entry.added), entry.name.to_lowercase(), *slug)
+        let featured_total = featured_slugs(inputs).len();
+        let groups = if featured.is_empty() {
+            Vec::new()
+        } else {
+            vec![EntryGroup::plain(featured)]
+        };
+        let projects = project_count(catalogue.entries().len());
+        let counts = if report.is_some() {
+            format!("{projects}, {featured_total} of them Featured.")
+        } else {
+            format!("{projects}.")
+        };
+        let latest_change = report.and_then(|_| {
+            change_rows(catalogue, inputs.changes, inputs.first_check, 1)
+                .into_iter()
+                .next()
         });
-        let recent = added
-            .into_iter()
-            .take(RECENT)
-            .map(|(slug, entry)| {
-                EntryRow::new(slug, entry, tier_of(report, slug)).with_added(entry)
-            })
-            .collect();
+        let first_check = report.and_then(|_| first_check_line(inputs.changes, inputs.first_check));
         Self {
             layout,
-            checked: report.map(|report| report.generated.to_string()),
+            checked,
+            checked_text,
+            counts,
+            examples: example_searches(),
             topics: topic_cards(catalogue, report),
-            categories: category_links(catalogue),
-            featured,
-            order: order_text(report),
-            recent,
-            changes: report
-                .map(|_| change_rows(catalogue, inputs.changes, inputs.first_check, RECENT))
-                .unwrap_or_default(),
-            first_check: report.and_then(|_| first_check_line(inputs.changes, inputs.first_check)),
+            categories: category_cards(catalogue),
+            groups,
+            featured_total,
+            order: featured_order_text(),
+            latest_change_date: latest_change
+                .as_ref()
+                .map(|change| date_text(&change.date).unwrap_or_else(|| change.date.clone())),
+            latest_change,
+            first_check_date: first_check
+                .as_ref()
+                .map(|line| date_text(&line.date).unwrap_or_else(|| line.date.clone())),
+            first_check,
         }
     }
 }

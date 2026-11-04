@@ -59,9 +59,11 @@ fn the_page_holds_the_form_and_the_live_result_list() {
         "<h1>Search</h1>",
         "<form class=\"search-form\" id=\"search-form\" action=\"/search/\" method=\"get\" role=\"search\">",
         "<input id=\"search-q\" name=\"q\" type=\"search\"",
-        "<ol class=\"search-results\" id=\"search-results\" aria-live=\"polite\"></ol>",
+        "<p class=\"search-status\" id=\"search-status\" role=\"status\"></p>",
+        "<table class=\"rows rows-mixed\" id=\"search-table\" hidden>",
+        "<tbody class=\"search-results\" id=\"search-results\"></tbody>",
         "<legend>Kind</legend>",
-        "<legend>Topic</legend>",
+        "<legend>Job</legend>",
         "<legend>Category</legend>",
         "<legend>Tier</legend>",
         "<legend>Organization</legend>",
@@ -167,12 +169,20 @@ fn readers_without_scripts_get_every_topic_link() {
     let end = page.find("</noscript>").expect("noscript end");
     let fallback = &page[start..end];
     assert!(
-        fallback.contains("<a href=\"/topics/\">topics</a>"),
+        fallback.contains("<a href=\"/topics/\">jobs</a>"),
         "{fallback}"
     );
+    // The start panel needs no script: a top-level topic is a tile, a subtopic a link beside it.
+    let panel = &page[page.find("id=\"search-start\"").expect("the start panel")..];
+    let panel = &panel[..panel.find("</section>").expect("the end of the panel")];
     for topic in catalogue.topics() {
+        let tile = format!("<a class=\"tile\" href=\"/topics/{}/\">", topic.id);
         let link = format!("<a href=\"/topics/{}/\">{}</a>", topic.id, topic.name);
-        assert!(fallback.contains(&link), "no {link} in {fallback}");
+        assert!(
+            panel.contains(&tile) || panel.contains(&link),
+            "no link to {} in {panel}",
+            topic.id
+        );
     }
 }
 

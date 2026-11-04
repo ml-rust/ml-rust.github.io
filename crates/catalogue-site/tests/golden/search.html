@@ -4,38 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Search · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.13d19258.css">
+<link rel="stylesheet" href="/assets/site.95dc0f8d.css">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
-<a class="site-name" href="/">Rust ML catalogue</a>
-<form class="site-search" action="/search/" method="get" role="search">
-<label for="site-search-q">Search the catalogue</label>
-<input id="site-search-q" name="q" type="search">
-<button type="submit">Search</button>
-</form>
+<div class="site-header-inner">
+<a class="site-name" href="/" aria-label="Rust ML catalogue, home"><span class="logo" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 21.25V2.75H12a5.75 5.75 0 0 1 0 11.5H4.5"/><path d="M10.5 14.25l3.25 3.5"/><rect x="14.5" y="16.25" width="6" height="6" rx="0.75" class="logo-accent" fill="#CE8166" stroke="none"/></svg></span><span class="site-name-main">Rust ML</span> <span class="site-name-sub">catalogue</span></a>
 <nav class="site-nav" aria-label="Main">
 <ul>
-<li><a href="/topics/">Topics</a></li>
+<li><a href="/topics/">Explore</a></li>
 <li><a href="/rules/">Rules</a></li>
 <li><a href="/changes/">Changes</a></li>
-<li><a href="/submit/">Submit</a></li>
+<li><a href="/submit/">Add project</a></li>
 </ul>
 </nav>
+<details class="site-menu">
+<summary><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 6.25h16.5"/><path d="M3.75 12h16.5"/><path d="M3.75 17.75h16.5"/></svg></span>Menu</summary>
+<nav aria-label="Menu">
+<ul>
+<li><a href="/topics/">Explore</a></li>
+<li><a href="/rules/">Rules</a></li>
+<li><a href="/changes/">Changes</a></li>
+<li><a href="/submit/">Add project</a></li>
+</ul>
+</nav>
+</details>
+</div>
 </header>
-<main id="main" tabindex="-1">
+<main id="main" tabindex="-1" class="page-wide">
 
 <h1>Search</h1>
-<p>Search entries by name, crate, topic, category or description. Tick filters to narrow the results.</p>
 <form class="search-form" id="search-form" action="/search/" method="get" role="search">
 <p class="search-box">
-<label for="search-q">Search terms</label>
-<input id="search-q" name="q" type="search" autocomplete="off">
+<label class="visually-hidden" for="search-q">Search terms</label>
+<span class="search-field"><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="7.25"/><path d="M15.75 15.75l4.75 4.75"/></svg></span><input id="search-q" name="q" type="search" autocomplete="off" placeholder="Name, crate, job, category or description"></span>
 <button type="submit">Search</button>
 </p>
+<details class="filters-all" id="search-filters-all" open>
+<summary class="filters-toggle">Filters<span class="filter-selected" id="filter-selected-all"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <div class="search-filters">
+<span class="filters-label">Filter</span>
+<details class="filter" name="search-filters">
+<summary>Kind<span class="filter-selected" id="filter-selected-kind"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>Kind</legend>
 <ul>
@@ -43,13 +56,19 @@
 <li><input type="checkbox" id="filter-kind-app" name="kind" value="app"> <label for="filter-kind-app">App</label> <span class="facet-count" id="filter-kind-app-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>Job<span class="filter-selected" id="filter-selected-topic"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
-<legend>Topic</legend>
+<legend>Job</legend>
 <ul>
 <li><input type="checkbox" id="filter-topic-ml" name="topic" value="ml"> <label for="filter-topic-ml">Machine learning</label> <span class="facet-count" id="filter-topic-ml-count"></span></li>
 <li><input type="checkbox" id="filter-topic-tensors" name="topic" value="tensors"> <label for="filter-topic-tensors">Tensors</label> <span class="facet-count" id="filter-topic-tensors-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>Category<span class="filter-selected" id="filter-selected-category"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>Category</legend>
 <ul>
@@ -58,6 +77,9 @@
 <li><input type="checkbox" id="filter-category-vector-databases" name="category" value="vector-databases"> <label for="filter-category-vector-databases">Vector databases</label> <span class="facet-count" id="filter-category-vector-databases-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>License<span class="filter-selected" id="filter-selected-license"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>License</legend>
 <ul>
@@ -67,6 +89,9 @@
 <li><input type="checkbox" id="filter-license-not-measured" name="license" value="not-measured"> <label for="filter-license-not-measured">Not measured</label> <span class="facet-count" id="filter-license-not-measured-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>Runs on<span class="filter-selected" id="filter-selected-runs_on"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>Runs on</legend>
 <ul>
@@ -76,6 +101,9 @@
 <li><input type="checkbox" id="filter-runs_on-not-measured" name="runs_on" value="not-measured"> <label for="filter-runs_on-not-measured">Not measured</label> <span class="facet-count" id="filter-runs_on-not-measured-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>Tier<span class="filter-selected" id="filter-selected-tier"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>Tier</legend>
 <ul>
@@ -85,6 +113,9 @@
 <li><input type="checkbox" id="filter-tier-archived" name="tier" value="archived"> <label for="filter-tier-archived">Archived</label> <span class="facet-count" id="filter-tier-archived-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<details class="filter" name="search-filters">
+<summary>Organization<span class="filter-selected" id="filter-selected-org"></span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9l6.5 6.5L18.5 9"/></svg></span></summary>
 <fieldset class="search-filter">
 <legend>Organization</legend>
 <ul>
@@ -92,22 +123,87 @@
 <li><input type="checkbox" id="filter-org-community" name="org" value="community"> <label for="filter-org-community">Community</label> <span class="facet-count" id="filter-org-community-count"></span></li>
 </ul>
 </fieldset>
+</details>
+<button type="button" class="filter-clear" id="search-clear" hidden>Clear filters</button>
 </div>
+</details>
 </form>
+<div class="results-head">
 <p class="search-status" id="search-status" role="status"></p>
-<ol class="search-results" id="search-results" aria-live="polite"></ol>
-<noscript>
-<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">topics</a> instead.</p>
-<ul class="link-list">
-<li><a href="/topics/ml/">Machine learning</a></li>
-<li><a href="/topics/tensors/">Tensors</a></li>
+<p class="order-note" id="search-order" hidden>Best match first. A stronger tier raises a match. <a href="/rules/">How tiers work</a></p>
+</div>
+<table class="rows rows-mixed" id="search-table" hidden>
+<caption class="visually-hidden">Search results</caption>
+<thead>
+<tr><th scope="col" class="col-project">Project</th><th scope="col" class="col-users">Active users</th><th scope="col" class="col-release">Latest release</th><th scope="col" class="col-gpu">Runs on (GPU)</th><th scope="col" class="col-native">Native code</th><th scope="col" class="col-license">License</th></tr>
+</thead>
+<tbody class="search-results" id="search-results"></tbody>
+</table>
+<section class="search-panel" id="search-start" aria-labelledby="search-start-title">
+<h2 id="search-start-title">Not sure what to type?</h2>
+<p class="examples"><span class="examples-label">Try</span> <a href="/search/?q=speech+recognition">speech recognition</a> <a href="/search/?q=GGUF">GGUF</a> <a href="/search/?q=vector+database">vector database</a> <a href="/search/?q=embeddings">embeddings</a></p>
+<h3>Or start from a job</h3>
+
+<ul class="tiles tiles-jobs">
+<li class="tile-item">
+<a class="tile" href="/topics/ml/">
+<span class="tile-icon" aria-hidden="true"></span>
+<span class="tile-body">
+<span class="tile-name">Machine learning</span>
+<span class="tile-meta">4 projects</span>
+<span class="tile-top">Alpha, Beta</span>
+</span>
+</a>
+<p class="tile-summary">Projects that train or run machine learning models.</p>
+<p class="sources">Sources: <a href="https://en.wikipedia.org/wiki/Machine_learning">en.wikipedia.org</a></p>
+<p class="subtopics">Subtopics: <a href="/topics/tensors/">Tensors</a></p>
+</li>
 </ul>
+</section>
+<section class="search-panel" id="search-none" aria-labelledby="search-none-title" hidden>
+<h2 id="search-none-title">No project matches <span id="search-none-query"></span></h2>
+<ul class="recovery">
+<li>Check the spelling, or try a shorter word.</li>
+<li id="search-none-filters" hidden>Filters narrow the results. <button type="button" class="link-button" id="search-none-clear">Clear filters</button></li>
+<li>Project missing from the catalogue? <a href="/submit/">Add it</a>.</li>
+</ul>
+<p class="examples"><span class="examples-label">Try</span> <a href="/search/?q=speech+recognition">speech recognition</a> <a href="/search/?q=GGUF">GGUF</a> <a href="/search/?q=vector+database">vector database</a> <a href="/search/?q=embeddings">embeddings</a></p>
+<h3>Or start from a job</h3>
+
+<ul class="tiles tiles-jobs">
+<li class="tile-item">
+<a class="tile" href="/topics/ml/">
+<span class="tile-icon" aria-hidden="true"></span>
+<span class="tile-body">
+<span class="tile-name">Machine learning</span>
+<span class="tile-meta">4 projects</span>
+<span class="tile-top">Alpha, Beta</span>
+</span>
+</a>
+<p class="tile-summary">Projects that train or run machine learning models.</p>
+<p class="sources">Sources: <a href="https://en.wikipedia.org/wiki/Machine_learning">en.wikipedia.org</a></p>
+<p class="subtopics">Subtopics: <a href="/topics/tensors/">Tensors</a></p>
+</li>
+</ul>
+</section>
+<noscript>
+<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">jobs</a> instead.</p>
 </noscript>
-<script type="module" src="/search/search.fbffa7a2.js"></script>
+<script type="module" src="/search/search.744767f0.js"></script>
 
 </main>
 <footer class="site-footer">
-<p>Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>. Source: <a href="https://github.com/ml-rust/ml-rust.github.io">ml-rust/ml-rust.github.io</a>.</p>
+<div class="site-footer-inner">
+<p class="site-footer-name">Rust ML catalogue</p>
+<ul class="site-footer-links">
+<li><a href="/rules/">Tier rules</a></li>
+<li><a href="/submit/">Add project</a></li>
+<li><a href="/changes/feed.xml">Atom feed</a></li>
+<li><a href="/data/catalogue.json">Data file</a></li>
+<li><a href="https://github.com/ml-rust/ml-rust.github.io">GitHub</a></li>
+</ul>
+<p class="site-footer-licenses">Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>.</p>
+</div>
 </footer>
 </body>
 </html>

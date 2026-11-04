@@ -1,17 +1,22 @@
-//! The topic grid: one card per top-level topic, with every topic below it.
+//! The job tiles: one per top-level topic, with its count and the top project names.
 
 use std::collections::BTreeSet;
 
-use catalogue_core::{Catalogue, Slug, Tier, TierReport, Topic};
+use catalogue_core::{Catalogue, Slug, TierReport, Topic};
 
-use super::entry_row::tier_of;
-use super::labels::tier_name;
+use super::listing::project_count;
+use super::order::family_heads;
 use super::paths::{EvidenceLink, NamedLink, topic_href};
 use crate::href::SafeHref;
 
-/// One card of `topic_grid.html`.
+/// How many project names a tile shows.
+const TOP_NAMES: usize = 2;
+
+/// One tile of `job_tile.html`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TopicCard<'a> {
+    /// The topic id. It picks the icon.
+    pub id: String,
     /// The topic name.
     pub name: &'a str,
     /// The link to the topic page.
@@ -20,26 +25,17 @@ pub(crate) struct TopicCard<'a> {
     pub summary: Option<&'a str>,
     /// The links that support the summary.
     pub evidence: Vec<EvidenceLink>,
-    /// The entry count of each tier. Empty without a report.
-    pub counts: Vec<TierCount>,
-    /// The entry count as text, such as `3 entries`. `None` with a report.
-    pub entries: Option<String>,
+    /// The project count as text. It covers the topic and every topic below it.
+    pub count: String,
+    /// The names of the first projects of the one list order, joined by commas.
+    pub top: String,
     /// Every topic below this one, depth first, in file order.
     pub subtopics: Vec<NamedLink<'a>>,
 }
 
-/// The number of entries in one tier.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct TierCount {
-    /// The tier name.
-    pub name: &'static str,
-    /// The number of entries.
-    pub count: usize,
-}
-
-/// One card per top-level topic, in file order.
+/// One tile per top-level topic, in file order.
 ///
-/// A card counts the entries of its topic and of every topic below it, each entry once.
+/// A tile counts the entries of its topic and of every topic below it, each entry once.
 pub(crate) fn topic_cards<'a>(
     catalogue: &'a Catalogue,
     report: Option<&TierReport>,
@@ -52,7 +48,7 @@ pub(crate) fn topic_cards<'a>(
         .collect()
 }
 
-/// The card of the top-level topic `topic`.
+/// The tile of the top-level topic `topic`.
 fn card<'a>(
     catalogue: &'a Catalogue,
     report: Option<&TierReport>,
@@ -63,26 +59,15 @@ fn card<'a>(
         .iter()
         .flat_map(|member| catalogue.entries_in_topic(&member.id))
         .collect();
-    let counts = match report {
-        Some(_) => Tier::ALL
-            .into_iter()
-            .map(|tier| TierCount {
-                name: tier_name(tier),
-                count: slugs
-                    .iter()
-                    .filter(|slug| tier_of(report, slug) == Some(tier))
-                    .count(),
-            })
-            .collect(),
-        None => Vec::new(),
-    };
+    let listed: Vec<&Slug> = slugs.iter().copied().collect();
     TopicCard {
+        id: topic.id.as_str().to_owned(),
         name: &topic.name,
         href: topic_href(&topic.id),
         summary: topic.summary.as_ref().map(|summary| summary.text.as_str()),
         evidence: EvidenceLink::of_summary(topic),
-        counts,
-        entries: report.is_none().then(|| entry_count(slugs.len())),
+        count: project_count(slugs.len()),
+        top: top_names(catalogue, report, &listed),
         subtopics: tree
             .iter()
             .skip(1)
@@ -92,6 +77,21 @@ fn card<'a>(
             })
             .collect(),
     }
+}
+
+/// The names of the first [`TOP_NAMES`] rows of a list of `slugs`, joined by commas.
+pub(crate) fn top_names(
+    catalogue: &Catalogue,
+    report: Option<&TierReport>,
+    slugs: &[&Slug],
+) -> String {
+    let names: Vec<&str> = family_heads(catalogue, report, slugs)
+        .into_iter()
+        .filter_map(|head| catalogue.entry(head.slug))
+        .take(TOP_NAMES)
+        .map(|entry| entry.name.as_str())
+        .collect();
+    names.join(", ")
 }
 
 /// `root` and then every topic below it, depth first, in file order.
@@ -120,18 +120,12 @@ fn visit<'a>(
     }
 }
 
-/// `count` entries as text: `1 entry`, `3 entries`.
-fn entry_count(count: usize) -> String {
-    if count == 1 {
-        "1 entry".to_owned()
-    } else {
-        format!("{count} entries")
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use catalogue_core::Tier;
+
     use super::*;
+    use crate::testing::{catalogue, entry, record, report, slug};
 
     fn topic(id: &str, parent: Option<&str>) -> Topic {
         Topic {
@@ -163,9 +157,21 @@ mod tests {
     }
 
     #[test]
-    fn the_count_text_names_one_entry_in_the_singular() {
-        assert_eq!(entry_count(0), "0 entries");
-        assert_eq!(entry_count(1), "1 entry");
-        assert_eq!(entry_count(3), "3 entries");
+    fn the_top_names_follow_the_list_order_and_stop_at_two() {
+        let data = catalogue(vec![
+            entry("alpha", ""),
+            entry("beta", ""),
+            entry("gamma", ""),
+        ]);
+        let tiers = report(vec![
+            ("alpha", record(Tier::Listed, None)),
+            ("beta", record(Tier::Featured, None)),
+            ("gamma", record(Tier::Archived, None)),
+        ]);
+        let (alpha, beta, gamma) = (slug("alpha"), slug("beta"), slug("gamma"));
+        let found = top_names(&data, Some(&tiers), &[&alpha, &beta, &gamma]);
+        let first = data.entry(&beta).expect("entry").name.clone();
+        let second = data.entry(&alpha).expect("entry").name.clone();
+        assert_eq!(found, format!("{first}, {second}"));
     }
 }

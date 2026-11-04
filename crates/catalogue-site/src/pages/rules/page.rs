@@ -1,11 +1,11 @@
 //! The rules page struct, its template binding and the page-level lines.
 
 use askama::Template;
-use catalogue_core::{Thresholds, Tier};
+use catalogue_core::Thresholds;
 
 use super::sections::{RuleSection, sections};
 use crate::pages::layout::Layout;
-use crate::pages::shared::tier_name;
+use crate::pages::shared::{TierLine, tier_lines};
 
 /// The rules page.
 #[derive(Debug, Template)]
@@ -39,22 +39,13 @@ impl StatusLine {
     }
 }
 
-/// One tier and what it means.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct TierLine {
-    /// The display name.
-    pub name: &'static str,
-    /// What the tier means.
-    pub meaning: &'static str,
-}
-
 impl RulesPage {
     /// The rules page in `layout`, showing `thresholds` when present.
     pub(crate) fn new(layout: Layout, thresholds: Option<&Thresholds>) -> Self {
         Self {
             layout,
             status: status(thresholds),
-            tiers: Tier::ALL.into_iter().map(tier_line).collect(),
+            tiers: tier_lines(),
             sections: sections(thresholds),
         }
     }
@@ -81,20 +72,6 @@ fn status(thresholds: Option<&Thresholds>) -> Vec<StatusLine> {
             "The values stay frozen until the yearly recalibration. Any change raises the version.",
         ),
     ]
-}
-
-/// The display name and meaning of `tier`.
-fn tier_line(tier: Tier) -> TierLine {
-    let meaning = match tier {
-        Tier::Featured => "Shown first. It passes every Featured gate.",
-        Tier::Listed => "Shown in the normal listing. No other tier applies.",
-        Tier::New => "A project whose first release is recent.",
-        Tier::Archived => "No longer maintained, or ended by its author.",
-    };
-    TierLine {
-        name: tier_name(tier),
-        meaning,
-    }
 }
 
 #[cfg(test)]
@@ -124,14 +101,5 @@ mod tests {
                 "data/thresholds.toml is absent. No tier is published."
             )]
         );
-    }
-
-    #[test]
-    fn every_tier_has_a_line() {
-        let names: Vec<&str> = Tier::ALL
-            .into_iter()
-            .map(|tier| tier_line(tier).name)
-            .collect();
-        assert_eq!(names, ["Featured", "Listed", "New", "Archived"]);
     }
 }

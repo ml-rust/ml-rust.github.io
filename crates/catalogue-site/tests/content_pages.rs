@@ -71,12 +71,12 @@ fn without_a_report_no_page_shows_a_tier_or_a_signal() {
     assert!(!home.contains("id=\"featured\""), "{home}");
     assert!(!home.contains("/changes/\">All tier changes"), "{home}");
     assert!(
-        home.contains("<p class=\"topic-count\">4 entries</p>"),
+        home.contains("<span class=\"tile-meta\">4 projects</span>"),
         "{home}"
     );
     let ml = &site["topics/ml/index.html"];
     assert!(ml.contains("Entries are sorted by name."), "{ml}");
-    assert!(!ml.contains("<h3>"), "{ml}");
+    assert!(!ml.contains("rows-group"), "{ml}");
     assert!(site["projects/alpha/index.html"].contains("<h2 id=\"tier\">Tier</h2>"));
 }
 
@@ -88,29 +88,36 @@ fn the_home_page_lists_topics_featured_recent_entries_and_changes() {
         home,
         &[
             "<a href=\"/rules/\">published rules</a>",
-            "<a href=\"/topics/ml/\">Machine learning</a>",
-            "<li>Featured: 1</li>",
-            "<li>Listed: 1</li>",
-            "<li>New: 1</li>",
-            "<li>Archived: 1</li>",
+            "<a class=\"tile\" href=\"/topics/ml/\">",
+            "<span class=\"tile-name\">Machine learning</span>",
+            "<span class=\"tile-meta\">4 projects</span>",
+            "<span class=\"tile-top\">Alpha, Beta</span>",
             "Subtopics: <a href=\"/topics/tensors/\">Tensors</a>",
-            "<h2 id=\"categories\">Browse by category</h2>",
-            "<a href=\"/categories/inference-runtimes/\">Inference runtimes</a>",
-            "<a href=\"/categories/tensor-libraries/\">Tensor libraries</a>",
-            "<a href=\"/categories/vector-databases/\">Vector databases</a>",
-            "<h2 id=\"featured\">Featured</h2>",
+            "<h2 id=\"categories\">Or pick the kind of project</h2>",
+            "<a class=\"tile tile-small\" href=\"/categories/inference-runtimes/\">",
+            "<a class=\"tile tile-small\" href=\"/categories/tensor-libraries/\">",
+            "<a class=\"tile tile-small\" href=\"/categories/vector-databases/\">",
+            "<h2 id=\"featured\">Featured projects</h2>",
             "/projects/alpha/\">Alpha</a>",
-            "<h2 id=\"recent\">Recently added</h2>",
-            "/projects/beta/\">Beta</a>",
-            "/projects/delta/\">Delta</a>",
-            "/projects/alpha/\">Alpha</a>",
-            "/projects/gamma/\">Gamma</a>",
-            "<h2 id=\"changes\">Recent tier changes</h2>",
-            "/projects/alpha/\">Alpha</a></td><td>Listed</td><td>Featured</td>",
-            "/projects/delta/\">Delta</a></td><td>First check</td><td>New</td>",
-            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1.",
-            "<a href=\"/changes/\">All tier changes</a>",
+            "<a href=\"/changes/\">All tier changes",
         ],
+    );
+    // Recently added leaves the home page, and changes reduce to the one latest line.
+    assert!(!home.contains("id=\"recent\""), "{home}");
+    assert!(!home.contains("First check"), "{home}");
+    in_order(
+        home,
+        &[
+            "<p class=\"change-line\" id=\"changes\">",
+            "/projects/alpha/\">Alpha</a> moved from Listed to Featured.",
+        ],
+    );
+    assert_eq!(home.matches("moved from").count(), 1, "{home}");
+    // The first check keeps its line and its rows on the changes page.
+    assert!(
+        site["changes/index.html"].contains(
+            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1."
+        )
     );
 }
 
@@ -121,26 +128,29 @@ fn a_topic_page_groups_its_entries_by_tier() {
     in_order(
         tensors,
         &[
-            "<h1>Tensors</h1>",
             "Part of <a href=\"/topics/ml/\">Machine learning</a>.",
+            "<h1>Tensors</h1>",
             "Libraries for n-dimensional arrays and the math on them.",
             "<a href=\"https://en.wikipedia.org/wiki/Tensor_(machine_learning)\">en.wikipedia.org</a>",
-            "<h3>Featured</h3>",
+            "<tr class=\"rows-group\" id=\"tier-featured\">",
+            "Featured</span> <span class=\"rows-group-count\">",
             "Alpha</a>",
-            "<h3>New</h3>",
+            "<tr class=\"rows-group\" id=\"tier-new\">",
+            "New</span> <span class=\"rows-group-count\">",
             "Delta</a>",
-            "<h3>Archived</h3>",
+            "<tr class=\"rows-group\" id=\"tier-archived\">",
+            "Archived</span> <span class=\"rows-group-count\">",
             "Gamma</a>",
         ],
     );
-    assert!(!tensors.contains("<h3>Listed</h3>"), "{tensors}");
+    assert!(!tensors.contains("id=\"tier-listed\""), "{tensors}");
     let ml = &site["topics/ml/index.html"];
     in_order(
         ml,
         &[
-            "<h2 id=\"subtopics\">Subtopics</h2>",
-            "<a href=\"/topics/tensors/\">Tensors</a>",
-            "<h3>Listed</h3>",
+            "<p class=\"subtopics\" id=\"subtopics\">Subtopics: <a href=\"/topics/tensors/\">Tensors</a>",
+            "<tr class=\"rows-group\" id=\"tier-listed\">",
+            "Listed</span> <span class=\"rows-group-count\">",
             "Beta</a>",
         ],
     );
@@ -158,13 +168,13 @@ fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
         tensors,
         &[
             "<h1>Tensor libraries</h1>",
-            "<p>Libraries for multidimensional arrays and their math.</p>",
-            "<h3>Featured</h3>",
-            "<code>cargo add alpha-crate</code> <a href=\"https://crates.io/crates/alpha-crate\">crates.io</a>",
+            "<p class=\"lede\">Libraries for multidimensional arrays and their math.</p>",
+            "<tr class=\"rows-group\" id=\"tier-featured\">",
             "/projects/alpha/\">Alpha</a>",
-            "<h3>Archived</h3>",
-            "<code>cargo add gamma</code>",
+            "<code>cargo add alpha-crate</code> <a href=\"https://crates.io/crates/alpha-crate\">crates.io</a>",
+            "<tr class=\"rows-group\" id=\"tier-archived\">",
             "/projects/gamma/\">Gamma</a>",
+            "<code>cargo add gamma</code>",
         ],
     );
     assert!(!tensors.contains("Delta</a>"), "{tensors}");
@@ -172,8 +182,8 @@ fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
     in_order(
         runtimes,
         &[
-            "<code>brew install beta</code> <a href=\"https://formulae.brew.sh/formula/beta\">Homebrew</a>",
             "/projects/beta/\">Beta</a>",
+            "<code>brew install beta</code> <a href=\"https://formulae.brew.sh/formula/beta\">Homebrew</a>",
         ],
     );
 }
@@ -191,22 +201,24 @@ fn an_app_without_a_channel_leads_with_its_repository() {
     let site = fixture::site(&files, false);
     let runtimes = &site["categories/inference-runtimes/index.html"];
     assert!(
-        runtimes.contains("<p><a href=\"https://github.com/ml-rust/beta\">Repository</a></p>"),
+        runtimes.contains(
+            "<p class=\"row-install\"><a href=\"https://github.com/ml-rust/beta\">Repository</a></p>"
+        ),
         "{runtimes}"
     );
     assert!(!runtimes.contains("<code>"), "{runtimes}");
 }
 
 #[test]
-fn a_category_with_no_entries_says_so_and_the_home_page_stays_silent_about_counts() {
+fn a_category_with_no_entries_says_so_and_the_home_page_counts_zero() {
     for site in [tiered(), untiered()] {
         let empty = &site["categories/vector-databases/index.html"];
         in_order(
             empty,
             &[
                 "<h1>Vector databases</h1>",
-                "<p>Databases that store vectors and find the ones nearest to a query.</p>",
-                "<p>No entry is in this category yet.</p>",
+                "<p class=\"lede\">Databases that store vectors and find the ones nearest to a query.</p>",
+                "<p>No project is in this category yet.</p>",
             ],
         );
         let home = &site["index.html"];
@@ -214,8 +226,14 @@ fn a_category_with_no_entries_says_so_and_the_home_page_stays_silent_about_count
         let block = &home[start..];
         let block = &block[block.find("<ul").expect("the list")..];
         let block = &block[..block.find("</ul>").expect("the end of the list")];
-        assert!(block.contains("Vector databases</a>"), "{block}");
-        assert!(!block.contains(char::is_numeric), "{block}");
+        in_order(
+            block,
+            &[
+                "<a class=\"tile tile-small\" href=\"/categories/vector-databases/\">",
+                "<span class=\"tile-name\">Vector databases</span>",
+                "<span class=\"tile-meta\">0 projects</span>",
+            ],
+        );
     }
 }
 
@@ -231,7 +249,7 @@ fn a_build_without_a_report_lists_a_category_by_name() {
             "/projects/gamma/\">Gamma</a>",
         ],
     );
-    assert!(!tensors.contains("<h3>"), "{tensors}");
+    assert!(!tensors.contains("rows-group"), "{tensors}");
 }
 
 #[test]

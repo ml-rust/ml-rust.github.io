@@ -136,7 +136,20 @@ fn a_record_links_names_and_weights_the_entry() {
             ("license", "apache-2-0-or-mit"),
             ("runs_on", "cuda"),
             ("runs_on", "metal"),
+            ("row_users", "9"),
+            ("row_released", "1 Sep 2026"),
+            ("row_gpu", "CUDA, Metal"),
+            ("row_native", "Required"),
+            ("row_native_full", "Binds native code: openssl-sys"),
+            ("row_python", "Python bindings"),
+            (
+                "row_python_full",
+                "Has Python bindings: alpha-extra needs Python"
+            ),
+            ("row_license", "Apache-2.0 OR MIT"),
+            ("row_released_iso", "2026-09-01"),
             ("tier", "featured"),
+            ("row_description", "A tensor library."),
         ]
     );
     assert_eq!(alpha.boost, 1.5);
@@ -166,7 +179,18 @@ fn synonyms_of_the_entry_text_become_aliases() {
             ("category", "inference-runtimes"),
             ("license", "none-stated"),
             ("runs_on", "not-measured"),
+            ("row_users", "Not measured"),
+            ("row_released", "Not measured"),
+            ("row_gpu", "Not measured"),
+            ("row_native", "Not measured"),
+            ("row_license", "None stated"),
+            ("row_status", "Stable"),
+            (
+                "row_status_meaning",
+                "The project is finished: dormant by design, not decayed."
+            ),
             ("tier", "listed"),
+            ("row_description", "A command line tool that runs models."),
         ]
     );
     assert_eq!(beta.boost, 1.1);

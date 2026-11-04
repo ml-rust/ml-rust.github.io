@@ -1,26 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ name }}{% endblock %}
+{% block main_class %}page-wide{% endblock %}
 {% block content %}
+<p class="back-link"><a href="/topics/#categories"><span class="icon" aria-hidden="true">{% include "icons/ui-arrow-left.svg" %}</span>All categories</a></p>
+<div class="page-title">
+{%- let icon_id = id.as_str() %}
+<span class="page-icon" aria-hidden="true">{% include "icon_category.html" %}</span>
 <h1>{{ name }}</h1>
-<p>{{ blurb }}</p>
-
-<h2 id="entries">Entries</h2>
-{%- if groups.is_empty() %}
-<p>No entry is in this category yet.</p>
-{%- else %}
-<p>{{ order }}</p>
-{%- if let Some(note) = movement_note %}
-<p>{{ note }}</p>
-{%- endif %}
-{%- for group in groups %}
-{%- if let Some(heading) = group.heading %}
-<h3>{{ heading }}</h3>
-{%- endif %}
-<ul class="entry-list">
-{%- for row in group.rows %}
-{% include "entry_row.html" %}
-{%- endfor %}
-</ul>
-{%- endfor %}
-{%- endif %}
+</div>
+<p class="lede">{{ blurb }}</p>
+{% include "list_head.html" %}
+{%- let show_install = true %}
+{%- let empty = "No project is in this category yet." %}
+{% include "list_section.html" %}
 {% endblock %}

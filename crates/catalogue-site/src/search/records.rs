@@ -7,6 +7,7 @@ use oxidoc_search::{Field, Record};
 use super::aliases::alias_terms;
 use super::boost::tier_boost;
 use super::choice_tags::{LICENSE_TAG, RUNS_ON_TAG, license_value, runs_on_values};
+use super::row_tags::row_tags;
 use crate::pages::{category_link, project_href, topic_link};
 
 /// The field of the effective topic names.
@@ -40,6 +41,9 @@ pub(crate) const CATEGORY_TAG: &str = "category";
 /// The tag of the tier. Present only with a tier report.
 pub(crate) const TIER_TAG: &str = "tier";
 
+/// The tag of the description a result row prints. No filter reads it.
+const ROW_DESCRIPTION_TAG: &str = "row_description";
+
 /// The `org` tag of an entry with `org_affiliated = true`.
 pub(crate) const ORG_AFFILIATED: &str = "ml-rust";
 /// The `org` tag of every other entry.
@@ -58,8 +62,8 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 ///
 /// Tags: `kind`, `org` (`ml-rust` or `community`), one `topic` per effective
 /// topic id, `category` when the entry has one, and `license`, one `runs_on` per
-/// backend and `tier` when `report` is given. An unknown license or backend tags
-/// as `not-measured`. The boost comes from the tier through [`super::TIER_BOOSTS`].
+/// backend, `tier` and the `row_` tags the result rows print when `report` is given.
+/// An unknown license or backend tags as `not-measured`. The boost comes from the tier through [`super::TIER_BOOSTS`].
 /// Without `report` none of those three tags exists and the boost is
 /// [`super::NO_TIER_BOOST`].
 pub fn search_records(catalogue: &Catalogue, report: Option<&TierReport>) -> Vec<Record> {
@@ -152,11 +156,13 @@ fn record(
         for id in runs_on_values(runs_on, catalogue.backends()) {
             record.tags.push(tag(RUNS_ON_TAG, id));
         }
+        record.tags.extend(row_tags(found));
     }
     let tier = found.map(|found| found.tier);
     if let Some(tier) = tier {
         record.tags.push(tag(TIER_TAG, tier.as_str()));
     }
+    record.tags.push(tag(ROW_DESCRIPTION_TAG, description));
     record.boost = tier_boost(tier);
     record.snippet = Some(description.to_owned());
     record

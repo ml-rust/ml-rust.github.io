@@ -1,4 +1,4 @@
-//! The stylesheet and the search script, each named by its content hash.
+//! The stylesheet, the favicon and the search script, each named by its content hash.
 
 use std::fmt::Write as _;
 
@@ -12,6 +12,9 @@ const SITE_CSS: &[u8] = include_bytes!("../assets/site.css");
 
 /// The script of the search page.
 const SEARCH_JS: &[u8] = include_bytes!("../assets/search.js");
+
+/// The favicon of every page. It carries its own light and dark colours.
+const FAVICON: &[u8] = include_bytes!("../assets/favicon.svg");
 
 /// How many leading bytes of the SHA-256 digest go into the file name.
 const HASH_BYTES: usize = 4;
@@ -32,6 +35,11 @@ impl HashedAsset {
     /// The search page script, at `search/search.<hash>.js`.
     pub(crate) fn search_script() -> Self {
         Self::of("search/search", "js", SEARCH_JS)
+    }
+
+    /// The favicon, at `assets/favicon.<hash>.svg`.
+    pub(crate) fn favicon() -> Self {
+        Self::of("assets/favicon", "svg", FAVICON)
     }
 
     /// The file with contents `bytes`, at `<stem>.<hash>.<ext>`.
@@ -90,6 +98,7 @@ mod tests {
     fn each_asset_links_its_own_file() {
         for (asset, bytes, stem, ext) in [
             (HashedAsset::stylesheet(), SITE_CSS, "assets/site", "css"),
+            (HashedAsset::favicon(), FAVICON, "assets/favicon", "svg"),
             (
                 HashedAsset::search_script(),
                 SEARCH_JS,

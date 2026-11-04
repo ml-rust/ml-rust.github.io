@@ -1,0 +1,18 @@
+{%- if categories.is_empty() %}
+<p>No category exists yet.</p>
+{%- else %}
+<ul class="tiles tiles-categories">
+{%- for card in categories %}
+<li class="tile-item">
+<a class="tile tile-small" href="{{ card.href }}">
+{%- let icon_id = card.id.as_str() %}
+<span class="tile-icon" aria-hidden="true">{% include "icon_category.html" %}</span>
+<span class="tile-body">
+<span class="tile-name">{{ card.name }}</span>
+<span class="tile-meta">{{ card.count }}</span>
+</span>
+</a>
+</li>
+{%- endfor %}
+</ul>
+{%- endif %}

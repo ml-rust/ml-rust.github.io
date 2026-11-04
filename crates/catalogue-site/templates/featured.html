@@ -1,17 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Featured{% endblock %}
+{% block main_class %}page-wide{% endblock %}
 {% block content %}
+<p class="back-link"><a href="/topics/"><span class="icon" aria-hidden="true">{% include "icons/ui-arrow-left.svg" %}</span>Explore</a></p>
+<div class="page-title">
+<span class="page-icon" aria-hidden="true">{% include "icons/tier-featured.svg" %}</span>
 <h1>Featured</h1>
+</div>
 {%- if !tiered %}
-<p>Tiers are not published, so this page lists no entry.</p>
-{%- else if rows.is_empty() %}
-<p>No entry is Featured.</p>
+<p class="lede">Tiers are not published, so this page lists no entry.</p>
+{%- else if groups.is_empty() %}
+<p class="lede">No entry is Featured.</p>
 {%- else %}
-<p>{{ order }}</p>
-<ul class="entry-list">
-{%- for row in rows %}
-{% include "entry_row.html" %}
-{%- endfor %}
-</ul>
+<p class="lede">{{ meaning }} The <a href="/rules/">published rules</a> name each gate, and stars never count.</p>
+<div class="list-bar">
+<p class="list-count"><strong>{{ count }}</strong>{% if let Some(date) = checked %}{% if let Some(text) = checked_text %}. Checked <time datetime="{{ date }}">{{ text }}</time>{% endif %}{% endif %}.</p>
+<p class="order-note">{{ order }}</p>
+</div>
+{% include "tier_help.html" %}
+{%- let show_install = false %}
+{%- let caption = "Featured projects" %}
+{% include "entry_table.html" %}
 {%- endif %}
 {% endblock %}

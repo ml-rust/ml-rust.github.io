@@ -1,16 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Search{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+{% block header_search %}{% endblock %}
 {% block content %}
 <h1>Search</h1>
-<p>Search entries by name, crate, topic, category or description. Tick filters to narrow the results.</p>
 <form class="search-form" id="search-form" action="/search/" method="get" role="search">
 <p class="search-box">
-<label for="search-q">Search terms</label>
-<input id="search-q" name="q" type="search" autocomplete="off">
+<label class="visually-hidden" for="search-q">Search terms</label>
+<span class="search-field"><span class="icon" aria-hidden="true">{% include "icons/ui-search.svg" %}</span><input id="search-q" name="q" type="search" autocomplete="off" placeholder="Name, crate, job, category or description"></span>
 <button type="submit">Search</button>
 </p>
+<details class="filters-all" id="search-filters-all" open>
+<summary class="filters-toggle">Filters<span class="filter-selected" id="filter-selected-all"></span><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-down.svg" %}</span></summary>
 <div class="search-filters">
+<span class="filters-label">Filter</span>
 {%- for group in groups %}
+<details class="filter" name="search-filters">
+<summary>{{ group.legend }}<span class="filter-selected" id="filter-selected-{{ group.key }}"></span><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-down.svg" %}</span></summary>
 <fieldset class="search-filter">
 <legend>{{ group.legend }}</legend>
 <ul>
@@ -19,20 +25,42 @@
 {%- endfor %}
 </ul>
 </fieldset>
+</details>
 {%- endfor %}
+<button type="button" class="filter-clear" id="search-clear" hidden>Clear filters</button>
 </div>
+</details>
 </form>
+<div class="results-head">
 <p class="search-status" id="search-status" role="status"></p>
-<ol class="search-results" id="search-results" aria-live="polite"></ol>
-<noscript>
-<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">topics</a> instead.</p>
-{%- if !topics.is_empty() %}
-<ul class="link-list">
-{%- for link in topics %}
-<li><a href="{{ link.href }}">{{ link.name }}</a></li>
-{%- endfor %}
+<p class="order-note" id="search-order" hidden>Best match first. A stronger tier raises a match. <a href="/rules/">How tiers work</a></p>
+</div>
+<table class="rows rows-mixed" id="search-table" hidden>
+<caption class="visually-hidden">Search results</caption>
+<thead>
+<tr><th scope="col" class="col-project">Project</th><th scope="col" class="col-users">Active users</th><th scope="col" class="col-release">Latest release</th><th scope="col" class="col-gpu">Runs on (GPU)</th><th scope="col" class="col-native">Native code</th><th scope="col" class="col-license">License</th></tr>
+</thead>
+<tbody class="search-results" id="search-results"></tbody>
+</table>
+<section class="search-panel" id="search-start" aria-labelledby="search-start-title">
+<h2 id="search-start-title">Not sure what to type?</h2>
+{% include "example_links.html" %}
+<h3>Or start from a job</h3>
+{% include "topic_grid.html" %}
+</section>
+<section class="search-panel" id="search-none" aria-labelledby="search-none-title" hidden>
+<h2 id="search-none-title">No project matches <span id="search-none-query"></span></h2>
+<ul class="recovery">
+<li>Check the spelling, or try a shorter word.</li>
+<li id="search-none-filters" hidden>Filters narrow the results. <button type="button" class="link-button" id="search-none-clear">Clear filters</button></li>
+<li>Project missing from the catalogue? <a href="/submit/">Add it</a>.</li>
 </ul>
-{%- endif %}
+{% include "example_links.html" %}
+<h3>Or start from a job</h3>
+{% include "topic_grid.html" %}
+</section>
+<noscript>
+<p>Search runs in your browser and needs JavaScript. Browse the <a href="/topics/">jobs</a> instead.</p>
 </noscript>
 <script type="module" src="{{ script }}"></script>
 {% endblock %}

@@ -1,0 +1,13 @@
+<details class="tier-help">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span>What do the tiers mean?</summary>
+<dl class="tier-list">
+{%- for tier in tiers %}
+<dt>{{ tier.name }}</dt>
+<dd>{{ tier.meaning }}</dd>
+{%- endfor %}
+</dl>
+<p>Tiers come from <a href="/rules/">published rules</a> over raw signals. Stars never count toward a tier.</p>
+{%- if let Some(note) = movement_note %}
+<p>{{ note }}</p>
+{%- endif %}
+</details>

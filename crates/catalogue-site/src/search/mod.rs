@@ -5,6 +5,7 @@ mod boost;
 mod choice_tags;
 mod files;
 mod records;
+mod row_tags;
 
 pub use boost::{NO_TIER_BOOST, TIER_BOOSTS};
 pub(crate) use choice_tags::{LICENSE_TAG, RUNS_ON_TAG, is_stated_license, license_value};

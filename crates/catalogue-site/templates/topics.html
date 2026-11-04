@@ -1,9 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Topics{% endblock %}
+{% block title %}Explore{% endblock %}
+{% block main_class %}page-wide{% endblock %}
 {% block content %}
-<h1>Topics</h1>
-<p>A topic groups entries by subject. A subtopic sits under a broader topic.</p>
+<h1>Explore</h1>
+<p class="lede">Start from the job you want done, or from the kind of project you want. Each page lists its projects with the facts to compare them.</p>
 
-<h2 id="all-topics">All topics</h2>
+<section aria-labelledby="all-topics">
+<h2 id="all-topics">Jobs</h2>
 {% include "topic_grid.html" %}
+{%- if has_subtopics %}
+<p class="order-note">A count covers the job and every subtopic. Each project counts once.</p>
+{%- endif %}
+</section>
+
+<section aria-labelledby="categories">
+<h2 id="categories">Categories</h2>
+{% include "category_grid.html" %}
+</section>
+
+<p class="more-link"><a href="/featured/">All Featured projects<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
 {% endblock %}

@@ -1,0 +1,5 @@
+{%- if let Some(full) = fact.full -%}
+<span class="fact{% if fact.quiet %} fact-quiet{% endif %}" title="{{ full }}"><span aria-hidden="true">{{ fact.short }}</span><span class="visually-hidden">{{ full }}</span></span>
+{%- else -%}
+<span class="fact{% if fact.quiet %} fact-quiet{% endif %}">{{ fact.short }}</span>
+{%- endif -%}

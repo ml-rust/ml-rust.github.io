@@ -90,13 +90,47 @@ fn the_signal_table_keeps_the_precise_value_and_each_fact_shows_its_source() {
 #[test]
 fn rows_on_topic_and_category_pages_show_the_facts_as_whole_numbers() {
     let site = tiered();
-    let row = "License: Apache-2.0 OR MIT. Runs on: CUDA, Metal. Active users: 9. Dependents: 12.";
-    assert!(site[TOPIC].contains(row), "{}", site[TOPIC]);
-    assert!(site[CATEGORY].contains(row), "{}", site[CATEGORY]);
-    assert!(
-        !site["index.html"].contains("Runs on:"),
-        "the home page keeps its rows"
+    // The home page's Featured rows compare the same facts.
+    for page in [TOPIC, CATEGORY, "index.html"] {
+        in_order(
+            &site[page],
+            &[
+                "<tr class=\"entry-row\" data-slug=\"alpha\"",
+                "data-users=\"9\"",
+                "data-dependents=\"12\"",
+                "<td class=\"cell-users\" data-label=\"Active users\"><span class=\"fact\">9</span></td>",
+                "<td class=\"cell-gpu\" data-label=\"Runs on (GPU)\"><span class=\"fact\">CUDA, Metal</span></td>",
+                "<td class=\"cell-license\" data-label=\"License\"><span class=\"fact\">Apache-2.0 OR MIT</span></td>",
+            ],
+        );
+    }
+}
+
+#[test]
+fn a_row_says_whether_native_code_is_required_and_keeps_the_exact_fact() {
+    let site = tiered();
+    let native = "Binds native code: openssl-sys";
+    let cell = format!(
+        "<td class=\"cell-native\" data-label=\"Native code\"><span class=\"fact\" title=\"{native}\"><span aria-hidden=\"true\">Required</span><span class=\"visually-hidden\">{native}</span></span></td>"
     );
+    assert!(site[TOPIC].contains(&cell), "{}", site[TOPIC]);
+}
+
+#[test]
+fn python_bindings_show_as_a_tag_beside_the_name_with_the_exact_fact() {
+    let site = tiered();
+    let page = &site[TOPIC];
+    in_order(
+        page,
+        &[
+            "/projects/alpha/\">Alpha</a>",
+            "<span class=\"row-tag\" title=\"Has Python bindings: alpha-extra needs Python\">Python bindings</span>",
+            "<p class=\"row-description\">",
+        ],
+    );
+    let cell = &page[page.find("class=\"cell-native\"").expect("a native cell")..];
+    let cell = &cell[..cell.find("</td>").expect("the end of the cell")];
+    assert!(!cell.contains("Python"), "{cell}");
 }
 
 #[test]
@@ -109,10 +143,12 @@ fn a_build_without_a_report_reads_not_measured_and_shows_no_tier() {
         page.contains("<code>cargo add alpha-crate</code>"),
         "{page}"
     );
-    assert!(
-        site[TOPIC].contains("License: Not measured. Runs on: Not measured."),
-        "{}",
-        site[TOPIC]
+    in_order(
+        &site[TOPIC],
+        &[
+            "<td class=\"cell-gpu\" data-label=\"Runs on (GPU)\"><span class=\"fact fact-quiet\">Not measured</span></td>",
+            "<td class=\"cell-license\" data-label=\"License\"><span class=\"fact fact-quiet\">Not measured</span></td>",
+        ],
     );
 }
 

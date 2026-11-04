@@ -87,11 +87,6 @@ pub(crate) fn category_link<'a>(catalogue: &'a Catalogue, id: &Slug) -> Option<N
         .map(named_category)
 }
 
-/// The link to every category, in file order.
-pub(crate) fn category_links(catalogue: &Catalogue) -> Vec<NamedLink<'_>> {
-    catalogue.categories().iter().map(named_category).collect()
-}
-
 fn named_category(category: &Category) -> NamedLink<'_> {
     NamedLink {
         name: &category.name,

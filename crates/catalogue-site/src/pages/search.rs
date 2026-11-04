@@ -10,7 +10,9 @@ use catalogue_core::{
 };
 
 use super::layout::Layout;
-use super::shared::{NamedLink, kind_name, tier_name, topic_href};
+use super::shared::{
+    ExampleSearch, TopicCard, example_searches, kind_name, tier_name, topic_cards,
+};
 use crate::href::SafeHref;
 use crate::search::{
     CATEGORY_TAG, KIND_TAG, LICENSE_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, RUNS_ON_TAG,
@@ -32,8 +34,10 @@ pub(crate) struct SearchPage<'a> {
     pub script: SafeHref,
     /// The filter groups, in display order.
     pub groups: Vec<FilterGroup<'a>>,
-    /// Every topic, in file order, for readers without scripts.
-    pub topics: Vec<NamedLink<'a>>,
+    /// One tile per top-level topic, for the empty and no-result states.
+    pub topics: Vec<TopicCard<'a>>,
+    /// The example searches.
+    pub examples: Vec<ExampleSearch>,
 }
 
 /// One set of checkboxes over the values of one search tag.
@@ -89,7 +93,7 @@ impl<'a> SearchPage<'a> {
         ];
         let mut groups = vec![
             group(KIND_TAG, "Kind", kinds),
-            group(TOPIC_TAG, "Topic", topics),
+            group(TOPIC_TAG, "Job", topics),
             group(CATEGORY_TAG, "Category", categories),
         ];
         if let Some(report) = report {
@@ -98,19 +102,12 @@ impl<'a> SearchPage<'a> {
             groups.push(group(TIER_TAG, "Tier", tiers));
         }
         groups.push(group(ORG_TAG, "Organization", orgs));
-        let topics = catalogue
-            .topics()
-            .iter()
-            .map(|topic| NamedLink {
-                name: &topic.name,
-                href: topic_href(&topic.id),
-            })
-            .collect();
         Self {
             layout,
             script,
             groups,
-            topics,
+            topics: topic_cards(catalogue, report),
+            examples: example_searches(),
         }
     }
 }

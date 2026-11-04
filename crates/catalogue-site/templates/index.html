@@ -1,58 +1,52 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+{% block header_search %}{% endblock %}
 {% block content %}
-<h1>{{ layout.site_name }}</h1>
-<p>The catalogue lists Rust projects for machine learning: libraries on crates.io, and apps.</p>
-<p>Each entry has a tier: Featured, Listed, New or Archived. Tiers come from <a href="/rules/">published rules</a> over raw signals. Stars never count toward a tier.</p>
-{%- if let Some(date) = checked %}
-<p>The tiers on this site come from the check on <time datetime="{{ date }}">{{ date }}</time>.</p>
-{%- else %}
-<p>Tiers are not published.</p>
-{%- endif %}
+<section class="hero" aria-labelledby="hero-title">
+<h1 id="hero-title">Find a Rust library or app for your ML job</h1>
+<p class="hero-statement">{{ counts }}{% if checked.is_some() %} Every tier comes from <a href="/rules/">published rules</a>. Stars never count.{% else %} Tiers are not published.{% endif %}</p>
+<form class="hero-search" action="/search/" method="get" role="search">
+<label class="visually-hidden" for="hero-search-q">Search the catalogue</label>
+<span class="search-field"><span class="icon" aria-hidden="true">{% include "icons/ui-search.svg" %}</span><input id="hero-search-q" name="q" type="search" placeholder="speech recognition, GGUF, embeddings"></span>
+<button type="submit">Search</button>
+</form>
+{% include "example_links.html" %}
+<p class="hero-meta">
+{%- if let Some(date) = checked %}{% if let Some(text) = checked_text %}<span>Checked <time datetime="{{ date }}">{{ text }}</time></span>{% endif %}{% endif %}
+<a href="/rules/">How tiers work<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
+</section>
 
-<h2 id="topics">Topics</h2>
+<section aria-labelledby="topics">
+<h2 id="topics">What do you want to do?</h2>
 {% include "topic_grid.html" %}
+</section>
 
-<h2 id="categories">Browse by category</h2>
-{%- if categories.is_empty() %}
-<p>No category exists yet.</p>
-{%- else %}
-<ul class="link-list">
-{%- for link in categories %}
-<li><a href="{{ link.href }}">{{ link.name }}</a></li>
-{%- endfor %}
-</ul>
-{%- endif %}
+<section aria-labelledby="categories">
+<h2 id="categories">Or pick the kind of project</h2>
+{% include "category_grid.html" %}
+</section>
 {%- if checked.is_some() %}
 
-<h2 id="featured">Featured</h2>
-{%- if featured.is_empty() %}
+<section aria-labelledby="featured">
+<div class="section-head">
+<h2 id="featured">Featured projects</h2>
+<p class="order-note">{{ order }}</p>
+</div>
+{%- if groups.is_empty() %}
 <p>No entry is Featured.</p>
 {%- else %}
-<p>{{ order }}</p>
-<ul class="entry-list">
-{%- for row in featured %}
-{% include "entry_row.html" %}
-{%- endfor %}
-</ul>
-<p><a href="/featured/">All Featured projects</a></p>
+{%- let show_install = false %}
+{%- let caption = "Featured projects" %}
+{% include "entry_table.html" %}
+<p class="more-link"><a href="/featured/">All {{ featured_total }} Featured projects<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
 {%- endif %}
-{%- endif %}
+</section>
 
-<h2 id="recent">Recently added</h2>
-{%- if recent.is_empty() %}
-<p>No entry exists yet.</p>
-{%- else %}
-<ul class="entry-list">
-{%- for row in recent %}
-{% include "entry_row.html" %}
-{%- endfor %}
-</ul>
-{%- endif %}
-{%- if checked.is_some() %}
-
-<h2 id="changes">Recent tier changes</h2>
-{% include "change_table.html" %}
-<p><a href="/changes/">All tier changes</a></p>
+<p class="change-line" id="changes">
+{%- if let Some(change) = latest_change %}{% if let Some(date) = latest_change_date %}<time datetime="{{ change.date }}">{{ date }}</time>: {% if let Some(href) = change.href %}<a href="{{ href }}">{{ change.name }}</a>{% else %}{{ change.name }}{% endif %} moved from {{ change.from }} to {{ change.to }}.{% endif %}
+{%- else if let Some(first) = first_check %}{% if let Some(date) = first_check_date %}The first check on <time datetime="{{ first.date }}">{{ date }}</time> placed {{ first.text }}.{% endif %}
+{%- else %}No tier change is recorded.
+{%- endif %} <a href="/changes/">All tier changes<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
 {%- endif %}
 {% endblock %}

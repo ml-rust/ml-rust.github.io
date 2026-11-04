@@ -1,31 +1,38 @@
-//! `/topics/`: every top-level topic with the topics below it.
+//! `/topics/`: every job with the jobs below it, then every category.
 
 use askama::Template;
 use catalogue_core::{Catalogue, TierReport};
 
 use crate::pages::layout::Layout;
-use crate::pages::shared::{TopicCard, topic_cards};
+use crate::pages::shared::{CategoryCard, TopicCard, category_cards, topic_cards};
 
-/// The topic list page.
+/// The explore page.
 #[derive(Debug, Template)]
 #[template(path = "topics.html")]
 pub(crate) struct TopicsPage<'a> {
     /// The shared layout.
     pub layout: Layout,
-    /// One card per top-level topic, in file order.
+    /// One tile per top-level topic, in file order.
     pub topics: Vec<TopicCard<'a>>,
+    /// One tile per category, in file order.
+    pub categories: Vec<CategoryCard<'a>>,
+    /// Whether any tile counts a topic below it.
+    pub has_subtopics: bool,
 }
 
 impl<'a> TopicsPage<'a> {
-    /// The topic list in `layout`, with tier counts from `report` when given.
+    /// The explore page in `layout`, ordering each tile's names with `report` when given.
     pub(crate) fn new(
         layout: Layout,
         catalogue: &'a Catalogue,
         report: Option<&TierReport>,
     ) -> Self {
+        let topics = topic_cards(catalogue, report);
         Self {
             layout,
-            topics: topic_cards(catalogue, report),
+            has_subtopics: topics.iter().any(|card| !card.subtopics.is_empty()),
+            topics,
+            categories: category_cards(catalogue),
         }
     }
 }

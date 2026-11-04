@@ -24,8 +24,8 @@ pub(crate) use project::ProjectPage;
 pub(crate) use rules::RulesPage;
 pub(crate) use search::SearchPage;
 pub(crate) use shared::{
-    category_file, category_href, category_link, first_check_line, is_first_check, project_file,
-    project_href, tier_name, topic_file, topic_href, topic_link,
+    ChoiceText, category_file, category_href, category_link, first_check_line, is_first_check,
+    project_file, project_href, row_statuses, tier_name, topic_file, topic_href, topic_link,
 };
 pub(crate) use submit::SubmitPage;
 pub(crate) use topics::{TopicPage, TopicsPage};

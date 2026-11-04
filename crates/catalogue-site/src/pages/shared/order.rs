@@ -16,6 +16,15 @@ const STRONGEST_FIRST: &str =
 /// The sentence a list without tiers shows.
 const BY_NAME: &str = "Entries are sorted by name.";
 
+/// The sentence a list of one tier shows.
+const MOST_USERS_FIRST: &str =
+    "Order: most active users first, then name, with unmeasured values last.";
+
+/// The sentence that states the order of the Featured list.
+pub(crate) fn featured_order_text() -> &'static str {
+    MOST_USERS_FIRST
+}
+
 /// The sentence that states the order of a list built with `report`.
 pub(crate) fn order_text(report: Option<&TierReport>) -> &'static str {
     if report.is_some() {

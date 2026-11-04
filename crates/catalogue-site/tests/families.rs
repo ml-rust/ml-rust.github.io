@@ -10,6 +10,10 @@ use std::collections::BTreeMap;
 use catalogue_core::{EntryReport, Movement, Slug, Tier};
 use catalogue_site::{SiteInputs, search_records};
 
+/// The sentence the Featured lists show.
+const MOST_USERS_FIRST: &str =
+    "Order: most active users first, then name, with unmeasured values last.";
+
 const STRONGEST_FIRST: &str =
     "Order: strongest tier first, then most active users, then name, with unmeasured values last.";
 
@@ -140,15 +144,15 @@ fn the_home_page_shows_eight_families_and_links_the_full_list() {
     let site = build_with(&extra);
     let home = &site["index.html"];
     let start = home.find("id=\"featured\"").expect("the Featured list");
-    let end = home.find("id=\"recent\"").expect("the recent list");
+    let end = home.find("id=\"changes\"").expect("the changes line");
     let block = &home[start..end];
     assert_eq!(block.matches("class=\"entry-row\"").count(), 8, "{block}");
     assert!(
-        block.contains("<a href=\"/featured/\">All Featured projects</a>"),
+        block.contains("<a href=\"/featured/\">All 11 Featured projects<span"),
         "{block}"
     );
     assert!(block.contains("and 1 related project"), "{block}");
-    assert!(block.contains(STRONGEST_FIRST), "{block}");
+    assert!(block.contains(MOST_USERS_FIRST), "{block}");
     let full = &site["featured/index.html"];
     assert_eq!(full.matches("class=\"entry-row\"").count(), 10, "{full}");
     assert!(!full.contains(">extra-0-child</a>"), "{full}");

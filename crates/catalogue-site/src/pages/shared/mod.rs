@@ -1,30 +1,40 @@
 //! View data that several pages share.
 
 mod badge;
+mod category_card;
 mod change_row;
 mod choice;
+mod date_text;
 mod entry_row;
+mod examples;
 mod install;
 mod labels;
+mod list_head;
 mod listing;
 mod movement;
 mod order;
 mod paths;
+mod tier_help;
 mod topic_card;
 
 pub(crate) use badge::TierBadge;
+pub(crate) use category_card::{CategoryCard, category_cards};
 pub(crate) use change_row::{
     ChangeRow, FirstCheckLine, change_rows, first_check_line, is_first_check,
 };
-pub(crate) use choice::{fact_text, whole_text};
-pub(crate) use entry_row::{EntryRow, RelatedLink, tier_of};
+pub(crate) use choice::{ChoiceText, fact_text, whole_text};
+pub(crate) use date_text::date_text;
+pub(crate) use entry_row::{RelatedLink, row_statuses, tier_of};
+pub(crate) use examples::{ExampleSearch, example_searches};
 pub(crate) use install::{InstallLine, install_line};
 pub(crate) use labels::{kind_name, project_kind_name, status_name, tier_name};
-pub(crate) use listing::{EntryGroup, featured_rows, group_entries, group_install_rows};
+pub(crate) use list_head::{ListHead, checked_dates};
+pub(crate) use listing::{EntryGroup, featured_rows, featured_slugs, group_entries, project_count};
 pub(crate) use movement::{movement_note, movement_word};
-pub(crate) use order::{family_heads, order_text, strongest_first};
+pub(crate) use order::{family_heads, featured_order_text, order_text, strongest_first};
 pub(crate) use paths::{
-    EvidenceLink, NamedLink, category_file, category_href, category_link, category_links,
-    entry_link, project_file, project_href, topic_file, topic_href, topic_link,
+    EvidenceLink, NamedLink, category_file, category_href, category_link, entry_link, project_file,
+    project_href, topic_file, topic_href, topic_link,
 };
+pub(crate) use tier_help::{FEATURED_MEANING, TierLine, tier_lines};
 pub(crate) use topic_card::{TopicCard, topic_cards};

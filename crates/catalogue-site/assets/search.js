@@ -10,11 +10,25 @@ const FILTER_KEYS = ["kind", "topic", "category", "license", "runs_on", "tier", 
 // Every record links an entry page. Any other link is dropped.
 const RESULT_PREFIX = "/projects/";
 const TIER_VALUE = /^[a-z]+$/;
+// The word a row prints for a fact with no value.
+const NOT_MEASURED = "Not measured";
 
 const form = document.getElementById("search-form");
 const input = document.getElementById("search-q");
 const status = document.getElementById("search-status");
 const results = document.getElementById("search-results");
+const table = document.getElementById("search-table");
+const order = document.getElementById("search-order");
+const startPanel = document.getElementById("search-start");
+const nonePanel = document.getElementById("search-none");
+const noneQuery = document.getElementById("search-none-query");
+const noneFilters = document.getElementById("search-none-filters");
+const clearButton = document.getElementById("search-clear");
+const noneClear = document.getElementById("search-none-clear");
+const filterGroups = Array.from(form.querySelectorAll("details.filter"));
+const filtersAll = document.getElementById("search-filters-all");
+// Above this width the filters always show. Below it they fold behind one button.
+const WIDE_BAR = window.matchMedia("(min-width: 761px)");
 const boxes = Array.from(form.querySelectorAll('input[type="checkbox"]'));
 
 let engine = null;
@@ -137,9 +151,29 @@ function showCounts(counts) {
   for (const box of boxes) {
     const target = document.getElementById(`${box.id}-count`);
     if (target) {
-      target.textContent = `(${counts.get(box.name)?.get(box.value) ?? 0})`;
+      const count = counts.get(box.name)?.get(box.value) ?? 0;
+      target.textContent = `(${count})`;
+      target.parentElement.classList.toggle("facet-none", count === 0);
     }
   }
+}
+
+// Writes how many boxes of each filter group are ticked, on the group's button.
+function showSelected(filters) {
+  for (const key of FILTER_KEYS) {
+    const target = document.getElementById(`filter-selected-${key}`);
+    if (target) {
+      target.textContent = filters[key]?.length ? String(filters[key].length) : "";
+    }
+  }
+  clearButton.hidden = Object.keys(filters).length === 0;
+  const ticked = Object.values(filters).reduce((sum, values) => sum + values.length, 0);
+  document.getElementById("filter-selected-all").textContent = ticked ? String(ticked) : "";
+}
+
+// Opens the filter bar on a wide page and folds it on a narrow one.
+function fitFilterBar() {
+  filtersAll.open = WIDE_BAR.matches;
 }
 
 // The first value of each tag of `hit`, as an object of tag to value.
@@ -164,50 +198,108 @@ function valuesOf(hit, key) {
   return found;
 }
 
-// Replaces the result list with `hits`.
-function showResults(text, hits) {
-  const items = [];
-  for (const hit of hits) {
-    if (typeof hit.path !== "string" || !hit.path.startsWith(RESULT_PREFIX)) {
-      continue;
-    }
-    const item = element("li", "search-result");
-    const title = element("a", "search-result-title", hit.title);
-    title.setAttribute("href", hit.path);
-    item.append(title);
-    if (hit.snippet) {
-      item.append(element("p", "search-result-snippet", hit.snippet));
-    }
-    const found = tagsOf(hit);
-    const line = element("p", "search-result-tags");
-    const kind = found.kind ? labelText("kind", found.kind) : null;
-    if (kind) {
-      line.append(element("span", "entry-kind", kind));
-    }
-    const tier = found.tier ? labelText("tier", found.tier) : null;
-    if (tier && TIER_VALUE.test(found.tier)) {
-      line.append(" ", element("span", `tier-badge tier-${found.tier}`, tier));
-    }
-    const license = found.license ? labelText("license", found.license) : null;
-    if (license) {
-      line.append(" ", element("span", "entry-license", `License: ${license}`));
-    }
-    const backends = valuesOf(hit, "runs_on")
-      .map((value) => labelText("runs_on", value))
-      .filter(Boolean);
-    if (backends.length > 0) {
-      line.append(" ", element("span", "entry-runs-on", `Runs on: ${backends.join(", ")}`));
-    }
-    if (line.childNodes.length > 0) {
-      item.append(line);
-    }
-    items.push(item);
+// A span with the short text of fact `name`, and its full wording when the two differ.
+function factSpan(found, name) {
+  const short = found[`row_${name}`] ?? NOT_MEASURED;
+  const full = found[`row_${name}_full`];
+  const quiet = short === NOT_MEASURED || (full !== undefined && short.startsWith("None"));
+  const span = element("span", quiet ? "fact fact-quiet" : "fact");
+  if (full === undefined) {
+    span.textContent = short;
+    return span;
   }
+  span.setAttribute("title", full);
+  const seen = element("span", "", short);
+  seen.setAttribute("aria-hidden", "true");
+  span.append(seen, element("span", "visually-hidden", full));
+  return span;
+}
+
+// A table cell for one fact, labelled for the stacked layout.
+function factCell(name, label, ...content) {
+  const cell = element("td", `cell-${name}`);
+  cell.setAttribute("data-label", label);
+  cell.append(...content);
+  return cell;
+}
+
+// The cell of the latest release, with its date in a time element when it has one.
+function releaseCell(found) {
+  if (!found.row_released_iso) {
+    return factCell("release", "Latest release", factSpan(found, "released"));
+  }
+  const time = element("time", "", found.row_released ?? "");
+  time.setAttribute("datetime", found.row_released_iso);
+  return factCell("release", "Latest release", time);
+}
+
+// The table row of `hit`, in the markup of every other list.
+function resultRow(hit) {
+  const found = tagsOf(hit);
+  const row = element("tr", "entry-row");
+  const head = element("div", "row-head");
+  const title = element("a", "row-name", hit.title);
+  title.setAttribute("href", hit.path);
+  head.append(title);
+  if (found.kind === "app") {
+    const kind = labelText("kind", found.kind);
+    if (kind) {
+      head.append(" ", element("span", "row-tag", kind));
+    }
+  }
+  if (found.row_python) {
+    const python = element("span", "row-tag", found.row_python);
+    python.setAttribute("title", found.row_python_full ?? "");
+    head.append(" ", python);
+  }
+  const tier = found.tier ? labelText("tier", found.tier) : null;
+  if (tier && TIER_VALUE.test(found.tier)) {
+    head.append(" ", element("span", `tier-badge tier-${found.tier}`, tier));
+  }
+  if (found.row_status) {
+    const status = element("span", "row-tag row-tag-notice", found.row_status);
+    status.setAttribute("title", found.row_status_meaning ?? "");
+    head.append(" ", status);
+  }
+  const project = element("th", "cell-project");
+  project.setAttribute("scope", "row");
+  project.append(head);
+  const description = found.row_description ?? hit.snippet;
+  if (description) {
+    project.append(element("p", "row-description", description));
+  }
+  row.append(
+    project,
+    factCell("users", "Active users", factSpan(found, "users")),
+    releaseCell(found),
+    factCell("gpu", "Runs on (GPU)", factSpan(found, "gpu")),
+    factCell("native", "Native code", factSpan(found, "native")),
+    factCell("license", "License", factSpan(found, "license")),
+  );
+  return row;
+}
+
+// Replaces the result rows with `hits`, and shows the panel that fits.
+function showResults(text, hits, filters) {
+  const items = hits
+    .filter((hit) => typeof hit.path === "string" && hit.path.startsWith(RESULT_PREFIX))
+    .map(resultRow);
   results.replaceChildren(...items);
+  const filtered = Object.keys(filters).length > 0;
+  table.hidden = items.length === 0;
+  order.hidden = items.length === 0;
+  startPanel.hidden = Boolean(text);
+  nonePanel.hidden = !text || items.length > 0;
+  noneQuery.textContent = `“${text}”`;
+  noneFilters.hidden = !filtered;
+  // A panel says the same in words, so the status stays for screen readers only.
+  status.classList.toggle("visually-hidden", items.length === 0);
   if (!text) {
     status.textContent = "Type a search term. The counts cover every entry.";
   } else if (items.length === 0) {
     status.textContent = "No entry matches.";
+  } else if (items.length === MAX_RESULTS) {
+    status.textContent = `The first ${MAX_RESULTS} results. Add a word or a filter to narrow them.`;
   } else {
     status.textContent = items.length === 1 ? "1 result." : `${items.length} results.`;
   }
@@ -219,6 +311,7 @@ async function run() {
   const text = input.value.trim();
   const filters = checkedFilters();
   writeUrl(text, filters);
+  showSelected(filters);
   await loadChunks(text);
   if (current !== generation) {
     return;
@@ -226,7 +319,7 @@ async function run() {
   const hits = query(text, filters);
   const counts = facets(text, filters);
   showCounts(counts);
-  showResults(text, hits);
+  showResults(text, hits, filters);
 }
 
 // A handler that shows `message` as a plain error line in the status.
@@ -249,7 +342,38 @@ function schedule(delay) {
   }, delay);
 }
 
+// Unticks every filter and runs the query again.
+function clearFilters() {
+  for (const box of boxes) {
+    box.checked = false;
+  }
+  schedule(0);
+}
+
+// Closes every open filter group other than `keep`.
+function closeFilters(keep) {
+  for (const group of filterGroups) {
+    if (group !== keep) {
+      group.open = false;
+    }
+  }
+}
+
 readUrl();
+startPanel.hidden = input.value.trim() !== "";
+showSelected(checkedFilters());
+fitFilterBar();
+WIDE_BAR.addEventListener("change", fitFilterBar);
+clearButton.addEventListener("click", clearFilters);
+noneClear.addEventListener("click", clearFilters);
+document.addEventListener("click", (event) => {
+  closeFilters(event.target.closest?.("details.filter") ?? null);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeFilters(null);
+  }
+});
 input.addEventListener("input", () => schedule(DEBOUNCE_MS));
 for (const box of boxes) {
   box.addEventListener("change", () => schedule(0));

@@ -1,0 +1,22 @@
+<li class="tile-item">
+<a class="tile" href="{{ card.href }}">
+{%- let icon_id = card.id.as_str() %}
+<span class="tile-icon" aria-hidden="true">{% include "icon_job.html" %}</span>
+<span class="tile-body">
+<span class="tile-name">{{ card.name }}</span>
+<span class="tile-meta">{{ card.count }}</span>
+{%- if !card.top.is_empty() %}
+<span class="tile-top">{{ card.top }}</span>
+{%- endif %}
+</span>
+</a>
+{%- if let Some(summary) = card.summary %}
+<p class="tile-summary">{{ summary }}</p>
+{%- if !card.evidence.is_empty() %}
+<p class="sources">Sources:{% for link in card.evidence %} <a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
+{%- endif %}
+{%- endif %}
+{%- if !card.subtopics.is_empty() %}
+<p class="subtopics">Subtopics:{% for link in card.subtopics %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
+{%- endif %}
+</li>

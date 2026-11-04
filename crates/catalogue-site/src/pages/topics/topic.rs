@@ -1,4 +1,4 @@
-//! `/topics/<id>/`: one topic with its summary, subtopics and entries.
+//! `/topics/<id>/`: one job with its summary, subtopics and entries.
 
 use askama::Template;
 use catalogue_core::Topic;
@@ -6,16 +6,17 @@ use catalogue_core::Topic;
 use crate::inputs::SiteInputs;
 use crate::pages::layout::Layout;
 use crate::pages::shared::{
-    EntryGroup, EvidenceLink, NamedLink, group_entries, movement_note, order_text, topic_href,
-    topic_link,
+    EntryGroup, EvidenceLink, ListHead, NamedLink, group_entries, topic_href, topic_link,
 };
 
-/// The page of one topic.
+/// The page of one job.
 #[derive(Debug, Template)]
 #[template(path = "topic.html")]
 pub(crate) struct TopicPage<'a> {
     /// The shared layout.
     pub layout: Layout,
+    /// The topic id. It picks the icon.
+    pub id: String,
     /// The topic name.
     pub name: &'a str,
     /// The broader topic.
@@ -28,10 +29,8 @@ pub(crate) struct TopicPage<'a> {
     pub children: Vec<NamedLink<'a>>,
     /// The entries of the topic, grouped by tier with a report.
     pub groups: Vec<EntryGroup<'a>>,
-    /// The sentence that states the order of the list.
-    pub order: &'static str,
-    /// The line shown when the history cannot measure movement.
-    pub movement_note: Option<&'static str>,
+    /// The parts above the rows.
+    pub head: ListHead<'a>,
 }
 
 impl<'a> TopicPage<'a> {
@@ -48,8 +47,10 @@ impl<'a> TopicPage<'a> {
                 href: topic_href(&child.id),
             })
             .collect();
+        let groups = group_entries(inputs, &slugs);
         Self {
             layout,
+            id: topic.id.as_str().to_owned(),
             name: &topic.name,
             parent: topic
                 .parent
@@ -58,9 +59,8 @@ impl<'a> TopicPage<'a> {
             summary: topic.summary.as_ref().map(|summary| summary.text.as_str()),
             evidence: EvidenceLink::of_summary(topic),
             children,
-            groups: group_entries(inputs, &slugs),
-            order: order_text(inputs.report),
-            movement_note: movement_note(inputs),
+            head: ListHead::new(inputs, slugs.len(), &groups),
+            groups,
         }
     }
 }

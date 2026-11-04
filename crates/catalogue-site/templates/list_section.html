@@ -1,0 +1,17 @@
+<section aria-labelledby="entries">
+<div class="section-head">
+<h2 id="entries">All projects</h2>
+<p class="order-note">{{ head.order }}</p>
+</div>
+{%- if groups.is_empty() %}
+<p>{{ empty }}</p>
+{%- else %}
+{%- if head.checked.is_some() %}
+{%- let tiers = &head.tiers %}
+{%- let movement_note = head.movement_note %}
+{% include "tier_help.html" %}
+{%- endif %}
+{%- let caption = name %}
+{% include "entry_table.html" %}
+{%- endif %}
+</section>

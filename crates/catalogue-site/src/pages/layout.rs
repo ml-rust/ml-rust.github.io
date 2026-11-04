@@ -11,8 +11,8 @@ pub const SITE_URL: &str = "https://ml-rust.github.io";
 /// A section in the main navigation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum NavItem {
-    /// The topic list.
-    Topics,
+    /// The jobs and categories, and every page under them.
+    Explore,
     /// The tier rules.
     Rules,
     /// The tier change log.
@@ -23,10 +23,10 @@ pub(crate) enum NavItem {
 
 /// Every navigation item with its label and target, in display order.
 const NAV: [(NavItem, &str, &str); 4] = [
-    (NavItem::Topics, "Topics", "/topics/"),
+    (NavItem::Explore, "Explore", "/topics/"),
     (NavItem::Rules, "Rules", "/rules/"),
     (NavItem::Changes, "Changes", "/changes/"),
-    (NavItem::Submit, "Submit", "/submit/"),
+    (NavItem::Submit, "Add project", "/submit/"),
 ];
 
 /// One navigation link.
@@ -47,13 +47,16 @@ pub(crate) struct Layout {
     pub site_name: &'static str,
     /// The link to the stylesheet.
     pub css: SafeHref,
+    /// The link to the favicon.
+    pub favicon: SafeHref,
     /// The main navigation.
     pub nav: Vec<NavLink>,
 }
 
 impl Layout {
-    /// The layout of a page in section `current`, linking the stylesheet at `css`.
-    pub(crate) fn new(css: SafeHref, current: Option<NavItem>) -> Self {
+    /// The layout of a page in section `current`, linking the stylesheet at `css` and the favicon
+    /// at `favicon`.
+    pub(crate) fn new(css: SafeHref, favicon: SafeHref, current: Option<NavItem>) -> Self {
         let nav = NAV
             .iter()
             .map(|&(item, label, href)| NavLink {
@@ -65,6 +68,7 @@ impl Layout {
         Self {
             site_name: SITE_NAME,
             css,
+            favicon,
             nav,
         }
     }
@@ -74,9 +78,17 @@ impl Layout {
 mod tests {
     use super::*;
 
+    fn css() -> SafeHref {
+        SafeHref::new("/assets/site.css")
+    }
+
+    fn favicon() -> SafeHref {
+        SafeHref::new("/assets/favicon.svg")
+    }
+
     #[test]
     fn only_the_current_section_is_marked() {
-        let layout = Layout::new(SafeHref::new("/assets/site.css"), Some(NavItem::Rules));
+        let layout = Layout::new(css(), favicon(), Some(NavItem::Rules));
         let current: Vec<&str> = layout
             .nav
             .iter()
@@ -84,15 +96,15 @@ mod tests {
             .map(|link| link.label)
             .collect();
         assert_eq!(current, ["Rules"]);
-        let none = Layout::new(SafeHref::new("/assets/site.css"), None);
+        let none = Layout::new(css(), favicon(), None);
         assert!(none.nav.iter().all(|link| !link.current));
     }
 
     #[test]
     fn every_link_is_a_site_path_with_a_trailing_slash() {
-        let layout = Layout::new(SafeHref::new("/assets/site.css"), None);
+        let layout = Layout::new(css(), favicon(), None);
         let labels: Vec<&str> = layout.nav.iter().map(|link| link.label).collect();
-        assert_eq!(labels, ["Topics", "Rules", "Changes", "Submit"]);
+        assert_eq!(labels, ["Explore", "Rules", "Changes", "Add project"]);
         for link in &layout.nav {
             assert!(!link.href.is_refused(), "{}", link.label);
             assert!(link.href.as_str().ends_with('/'), "{}", link.href);
