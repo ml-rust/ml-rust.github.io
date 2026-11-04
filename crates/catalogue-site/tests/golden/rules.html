@@ -44,7 +44,7 @@
 <dt>Listed</dt>
 <dd>Shown in the normal listing. No other tier applies.</dd>
 <dt>New</dt>
-<dd>A young, prerelease or barely used project.</dd>
+<dd>A project whose first release is recent.</dd>
 <dt>Archived</dt>
 <dd>No longer maintained, or ended by its author.</dd>
 </dl>
@@ -182,19 +182,14 @@
 
 <section aria-labelledby="new">
 <h2 id="new">New</h2>
-<p>An entry is New when any one of these holds.</p>
-<ul>
-<li>Its first release is younger than the age limit.</li>
-<li>Every version is a prerelease or 0.0.x.</li>
-<li>A library has fewer active users than the user floor.</li>
-</ul>
+<p>An entry is New when its first release is younger than the age limit.</p>
+<p>Age alone decides. An old entry with few users or only prerelease versions is not New.</p>
 <table>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
 <tbody>
 <tr><th scope="row"><code>new.max_age_days</code></th><td class="number">180</td><td>Age limit: a first release fewer days ago than this is New.</td></tr>
-<tr><th scope="row"><code>new.min_active_users</code></th><td class="number">2</td><td>User floor: a library with fewer active users than this is New.</td></tr>
 </tbody>
 </table>
 </section>
@@ -209,6 +204,7 @@
 <li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
 <li>Former glory reaches its floor.</li>
 <li>Docs are present.</li>
+<li>At least one version is neither a prerelease nor 0.0.x.</li>
 </ul>
 <p>A gate that lacks its signal does not pass.</p>
 <table>
@@ -232,6 +228,7 @@
 <li>Repology repository families that package the app.</li>
 <li>Docker pull growth over 90 days.</li>
 </ul>
+<p>An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.</p>
 <p>Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
 <table>
 <thead>
@@ -269,10 +266,10 @@
 <p>These facts help a person choose a project. They never count toward a tier.</p>
 <p>Each comes from measured data, and each row in the signal table links its source.</p>
 <ul>
-<li><strong>License</strong> A library reads the license of its primary crate&#39;s default version on crates.io, as an SPDX expression. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license reads as none stated.</li>
-<li><strong>Runs on</strong> Each listed crate&#39;s default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. CPU means the dump holds the crates and no row matches. A backend behind a deeper dependency stays unseen.</li>
-<li><strong>Native code</strong> Pure Rust, or what the project binds: the links key of each listed crate and every listed crate or direct dependency named -sys. A deeper dependency stays unseen. So does C built with no links key.</li>
-<li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it.</li>
+<li><strong>License</strong> A library reads the license of its primary crate&#39;s default version on crates.io, as an SPDX expression. A primary crate with no license column falls back to the license GitHub states. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license in either source reads as none stated.</li>
+<li><strong>Runs on</strong> Each listed crate&#39;s default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. No GPU feature found means the dump holds the crates and no row matches. It does not prove the project runs on a CPU only. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.</li>
+<li><strong>Native code</strong> No native code found, or what the project binds. The check follows the normal dependencies of each listed crate, and theirs in turn. A hit is a crate named -sys or a crate with a links key. Crates that bind no foreign library never count. An optional dependency of a listed crate names the feature that enables it. A build dependency such as cc or cmake shows that the build uses a native toolchain. C built with no links key, no -sys crate and no such build dependency stays unseen. So does native code kept outside crates.io.</li>
+<li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it. No Python binding crate found means no such crate shows on crates.io. Bindings kept outside crates.io stay unseen.</li>
 <li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.</li>
 <li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
 </ul>

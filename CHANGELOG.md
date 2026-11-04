@@ -44,3 +44,9 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `/changes/feed.xml`: Atom feed of tier changes and new entries.
 - `/data/catalogue.json`, `/llms.txt`, `sitemap.xml` and `robots.txt` for scripts and AI agents.
 - CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.
+
+### Changed
+
+- The New tier now means a recent first release only.
+- Row facts state only what the check found, and native code reads deeper dependencies.
+- Categories cover more projects and match description terms first.

@@ -4,15 +4,21 @@
 # A topic in `topics.toml` says the job: "I want to run models". An entry has at most one category.
 # A `blurb` is one plain sentence that defines the category. It holds no claim that needs evidence.
 #
-# `catalogue seed` and `catalogue seed --leads` set `category` in the same two steps as topics.
+# `catalogue seed` and `catalogue seed --leads` set `category` in two steps. The order is the reverse
+# of the topic steps: a description says what a project is, and keywords also list what it touches.
 # A human reviews every drafted entry.
 #
-# 1. `keywords` and `categories` match the crates.io keywords and category slugs of every family crate.
-# 2. When step 1 finds no category, `terms` match the same texts as the terms of a topic.
+# 1. `terms` match the same texts as the terms of a topic.
+# 2. When step 1 finds no category, `keywords` and `categories` match the crates.io keywords and
+#    category slugs of every family crate.
 #
 # When several categories match in one step, the first in this file wins. So order matters, and an
-# earlier category holds only words that a later category cannot use. `tensors` stays out of Tensor
-# libraries, because a model format also stores tensors.
+# earlier category holds only words that a later category cannot use. Specific domains come first
+# and the general ones come last.
+#
+# The bare keywords `tensor` and `tensors` stay out of Tensors and math. A model format also stores
+# tensors, and a framework carries the keyword `tensor`. ML frameworks owns `deep-learning`, because
+# every domain category that could claim a deep learning app comes before it.
 #
 # No match leaves `category` unset and never skips the draft. An install channel changes nothing.
 #
@@ -23,44 +29,108 @@
 # A term maps to one category.
 
 [[category]]
+id = "speech-audio"
+name = "Speech and audio"
+blurb = "Libraries and programs that recognize speech, synthesize it, detect voice or clean up audio."
+keywords = ["speech", "speech-recognition", "speech-to-text", "text-to-speech", "speech-synthesis", "asr", "tts", "whisper", "audio-ml", "vad", "voice-activity-detection", "audio-denoising"]
+terms = ["speech recognition", "automatic speech recognition", "speech synthesis", "speech to text", "text to speech", "speech enhancement", "speaker diarization", "voice activity", "audio denoising", "transcription", "speech"]
+
+[[category]]
+id = "computer-vision"
+name = "Computer vision"
+blurb = "Libraries and programs that process images and find things in them."
+keywords = ["computer-vision", "image-processing", "ocr", "object-detection", "opencv", "image-recognition", "image-segmentation"]
+categories = ["computer-vision"]
+terms = ["computer vision", "image processing", "ocr", "optical character recognition", "object detection", "opencv", "image segmentation", "image classification", "face detection"]
+
+[[category]]
 id = "inference-runtimes"
 name = "Inference runtimes"
 blurb = "Programs and libraries that load a trained model and run it."
 keywords = ["inference", "onnxruntime", "llama-cpp", "model-serving", "inference-engine", "inference-server"]
-terms = ["inference runtime", "inference runtimes", "inference server", "inference servers", "model serving", "model inference", "llm inference", "onnx inference", "neural network inference", "machine learning inference"]
+terms = ["inference runtime", "inference runtimes", "inference server", "inference servers", "model serving", "model inference", "llm inference", "onnx inference", "neural network inference", "machine learning inference", "onnx runtime", "onnxruntime", "tflite", "tensorflow lite", "llama cpp", "openvino"]
 
 [[category]]
-id = "ml-frameworks"
-name = "ML frameworks"
-blurb = "Libraries for defining neural networks and training them."
-keywords = ["neural-network", "neural-networks", "autograd", "ml-framework", "deep-learning-framework"]
-terms = ["machine learning framework", "machine learning frameworks", "ml framework", "ml frameworks", "deep learning framework", "deep learning frameworks", "deep learning library", "machine learning library", "neural network library", "neural network framework", "machine learning toolkit"]
+id = "llm-clients"
+name = "LLM clients"
+blurb = "Client libraries for the APIs of LLM providers."
+keywords = ["openai", "anthropic", "ollama", "gemini", "openrouter", "llm-client", "llm-api"]
+terms = ["llm client", "llm clients", "llm sdk", "openai client", "openai sdk", "openai api client", "client for the openai api", "client for openai", "anthropic client", "anthropic sdk", "client for anthropic", "ollama client", "client for ollama", "gemini client", "openai api", "ollama api", "anthropic api", "gemini api", "mistral ai", "llm providers", "chatgpt"]
+
+[[category]]
+id = "agent-frameworks"
+name = "Agents and LLM apps"
+blurb = "Frameworks and tools for building LLM apps, agents and retrieval pipelines."
+keywords = ["agent", "agents", "ai-agent", "ai-agents", "agent-protocol", "mcp", "model-context-protocol", "rag", "langchain", "chatbot", "coding-agent", "coding-assistant"]
+terms = ["agent framework", "agent frameworks", "ai agent", "ai agents", "llm agent", "llm agents", "llm app", "llm apps", "llm application", "llm applications", "retrieval augmented generation", "rag", "mcp", "mcp server", "mcp servers", "model context protocol", "agent protocol", "agent protocols", "coding agent", "coding agents", "coding assistant", "coding assistants"]
 
 [[category]]
 id = "vector-databases"
 name = "Vector databases"
-blurb = "Databases that store vectors and find the ones nearest to a query."
-keywords = ["vector-database", "vector-db", "vectordb", "vector-search", "vector-store"]
-terms = ["vector database", "vector databases", "vector store", "vector stores", "vector search", "vector similarity search"]
+blurb = "Databases and indexes that store vectors and find the ones nearest to a query."
+keywords = ["vector-database", "vector-db", "vectordb", "vector-search", "vector-store", "nearest-neighbor", "nearest-neighbors", "nearest-neighbour", "approximate-nearest-neighbor", "hnsw"]
+terms = ["vector database", "vector databases", "vector store", "vector stores", "vector search", "vector similarity search", "nearest neighbor", "nearest neighbors", "nearest neighbour", "approximate nearest neighbor", "hnsw"]
 
 [[category]]
-id = "tensor-libraries"
-name = "Tensor libraries"
-blurb = "Libraries for multidimensional arrays and the math on them."
-keywords = ["tensor", "tensors", "ndarray"]
-terms = ["tensor library", "tensor libraries", "tensor computation", "tensor operations", "n dimensional array", "n dimensional arrays", "multidimensional array", "multidimensional arrays"]
+id = "embeddings"
+name = "Embeddings"
+blurb = "Libraries that turn text and other data into embedding vectors."
+keywords = ["sentence-embeddings", "text-embeddings", "word-embeddings", "word2vec", "embedding-model", "embedding-models"]
+terms = ["text embeddings", "sentence embeddings", "word embeddings", "word vectors", "word2vec", "embedding model", "embedding models", "embedding generation", "generate embeddings", "vector embeddings", "embeddings"]
+
+[[category]]
+id = "search-engines"
+name = "Search engines"
+blurb = "Engines and libraries that index text and search it."
+keywords = ["full-text-search", "fulltext-search", "search-engine", "bm25", "information-retrieval", "inverted-index"]
+terms = ["full text search", "search engine", "search engines", "search backend", "search backends", "bm25", "information retrieval", "inverted index"]
+
+[[category]]
+id = "text-tools"
+name = "Text and tokenizers"
+blurb = "Libraries that split, normalize and analyze text before a model reads it."
+keywords = ["tokenizer", "tokenizers", "tokenization", "bpe", "nlp", "natural-language-processing", "chunking", "text-chunking", "text-splitter", "stemming", "stemmer", "stopwords", "stop-words", "text-segmentation", "language-detection"]
+terms = ["tokenizer", "tokenizers", "tokenization", "nlp", "natural language processing", "natural language", "text chunking", "semantic chunking", "text splitter", "stemming", "stemmer", "stop words", "text segmentation", "word segmentation", "sentence segmentation", "language detection", "language identification"]
 
 [[category]]
 id = "model-formats"
 name = "Model formats"
 blurb = "File formats for model weights, and the code that reads and writes them."
-keywords = ["safetensors", "gguf", "onnx", "model-format", "model-formats"]
-terms = ["safetensors", "gguf", "onnx", "model format", "model formats", "model file format", "model file"]
+keywords = ["safetensors", "gguf", "onnx-parser", "onnx-parsing", "model-format", "model-formats"]
+terms = ["safetensors", "gguf", "onnx parser", "onnx parsing", "onnx model parser", "model format", "model formats", "model file format", "model file", "onnx model", "onnx models", "onnx file", "onnx files"]
+
+[[category]]
+id = "data-tools"
+name = "Data formats and dataframes"
+blurb = "Libraries for dataframes and for columnar and array file formats."
+keywords = ["dataframe", "dataframes", "arrow", "parquet", "columnar", "hdf5", "netcdf", "zarr", "npy", "npz", "data-format"]
+terms = ["dataframe", "dataframes", "columnar", "apache arrow", "arrow format", "parquet", "hdf5", "netcdf", "zarr", "npy", "data format", "data formats"]
+
+[[category]]
+id = "classical-ml"
+name = "Classical ML"
+blurb = "Libraries of learning algorithms such as clustering, decision trees, boosting, regression and reinforcement learning."
+keywords = ["clustering", "k-means", "svm", "random-forest", "gradient-boosting", "gbdt", "decision-tree", "linear-regression", "logistic-regression", "genetic-algorithm", "genetic-algorithms", "evolutionary-algorithm", "reinforcement-learning"]
+terms = ["clustering algorithms", "cluster analysis", "k means", "support vector machine", "support vector machines", "random forest", "random forests", "gradient boosting", "decision tree", "decision trees", "linear regression", "logistic regression", "genetic algorithm", "genetic algorithms", "evolutionary algorithms", "reinforcement learning", "dimensionality reduction", "clustering", "t sne", "gradient boosted", "self organizing map"]
+
+[[category]]
+id = "ml-frameworks"
+name = "ML frameworks"
+blurb = "Libraries for defining models and training them."
+keywords = ["deep-learning", "neural-network", "neural-networks", "autograd", "ml-framework", "deep-learning-framework", "machine-learning-framework"]
+terms = ["machine learning framework", "machine learning frameworks", "machine learning in rust", "ml framework", "ml frameworks", "ml library", "ml toolkit", "deep learning framework", "deep learning frameworks", "deep learning library", "machine learning library", "neural network library", "neural network framework", "machine learning toolkit", "tensorflow", "pytorch", "libtorch", "deep learning", "neural network", "neural networks", "autograd"]
+
+[[category]]
+id = "math-libraries"
+name = "Tensors and math"
+blurb = "Libraries for tensors, arrays, linear algebra, statistics, optimization and GPU compute."
+keywords = ["ndarray", "multidimensional-array", "linear-algebra", "matrix", "matrices", "sparse-matrix", "statistics", "numerical", "numerics", "scientific-computing", "fft", "numerical-optimization", "mathematical-optimization", "gpgpu", "gpu-computing"]
+categories = ["mathematics"]
+terms = ["tensor library", "tensor libraries", "tensor computation", "tensor operations", "tensor algebra", "n dimensional array", "n dimensional arrays", "multidimensional array", "multidimensional arrays", "linear algebra", "sparse matrix", "sparse matrices", "numerical computing", "numerical optimization", "mathematical optimization", "statistical computing", "statistical distributions", "numpy", "gpu compute", "gpu computing"]
 
 [[category]]
 id = "developer-tools"
 name = "Developer tools"
 blurb = "Tools that help people build, test and manage machine learning projects."
-keywords = ["mlops", "experiment-tracking", "model-registry", "coding-agent", "coding-assistant"]
-categories = ["development-tools"]
-terms = ["mlops", "experiment tracking", "model registry", "model management", "model monitoring", "model evaluation", "model conversion", "model converter", "hyperparameter tuning", "hyperparameter search", "hyperparameter optimization", "coding assistant", "coding assistants", "coding agent", "coding agents"]
+keywords = ["mlops", "experiment-tracking", "model-registry", "model-conversion", "model-monitoring", "hyperparameter-tuning", "hyperparameter-optimization"]
+terms = ["mlops", "experiment tracking", "model registry", "model management", "model monitoring", "model evaluation", "model conversion", "model converter", "hyperparameter tuning", "hyperparameter search", "hyperparameter optimization"]

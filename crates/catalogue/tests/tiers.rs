@@ -48,7 +48,7 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
     assert_eq!(slugs, ["alpha", "beta", "gamma"]);
 
     let alpha = block(&report, "alpha");
-    assert!(alpha.contains("\ntier: new\n"), "{alpha}");
+    assert!(alpha.contains("\ntier: listed\n"), "{alpha}");
     assert!(
         alpha.contains(
             "\n  rot: deprecated requirement `tokio 0.1 (https://example.com/tokio-deprecation)`\n"
@@ -56,7 +56,7 @@ fn offline_report_assigns_every_fixture_entry_a_tier() {
         "{alpha}"
     );
     assert!(
-        alpha.contains("\n  new: new: 0 active users < 2\n"),
+        alpha.contains("\n  featured: not featured: active_users 0 < 10 and new_adopters 0 < 5\n"),
         "{alpha}"
     );
     assert!(alpha.contains("\ndemotion_pending: -\n"), "{alpha}");

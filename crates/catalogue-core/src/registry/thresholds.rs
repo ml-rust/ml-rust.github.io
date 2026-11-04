@@ -39,8 +39,6 @@ pub struct Thresholds {
 pub struct NewThresholds {
     /// A first release fewer days ago than this is new.
     pub max_age_days: u32,
-    /// A library with fewer active users than this is new.
-    pub min_active_users: f64,
 }
 
 /// Gates for a featured library.
@@ -161,7 +159,6 @@ impl Thresholds {
     pub fn problems(&self) -> Vec<String> {
         let mut out = Vec::new();
         for (name, value) in [
-            ("new.min_active_users", self.new.min_active_users),
             (
                 "library_featured.min_active_users",
                 self.library_featured.min_active_users,
@@ -273,7 +270,7 @@ mod tests {
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 5);
+        assert_eq!(t.version, 6);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
         assert_eq!(t.movement.window_days, 30);
@@ -344,8 +341,8 @@ mod tests {
         ));
         let found = problems_with("active_users_double = 10.0", "active_users_double = nan");
         assert!(has(&found, "interval.active_users_double = NaN"));
-        let found = problems_with("min_active_users = 2.0", "min_active_users = inf");
-        assert!(has(&found, "new.min_active_users = inf"));
+        let found = problems_with("min_active_users = 10.0", "min_active_users = inf");
+        assert!(has(&found, "library_featured.min_active_users = inf"));
     }
 
     #[test]

@@ -1,42 +1,45 @@
 //! Whether a project binds native code, and whether it has Python bindings.
 //!
-//! These read each listed crate and its direct dependencies. A deeper dependency stays unseen,
-//! and so does C built with no `links` key and no `*-sys` dependency. Listing a crate on an
-//! entry is what brings its dependencies into view.
+//! The native code check walks the dependencies of each listed crate's default version. A hit is
+//! a `*-sys` crate or a crate with a `links` key. It also reads the build dependencies of the
+//! listed crates themselves, for a tool that compiles or links native code. A negative value
+//! states only that the check found nothing. It cannot see C built by a script with no `links`
+//! key, no `*-sys` crate and no such build tool, or native code kept outside crates.io.
+//!
+//! The Python check reads the normal dependencies of each listed crate for a Python binding
+//! crate. Python bindings that a project keeps outside crates.io stay unseen.
 
-use std::collections::BTreeMap;
-
-use catalogue_core::{Backends, CrateName, canonical_crate_name};
+use catalogue_core::{Backends, canonical_crate_name};
 
 use super::family::Member;
+use super::native_walk::{Found, build_tools, lists, native_hits};
 use super::reach::enabling_feature;
 use crate::dump::DumpSnapshot;
 
-/// The value of a measured project that binds nothing.
-const PURE_RUST: &str = "Pure Rust";
+/// The value of a measured project where the check finds no native code.
+const NO_NATIVE_CODE: &str = "No native code found";
 
 /// The start of the value of a project that binds something.
 const BINDS: &str = "Binds native code";
 
-/// The value of a measured project with no Python binding crate.
-const NO_PYTHON: &str = "No Python bindings";
+/// The start of the list of build tools in the value.
+const BUILDS: &str = "Build uses a native toolchain";
+
+/// The value of a measured project with no Python binding crate on crates.io.
+const NO_PYTHON_CRATE: &str = "No Python binding crate found";
 
 /// The start of the value of a project with a Python binding crate.
 const HAS_PYTHON: &str = "Has Python bindings";
 
-/// The ending of a crate name that binds a foreign library by convention.
-const SYS_SUFFIX: &str = "-sys";
-
-/// Whether `list` names `canonical`, a canonical crate name.
-fn names(list: &[CrateName], canonical: &str) -> bool {
-    list.iter().any(|name| name.normalized() == canonical)
-}
+/// Most names one list in the value names. The rest count as `and N more`.
+const MOST_NAMES: usize = 5;
 
 /// The native code value of `members`. `None` without a member.
 ///
-/// The value names each `links` key and each `*-sys` crate, listed or a direct normal dependency.
-/// `not_native` in the table lists the crates to skip. An optional dependency names the feature
-/// that enables it.
+/// The value names each `links` key and each `*-sys` crate that the listed crates reach through
+/// normal dependencies, direct ones first. `not_native` in the table lists the crates to skip. A
+/// name behind an optional dependency of a listed crate carries the feature that enables it.
+/// The build tools that `native_build` lists follow, for the listed crates only.
 pub(super) fn native_code(
     members: &[Member<'_>],
     dump: &DumpSnapshot,
@@ -45,38 +48,37 @@ pub(super) fn native_code(
     if members.is_empty() {
         return None;
     }
-    let binds = |name: &str| {
-        let canonical = canonical_crate_name(name);
-        canonical.ends_with(SYS_SUFFIX) && !names(&table.not_native, &canonical)
-    };
-    let mut found: BTreeMap<String, Option<String>> = BTreeMap::new();
-    for member in members {
-        if let Some(links) = &member.details.links {
-            found.insert(links.clone(), None);
-        }
-        if binds(member.name) {
-            found.insert(member.name.to_owned(), None);
-        }
-        for dependency in member.dependencies(dump).filter(|dep| binds(dep.name)) {
-            if !dependency.optional {
-                found.insert(dependency.name.to_owned(), None);
-            } else if !found.contains_key(dependency.name) {
-                let feature = enabling_feature(member, &dependency, &[]);
-                found.insert(dependency.name.to_owned(), Some(feature));
-            }
-        }
+    let mut parts = Vec::new();
+    let hits = native_hits(members, dump, table);
+    if !hits.is_empty() {
+        parts.push(format!("{BINDS}: {}", limited(&hits)));
     }
-    if found.is_empty() {
-        return Some(PURE_RUST.to_owned());
+    let tools = build_tools(members, dump, table);
+    if !tools.is_empty() {
+        parts.push(format!("{BUILDS}: {}", limited(&tools)));
     }
-    let list: Vec<String> = found
-        .into_iter()
-        .map(|(name, feature)| match feature {
-            Some(feature) => format!("{name} (feature {feature})"),
-            None => name,
+    Some(if parts.is_empty() {
+        NO_NATIVE_CODE.to_owned()
+    } else {
+        parts.join(". ")
+    })
+}
+
+/// The first [`MOST_NAMES`] of `found`, then `and N more`.
+fn limited(found: &[Found]) -> String {
+    let shown: Vec<String> = found
+        .iter()
+        .take(MOST_NAMES)
+        .map(|hit| match &hit.feature {
+            Some(feature) => format!("{} (feature {feature})", hit.name),
+            None => hit.name.clone(),
         })
         .collect();
-    Some(format!("{BINDS}: {}", list.join(", ")))
+    let list = shown.join(", ");
+    match found.len().saturating_sub(MOST_NAMES) {
+        0 => list,
+        more => format!("{list} and {more} more"),
+    }
 }
 
 /// The Python bindings value of `members`. `None` without a member or without a `python` list.
@@ -95,7 +97,7 @@ pub(super) fn python_bindings(
     for member in members {
         let matched: Vec<_> = member
             .dependencies(dump)
-            .filter(|dep| names(&table.python, &canonical_crate_name(dep.name)))
+            .filter(|dep| lists(&table.python, &canonical_crate_name(dep.name)))
             .collect();
         if matched.iter().any(|dependency| !dependency.optional) {
             lines.push(format!("{} needs Python", member.name));
@@ -108,7 +110,7 @@ pub(super) fn python_bindings(
         }
     }
     Some(if lines.is_empty() {
-        NO_PYTHON.to_owned()
+        NO_PYTHON_CRATE.to_owned()
     } else {
         format!("{HAS_PYTHON}: {}", lines.join(", "))
     })
@@ -122,7 +124,7 @@ mod tests {
     use crate::assemble::index::CrateIndex;
     use crate::dump::{CrateDetails, DependencyKind};
 
-    const TABLE: &str = "python = [\"pyo3\"]\nnot_native = [\"js-sys\"]\n";
+    const TABLE: &str = "python = [\"pyo3\"]\nnot_native = [\"js-sys\", \"clang-sys\"]\nnative_build = [\"cc\", \"clang-sys\"]\n";
 
     fn table() -> Backends {
         toml::from_str(TABLE).expect("table parses")
@@ -136,6 +138,8 @@ mod tests {
         dump.add_crate(11, "js-sys");
         dump.add_crate(12, "pyo3");
         dump.add_crate(13, "serde");
+        dump.add_crate(14, "cc");
+        dump.add_crate(15, "clang-sys");
         dump.set_details(1, CrateDetails::default());
         dump
     }
@@ -161,10 +165,84 @@ mod tests {
     }
 
     #[test]
-    fn no_binding_reads_as_pure_rust() {
+    fn no_binding_reads_as_none_found() {
         let mut dump = dump();
         dump.add_requirement(1, 13, "^1", DependencyKind::Normal);
-        assert_eq!(native(&dump, &["tool"]).as_deref(), Some("Pure Rust"));
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("No native code found")
+        );
+    }
+
+    #[test]
+    fn a_sys_crate_below_a_normal_dependency_binds_native_code() {
+        let mut dump = dump();
+        dump.add_requirement(1, 13, "^1", DependencyKind::Normal);
+        dump.add_requirement(13, 10, "^1", DependencyKind::Normal);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Binds native code: openssl-sys")
+        );
+    }
+
+    #[test]
+    fn a_sys_crate_behind_an_optional_listed_dependency_names_the_feature() {
+        let mut dump = dump();
+        dump.add_optional(1, 13);
+        dump.add_requirement(13, 10, "^1", DependencyKind::Normal);
+        let mut details = CrateDetails::default();
+        details
+            .features
+            .insert("tls".to_owned(), vec!["dep:serde".to_owned()]);
+        dump.set_details(1, details);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Binds native code: openssl-sys (feature tls)")
+        );
+    }
+
+    #[test]
+    fn a_value_names_at_most_five_and_counts_the_rest() {
+        let mut dump = dump();
+        for (offset, name) in ["a", "b", "c", "d", "e", "f", "g"].into_iter().enumerate() {
+            let id = 30 + u32::try_from(offset).expect("small");
+            dump.add_crate(id, &format!("{name}-sys"));
+            dump.add_requirement(1, id, "^1", DependencyKind::Normal);
+        }
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Binds native code: a-sys, b-sys, c-sys, d-sys, e-sys and 2 more")
+        );
+    }
+
+    #[test]
+    fn a_build_dependency_on_a_native_tool_shows_the_toolchain() {
+        let mut dump = dump();
+        dump.add_requirement(1, 14, "^1", DependencyKind::Build);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Build uses a native toolchain: cc")
+        );
+        dump.add_requirement(1, 10, "^1", DependencyKind::Normal);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Binds native code: openssl-sys. Build uses a native toolchain: cc")
+        );
+    }
+
+    #[test]
+    fn a_build_tool_alone_is_no_binding_as_a_normal_dependency() {
+        let mut dump = dump();
+        dump.add_requirement(1, 15, "^1", DependencyKind::Normal);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("No native code found")
+        );
+        dump.add_requirement(1, 15, "^1", DependencyKind::Build);
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("Build uses a native toolchain: clang-sys")
+        );
     }
 
     #[test]
@@ -231,11 +309,14 @@ mod tests {
     }
 
     #[test]
-    fn a_not_native_crate_and_a_dev_dependency_stay_pure_rust() {
+    fn a_not_native_crate_and_a_dev_dependency_find_nothing() {
         let mut dump = dump();
         dump.add_requirement(1, 11, "^1", DependencyKind::Normal);
         dump.add_requirement(1, 10, "^1", DependencyKind::Dev);
-        assert_eq!(native(&dump, &["tool"]).as_deref(), Some("Pure Rust"));
+        assert_eq!(
+            native(&dump, &["tool"]).as_deref(),
+            Some("No native code found")
+        );
     }
 
     #[test]
@@ -280,11 +361,11 @@ mod tests {
     }
 
     #[test]
-    fn no_python_crate_reads_no_and_an_empty_list_measures_nothing() {
+    fn no_python_crate_found_and_an_empty_list_measures_nothing() {
         let dump = dump();
         assert_eq!(
             python(&dump, &["tool"], &table()).as_deref(),
-            Some("No Python bindings")
+            Some("No Python binding crate found")
         );
         assert_eq!(python(&dump, &["tool"], &Backends::default()), None);
     }

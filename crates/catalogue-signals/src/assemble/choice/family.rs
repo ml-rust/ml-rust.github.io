@@ -8,6 +8,8 @@ use crate::dump::{CrateDetails, DependencyKind, DumpSnapshot, Requirement};
 /// One listed crate whose default version the dump holds.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct Member<'a> {
+    /// The crate id.
+    pub(super) crate_id: u32,
     /// The crate name as crates.io spells it.
     pub(super) name: &'a str,
     /// The details of the default version.
@@ -41,6 +43,7 @@ pub(super) fn members<'a>(
             let row = dump.crates.get(&id)?;
             let details = dump.details.get(&id)?;
             Some(Member {
+                crate_id: id,
                 name: &row.name,
                 details,
                 requirements: dump
@@ -61,9 +64,25 @@ impl<'a> Member<'a> {
         &self,
         dump: &'a DumpSnapshot,
     ) -> impl Iterator<Item = Dependency<'a>> {
+        self.of_kind(dump, DependencyKind::Normal)
+    }
+
+    /// The build dependencies of the default version whose crate the dump holds.
+    pub(super) fn build_dependencies(
+        &self,
+        dump: &'a DumpSnapshot,
+    ) -> impl Iterator<Item = Dependency<'a>> {
+        self.of_kind(dump, DependencyKind::Build)
+    }
+
+    fn of_kind(
+        &self,
+        dump: &'a DumpSnapshot,
+        kind: DependencyKind,
+    ) -> impl Iterator<Item = Dependency<'a>> {
         self.requirements
             .iter()
-            .filter(|requirement| requirement.kind == DependencyKind::Normal)
+            .filter(move |requirement| requirement.kind == kind)
             .filter_map(move |requirement| {
                 let row = dump.crates.get(&requirement.crate_id)?;
                 Some(Dependency {

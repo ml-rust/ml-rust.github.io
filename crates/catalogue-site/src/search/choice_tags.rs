@@ -1,7 +1,8 @@
 //! The search tags of the license and runs-on facts.
 
 use catalogue_core::{
-    Backends, CPU_ONLY, CPU_ONLY_ID, NONE_STATED, NOT_MEASURED, NOT_MEASURED_ID, RUNS_ON_SEPARATOR,
+    Backends, NO_GPU_FEATURE, NO_GPU_FEATURE_ID, NONE_STATED, NOT_MEASURED, NOT_MEASURED_ID,
+    RUNS_ON_SEPARATOR,
 };
 
 /// The tag of the license fact. Present only with a tier report.
@@ -35,8 +36,8 @@ pub(crate) fn runs_on_values<'a>(value: Option<&str>, table: &'a Backends) -> Ve
     let Some(value) = value else {
         return vec![NOT_MEASURED_ID];
     };
-    if value == CPU_ONLY {
-        return vec![CPU_ONLY_ID];
+    if value == NO_GPU_FEATURE {
+        return vec![NO_GPU_FEATURE_ID];
     }
     let ids: Vec<&'a str> = value
         .split(RUNS_ON_SEPARATOR)
@@ -100,7 +101,10 @@ mod tests {
             runs_on_values(Some("CUDA, WebGPU"), &table),
             ["cuda", "webgpu"]
         );
-        assert_eq!(runs_on_values(Some("CPU"), &table), ["cpu"]);
+        assert_eq!(
+            runs_on_values(Some("No GPU feature found"), &table),
+            ["no-gpu-feature"]
+        );
         assert_eq!(runs_on_values(None, &table), ["not-measured"]);
         assert_eq!(runs_on_values(Some("Gone"), &table), ["not-measured"]);
         assert_eq!(runs_on_values(Some("CUDA, Gone"), &table), ["cuda"]);

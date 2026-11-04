@@ -31,7 +31,9 @@ pub struct DumpSnapshot {
     /// The requirements of each crate's default version, by depender crate id.
     pub default_requirements: IdMap<Vec<Requirement>>,
     /// The details of the default version of each crate the caller named, by crate id.
-    /// Empty unless the dump was read with [`read_with_details`](super::read_with_details).
+    /// A crate the caller did not name appears only when it has a `links` key, and then only
+    /// that key is set. Empty unless the dump was read with
+    /// [`read_with_details`](super::read_with_details).
     pub details: IdMap<CrateDetails>,
     /// Owners by crate id.
     pub owners: IdMap<Vec<Owner>>,

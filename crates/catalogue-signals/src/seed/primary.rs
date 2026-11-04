@@ -45,6 +45,9 @@ const AUXILIARY_SEGMENTS: &[&str] = &[
 /// Language markers that a repository or crate name can carry at either end.
 const LANGUAGE_MARKERS: &[&str] = &["rs", "rust"];
 
+/// Words that say nothing about which project a name belongs to.
+const FILLER_WORDS: &[&str] = &["rs", "rust", "lib"];
+
 /// The lowercase words of `name`, split at every character that is not a letter or digit.
 pub(super) fn words(name: &str) -> Vec<String> {
     name.split(|c: char| !c.is_alphanumeric())
@@ -76,6 +79,8 @@ pub(super) struct RepoName {
     joined: String,
     stem: String,
     lead: Option<String>,
+    /// The words of the name without filler words. The whole words when only filler remains.
+    key_words: Vec<String>,
 }
 
 impl RepoName {
@@ -83,7 +88,16 @@ impl RepoName {
     pub(super) fn new(segment: &str) -> Self {
         let all = words(segment);
         let kept = without_markers(&all);
+        let mut key_words: Vec<String> = all
+            .iter()
+            .filter(|word| !FILLER_WORDS.contains(&word.as_str()))
+            .cloned()
+            .collect();
+        if key_words.is_empty() {
+            key_words.clone_from(&all);
+        }
         Self {
+            key_words,
             joined: all.concat(),
             stem: kept.concat(),
             lead: kept.first().cloned(),
@@ -102,6 +116,25 @@ impl RepoName {
         } else {
             0
         }
+    }
+
+    /// Whether crate `name` shares a word with the repository name.
+    ///
+    /// Filler words (`rust`, `rs`, `lib`) do not count, and `-`, `_` and `.` separate words. A
+    /// crate word matches a repository word when it starts with it, so `mistralrs` matches
+    /// `mistral.rs`. A crate word with a `lib` prefix matches after the prefix goes, so
+    /// `liboxen` matches `oxen`.
+    pub(super) fn names_repo(&self, name: &str) -> bool {
+        words(name)
+            .iter()
+            .filter(|word| !FILLER_WORDS.contains(&word.as_str()))
+            .any(|word| {
+                let bare = word.strip_prefix("lib").filter(|bare| !bare.is_empty());
+                self.key_words.iter().any(|key| {
+                    word.starts_with(key.as_str())
+                        || bare.is_some_and(|bare| bare.starts_with(key.as_str()))
+                })
+            })
     }
 
     fn shares_lead(&self, name: &str) -> bool {
@@ -548,6 +581,29 @@ mod tests {
         }
         for name in ["other", "other-engine"] {
             assert!(!repo.is_rust_named(name), "{name}");
+        }
+    }
+
+    #[test]
+    fn names_repo_compares_words_without_filler() {
+        let yes = [
+            ("oxen", "liboxen"),
+            ("foo-rs", "foo"),
+            ("mistral.rs", "mistralrs"),
+            ("mistral.rs", "mistralrs-core"),
+            ("some-engine", "other_engine"),
+            ("meilisearch", "meilisearch-sdk"),
+        ];
+        for (repo, name) in yes {
+            assert!(RepoName::new(repo).names_repo(name), "{repo} {name}");
+        }
+        let no = [
+            ("engine", "unrelated"),
+            ("meilisearch", "interprete"),
+            ("foo-rs", "rust-lib"),
+        ];
+        for (repo, name) in no {
+            assert!(!RepoName::new(repo).names_repo(name), "{repo} {name}");
         }
     }
 

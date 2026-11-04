@@ -180,22 +180,11 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
         RuleSection {
             id: "new",
             title: "New",
-            lead: &["An entry is New when any one of these holds."],
-            items: &[
-                Item {
-                    label: "",
-                    text: "Its first release is younger than the age limit.",
-                },
-                Item {
-                    label: "",
-                    text: "Every version is a prerelease or 0.0.x.",
-                },
-                Item {
-                    label: "",
-                    text: "A library has fewer active users than the user floor.",
-                },
+            lead: &["An entry is New when its first release is younger than the age limit."],
+            items: &[],
+            notes: &[
+                "Age alone decides. An old entry with few users or only prerelease versions is not New.",
             ],
-            notes: &[],
             rows: rows(new_rows),
         },
         RuleSection {
@@ -226,6 +215,10 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
                     label: "",
                     text: "Docs are present.",
                 },
+                Item {
+                    label: "",
+                    text: "At least one version is neither a prerelease nor 0.0.x.",
+                },
             ],
             notes: &["A gate that lacks its signal does not pass."],
             rows: rows(library_rows),
@@ -253,6 +246,7 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
                 },
             ],
             notes: &[
+                "An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.",
                 "Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.",
             ],
             rows: rows(app_rows),
@@ -297,19 +291,19 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
             items: &[
                 Item {
                     label: "License",
-                    text: "A library reads the license of its primary crate's default version on crates.io, as an SPDX expression. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license reads as none stated.",
+                    text: "A library reads the license of its primary crate's default version on crates.io, as an SPDX expression. A primary crate with no license column falls back to the license GitHub states. An app reads the license GitHub states. So does a library the dump lacks. A license nobody can name reads as not measured. No license in either source reads as none stated.",
                 },
                 Item {
                     label: "Runs on",
-                    text: "Each listed crate's default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. CPU means the dump holds the crates and no row matches. A backend behind a deeper dependency stays unseen.",
+                    text: "Each listed crate's default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. No GPU feature found means the dump holds the crates and no row matches. It does not prove the project runs on a CPU only. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.",
                 },
                 Item {
                     label: "Native code",
-                    text: "Pure Rust, or what the project binds: the links key of each listed crate and every listed crate or direct dependency named -sys. A deeper dependency stays unseen. So does C built with no links key.",
+                    text: "No native code found, or what the project binds. The check follows the normal dependencies of each listed crate, and theirs in turn. A hit is a crate named -sys or a crate with a links key. Crates that bind no foreign library never count. An optional dependency of a listed crate names the feature that enables it. A build dependency such as cc or cmake shows that the build uses a native toolchain. C built with no links key, no -sys crate and no such build dependency stays unseen. So does native code kept outside crates.io.",
                 },
                 Item {
                     label: "Python bindings",
-                    text: "A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it.",
+                    text: "A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it. No Python binding crate found means no such crate shows on crates.io. Bindings kept outside crates.io stay unseen.",
                 },
                 Item {
                     label: "Dependents",

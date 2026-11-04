@@ -51,12 +51,11 @@ pub(super) fn draft_family(
     if matched.is_empty() {
         return Err("no topic matches".to_owned());
     }
-    let category = member_category(snapshot, &members, mappings.categories).or_else(|| {
-        category_by_terms(
-            mappings.categories,
-            &[crate_name, row.description.as_deref().unwrap_or_default()],
-        )
-    });
+    let category = category_by_terms(
+        mappings.categories,
+        &[crate_name, row.description.as_deref().unwrap_or_default()],
+    )
+    .or_else(|| member_category(snapshot, &members, mappings.categories));
     let (name, slug) = entry_name(crate_name, &repo)?;
     let crates = crate_names(crate_name, &members)?;
     let source_url = crate_page(described_by)
@@ -106,6 +105,8 @@ pub(super) fn member_topics(
 }
 
 /// The first category, in file order, whose keywords or slugs match any of `members`.
+///
+/// The draft reads this only when no category term matches.
 pub(super) fn member_category(
     snapshot: &DumpSnapshot,
     members: &[(u32, &str)],

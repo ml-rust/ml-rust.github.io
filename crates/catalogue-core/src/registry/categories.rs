@@ -28,7 +28,7 @@ pub struct Category {
     /// crates.io category slugs that map a crate to this category. A slug also matches its sub-categories.
     #[serde(default)]
     pub categories: Vec<String>,
-    /// Whole words or phrases that map a crate to this category when no keyword or slug does.
+    /// Whole words or phrases that map a crate to this category. A term match wins over a keyword or slug match.
     ///
     /// They read the same texts as the terms of a topic. Lowercase words of `[a-z0-9]`, separated by one space.
     #[serde(default)]

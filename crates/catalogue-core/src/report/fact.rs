@@ -15,7 +15,7 @@ pub const ACTIVE_USERS_SIGNAL: &str = "active_users";
 /// The id of the license fact: an SPDX expression or [`NONE_STATED`].
 pub const LICENSE_SIGNAL: &str = "license";
 
-/// The id of the backends fact: names joined with [`RUNS_ON_SEPARATOR`], or [`CPU_ONLY`].
+/// The id of the backends fact: names joined with [`RUNS_ON_SEPARATOR`], or [`NO_GPU_FEATURE`].
 pub const RUNS_ON_SIGNAL: &str = "runs_on";
 
 /// The id of the fact that names the crate and the feature or dependency behind each backend.
@@ -37,7 +37,10 @@ pub const CONTRIBUTORS_SIGNAL: &str = "contributors";
 pub const RUNS_ON_SEPARATOR: &str = ", ";
 
 /// The [`RUNS_ON_SIGNAL`] value of a measured project with no backend row.
-pub const CPU_ONLY: &str = "CPU";
+///
+/// The check finds no feature or dependency that names a GPU backend. It does not prove the
+/// project runs on a CPU only.
+pub const NO_GPU_FEATURE: &str = "No GPU feature found";
 
 /// The [`LICENSE_SIGNAL`] value of a project that states no license.
 pub const NONE_STATED: &str = "None stated";

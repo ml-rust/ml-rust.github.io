@@ -44,6 +44,23 @@ pub(super) fn from_dump(column: Option<&str>) -> Option<Licensed> {
     })
 }
 
+/// The license value of a library's primary crate, with GitHub as the fallback.
+///
+/// A crate that names a license file and no `license` leaves the column NULL or `non-standard`,
+/// though GitHub reads the file. A blank or unreadable column takes the repo license when GitHub
+/// states one. With a blank column and none from GitHub, the value is the plain statement that
+/// there is none.
+pub(super) fn from_primary(column: Option<&str>, repo: Option<&RepoLicense>) -> Option<Licensed> {
+    let replaceable = column
+        .map(str::trim)
+        .is_none_or(|text| text.is_empty() || is_unreadable(text));
+    let stated = repo.filter(|license| matches!(license, RepoLicense::Stated(_)));
+    if replaceable && let Some(found) = stated.and_then(from_repo) {
+        return Some(found);
+    }
+    from_dump(column)
+}
+
 /// The license value GitHub states. `None` when the repo has no readable one.
 pub(super) fn from_repo(license: &RepoLicense) -> Option<Licensed> {
     let text = match license {
@@ -124,6 +141,59 @@ mod tests {
         for column in ["non-standard", "NOASSERTION", "noassertion", "other"] {
             assert_eq!(dump_text(Some(column)), None, "{column}");
         }
+    }
+
+    #[test]
+    fn a_blank_column_falls_back_to_the_repo_license() {
+        let repo = RepoLicense::Stated("MIT".to_owned());
+        for column in [None, Some(""), Some("  ")] {
+            let found = from_primary(column, Some(&repo)).expect("license");
+            assert_eq!(
+                (found.text.as_str(), found.origin),
+                ("MIT", LicenseOrigin::Repo)
+            );
+        }
+    }
+
+    #[test]
+    fn a_stated_column_beats_the_repo_license() {
+        let repo = RepoLicense::Stated("GPL-3.0".to_owned());
+        let found = from_primary(Some("MIT"), Some(&repo)).expect("license");
+        assert_eq!(
+            (found.text.as_str(), found.origin),
+            ("MIT", LicenseOrigin::Dump)
+        );
+    }
+
+    #[test]
+    fn a_blank_column_and_no_repo_license_read_none_stated() {
+        for repo in [
+            None,
+            Some(RepoLicense::NoneStated),
+            Some(RepoLicense::NotMeasured),
+            Some(RepoLicense::Stated("NOASSERTION".to_owned())),
+        ] {
+            let found = from_primary(None, repo.as_ref()).expect("license");
+            assert_eq!(
+                (found.text.as_str(), found.origin),
+                ("None stated", LicenseOrigin::Dump)
+            );
+        }
+    }
+
+    #[test]
+    fn an_unreadable_column_takes_the_repo_license() {
+        let repo = RepoLicense::Stated("MIT".to_owned());
+        let found = from_primary(Some("non-standard"), Some(&repo)).expect("stated");
+        assert_eq!(found.text, "MIT");
+        assert_eq!(found.origin, LicenseOrigin::Repo);
+    }
+
+    #[test]
+    fn an_unreadable_column_without_a_repo_license_stays_not_measured() {
+        assert_eq!(from_primary(Some("non-standard"), None), None);
+        let none = RepoLicense::NoneStated;
+        assert_eq!(from_primary(Some("non-standard"), Some(&none)), None);
     }
 
     #[test]

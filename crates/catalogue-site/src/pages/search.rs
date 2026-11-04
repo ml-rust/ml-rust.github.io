@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 
 use askama::Template;
 use catalogue_core::{
-    CPU_ONLY, CPU_ONLY_ID, Catalogue, EntryKind, LICENSE_SIGNAL, NONE_STATED, NOT_MEASURED,
-    NOT_MEASURED_ID, Tier, TierReport,
+    Catalogue, EntryKind, LICENSE_SIGNAL, NO_GPU_FEATURE, NO_GPU_FEATURE_ID, NONE_STATED,
+    NOT_MEASURED, NOT_MEASURED_ID, Tier, TierReport,
 };
 
 use super::layout::Layout;
@@ -130,14 +130,17 @@ fn license_options(report: &TierReport) -> Vec<(String, String)> {
         .collect()
 }
 
-/// Every backend of the table in file order, then CPU and not measured.
+/// Every backend of the table in file order, then no GPU feature found and not measured.
 fn runs_on_options(catalogue: &Catalogue) -> Vec<(&str, &str)> {
     catalogue
         .backends()
         .backend
         .iter()
         .map(|row| (row.id.as_str(), row.name.as_str()))
-        .chain([(CPU_ONLY_ID, CPU_ONLY), (NOT_MEASURED_ID, NOT_MEASURED)])
+        .chain([
+            (NO_GPU_FEATURE_ID, NO_GPU_FEATURE),
+            (NOT_MEASURED_ID, NOT_MEASURED),
+        ])
         .collect()
 }
 

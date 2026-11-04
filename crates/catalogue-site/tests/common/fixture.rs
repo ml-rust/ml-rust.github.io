@@ -452,7 +452,12 @@ fn report() -> TierReport {
         vec![
             signal("first_release", "First release", Some("2026-10-05"), DUMP),
             signal(LICENSE_SIGNAL, "License", Some("MIT"), DUMP),
-            signal(RUNS_ON_SIGNAL, "Runs on", Some("CPU"), DUMP),
+            signal(
+                RUNS_ON_SIGNAL,
+                "Runs on",
+                Some("No GPU feature found"),
+                DUMP,
+            ),
         ],
     );
     let entries = [

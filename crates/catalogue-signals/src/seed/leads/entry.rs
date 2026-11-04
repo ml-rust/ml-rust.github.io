@@ -44,8 +44,8 @@ pub(super) fn build_entry(
     if matched.is_empty() {
         return Err("no topic matches".to_owned());
     }
-    let category = member_category(snapshot, &members, mappings.categories)
-        .or_else(|| category_by_terms(mappings.categories, &texts));
+    let category = category_by_terms(mappings.categories, &texts)
+        .or_else(|| member_category(snapshot, &members, mappings.categories));
     let (name, slug) = match primary {
         Some(row) => entry_name(&row.name, &repo)?,
         None if is_generic_repo_name(&canonical.name) => repo_entry_name(&repo)?,

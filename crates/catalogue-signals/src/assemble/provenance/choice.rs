@@ -79,7 +79,7 @@ pub fn choice_signal_facts(facts: &ChoiceFacts, sources: &FactSources) -> Vec<Si
         ),
         row(
             NATIVE_CODE_SIGNAL,
-            "Native code, from listed crates and their direct dependencies",
+            "Native code, from listed crates and their dependencies",
             facts.native_code.clone(),
             dump.clone(),
         ),
@@ -134,9 +134,9 @@ mod tests {
                 text: "MIT".to_owned(),
                 origin,
             }),
-            runs_on: Some(RunsOn::CpuOnly),
-            native_code: Some("Pure Rust".to_owned()),
-            python: Some("No Python bindings".to_owned()),
+            runs_on: Some(RunsOn::NoGpuFeature),
+            native_code: Some("No native code found".to_owned()),
+            python: Some("No Python binding crate found".to_owned()),
             dependents: Some(4),
             contributors: Some(38),
         }

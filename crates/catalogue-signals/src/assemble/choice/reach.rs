@@ -72,6 +72,7 @@ mod tests {
 
     fn reach(found: &CrateDetails, preferred: &[&str]) -> String {
         let member = Member {
+            crate_id: 1,
             name: "tool",
             details: found,
             requirements: &[],

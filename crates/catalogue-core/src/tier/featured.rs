@@ -67,7 +67,24 @@ fn library_gates(signals: &Signals, t: &LibraryFeaturedThresholds) -> Vec<Gate> 
     ]
 }
 
-/// Rule 8: the Featured gates for the entry's kind, plus activity: not dormant, or stable.
+/// The release gate: the entry has a stable release, so not every version is a prerelease or
+/// `0.0.x`.
+///
+/// A library with an unknown value fails the gate as unknown. An app has a crate only
+/// when it ships one, so an app with an unknown value passes.
+fn release_gate(signals: &Signals) -> Gate {
+    let fact = match signals.all_prerelease {
+        None if !signals.is_library() => Fact::known(true),
+        known => Fact::of("all_prerelease", known, |all| !all),
+    };
+    Gate {
+        fact,
+        failure: "every version is a prerelease or 0.0.x".to_owned(),
+    }
+}
+
+/// Rule 8: the Featured gates for the entry's kind, plus the release gate and activity: not
+/// dormant, or stable.
 ///
 /// `active` is that activity condition. Unknown gates leave the rule unknown, so the
 /// entry is not featured.
@@ -77,6 +94,7 @@ pub(super) fn featured(signals: &Signals, active: Fact, thresholds: &Thresholds)
     } else {
         vec![app_gate(signals, &thresholds.app_featured)]
     };
+    gates.push(release_gate(signals));
     gates.push(Gate {
         fact: active,
         failure: "dormant and not stable".to_owned(),
@@ -277,6 +295,40 @@ mod tests {
         let found = check(&signals);
         assert!(found.fact.is_false());
         assert!(found.fact.needs.is_empty());
+    }
+
+    #[test]
+    fn all_prerelease_library_is_not_featured() {
+        let signals = Signals {
+            all_prerelease: Some(true),
+            ..featured_library()
+        };
+        fails(&signals, "every version is a prerelease or 0.0.x");
+    }
+
+    #[test]
+    fn unknown_all_prerelease_keeps_a_library_out_of_featured() {
+        let signals = Signals {
+            all_prerelease: None,
+            ..featured_library()
+        };
+        let found = check(&signals);
+        assert_eq!(found.fact.value, None);
+        assert_eq!(found.fact.needs, ["all_prerelease"]);
+    }
+
+    #[test]
+    fn app_gate_applies_only_when_all_prerelease_is_known() {
+        let prerelease = Signals {
+            all_prerelease: Some(true),
+            ..featured_app()
+        };
+        fails(&prerelease, "every version is a prerelease or 0.0.x");
+        let no_crate = Signals {
+            all_prerelease: None,
+            ..featured_app()
+        };
+        assert!(check(&no_crate).fact.is_true());
     }
 
     #[test]

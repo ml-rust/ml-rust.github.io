@@ -11,10 +11,7 @@ pub(super) fn thresholds(calibrated: Option<Date>) -> Thresholds {
     Thresholds {
         version: 3,
         calibrated,
-        new: NewThresholds {
-            max_age_days: 180,
-            min_active_users: 2.0,
-        },
+        new: NewThresholds { max_age_days: 180 },
         library_featured: LibraryFeaturedThresholds {
             min_active_users: 11.0,
             min_new_adopters: 9.0,

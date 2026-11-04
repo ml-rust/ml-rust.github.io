@@ -50,6 +50,7 @@ pub(crate) fn check_backends(file: &Parsed<Backends>, diags: &mut Diagnostics) {
     }
     check_list("python", &table.python, file, diags);
     check_list("not_native", &table.not_native, file, diags);
+    check_list("native_build", &table.native_build, file, diags);
 }
 
 /// Reports a crate that `list` names twice.
@@ -146,11 +147,13 @@ mod tests {
 
     #[test]
     fn a_repeat_in_a_list_is_reported() {
-        let found =
-            with_table("python = [\"pyo3\", \"pyo3\"]\nnot_native = [\"a-sys\", \"A_sys\"]\n");
+        let found = with_table(
+            "python = [\"pyo3\", \"pyo3\"]\nnot_native = [\"a-sys\", \"A_sys\"]\nnative_build = [\"cc\", \"cc\"]\n",
+        );
         for needle in [
             "`python` lists crate `pyo3` twice",
             "`not_native` lists crate `A_sys` twice",
+            "`native_build` lists crate `cc` twice",
         ] {
             assert!(
                 found.iter().any(|message| message.contains(needle)),

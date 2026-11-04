@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::ids::{CrateName, Slug};
-use crate::report::{CPU_ONLY, NOT_MEASURED, RUNS_ON_SEPARATOR};
+use crate::report::{NO_GPU_FEATURE, NOT_MEASURED, RUNS_ON_SEPARATOR};
 
-/// The tag id of the value [`CPU_ONLY`]. A table row cannot use it.
-pub const CPU_ONLY_ID: &str = "cpu";
+/// The tag id of the value [`NO_GPU_FEATURE`]. A table row cannot use it.
+pub const NO_GPU_FEATURE_ID: &str = "no-gpu-feature";
 
 /// The tag id of the value [`NOT_MEASURED`]. A table row cannot use it.
 pub const NOT_MEASURED_ID: &str = "not-measured";
@@ -21,6 +21,10 @@ pub struct Backends {
     /// Crates named `*-sys` that bind no foreign library. The native code fact skips them.
     #[serde(default)]
     pub not_native: Vec<CrateName>,
+    /// Crates whose presence as a build dependency of a listed crate shows that its build
+    /// compiles or links native code.
+    #[serde(default)]
+    pub native_build: Vec<CrateName>,
     /// The `[[backend]]` tables. The order sets the order of the `runs_on` fact.
     #[serde(default)]
     pub backend: Vec<Backend>,
@@ -55,13 +59,13 @@ impl Backend {
                 self.name
             ));
         }
-        if self.name == CPU_ONLY || self.name == NOT_MEASURED {
+        if self.name == NO_GPU_FEATURE || self.name == NOT_MEASURED {
             out.push(format!(
                 "name `{}` is reserved: the `runs_on` fact uses it for a project with no backend row",
                 self.name
             ));
         }
-        if self.id.as_str() == CPU_ONLY_ID || self.id.as_str() == NOT_MEASURED_ID {
+        if self.id.as_str() == NO_GPU_FEATURE_ID || self.id.as_str() == NOT_MEASURED_ID {
             out.push(format!(
                 "id `{}` is reserved: the search filter uses it for a project with no backend row",
                 self.id
@@ -121,7 +125,7 @@ mod tests {
         for (name, needle) in [
             ("Vulkan, Metal", "must not hold a comma"),
             (" ", "must not be empty"),
-            ("CPU", "is reserved"),
+            ("No GPU feature found", "is reserved"),
             ("Not measured", "is reserved"),
         ] {
             let row = backend(&format!(
@@ -137,7 +141,7 @@ mod tests {
 
     #[test]
     fn a_reserved_id_is_reported() {
-        for id in [CPU_ONLY_ID, NOT_MEASURED_ID] {
+        for id in [NO_GPU_FEATURE_ID, NOT_MEASURED_ID] {
             let row = backend(&format!(
                 "id = \"{id}\"\nname = \"X\"\nfeatures = [\"x\"]\n"
             ));
@@ -164,5 +168,6 @@ mod tests {
     fn an_empty_file_is_an_empty_table() {
         let table: Backends = toml::from_str("").expect("parses");
         assert!(table.backend.is_empty() && table.python.is_empty() && table.not_native.is_empty());
+        assert!(table.native_build.is_empty());
     }
 }

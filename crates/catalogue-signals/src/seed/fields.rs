@@ -470,11 +470,20 @@ terms = ["other term"]
         assert_eq!(
             names,
             [
+                "Speech and audio",
+                "Computer vision",
                 "Inference runtimes",
-                "ML frameworks",
+                "LLM clients",
+                "Agents and LLM apps",
                 "Vector databases",
-                "Tensor libraries",
+                "Embeddings",
+                "Search engines",
+                "Text and tokenizers",
                 "Model formats",
+                "Data formats and dataframes",
+                "Classical ML",
+                "ML frameworks",
+                "Tensors and math",
                 "Developer tools",
             ]
         );
@@ -497,7 +506,7 @@ terms = ["other term"]
                 "Read and write SafeTensors with tensors inside.",
                 "model-formats",
             ),
-            ("An N-dimensional array crate.", "tensor-libraries"),
+            ("An N-dimensional array crate.", "math-libraries"),
             ("A deep learning framework.", "ml-frameworks"),
             ("Experiment tracking for runs.", "developer-tools"),
         ] {

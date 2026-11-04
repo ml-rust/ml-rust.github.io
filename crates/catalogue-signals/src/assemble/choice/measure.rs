@@ -4,7 +4,7 @@ use catalogue_core::{Backends, Entry, EntryKind};
 
 use super::dependents::DependentIndex;
 use super::family::members;
-use super::license::{Licensed, from_dump, from_repo};
+use super::license::{Licensed, from_primary, from_repo};
 use super::native::{native_code, python_bindings};
 use super::runs_on::{RunsOn, runs_on};
 use crate::assemble::index::CrateIndex;
@@ -45,8 +45,9 @@ pub struct ChoiceFacts {
 /// The choice facts of `entry`.
 ///
 /// `facts` and `contributors` come from the network, and `None` leaves them not measured.
-/// A library reads its license from its primary crate. An app, or a library whose primary crate
-/// the dump does not hold, reads it from GitHub. Every other fact reads every listed crate.
+/// A library reads its license from its primary crate, and falls back to GitHub when the crate
+/// states none. An app, or a library whose primary crate the dump does not hold, reads it from
+/// GitHub. Every other fact reads every listed crate.
 pub fn measure(
     entry: &Entry,
     inputs: &ChoiceInputs<'_>,
@@ -71,9 +72,10 @@ pub fn measure(
         .and_then(|name| index.id(name.as_str()))
         .and_then(|id| dump.details.get(&id))
         .filter(|_| entry.kind == EntryKind::Library);
+    let repo_license = facts.and_then(RepoValues::license);
     let license = match primary {
-        Some(details) => from_dump(details.license.as_deref()),
-        None => facts.and_then(RepoValues::license).and_then(from_repo),
+        Some(details) => from_primary(details.license.as_deref(), repo_license),
+        None => repo_license.and_then(from_repo),
     };
     ChoiceFacts {
         license,
@@ -156,14 +158,37 @@ mod tests {
             "the primary crate answers"
         );
         assert_eq!(found.runs_on.expect("runs on").value(), "CUDA");
-        assert_eq!(found.native_code.as_deref(), Some("Pure Rust"));
-        assert_eq!(found.python.as_deref(), Some("No Python bindings"));
+        assert_eq!(found.native_code.as_deref(), Some("No native code found"));
+        assert_eq!(
+            found.python.as_deref(),
+            Some("No Python binding crate found")
+        );
         assert_eq!(
             found.dependents,
             Some(1),
             "user depends on the second crate"
         );
         assert_eq!(found.contributors, None);
+    }
+
+    #[test]
+    fn a_library_with_no_crate_license_falls_back_to_the_repo() {
+        let mut dump = dump();
+        dump.set_details(1, CrateDetails::default());
+        let facts = repo_facts();
+        let entry = library(&["tool"]);
+        let license = run(&dump, &entry, Some(&facts), None)
+            .license
+            .expect("license");
+        assert_eq!(
+            (license.text.as_str(), license.origin),
+            ("MIT", LicenseOrigin::Repo)
+        );
+        let none = run(&dump, &entry, None, None).license.expect("license");
+        assert_eq!(
+            (none.text.as_str(), none.origin),
+            ("None stated", LicenseOrigin::Dump)
+        );
     }
 
     #[test]

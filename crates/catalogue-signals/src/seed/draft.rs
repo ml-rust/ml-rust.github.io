@@ -40,8 +40,9 @@ use crate::usage::Usage;
 /// 300 characters. Its topics are the union of the topics whose keywords or
 /// categories match any member. When that union is empty, they are the topics
 /// with a term in the primary's name or description. Its category comes from
-/// the same two steps, and the first match in file order wins. No match leaves
-/// the category unset and keeps the draft.
+/// the first category in file order with a term in that text. When none has one,
+/// it comes from the first category whose keywords or slugs match any member.
+/// No match leaves the category unset and keeps the draft.
 ///
 /// Any https host is accepted. GitHub-only signals stay unknown for other
 /// hosts, so such entries can be Listed but not Featured. A family whose
@@ -287,10 +288,10 @@ mod tests {
     }
 
     #[test]
-    fn metadata_beats_a_term_of_an_earlier_category() {
+    fn a_term_beats_the_metadata_of_an_earlier_category() {
         let mut spec = Spec::new(1, "tool");
         spec.description = Some("A sparse matrix tool.".to_owned());
-        assert_eq!(category_of(spec).as_deref(), Some("alpha-tools"));
+        assert_eq!(category_of(spec).as_deref(), Some("zeta-tools"));
     }
 
     #[test]

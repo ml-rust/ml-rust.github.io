@@ -355,7 +355,7 @@ fn an_install_channel_never_gives_a_category_and_no_match_keeps_the_draft() {
 }
 
 #[test]
-fn a_library_lead_takes_its_category_from_any_family_crate() {
+fn a_library_lead_takes_its_category_from_a_term_before_family_keywords() {
     let script = Script::default().repo("acme/tool", 200, &rust_repo("acme/tool"));
     let specs = [library(1, "tool", "https://github.com/acme/tool")];
     let seed = run("acme/tool\n", &script, &specs);
@@ -363,7 +363,7 @@ fn a_library_lead_takes_its_category_from_any_family_crate() {
     assert_eq!(entry.kind, EntryKind::Library);
     assert_eq!(
         entry.category.as_ref().map(ToString::to_string).as_deref(),
-        Some("tensor-libraries")
+        Some("ml-frameworks")
     );
 }
 

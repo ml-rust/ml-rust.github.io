@@ -92,7 +92,7 @@ fn the_choice_facts_read_the_dump_and_an_absent_crate_reads_as_not_measured() {
         .expect("alpha");
     assert_eq!(alpha.value_of("license"), Some("Apache-2.0 OR MIT"));
     assert_eq!(alpha.value_of("runs_on"), Some("CUDA"));
-    assert_eq!(alpha.value_of("native_code"), Some("Pure Rust"));
+    assert_eq!(alpha.value_of("native_code"), Some("No native code found"));
     assert_eq!(alpha.value_of("dependents"), Some("0"));
     assert_eq!(alpha.value_of("contributors"), None, "an offline run");
     let beta = run

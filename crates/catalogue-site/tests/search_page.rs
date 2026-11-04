@@ -143,7 +143,7 @@ fn the_license_and_runs_on_filters_come_from_the_report_and_the_table() {
         checkbox("license", "not-measured"),
         checkbox("runs_on", "cuda"),
         checkbox("runs_on", "metal"),
-        checkbox("runs_on", "cpu"),
+        checkbox("runs_on", "no-gpu-feature"),
         checkbox("runs_on", "not-measured"),
     ] {
         assert!(page.contains(found.as_str()), "no {found} in:\n{page}");

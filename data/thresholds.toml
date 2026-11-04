@@ -6,12 +6,11 @@
 # recalibration. Any change to the file raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 5
+version = 6
 calibrated = 2026-11-03
 
 [new]
 max_age_days = 180
-min_active_users = 2.0
 
 [library_featured]
 # Calibrated: p90 over discovery candidates with at least 1 active user.

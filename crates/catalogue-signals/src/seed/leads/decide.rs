@@ -93,14 +93,16 @@ pub(super) fn decide(ctx: &Context<'_>, lead: &RepoRef, profile: &RepoProfile) -
         .into_iter()
         .map(|candidate| (candidate, users_of(ctx, candidate)))
         .collect();
+    let (members, unnamed) = split_unnamed(&canonical, members);
     let claimed = !members.is_empty();
     let found = family(inputs.snapshot, &keys[0], members, 0.0);
     if !is_rust(profile) && !has_rust_named_crate(found.as_ref(), &canonical) {
         return Decision::alone(Outcome::Skip(language_reason(profile)));
     }
-    let left_out = found
+    let mut left_out = found
         .as_ref()
         .map_or_else(Vec::new, |family| family.left_out.clone());
+    left_out.extend(unnamed);
     let outcome = match &found {
         None if claimed => Outcome::Skip(
             "every crate that claims the repository is deprecated, yanked or has no default version"
@@ -109,6 +111,37 @@ pub(super) fn decide(ctx: &Context<'_>, lead: &RepoRef, profile: &RepoProfile) -
         found => draft(ctx, canonical, keys, profile, found.as_ref()),
     };
     Decision { outcome, left_out }
+}
+
+/// Splits the crates that claim a repository into the ones to keep and the ones to leave out.
+///
+/// A repository link alone does not make a crate part of a project. When no claiming crate
+/// shares a word with the repository name (see [`RepoName::names_repo`]), every claimant is left
+/// out with the reason, and the lead drafts as an app with no crates.
+fn split_unnamed<'a>(
+    canonical: &RepoRef,
+    members: Vec<Member<'a>>,
+) -> (Vec<Member<'a>>, Vec<(String, String)>) {
+    let repo = RepoName::new(&canonical.name);
+    if members
+        .iter()
+        .any(|(candidate, _)| repo.names_repo(&candidate.name))
+    {
+        return (members, Vec::new());
+    }
+    let left_out = members
+        .iter()
+        .map(|(candidate, _)| {
+            (
+                candidate.name.clone(),
+                format!(
+                    "name shares no word with repository `{}`, so no crate joins the draft",
+                    canonical.name
+                ),
+            )
+        })
+        .collect();
+    (Vec::new(), left_out)
 }
 
 fn draft(
@@ -229,8 +262,23 @@ mod tests {
     }
 
     fn run(specs: Vec<Spec>, existing: &ExistingIndex, found: &RepoProfile) -> Decision {
+        decide_lead("o/proj", specs, existing, found)
+    }
+
+    fn run_for(lead: &str, specs: Vec<Spec>, found: &RepoProfile) -> Decision {
+        let mut found = found.clone();
+        found.name_with_owner = lead.to_owned();
+        decide_lead(lead, specs, &ExistingIndex::default(), &found)
+    }
+
+    fn decide_lead(
+        lead: &str,
+        specs: Vec<Spec>,
+        existing: &ExistingIndex,
+        found: &RepoProfile,
+    ) -> Decision {
         let world = World::new(specs);
-        let keys = HashSet::from(["github.com/o/proj".to_owned()]);
+        let keys = HashSet::from([format!("github.com/{}", lead.to_lowercase())]);
         let claims = Claims::of(&world.snapshot, &keys);
         let topics = topics();
         let categories = categories();
@@ -249,7 +297,7 @@ mod tests {
             usage: &world.usage,
             added: Date::new(2026, 11, 3).expect("date"),
         };
-        decide(&ctx, &RepoRef::parse("o/proj").expect("lead"), found)
+        decide(&ctx, &RepoRef::parse(lead).expect("lead"), found)
     }
 
     fn claim(id: u32, name: &'static str) -> Spec {
@@ -356,6 +404,43 @@ mod tests {
         );
         assert_eq!(drafted(&decision).entry.crates.len(), 1);
         assert_eq!(decision.left_out.len(), 1);
+    }
+
+    #[test]
+    fn a_lead_whose_only_claimant_shares_no_name_word_drafts_as_an_app_with_no_crates() {
+        let world_claim = |name: &'static str| {
+            let mut spec = Spec::new(1, name);
+            spec.repository = Some("https://github.com/search/engine".to_owned());
+            spec.users = 0.0;
+            spec
+        };
+        let decision = run_for(
+            "search/engine",
+            vec![world_claim("unrelated")],
+            &profile(Some("Rust")),
+        );
+        let found = drafted(&decision);
+        assert_eq!(found.entry.kind, EntryKind::App);
+        assert!(found.entry.crates.is_empty());
+        assert!(found.notes.contains(&"basis:no-crate".to_owned()));
+        let [(name, reason)] = decision.left_out.as_slice() else {
+            panic!("one crate left out");
+        };
+        assert_eq!(name, "unrelated");
+        assert!(reason.contains("shares no word"), "{reason}");
+    }
+
+    #[test]
+    fn a_marker_or_lib_prefix_in_a_crate_name_keeps_a_library() {
+        for (repo, name) in [("foo-rs", "foo"), ("oxen", "liboxen")] {
+            let mut spec = Spec::new(1, name);
+            spec.repository = Some(format!("https://github.com/o/{repo}"));
+            spec.users = 0.0;
+            let decision = run_for(&format!("o/{repo}"), vec![spec], &profile(Some("Rust")));
+            let found = drafted(&decision);
+            assert_eq!(found.entry.kind, EntryKind::Library, "{repo} {name}");
+            assert_eq!(found.entry.crates.len(), 1, "{repo} {name}");
+        }
     }
 
     #[test]

@@ -81,7 +81,6 @@ pub(crate) const THRESHOLDS: &str = r#"version = 1
 
 [new]
 max_age_days = 180
-min_active_users = 2.0
 
 [library_featured]
 min_active_users = 10.0

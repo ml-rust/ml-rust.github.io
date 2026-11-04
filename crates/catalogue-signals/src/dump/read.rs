@@ -38,9 +38,10 @@ pub fn read(reader: impl Read, window_days: u16) -> Result<DumpSnapshot, DumpErr
 
 /// [`read`], and the [`CrateDetails`] of the default version of each crate in `names`.
 ///
-/// Names match the way crates.io compares them. A row of any other crate allocates nothing
-/// beyond what [`read`] allocates, because these columns are large and the dump holds millions
-/// of rows. The `crates` table must come before `versions`, as it does in a crates.io dump.
+/// Names match the way crates.io compares them. Any other crate with a `links` key keeps details
+/// that hold only that key. A row of any other crate allocates nothing beyond what [`read`]
+/// allocates, because these columns are large and the dump holds millions of rows. The `crates`
+/// table must come before `versions`, as it does in a crates.io dump.
 ///
 /// # Errors
 ///
@@ -270,18 +271,19 @@ impl State {
         found
     }
 
-    /// The details of each kept crate's default version, by crate id.
+    /// The details of each default version the reader kept, by crate id.
+    ///
+    /// A listed crate holds every detail. Any other crate holds only its `links` key.
     fn default_details(&mut self) -> IdMap<CrateDetails> {
         let mut out = IdMap::default();
-        for &crate_id in &self.detail_crates {
-            let details = self
-                .default_version
-                .get(&crate_id)
-                .and_then(|version| self.version_details.remove(version));
-            if let Some(mut details) = details {
+        for (&crate_id, version) in &self.default_version {
+            let Some(mut details) = self.version_details.remove(version) else {
+                continue;
+            };
+            if self.detail_crates.contains(&crate_id) {
                 details.renames = self.renames.remove(&crate_id).unwrap_or_default();
-                out.insert(crate_id, details);
             }
+            out.insert(crate_id, details);
         }
         out
     }

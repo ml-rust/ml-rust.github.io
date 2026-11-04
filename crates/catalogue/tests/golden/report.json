@@ -5,7 +5,7 @@
   "calibrated": null,
   "entries": {
     "alpha": {
-      "tier": "new",
+      "tier": "listed",
       "stable": false,
       "dormant": false,
       "demotion_pending": null,
@@ -23,8 +23,12 @@
           "detail": "deprecated requirement `tokio 0.1 (https://example.com/tokio-deprecation)`"
         },
         {
-          "rule": "new",
-          "detail": "new: 0 active users < 2"
+          "rule": "featured",
+          "detail": "not featured: active_users 0 < 10 and new_adopters 0 < 5"
+        },
+        {
+          "rule": "listed",
+          "detail": "listed: no archive, new or featured rule applies"
         }
       ],
       "unknown": [],
@@ -380,8 +384,8 @@
         },
         {
           "name": "native_code",
-          "label": "Native code, from listed crates and their direct dependencies",
-          "value": "Pure Rust",
+          "label": "Native code, from listed crates and their dependencies",
+          "value": "No native code found",
           "source": {
             "label": "crates.io database dump",
             "url": "https://crates.io/data-access"
@@ -392,7 +396,7 @@
         {
           "name": "python_bindings",
           "label": "Python bindings, from direct dependencies of listed crates",
-          "value": "No Python bindings",
+          "value": "No Python binding crate found",
           "source": {
             "label": "crates.io database dump",
             "url": "https://crates.io/data-access"
@@ -437,7 +441,7 @@
         },
         {
           "rule": "featured",
-          "detail": "not featured: unknown active_users, new_adopters, repo_link_verified, former_glory, docs_present, last_release, last_human_commit"
+          "detail": "not featured: unknown active_users, new_adopters, repo_link_verified, former_glory, docs_present, all_prerelease, last_release, last_human_commit"
         },
         {
           "rule": "listed",
@@ -455,10 +459,10 @@
         "build_fails",
         "new_adopters",
         "first_release",
-        "all_prerelease",
         "active_users",
         "repo_link_verified",
-        "docs_present"
+        "docs_present",
+        "all_prerelease"
       ],
       "notes": [
         "crate beta-crate is not in the dump"
@@ -760,7 +764,7 @@
         },
         {
           "name": "native_code",
-          "label": "Native code, from listed crates and their direct dependencies",
+          "label": "Native code, from listed crates and their dependencies",
           "value": null,
           "source": null,
           "fetched": null,
@@ -824,7 +828,6 @@
         "repo_gone",
         "binary_downloads_per_release",
         "first_release",
-        "all_prerelease",
         "binary_downloads_last3",
         "homebrew_on_request_365d",
         "repology_families",
@@ -1122,7 +1125,7 @@
         },
         {
           "name": "native_code",
-          "label": "Native code, from listed crates and their direct dependencies",
+          "label": "Native code, from listed crates and their dependencies",
           "value": null,
           "source": null,
           "fetched": null,

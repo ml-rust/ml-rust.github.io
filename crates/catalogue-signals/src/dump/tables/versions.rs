@@ -60,7 +60,8 @@ pub(crate) fn read_versions(input: impl Read) -> Result<IdMap<VersionRow>, DumpE
 
 /// The rows of `versions`, and the [`CrateDetails`] by version id of each version of `kept`.
 ///
-/// A row of any other crate allocates nothing beyond what [`read_versions`] allocates.
+/// A version of any other crate with a `links` key gets details that hold only that key. A row
+/// with no `links` key allocates nothing beyond what [`read_versions`] allocates.
 pub(crate) fn read_versions_with_details(
     input: impl Read,
     kept: &IdSet,
@@ -102,6 +103,12 @@ pub(crate) fn read_versions_with_details(
             let (version_id, version) = version_row(row, &cols)?;
             if kept.contains(&version.crate_id) {
                 details.insert(version_id, crate_details(row, license, links, features)?);
+            } else if let Some(links) = row.optional_string(links)? {
+                let only_links = CrateDetails {
+                    links: Some(links),
+                    ..CrateDetails::default()
+                };
+                details.insert(version_id, only_links);
             }
             out.insert(version_id, version);
             Ok(())
@@ -248,6 +255,18 @@ mod tests {
             (None, None)
         );
         assert!(second.features.is_empty());
+    }
+
+    #[test]
+    fn another_crate_keeps_only_its_links_key() {
+        let csv = "bin_names,crate_id,created_at,edition,features,has_lib,id,license,links,num,published_by,rust_version,yanked\n\
+            {},2,2026-01-03 00:00:00+00,,\"not json is fine here\",t,20,MIT,zlib,1.0.0,,,f\n";
+        let kept: IdSet = [1].into_iter().collect();
+        let (_, details) = read_versions_with_details(csv.as_bytes(), &kept).expect("reads");
+        let other = details.get(&20).expect("20");
+        assert_eq!(other.links.as_deref(), Some("zlib"));
+        assert_eq!(other.license, None);
+        assert!(other.features.is_empty());
     }
 
     #[test]

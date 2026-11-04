@@ -88,7 +88,7 @@ fn tier_line(tier: Tier) -> TierLine {
     let meaning = match tier {
         Tier::Featured => "Shown first. It passes every Featured gate.",
         Tier::Listed => "Shown in the normal listing. No other tier applies.",
-        Tier::New => "A young, prerelease or barely used project.",
+        Tier::New => "A project whose first release is recent.",
         Tier::Archived => "No longer maintained, or ended by its author.",
     };
     TierLine {

@@ -24,6 +24,9 @@ use crate::token::token_from_env;
 /// Days of download history read from the dump. The signals need none.
 const WINDOW_DAYS: u16 = 1;
 
+/// Fewest active users a crate has to draft when `--min-users` is unset.
+const DEFAULT_MIN_USERS: f64 = 2.0;
+
 /// The arguments of `catalogue seed`.
 ///
 /// Reads the cached crates.io dump. Run `catalogue dump fetch` first.
@@ -35,7 +38,7 @@ pub struct SeedArgs {
     /// Directory that holds the cache. Default: the user cache directory.
     #[arg(long, value_name = "DIR")]
     pub cache_dir: Option<PathBuf>,
-    /// Fewest active users a crate has to draft. Default: `new.min_active_users` in `thresholds.toml`.
+    /// Fewest active users a crate has to draft. Default: 2.
     ///
     /// With `--leads` it only labels a draft below it `below-floor`.
     #[arg(long, value_name = "N", value_parser = parse_min_users)]
@@ -93,7 +96,7 @@ fn seed(args: &SeedArgs) -> Result<String, SeedError> {
         return seed_from_leads(args, &catalogue, file);
     }
     let rules = crate_rules(&catalogue, &args.data)?;
-    let min_users = min_users(args, &catalogue)?;
+    let min_users = args.min_users.unwrap_or(DEFAULT_MIN_USERS);
     let snapshot = cached_dump(args)?;
     let (topics, categories) = mapping_files(&catalogue);
     let mappings = Mappings {
@@ -116,7 +119,7 @@ fn seed_from_leads(
 ) -> Result<String, SeedError> {
     let leads = read_leads(file)?;
     let token = token_from_env()?;
-    let min_active_users = min_users(args, catalogue)?;
+    let min_active_users = args.min_users.unwrap_or(DEFAULT_MIN_USERS);
     let snapshot = cached_dump(args)?;
     let (topics, categories) = mapping_files(catalogue);
     let existing = ExistingIndex::from_catalogue(catalogue);
@@ -173,19 +176,6 @@ fn finish(args: &SeedArgs, text: String, drafts: &Drafts) -> Result<String, Seed
     let mut lines = vec![text, format!("written: {}", paths.len())];
     lines.extend(paths.iter().map(|path| path.display().to_string()));
     Ok(lines.join("\n"))
-}
-
-/// The fewest active users: `--min-users`, else `new.min_active_users`.
-fn min_users(args: &SeedArgs, catalogue: &Catalogue) -> Result<f64, SeedError> {
-    if let Some(value) = args.min_users {
-        return Ok(value);
-    }
-    catalogue
-        .thresholds()
-        .map(|thresholds| thresholds.new.min_active_users)
-        .ok_or_else(|| SeedError::NoThresholds {
-            path: args.data.join("thresholds.toml"),
-        })
 }
 
 #[cfg(test)]
@@ -262,22 +252,8 @@ mod tests {
     }
 
     #[test]
-    fn min_users_defaults_to_the_new_tier_gate() {
-        let thresholds = include_str!("../../../../data/thresholds.toml");
-        let catalogue = Catalogue::load(catalogue_core::DataSources {
-            thresholds: Some(catalogue_core::SourceFile {
-                path: "thresholds.toml".to_owned(),
-                contents: thresholds.to_owned(),
-            }),
-            ..Default::default()
-        })
-        .expect("loads");
-        let default = args(&[]).expect("parses");
-        assert_eq!(min_users(&default, &catalogue).expect("gate"), 2.0);
-        let given = args(&["--min-users", "7"]).expect("parses");
-        assert_eq!(min_users(&given, &catalogue).expect("given"), 7.0);
-        let none = Catalogue::load(Default::default()).expect("empty");
-        let error = min_users(&default, &none).expect_err("no thresholds");
-        assert!(error.to_string().contains("thresholds.toml"), "{error}");
+    fn min_users_default_is_two() {
+        assert_eq!(args(&[]).expect("parses").min_users, None);
+        assert_eq!(DEFAULT_MIN_USERS, 2.0);
     }
 }

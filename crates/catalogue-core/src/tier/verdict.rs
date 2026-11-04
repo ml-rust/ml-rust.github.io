@@ -19,7 +19,7 @@ pub enum Rule {
     Dead,
     /// Dormant without rot and still adopted, or a `finished` statement without rot.
     Finished,
-    /// A young, prerelease or barely used project.
+    /// A project whose first release is recent.
     New,
     /// The adoption and health gates for Featured.
     Featured,

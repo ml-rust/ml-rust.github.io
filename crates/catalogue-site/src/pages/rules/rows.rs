@@ -186,18 +186,11 @@ pub(super) fn movement_rows(t: &Thresholds) -> Vec<ThresholdRow> {
 /// The New gates.
 pub(super) fn new_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     let n = &t.new;
-    vec![
-        row(
-            "new.max_age_days",
-            n.max_age_days,
-            "Age limit: a first release fewer days ago than this is New.",
-        ),
-        row(
-            "new.min_active_users",
-            n.min_active_users,
-            "User floor: a library with fewer active users than this is New.",
-        ),
-    ]
+    vec![row(
+        "new.max_age_days",
+        n.max_age_days,
+        "Age limit: a first release fewer days ago than this is New.",
+    )]
 }
 
 /// The Featured library gates.

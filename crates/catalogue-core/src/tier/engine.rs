@@ -276,6 +276,50 @@ mod tests {
     }
 
     #[test]
+    fn young_library_is_new() {
+        let signals = Signals {
+            first_release: Some(days_ago(30)),
+            ..featured_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::New);
+        assert_eq!(rules(&verdict).last(), Some(&Rule::New));
+    }
+
+    #[test]
+    fn old_library_with_few_users_is_listed_not_new() {
+        let signals = Signals {
+            first_release: Some(days_ago(3000)),
+            active_users: Some(0.0),
+            new_adopters: Some(0.0),
+            ..featured_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Listed);
+        assert!(!rules(&verdict).contains(&Rule::New));
+    }
+
+    #[test]
+    fn prerelease_only_library_with_high_adoption_is_listed_with_the_gate_text() {
+        let signals = Signals {
+            first_release: Some(days_ago(1000)),
+            all_prerelease: Some(true),
+            active_users: Some(400.0),
+            ..featured_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Listed);
+        assert!(!rules(&verdict).contains(&Rule::New));
+        assert!(
+            verdict.reasons.iter().any(|reason| reason
+                .detail
+                .contains("every version is a prerelease or 0.0.x")),
+            "{:?}",
+            verdict.reasons
+        );
+    }
+
+    #[test]
     fn an_active_entry_lists_no_unknown_rot_fact() {
         let mut signals = featured_library();
         signals.build_fails = None;

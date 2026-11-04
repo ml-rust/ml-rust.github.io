@@ -10,19 +10,76 @@
 # 2. `features` names one of its features. A feature name matches whole, so `cuda-tests` is no match.
 #
 # A row names what the crate uses. It holds no claim about how well the backend works.
-# The dump covers each listed crate and its direct dependencies. A deeper dependency stays unseen.
-# A project with no match reads as CPU only when the dump holds its crates, and as not measured otherwise.
+# The backend check reads each listed crate and its direct dependencies. A deeper dependency stays unseen.
+# A backend that needs no feature stays unseen too.
+# A project with no match reads as `No GPU feature found` when the dump holds its crates, and as
+# not measured otherwise. That value states only that nothing matched.
 #
-# Each dependency and each feature maps to one row. A name holds no comma. `cpu` and `not-measured`
-# are reserved ids. `CPU` and `Not measured` are reserved names.
+# The native code check walks the normal dependencies of each listed crate, then theirs in turn.
+# It follows the optional dependencies of a listed crate and names the feature that enables each.
+# It never follows an optional dependency below a listed crate.
+# A hit is a `*-sys` crate or a crate with a `links` key. `not_native` lists the crates to skip.
+# A project with no hit reads as `No native code found`. C built by a script with no `links` key
+# and no `*-sys` crate stays unseen, and so does native code kept outside crates.io.
+#
+# The Python check reads the normal dependencies of each listed crate. A project with no match
+# reads as `No Python binding crate found`. Python bindings kept outside crates.io stay unseen.
+#
+# Each dependency and each feature maps to one row. A name holds no comma. `no-gpu-feature`
+# and `not-measured` are reserved ids. `No GPU feature found` and `Not measured` are reserved names.
 
 # Normal dependencies that show Python bindings.
 python = ["pyo3"]
 
-# Crates named `*-sys` that bind no foreign library, so they never read as native code.
-# `js-sys` and `web-sys` bind browser APIs. `linux-raw-sys` holds system call numbers.
-# `windows-sys` declares the APIs of the operating system.
-not_native = ["js-sys", "web-sys", "linux-raw-sys", "windows-sys"]
+# Crates named `*-sys`, or with a `links` key, that bind no foreign library that a person
+# installs or compiles for the project. They never read as native code.
+# - `js-sys`, `web-sys` and `wasm-bindgen-shared` bind browser APIs.
+# - `linux-raw-sys` holds system call numbers. `inotify-sys` and `kqueue-sys` declare kernel APIs.
+# - `windows-sys` declares the APIs of the operating system.
+# - `core-foundation-sys`, `security-framework-sys` and `system-configuration-sys` declare macOS
+#   system APIs.
+# - `jni-sys`, `ndk-sys` and `android_log-sys` declare Android and Java APIs.
+# - `dirs-sys` calls operating system APIs for user directories.
+# - `clang-sys` binds a compiler library. A build uses it as a tool, so `native_build` lists it.
+# - `rayon-core`, `prettyplease` and `embassy-time-driver` are Rust crates. Each uses a `links`
+#   key to allow one version in a build.
+# - `pyo3` and `pyo3-ffi` bind Python. The Python check reports them.
+not_native = [
+    "js-sys",
+    "web-sys",
+    "wasm-bindgen-shared",
+    "linux-raw-sys",
+    "inotify-sys",
+    "kqueue-sys",
+    "windows-sys",
+    "core-foundation-sys",
+    "security-framework-sys",
+    "system-configuration-sys",
+    "jni-sys",
+    "ndk-sys",
+    "android_log-sys",
+    "dirs-sys",
+    "clang-sys",
+    "rayon-core",
+    "prettyplease",
+    "embassy-time-driver",
+    "pyo3",
+    "pyo3-ffi",
+]
+
+# Crates whose presence as a build dependency of a listed crate shows that its build compiles or
+# links native code. Only the listed crates count, not their dependencies.
+native_build = [
+    "cc",
+    "cmake",
+    "pkg-config",
+    "vcpkg",
+    "bindgen",
+    "autotools",
+    "cxx-build",
+    "clang-sys",
+    "meson",
+]
 
 [[backend]]
 id = "cuda"

@@ -1,4 +1,4 @@
-use super::fact::{Fact, show, show_below};
+use super::fact::{Fact, show};
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
 use crate::date::Date;
@@ -11,43 +11,23 @@ pub(super) struct New {
     pub reason: Option<Reason>,
 }
 
-/// Rule 7: an entry is new when its first release is fewer than `max_age_days` days
-/// old, when every version is a prerelease or `0.0.x`, or, for a library, when it has
-/// fewer than `min_active_users` active users.
+/// Rule 7: an entry is new when its first release is fewer than `max_age_days` days old.
+///
+/// An unknown first release leaves the rule unknown.
 pub(super) fn new(signals: &Signals, today: Date, t: &NewThresholds) -> New {
-    let young = Fact::of("first_release", signals.first_release, |first| {
+    let fact = Fact::of("first_release", signals.first_release, |first| {
         today.days_since(first) < i64::from(t.max_age_days)
     });
-    let prerelease = Fact::of("all_prerelease", signals.all_prerelease, |all| all);
-    let few_users = if signals.is_library() {
-        Fact::of("active_users", signals.active_users, |users| {
-            users < t.min_active_users
-        })
-    } else {
-        Fact::known(false)
-    };
-    let mut why = Vec::new();
-    if young.is_true() {
-        why.push(format!(
-            "first release {} is under {} days old",
-            show(signals.first_release),
-            t.max_age_days
-        ));
-    }
-    if prerelease.is_true() {
-        why.push("every version is a prerelease or 0.0.x".to_owned());
-    }
-    if few_users.is_true() {
-        why.push(format!(
-            "{} active users < {}",
-            show_below(signals.active_users, t.min_active_users),
-            t.min_active_users
-        ));
-    }
-    let fact = Fact::any(vec![young, prerelease, few_users]);
-    let reason = fact
-        .is_true()
-        .then(|| Reason::new(Rule::New, format!("new: {}", why.join(", "))));
+    let reason = fact.is_true().then(|| {
+        Reason::new(
+            Rule::New,
+            format!(
+                "new: first release {} is under {} days old",
+                show(signals.first_release),
+                t.max_age_days
+            ),
+        )
+    });
     New { fact, reason }
 }
 
@@ -86,41 +66,32 @@ mod tests {
     }
 
     #[test]
-    fn all_prerelease_is_new() {
+    fn prerelease_versions_do_not_make_an_entry_new() {
         let signals = Signals {
             all_prerelease: Some(true),
             ..featured_library()
         };
-        assert!(check(&signals).fact.is_true());
+        assert!(check(&signals).fact.is_false());
     }
 
     #[test]
-    fn few_active_users_make_a_library_new_but_not_an_app() {
-        let below = Signals {
-            active_users: Some(1.5),
+    fn few_active_users_do_not_make_an_old_entry_new() {
+        let signals = Signals {
+            active_users: Some(0.0),
             ..featured_library()
         };
-        assert!(check(&below).fact.is_true());
-        let at = Signals {
-            active_users: Some(2.0),
-            ..featured_library()
-        };
-        assert!(check(&at).fact.is_false());
+        let found = check(&signals);
+        assert!(found.fact.is_false());
+        assert!(found.reason.is_none());
         assert!(check(&featured_app()).fact.is_false());
     }
 
     #[test]
-    fn unknown_signals_leave_new_unknown_unless_one_holds() {
+    fn an_unknown_first_release_leaves_new_unknown() {
         let found = check(&Signals::unknown(EntryKind::Library));
-        assert_eq!(
-            found.fact,
-            Fact::unknown(vec!["first_release", "all_prerelease", "active_users"])
-        );
+        assert_eq!(found.fact, Fact::unknown(vec!["first_release"]));
         assert!(found.reason.is_none());
-        let prerelease = Signals {
-            all_prerelease: Some(true),
-            ..Signals::unknown(EntryKind::App)
-        };
-        assert!(check(&prerelease).fact.is_true());
+        let app = check(&Signals::unknown(EntryKind::App));
+        assert_eq!(app.fact.value, None);
     }
 }

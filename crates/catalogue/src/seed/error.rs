@@ -20,12 +20,6 @@ pub enum SeedError {
     /// The cached dump cannot be found or read.
     #[error(transparent)]
     Dump(#[from] DumpCommandError),
-    /// `--min-users` is unset and the data directory has no `thresholds.toml`.
-    #[error("no thresholds at {}. Create the file or pass --min-users <N>, then rerun", .path.display())]
-    NoThresholds {
-        /// The expected thresholds file.
-        path: PathBuf,
-    },
     /// An entry file for a draft already exists.
     #[error("{} already exists. Remove or rename it, then rerun", .path.display())]
     Exists {
@@ -83,15 +77,14 @@ pub enum SeedError {
 impl SeedError {
     /// The process exit code.
     ///
-    /// 1 for rule breaks, a missing thresholds file, an existing entry file, a bad lead file, a
+    /// 1 for rule breaks, an existing entry file, a bad lead file, a
     /// missing token and a rejected token. 2 for IO and network errors. The inner code for
     /// discover and dump errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Discover(error) => error.exit_code(),
             Self::Dump(error) => error.exit_code(),
-            Self::NoThresholds { .. }
-            | Self::Exists { .. }
+            Self::Exists { .. }
             | Self::Serialize { .. }
             | Self::BadLead { .. }
             | Self::NoLeads { .. }
@@ -118,10 +111,6 @@ mod tests {
             source: io::Error::from(io::ErrorKind::PermissionDenied),
         };
         assert_eq!(io.exit_code(), IO);
-        let thresholds = SeedError::NoThresholds {
-            path: PathBuf::from("data/thresholds.toml"),
-        };
-        assert!(thresholds.to_string().contains("--min-users"));
     }
 
     #[test]

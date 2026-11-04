@@ -45,15 +45,15 @@ pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use movement::{FirstSeen, MeasuredMovement, Movement, MovementKind, UsersChange};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
-    AppFeaturedThresholds, Backend, Backends, CPU_ONLY_ID, Categories, Category, Deprecated,
+    AppFeaturedThresholds, Backend, Backends, Categories, Category, Deprecated,
     DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, MovementThresholds,
-    NOT_MEASURED_ID, NewThresholds, RequirementCheck, RotThresholds, SynonymGroup, Synonyms,
-    Thresholds, Topic, TopicSummary, Topics,
+    NO_GPU_FEATURE_ID, NOT_MEASURED_ID, NewThresholds, RequirementCheck, RotThresholds,
+    SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
-    ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, CPU_ONLY, DEPENDENTS_SIGNAL, EntryReport,
-    LICENSE_SIGNAL, NATIVE_CODE_SIGNAL, NONE_STATED, NOT_MEASURED, PYTHON_SIGNAL, REPORT_SCHEMA,
+    ACTIVE_USERS_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, EntryReport, LICENSE_SIGNAL,
+    NATIVE_CODE_SIGNAL, NO_GPU_FEATURE, NONE_STATED, NOT_MEASURED, PYTHON_SIGNAL, REPORT_SCHEMA,
     RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, ReasonRecord, ReportMismatch,
     STARS_SIGNAL, SignalFact, SourceRef, TierReport, never_counts,
 };

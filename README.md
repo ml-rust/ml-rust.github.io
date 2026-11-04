@@ -18,8 +18,8 @@ The tier rules run in a fixed order on every check. Each entry gets one tier per
 | Tier | What earns it |
 | --- | --- |
 | Archived | The author or RustSec ends the project. Any one of these archives it: an archived repository, an `unmaintained` advisory, a deprecation notice, every version yanked, or a deleted crate. A dead entry also archives after enough consecutive dead checks. |
-| New | The first release is recent, every version is a prerelease or `0.0.x`, or a library has too few active users. New takes precedence over Featured. |
-| Featured | A library passes its adoption, health, and docs gates. An app passes enough of its four use signals: binary downloads, Homebrew installs, Repology packaging, and Docker pull growth. The entry must be active or finished. |
+| New | The first release is recent. New takes precedence over Featured. |
+| Featured | A library passes its adoption, health, and docs gates. An app passes enough of its four use signals: binary downloads, Homebrew installs, Repology packaging, and Docker pull growth. The entry must be active or finished. A library, or an app that ships a crate, needs at least one version that is neither a prerelease nor `0.0.x`. |
 | Listed | No other tier applies. |
 
 Health covers unpatched vulnerabilities, a repository link that the crate package confirms, and the share of peak users still active.

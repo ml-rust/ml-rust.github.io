@@ -1,6 +1,10 @@
 //! What a project runs on, from the dependency and feature names of its listed crates.
+//!
+//! The check reads the default version of each listed crate: its direct dependencies and its
+//! feature names. A GPU backend behind a deeper dependency stays unseen. So does a backend that
+//! needs no feature. A value with no match states only that nothing matched.
 
-use catalogue_core::{Backend, Backends, CPU_ONLY, RUNS_ON_SEPARATOR, canonical_crate_name};
+use catalogue_core::{Backend, Backends, NO_GPU_FEATURE, RUNS_ON_SEPARATOR, canonical_crate_name};
 
 use super::family::Member;
 use super::reach::enabling_feature;
@@ -18,7 +22,7 @@ pub enum RunsOn {
     /// The backends with a hit, in table order.
     Backends(Vec<BackendHits>),
     /// The dump holds the crates and no row matches.
-    CpuOnly,
+    NoGpuFeature,
 }
 
 /// One backend and what shows it.
@@ -56,10 +60,10 @@ pub enum Shows {
 }
 
 impl RunsOn {
-    /// The value of the `runs_on` fact: the backend names, or [`CPU_ONLY`].
+    /// The value of the `runs_on` fact: the backend names, or [`NO_GPU_FEATURE`].
     pub fn value(&self) -> String {
         match self {
-            Self::CpuOnly => CPU_ONLY.to_owned(),
+            Self::NoGpuFeature => NO_GPU_FEATURE.to_owned(),
             Self::Backends(found) => {
                 let names: Vec<&str> = found.iter().map(|hit| hit.name.as_str()).collect();
                 names.join(RUNS_ON_SEPARATOR)
@@ -70,7 +74,7 @@ impl RunsOn {
     /// The value of the `runs_on_evidence` fact: the crate and the name behind each backend.
     pub fn evidence(&self) -> String {
         match self {
-            Self::CpuOnly => NO_ROW.to_owned(),
+            Self::NoGpuFeature => NO_ROW.to_owned(),
             Self::Backends(found) => {
                 let lines: Vec<String> = found.iter().map(BackendHits::evidence).collect();
                 lines.join(EVIDENCE_SEPARATOR)
@@ -130,7 +134,7 @@ pub(super) fn runs_on(
         })
         .collect();
     Some(if found.is_empty() {
-        RunsOn::CpuOnly
+        RunsOn::NoGpuFeature
     } else {
         RunsOn::Backends(found)
     })
@@ -299,8 +303,8 @@ features = ["metal"]
         dump.add_requirement(1, 10, "^1", DependencyKind::Dev);
         dump.add_requirement(1, 11, "^1", DependencyKind::Build);
         let found = measure(&dump, &["tool"], &table()).expect("measured");
-        assert_eq!(found, RunsOn::CpuOnly);
-        assert_eq!(found.value(), "CPU");
+        assert_eq!(found, RunsOn::NoGpuFeature);
+        assert_eq!(found.value(), "No GPU feature found");
     }
 
     #[test]

@@ -11,7 +11,7 @@ mod synonyms;
 mod thresholds;
 mod topics;
 
-pub use backends::{Backend, Backends, CPU_ONLY_ID, NOT_MEASURED_ID};
+pub use backends::{Backend, Backends, NO_GPU_FEATURE_ID, NOT_MEASURED_ID};
 pub use categories::{Categories, Category};
 pub use deprecated::{Deprecated, DeprecatedRequirement, RequirementCheck};
 pub use discovery::Discovery;

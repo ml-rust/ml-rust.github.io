@@ -37,7 +37,6 @@ fn every_threshold_appears_with_its_value() {
     let page = rules(Some(&thresholds(Some("2026-11-03"))));
     for (key, value) in [
         ("new.max_age_days", "180"),
-        ("new.min_active_users", "2"),
         ("library_featured.min_active_users", "11"),
         ("library_featured.min_new_adopters", "9"),
         ("library_featured.min_former_glory", "0.5"),
