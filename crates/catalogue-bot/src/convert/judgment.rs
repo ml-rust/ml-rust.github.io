@@ -9,8 +9,8 @@ use url::Url;
 
 use super::meta::{Approval, IssueMeta, JUDGMENTS_DIR};
 use crate::form::{
-    CATEGORY, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, FormError, JudgmentAnswers,
-    JudgmentForm, KIND, MAINTAINER, SUPERSEDES, excerpt, label,
+    CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, FormError, JudgmentAnswers, JudgmentForm,
+    KIND, MAINTAINER, SUPERSEDES, TOPIC, excerpt, label,
 };
 
 /// A judgment that waits for approval: every field except the approver and the date.
@@ -61,7 +61,7 @@ fn fields_of(answers: &JudgmentAnswers) -> &'static [Field] {
         JudgmentAnswers::Correctness { .. } => CORRECTNESS,
         JudgmentAnswers::Supersedes { .. } => SUPERSEDES,
         JudgmentAnswers::Kind { .. } => KIND,
-        JudgmentAnswers::Category { .. } => CATEGORY,
+        JudgmentAnswers::Topic { .. } => TOPIC,
         JudgmentAnswers::Demotion { .. } => DEMOTION,
         JudgmentAnswers::FeaturedApproval => FEATURED_APPROVAL,
         JudgmentAnswers::Maintainer { .. } => MAINTAINER,
@@ -92,7 +92,7 @@ fn kind_of(answers: &JudgmentAnswers) -> Result<JudgmentKind, (&'static str, Str
                 other => return Err(("value", not_an_option(other))),
             },
         },
-        JudgmentAnswers::Category { topics } => JudgmentKind::Category {
+        JudgmentAnswers::Topic { topics } => JudgmentKind::Topic {
             topics: topics
                 .iter()
                 .map(|topic| slug(topic))
@@ -240,10 +240,10 @@ mod tests {
                 },
             ),
             (
-                JudgmentAnswers::Category {
+                JudgmentAnswers::Topic {
                     topics: vec!["tensors".to_owned()],
                 },
-                JudgmentKind::Category {
+                JudgmentKind::Topic {
                     topics: vec![Slug::new("tensors").expect("slug")],
                 },
             ),

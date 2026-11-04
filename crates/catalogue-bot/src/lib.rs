@@ -34,9 +34,9 @@ pub use convert::{
     submission,
 };
 pub use form::{
-    AFFILIATED, CATEGORY, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, Form, FormError,
-    FormKind, JudgmentAnswers, JudgmentForm, KIND, LabelError, MAINTAINER, NOT_AFFILIATED, SUBMIT,
-    SUPERSEDES, Shape, SubmitForm, parse_form,
+    AFFILIATED, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, Form, FormError, FormKind,
+    JudgmentAnswers, JudgmentForm, KIND, LabelError, MAINTAINER, NOT_AFFILIATED, SUBMIT,
+    SUPERSEDES, Shape, SubmitForm, TOPIC, parse_form,
 };
 pub use labels::{
     DESCRIPTION_MAX, LabelProblem, LabelSpec, LabelUpdate, LabelsError, LabelsFile, RepoLabel,

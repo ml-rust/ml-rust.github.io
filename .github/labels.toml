@@ -22,7 +22,7 @@ color = "1d76db"
 description = "Set an entry as a product or a demo"
 
 [[label]]
-name = "judgment:category"
+name = "judgment:topic"
 color = "0052cc"
 description = "Change the topics of an entry"
 

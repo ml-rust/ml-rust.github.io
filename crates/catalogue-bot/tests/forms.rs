@@ -19,7 +19,7 @@ fn template(kind: FormKind) -> &'static str {
         FormKind::Correctness => include_str!("../../../.github/ISSUE_TEMPLATE/correctness.yml"),
         FormKind::Supersedes => include_str!("../../../.github/ISSUE_TEMPLATE/supersedes.yml"),
         FormKind::Kind => include_str!("../../../.github/ISSUE_TEMPLATE/kind.yml"),
-        FormKind::Category => include_str!("../../../.github/ISSUE_TEMPLATE/category.yml"),
+        FormKind::Topic => include_str!("../../../.github/ISSUE_TEMPLATE/topic.yml"),
         FormKind::Demotion => include_str!("../../../.github/ISSUE_TEMPLATE/demotion.yml"),
         FormKind::FeaturedApproval => {
             include_str!("../../../.github/ISSUE_TEMPLATE/featured-approval.yml")
@@ -149,7 +149,7 @@ fn every_fixture_form_parses_and_converts() {
         (FormKind::Correctness, "correctness.md"),
         (FormKind::Supersedes, "supersedes.md"),
         (FormKind::Kind, "kind.md"),
-        (FormKind::Category, "category.md"),
+        (FormKind::Topic, "topic.md"),
         (FormKind::Demotion, "demotion.md"),
         (FormKind::FeaturedApproval, "featured-approval.md"),
         (FormKind::Maintainer, "maintainer.md"),

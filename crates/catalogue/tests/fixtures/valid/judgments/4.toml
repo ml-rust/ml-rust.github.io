@@ -6,5 +6,5 @@ date = 2026-11-03
 evidence = ["https://example.com/proof-4"]
 
 [judgment]
-type = "category"
+type = "topic"
 topics = ["tensors"]

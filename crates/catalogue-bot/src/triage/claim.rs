@@ -104,8 +104,8 @@ fn judgment_claim(form: &JudgmentForm) -> Claim {
             "the entry is of the stated kind: a product or a demo.",
             Some(field("Kind", value.as_str())),
         ),
-        JudgmentAnswers::Category { topics } => (
-            FormKind::Category,
+        JudgmentAnswers::Topic { topics } => (
+            FormKind::Topic,
             "the entry belongs in the stated topics.",
             Some(field("Topics", topics.join(", "))),
         ),
@@ -209,7 +209,7 @@ mod tests {
                 Some("Kind"),
             ),
             (
-                JudgmentAnswers::Category {
+                JudgmentAnswers::Topic {
                     topics: vec!["a".to_owned(), "b".to_owned()],
                 },
                 Some("Topics"),

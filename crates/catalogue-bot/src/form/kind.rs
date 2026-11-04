@@ -5,7 +5,7 @@ use std::fmt;
 use thiserror::Error;
 
 use super::fields::{
-    CATEGORY, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, KIND, MAINTAINER, SUBMIT, SUPERSEDES,
+    CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, KIND, MAINTAINER, SUBMIT, SUPERSEDES, TOPIC,
 };
 
 /// The prefix of every judgment form label.
@@ -24,8 +24,8 @@ pub enum FormKind {
     Supersedes,
     /// `kind.yml`, label `judgment:kind`.
     Kind,
-    /// `category.yml`, label `judgment:category`.
-    Category,
+    /// `topic.yml`, label `judgment:topic`.
+    Topic,
     /// `demotion.yml`, label `judgment:demotion`.
     Demotion,
     /// `featured-approval.yml`, label `judgment:featured-approval`.
@@ -52,7 +52,7 @@ impl FormKind {
         Self::Correctness,
         Self::Supersedes,
         Self::Kind,
-        Self::Category,
+        Self::Topic,
         Self::Demotion,
         Self::FeaturedApproval,
         Self::Maintainer,
@@ -65,7 +65,7 @@ impl FormKind {
             Self::Correctness => "correctness",
             Self::Supersedes => "supersedes",
             Self::Kind => "kind",
-            Self::Category => "category",
+            Self::Topic => "topic",
             Self::Demotion => "demotion",
             Self::FeaturedApproval => "featured-approval",
             Self::Maintainer => "maintainer",
@@ -92,7 +92,7 @@ impl FormKind {
             Self::Correctness => CORRECTNESS,
             Self::Supersedes => SUPERSEDES,
             Self::Kind => KIND,
-            Self::Category => CATEGORY,
+            Self::Topic => TOPIC,
             Self::Demotion => DEMOTION,
             Self::FeaturedApproval => FEATURED_APPROVAL,
             Self::Maintainer => MAINTAINER,

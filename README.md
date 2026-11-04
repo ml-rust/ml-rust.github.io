@@ -66,7 +66,7 @@ Open the [issue chooser](https://github.com/ml-rust/ml-rust.github.io/issues/new
 | --- | --- | --- |
 | Submit | Propose a library or app. | `submit` |
 | Correctness report | Report a wrong fact on an entry. | `judgment:correctness` |
-| Category change | Replace the topics of an entry. | `judgment:category` |
+| Topic change | Replace the topics of an entry. | `judgment:topic` |
 | Product or demo | Set an entry as a product or a demo. | `judgment:kind` |
 | Featured demotion | Approve a demotion that the rules propose. | `judgment:demotion` |
 | Featured approval | Approve Featured for an org-affiliated entry. | `judgment:featured-approval` |

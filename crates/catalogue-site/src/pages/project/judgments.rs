@@ -89,8 +89,8 @@ fn decision<'a>(
             entry_link(catalogue, by).into_iter().collect(),
         ),
         JudgmentKind::Kind { value } => ("Kind", project_kind_name(*value).to_owned(), Vec::new()),
-        JudgmentKind::Category { topics } => (
-            "Category",
+        JudgmentKind::Topic { topics } => (
+            "Topic",
             "Topics:".to_owned(),
             topics
                 .iter()

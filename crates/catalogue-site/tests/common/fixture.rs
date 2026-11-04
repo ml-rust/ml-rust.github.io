@@ -126,7 +126,7 @@ text = "An older tensor library."
 source = "human"
 "#;
 
-/// A library that a category judgment moves from `ml` to `tensors`.
+/// A library that a topic judgment moves from `ml` to `tensors`.
 const DELTA: &str = r#"name = "Delta"
 kind = "library"
 repo = "https://github.com/someone/delta"
@@ -179,7 +179,7 @@ value = "product"
 "#;
 
 /// Delta moves to the `tensors` topic.
-const CATEGORY: &str = r#"entry = "delta"
+const TOPIC: &str = r#"entry = "delta"
 issue = "https://github.com/ml-rust/ml-rust.github.io/issues/14"
 reporter = "erin"
 approver = "carol"
@@ -187,7 +187,7 @@ date = 2026-11-03
 evidence = ["https://github.com/someone/delta/blob/main/README.md"]
 
 [judgment]
-type = "category"
+type = "topic"
 topics = ["tensors"]
 "#;
 
@@ -217,7 +217,7 @@ pub fn files() -> Vec<(String, String)> {
         ("judgments/11.toml", CORRECTNESS),
         ("judgments/12.toml", SUPERSEDES),
         ("judgments/13.toml", KIND),
-        ("judgments/14.toml", CATEGORY),
+        ("judgments/14.toml", TOPIC),
         ("judgments/15.toml", MAINTAINER),
     ]
     .into_iter()

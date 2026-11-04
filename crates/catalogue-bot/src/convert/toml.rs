@@ -99,7 +99,7 @@ mod tests {
             JudgmentKind::Kind {
                 value: ProjectKind::Product,
             },
-            JudgmentKind::Category {
+            JudgmentKind::Topic {
                 topics: vec![slug("ml"), slug("tensors")],
             },
             JudgmentKind::Demotion {

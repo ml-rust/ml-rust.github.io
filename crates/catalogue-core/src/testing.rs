@@ -56,10 +56,10 @@ pub(crate) fn supersedes_judgment(number: u32, entry: &str, by: &str) -> String 
     )
 }
 
-/// Judgment 7 on `alpha`, of type `category` with `topics` as a TOML array.
-pub(crate) fn category_judgment(topics: &str) -> String {
+/// Judgment 7 on `alpha`, of type `topic` with `topics` as a TOML array.
+pub(crate) fn topic_judgment(topics: &str) -> String {
     format!(
-        "{}[judgment]\ntype = \"category\"\ntopics = {topics}\n",
+        "{}[judgment]\ntype = \"topic\"\ntopics = {topics}\n",
         judgment_head(7, "alpha")
     )
 }

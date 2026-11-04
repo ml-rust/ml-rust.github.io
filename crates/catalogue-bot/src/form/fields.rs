@@ -106,8 +106,8 @@ pub const KIND: &[Field] = &[
     EVIDENCE,
 ];
 
-/// The `judgment:category` form.
-pub const CATEGORY: &[Field] = &[
+/// The `judgment:topic` form.
+pub const TOPIC: &[Field] = &[
     ENTRY,
     field("topics", "Topics", true, Shape::List),
     EVIDENCE,
@@ -157,7 +157,7 @@ mod tests {
             CORRECTNESS,
             SUPERSEDES,
             KIND,
-            CATEGORY,
+            TOPIC,
             DEMOTION,
             FEATURED_APPROVAL,
             MAINTAINER,

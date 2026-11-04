@@ -36,7 +36,7 @@ pub struct EffectiveEntry<'a> {
     pub slug: &'a Slug,
     /// The entry as its data file states it.
     pub entry: &'a Entry,
-    /// The topics of the newest `category` judgment, else the entry's own topics.
+    /// The topics of the newest `topic` judgment, else the entry's own topics.
     pub topics: &'a [Slug],
     /// The value of the newest `kind` judgment. `None` without one.
     pub kind_label: Option<ProjectKind>,
@@ -80,7 +80,7 @@ impl Catalogue {
         Some(EffectiveEntry {
             slug,
             entry,
-            topics: latest(&judgments, category_topics).unwrap_or(entry.topics.as_slice()),
+            topics: latest(&judgments, judged_topics).unwrap_or(entry.topics.as_slice()),
             kind_label: latest(&judgments, project_kind),
             superseded_by: latest(&judgments, replacement),
             supersedes: replaced.into_iter().collect(),
@@ -98,7 +98,7 @@ impl Catalogue {
         self.entries
             .iter()
             .filter(|(slug, entry)| {
-                self.latest_judgment(slug, category_topics)
+                self.latest_judgment(slug, judged_topics)
                     .unwrap_or(entry.topics.as_slice())
                     .contains(topic)
             })
@@ -112,10 +112,10 @@ impl Catalogue {
     }
 }
 
-/// The topics a `category` judgment sets.
-fn category_topics(kind: &JudgmentKind) -> Option<&[Slug]> {
+/// The topics a `topic` judgment sets.
+fn judged_topics(kind: &JudgmentKind) -> Option<&[Slug]> {
     match kind {
-        JudgmentKind::Category { topics } => Some(topics),
+        JudgmentKind::Topic { topics } => Some(topics),
         _ => None,
     }
 }
@@ -162,8 +162,8 @@ mod tests {
         Catalogue::load(src).expect("valid data")
     }
 
-    fn category(topic: &str) -> String {
-        format!("type = \"category\"\ntopics = [\"{topic}\"]\n")
+    fn topic_change(topic: &str) -> String {
+        format!("type = \"topic\"\ntopics = [\"{topic}\"]\n")
     }
 
     fn supersedes(by: &str) -> String {
@@ -187,9 +187,9 @@ mod tests {
     }
 
     #[test]
-    fn the_later_category_judgment_wins() {
-        let ml = category("ml");
-        let tensors = category("tensors");
+    fn the_later_topic_judgment_wins() {
+        let ml = topic_change("ml");
+        let tensors = topic_change("tensors");
         let catalogue = load(with(&[
             (10, "alpha", "2026-06-01", ml.as_str()),
             (11, "alpha", "2026-04-01", tensors.as_str()),
@@ -205,8 +205,8 @@ mod tests {
 
     #[test]
     fn on_the_same_date_the_higher_issue_wins() {
-        let ml = category("ml");
-        let tensors = category("tensors");
+        let ml = topic_change("ml");
+        let tensors = topic_change("tensors");
         let catalogue = load(with(&[
             (10, "alpha", "2026-06-01", tensors.as_str()),
             (11, "alpha", "2026-06-01", ml.as_str()),

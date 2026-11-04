@@ -146,7 +146,7 @@ fn a_topic_page_groups_its_entries_by_tier() {
     );
     assert!(
         !ml.contains("Delta</a>"),
-        "a category judgment moves Delta: {ml}"
+        "a topic judgment moves Delta: {ml}"
     );
 }
 
@@ -313,8 +313,7 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
     );
     let delta = &site["projects/delta/index.html"];
     assert!(
-        delta
-            .contains("<td>Category</td><td>Topics: <a href=\"/topics/tensors/\">Tensors</a></td>"),
+        delta.contains("<td>Topic</td><td>Topics: <a href=\"/topics/tensors/\">Tensors</a></td>"),
         "{delta}"
     );
 }

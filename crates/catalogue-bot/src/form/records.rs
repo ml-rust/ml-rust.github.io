@@ -69,8 +69,8 @@ pub enum JudgmentAnswers {
         /// `value`: `product` or `demo`.
         value: String,
     },
-    /// `judgment:category`.
-    Category {
+    /// `judgment:topic`.
+    Topic {
         /// `topics`: topic slugs, one per item.
         topics: Vec<String>,
     },
@@ -153,7 +153,7 @@ impl Answers {
             FormKind::Kind => JudgmentAnswers::Kind {
                 value: self.required("value")?,
             },
-            FormKind::Category => JudgmentAnswers::Category {
+            FormKind::Topic => JudgmentAnswers::Topic {
                 topics: self.list("topics"),
             },
             FormKind::Demotion => JudgmentAnswers::Demotion {
@@ -201,7 +201,7 @@ impl Form {
                 JudgmentAnswers::Correctness { .. } => FormKind::Correctness,
                 JudgmentAnswers::Supersedes { .. } => FormKind::Supersedes,
                 JudgmentAnswers::Kind { .. } => FormKind::Kind,
-                JudgmentAnswers::Category { .. } => FormKind::Category,
+                JudgmentAnswers::Topic { .. } => FormKind::Topic,
                 JudgmentAnswers::Demotion { .. } => FormKind::Demotion,
                 JudgmentAnswers::FeaturedApproval => FormKind::FeaturedApproval,
                 JudgmentAnswers::Maintainer { .. } => FormKind::Maintainer,

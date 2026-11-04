@@ -47,8 +47,8 @@ pub const ISSUE_FORMS: [IssueForm; 8] = [
         description: "Set whether an entry is a product or a demo.",
     },
     IssueForm {
-        file: "category.yml",
-        name: "Category change",
+        file: "topic.yml",
+        name: "Topic change",
         description: "Change the topics of an entry.",
     },
     IssueForm {

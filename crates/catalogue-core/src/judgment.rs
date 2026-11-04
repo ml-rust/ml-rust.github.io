@@ -48,7 +48,7 @@ pub enum JudgmentKind {
         value: ProjectKind,
     },
     /// The topics change.
-    Category {
+    Topic {
         /// The new topic ids.
         topics: Vec<Slug>,
     },
@@ -92,8 +92,8 @@ impl JudgmentKind {
             Self::Correctness { finding } if finding.trim().is_empty() => {
                 out.push("finding must not be empty".to_owned());
             }
-            Self::Category { topics } if topics.is_empty() => {
-                out.push("category needs at least one topic".to_owned());
+            Self::Topic { topics } if topics.is_empty() => {
+                out.push("topic change needs at least one topic".to_owned());
             }
             Self::Demotion { from, to } => {
                 if *from != Tier::Featured {
@@ -182,7 +182,7 @@ date = 2026-11-03
             "type = \"correctness\"\nfinding = \"The claim is wrong.\"\n",
             "type = \"supersedes\"\nby = \"beta\"\n",
             "type = \"kind\"\nvalue = \"demo\"\n",
-            "type = \"category\"\ntopics = [\"tensors\"]\n",
+            "type = \"topic\"\ntopics = [\"tensors\"]\n",
             "type = \"demotion\"\nfrom = \"featured\"\nto = \"listed\"\n",
             "type = \"maintainer\"\nstatus = \"finished\"\n",
             "type = \"featured-approval\"\n",
@@ -251,8 +251,8 @@ date = 2026-11-03
     }
 
     #[test]
-    fn empty_category_is_reported() {
-        let body = "type = \"category\"\ntopics = []\n";
+    fn empty_topic_change_is_reported() {
+        let body = "type = \"topic\"\ntopics = []\n";
         assert!(has(&problems(&doc(true, body)), "at least one topic"));
     }
 

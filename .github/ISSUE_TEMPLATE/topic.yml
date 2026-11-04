@@ -1,7 +1,7 @@
-name: Category change
+name: Topic change
 description: Change the topics of an entry.
-title: "[category] "
-labels: ["judgment:category"]
+title: "[topic] "
+labels: ["judgment:topic"]
 body:
   - type: markdown
     attributes:

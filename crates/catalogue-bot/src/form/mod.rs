@@ -12,8 +12,8 @@ pub use error::FormError;
 pub(crate) use error::excerpt;
 pub(crate) use fields::label;
 pub use fields::{
-    AFFILIATED, CATEGORY, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, KIND, MAINTAINER,
-    NOT_AFFILIATED, SUBMIT, SUPERSEDES, Shape,
+    AFFILIATED, CORRECTNESS, DEMOTION, FEATURED_APPROVAL, Field, KIND, MAINTAINER, NOT_AFFILIATED,
+    SUBMIT, SUPERSEDES, Shape, TOPIC,
 };
 pub use kind::{FormKind, LabelError};
 pub use parse::parse_form;

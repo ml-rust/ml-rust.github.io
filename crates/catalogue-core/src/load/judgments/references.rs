@@ -22,7 +22,7 @@ pub(super) fn check(
                 diags.push(path, format!("replacing entry `{by}` does not exist"));
             }
         }
-        JudgmentKind::Category { topics } => {
+        JudgmentKind::Topic { topics } => {
             for topic in topics {
                 if !refs.topics.contains(topic) {
                     diags.push(path, format!("topic `{topic}` does not exist"));
@@ -36,8 +36,7 @@ pub(super) fn check(
 #[cfg(test)]
 mod tests {
     use crate::testing::{
-        JUDGMENT, category_judgment as category, errors, expect_error, put, supersedes_judgment,
-        valid,
+        JUDGMENT, errors, expect_error, put, supersedes_judgment, topic_judgment as topic, valid,
     };
 
     fn supersedes(by: &str) -> String {
@@ -47,7 +46,7 @@ mod tests {
     #[test]
     fn existing_references_pass() {
         let mut src = valid();
-        put(&mut src, "judgments/7.toml", &category("[\"tensors\"]"));
+        put(&mut src, "judgments/7.toml", &topic("[\"tensors\"]"));
         put(
             &mut src,
             "judgments/8.toml",
@@ -82,9 +81,9 @@ mod tests {
     }
 
     #[test]
-    fn category_topics_must_exist() {
+    fn changed_topics_must_exist() {
         let mut src = valid();
-        put(&mut src, "judgments/7.toml", &category("[\"ghost\"]"));
+        put(&mut src, "judgments/7.toml", &topic("[\"ghost\"]"));
         expect_error(src, "topic `ghost` does not exist");
     }
 }
