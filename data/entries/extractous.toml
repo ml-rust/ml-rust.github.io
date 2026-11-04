@@ -1,0 +1,14 @@
+name = "extractous"
+kind = "library"
+repo = "https://github.com/yobix-ai/extractous"
+homepage = "https://extractous.yobix.ai/"
+crates = ["extractous"]
+topics = ["vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Extractous provides a fast and efficient way to extract content from all kind of file formats including PDF, Word, Excel CSV, Email etc... Internally it uses a natively compiled Apache Tika for formats are not supported natively by the Rust core"
+source = "crate"
+source_url = "https://crates.io/crates/extractous"

@@ -1,0 +1,14 @@
+name = "NewsAggregator"
+kind = "app"
+repo = "https://github.com/engineersbox/newsaggregator"
+homepage = "https://search.jkl.io/"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fast, searchable, knowledge engine using various machine learning models to aggregate based on importance, association and relevance"
+source = "repo"
+source_url = "https://github.com/engineersbox/newsaggregator"

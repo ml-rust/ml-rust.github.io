@@ -1,0 +1,13 @@
+name = "vidr"
+kind = "app"
+repo = "https://github.com/ml-rust/vidr"
+crates = []
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "Video: codecs, hardware decode and encode, filters, and models on the GPU, as a library."
+source = "repo"
+source_url = "https://github.com/ml-rust/vidr"

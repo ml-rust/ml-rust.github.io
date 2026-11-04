@@ -1,0 +1,13 @@
+name = "anthropic-sdk-rs"
+kind = "library"
+repo = "https://github.com/katsuhirohonda/anthropic-sdk-rs"
+crates = ["anthropic-ai-sdk"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An unofficial Rust SDK for Anthropic's Claude AI API"
+source = "crate"
+source_url = "https://crates.io/crates/anthropic-ai-sdk"

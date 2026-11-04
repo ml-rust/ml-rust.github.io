@@ -1,0 +1,14 @@
+name = "xet-core"
+kind = "library"
+repo = "https://github.com/huggingface/xet-core"
+homepage = "https://github.com/huggingface/xet-core"
+crates = ["xet-runtime", "hf-xet", "xet-client", "xet-data"]
+topics = ["data-formats"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Async runtime, configuration, logging, and utility infrastructure for the Hugging Face Xet client tools."
+source = "crate"
+source_url = "https://crates.io/crates/xet-runtime"

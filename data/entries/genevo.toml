@@ -1,0 +1,14 @@
+name = "genevo"
+kind = "library"
+repo = "https://github.com/innoave/genevo"
+homepage = "https://crates.io/crates/genevo"
+crates = ["genevo"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "genevo provides building blocks to run simulations of optimization and search problems using genetic algorithms (GA). Execute genetic algorithm (GA) simulations in a customizable and extensible way."
+source = "crate"
+source_url = "https://crates.io/crates/genevo"

@@ -1,0 +1,14 @@
+name = "lindera"
+kind = "library"
+repo = "https://github.com/lindera/lindera"
+homepage = "https://github.com/lindera/lindera"
+crates = ["lindera", "lindera-analysis", "lindera-analyzer", "lindera-assets", "lindera-binding-core", "lindera-cc-cedict", "lindera-cc-cedict-builder", "lindera-cli", "lindera-compress", "lindera-core", "lindera-crf", "lindera-decompress", "lindera-dictionary", "lindera-dictionary-builder", "lindera-filter", "lindera-ipadic", "lindera-ipadic-builder", "lindera-ipadic-neologd", "lindera-ipadic-neologd-builder", "lindera-jieba", "lindera-ko-dic", "lindera-ko-dic-builder", "lindera-nodejs", "lindera-python", "lindera-ruby", "lindera-sudachidict", "lindera-tokenizer", "lindera-trainer", "lindera-unidic", "lindera-unidic-builder", "lindera-wasm"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A morphological analysis library."
+source = "crate"
+source_url = "https://crates.io/crates/lindera"

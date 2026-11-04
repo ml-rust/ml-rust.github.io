@@ -1,0 +1,14 @@
+name = "fastembed-rs"
+kind = "library"
+repo = "https://github.com/anush008/fastembed-rs"
+homepage = "https://crates.io/crates/fastembed"
+crates = ["fastembed"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Library for generating vector embeddings, reranking locally."
+source = "crate"
+source_url = "https://crates.io/crates/fastembed"

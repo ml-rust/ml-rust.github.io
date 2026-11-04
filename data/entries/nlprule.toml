@@ -1,0 +1,13 @@
+name = "nlprule"
+kind = "library"
+repo = "https://github.com/bminixhofer/nlprule"
+crates = ["nlprule", "nlprule-build"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fast, low-resource Natural Language Processing and Error Correction library."
+source = "crate"
+source_url = "https://crates.io/crates/nlprule"

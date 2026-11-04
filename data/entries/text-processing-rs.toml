@@ -1,0 +1,13 @@
+name = "text-processing-rs"
+kind = "library"
+repo = "https://github.com/fluidinference/text-processing-rs"
+crates = ["text-processing-rs"]
+topics = ["speech-audio", "text-search"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Inverse Text Normalization (ITN) — convert spoken-form ASR output to written form"
+source = "crate"
+source_url = "https://crates.io/crates/text-processing-rs"

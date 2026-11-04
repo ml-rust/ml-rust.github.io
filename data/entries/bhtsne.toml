@@ -1,0 +1,13 @@
+name = "bhtsne"
+kind = "library"
+repo = "https://github.com/frjnn/bhtsne"
+crates = ["bhtsne"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Exact and Barnes-Hut implementations of t-SNE."
+source = "crate"
+source_url = "https://crates.io/crates/bhtsne"

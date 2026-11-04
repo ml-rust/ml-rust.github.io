@@ -1,0 +1,14 @@
+name = "mistralrs"
+kind = "library"
+repo = "https://github.com/ericlbuehler/mistral.rs"
+homepage = "https://github.com/EricLBuehler/mistral.rs"
+crates = ["mistralrs", "mistralrs-audio", "mistralrs-cli", "mistralrs-core", "mistralrs-macros", "mistralrs-mcp", "mistralrs-paged-attn", "mistralrs-quant", "mistralrs-server-core", "mistralrs-vision"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast, flexible LLM inference."
+source = "crate"
+source_url = "https://crates.io/crates/mistralrs"

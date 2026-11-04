@@ -1,0 +1,13 @@
+name = "mpsgraph-rs"
+kind = "library"
+repo = "https://github.com/mirai-audio/mpsgraph-rs"
+crates = ["mpsgraph"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Modern Rust bindings for Apple's Metal Performance Shaders Graph framework"
+source = "crate"
+source_url = "https://crates.io/crates/mpsgraph"

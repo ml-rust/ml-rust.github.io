@@ -1,0 +1,13 @@
+name = "linfa"
+kind = "library"
+repo = "https://github.com/rust-ml/linfa"
+crates = ["linfa", "linfa-bayes", "linfa-clustering", "linfa-datasets", "linfa-elasticnet", "linfa-ensemble", "linfa-ftrl", "linfa-hierarchical", "linfa-ica", "linfa-kernel", "linfa-lars", "linfa-linear", "linfa-logistic", "linfa-nn", "linfa-pls", "linfa-preprocessing", "linfa-reduction", "linfa-svm", "linfa-trees", "linfa-tsne"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Machine Learning framework for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/linfa"

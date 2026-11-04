@@ -1,0 +1,13 @@
+name = "floneum"
+kind = "library"
+repo = "https://github.com/floneum/floneum"
+crates = ["kalosm", "kalosm-common", "kalosm-language", "kalosm-language-model", "kalosm-learning", "kalosm-learning-macro", "kalosm-llama", "kalosm-model-types", "kalosm-ocr", "kalosm-parse-macro", "kalosm-sample", "kalosm-sound", "kalosm-vision", "rbert", "rmistral", "rphi", "rwhisper", "rwuerstchen", "segment-anything-rs"]
+topics = ["llm-apps", "run-models"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A simple interface for pretrained AI models"
+source = "crate"
+source_url = "https://crates.io/crates/kalosm"

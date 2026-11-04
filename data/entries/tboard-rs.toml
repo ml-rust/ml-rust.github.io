@@ -1,0 +1,13 @@
+name = "tboard-rs"
+kind = "library"
+repo = "https://github.com/laurentmazare/tboard-rs"
+crates = ["tboard", "tboard-pyo3"]
+topics = ["train-models"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Write and read tensorboard files."
+source = "crate"
+source_url = "https://crates.io/crates/tboard"

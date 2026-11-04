@@ -1,0 +1,14 @@
+name = "sentencepiece"
+kind = "library"
+repo = "https://github.com/danieldk/sentencepiece"
+homepage = "https://github.com/danieldk/sentencepiece"
+crates = ["sentencepiece", "sentencepiece-sys"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Binding for the sentencepiece tokenizer"
+source = "crate"
+source_url = "https://crates.io/crates/sentencepiece"

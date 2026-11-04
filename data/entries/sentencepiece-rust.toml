@@ -1,0 +1,14 @@
+name = "sentencepiece-rust"
+kind = "library"
+repo = "https://github.com/voicelessq/sentencepiece-rust"
+homepage = "https://github.com/VoiceLessQ/sentencepiece-rust"
+crates = ["sentencepiece-rust"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "From-scratch pure-Rust SentencePiece inference (encode/decode), differentially verified against the upstream C++/Python implementation."
+source = "crate"
+source_url = "https://crates.io/crates/sentencepiece-rust"

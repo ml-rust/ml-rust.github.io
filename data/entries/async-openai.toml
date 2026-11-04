@@ -1,0 +1,14 @@
+name = "async-openai"
+kind = "library"
+repo = "https://github.com/64bit/async-openai"
+homepage = "https://github.com/64bit/async-openai"
+crates = ["async-openai", "async-openai-macros"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust library for OpenAI"
+source = "crate"
+source_url = "https://crates.io/crates/async-openai"

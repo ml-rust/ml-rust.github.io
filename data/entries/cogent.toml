@@ -1,0 +1,13 @@
+name = "cogent"
+kind = "library"
+repo = "https://github.com/jonathanwoollett-light/cogent"
+crates = ["cogent"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Basic neural network library for classification."
+source = "crate"
+source_url = "https://crates.io/crates/cogent"

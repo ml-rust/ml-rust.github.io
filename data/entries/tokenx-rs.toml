@@ -1,0 +1,14 @@
+name = "tokenx-rs"
+kind = "library"
+repo = "https://github.com/qbit-ai/tokenx-rs"
+homepage = "https://github.com/qbit-ai/tokenx-rs"
+crates = ["tokenx-rs"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast token count estimation for LLMs at 96% accuracy without a full tokenizer"
+source = "crate"
+source_url = "https://crates.io/crates/tokenx-rs"

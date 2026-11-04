@@ -1,0 +1,13 @@
+name = "rust-stemmers"
+kind = "library"
+repo = "https://github.com/currysoftware/rust-stemmers"
+crates = ["rust-stemmers"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A rust implementation of some popular snowball stemming algorithms"
+source = "crate"
+source_url = "https://crates.io/crates/rust-stemmers"

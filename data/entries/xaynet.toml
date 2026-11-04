@@ -1,0 +1,14 @@
+name = "xaynet"
+kind = "library"
+repo = "https://github.com/xaynetwork/xaynet"
+homepage = "https://xaynet.dev/"
+crates = ["xaynet", "xaynet-client", "xaynet-core", "xaynet-macros", "xaynet-mobile", "xaynet-sdk", "xaynet-server"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The Xayn Network project is building a privacy layer for machine learning so that AI projects can meet compliance such as GDPR and CCPA. The approach relies on Federated Learning as enabling technology that allows production AI applications to be fully privacy compliant."
+source = "crate"
+source_url = "https://crates.io/crates/xaynet"

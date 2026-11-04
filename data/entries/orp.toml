@@ -1,0 +1,14 @@
+name = "orp"
+kind = "library"
+repo = "https://github.com/fbilhaut/orp"
+homepage = "https://github.com/fbilhaut/orp"
+crates = ["orp"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Lightweight framework for building ONNX runtime pipelines with ort"
+source = "crate"
+source_url = "https://crates.io/crates/orp"

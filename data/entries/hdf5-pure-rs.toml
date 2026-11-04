@@ -1,0 +1,14 @@
+name = "hdf5-pure-rs"
+kind = "library"
+repo = "https://github.com/henriksson-lab/hdf5-pure-rs"
+homepage = "https://github.com/henriksson-lab/hdf5-pure-rs"
+crates = ["hdf5-pure-rust"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust implementation of the HDF5 file format"
+source = "crate"
+source_url = "https://crates.io/crates/hdf5-pure-rust"

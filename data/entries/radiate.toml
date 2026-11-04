@@ -1,0 +1,14 @@
+name = "radiate"
+kind = "library"
+repo = "https://github.com/pkalivas/radiate"
+homepage = "https://pkalivas.github.io/radiate/"
+crates = ["radiate", "radiate-alters", "radiate-core", "radiate-engines", "radiate-error", "radiate-expr", "radiate-extensions", "radiate-gp", "radiate-pgm", "radiate-selectors", "radiate-ui", "radiate-utils", "radiate_matrix_tree", "radiate_web"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust library for genetic algorithms and artificial evolution."
+source = "crate"
+source_url = "https://crates.io/crates/radiate"

@@ -1,0 +1,19 @@
+name = "meilisearch"
+kind = "app"
+repo = "https://github.com/meilisearch/meilisearch"
+homepage = "https://www.meilisearch.com/"
+crates = []
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A lightning-fast search engine API bringing AI-powered hybrid search to your sites and applications."
+source = "repo"
+source_url = "https://github.com/meilisearch/meilisearch"
+
+[distribution]
+homebrew = "meilisearch"
+docker = []
+repology = "meilisearch"

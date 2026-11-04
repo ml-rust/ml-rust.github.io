@@ -1,0 +1,14 @@
+name = "delta-rs"
+kind = "library"
+repo = "https://github.com/delta-io/delta-rs"
+homepage = "https://github.com/delta-io/delta.rs"
+crates = ["deltalake-core", "deltalake", "deltalake-aws", "deltalake-azure", "deltalake-catalog-glue", "deltalake-catalog-unity", "deltalake-derive", "deltalake-gcp", "deltalake-hdfs", "deltalake-lakefs", "deltalake-mount", "deltalake-opendal"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Native Delta Lake implementation in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/deltalake-core"

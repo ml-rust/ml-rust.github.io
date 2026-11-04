@@ -1,0 +1,17 @@
+name = "ratchet"
+kind = "app"
+repo = "https://github.com/huggingface/ratchet"
+crates = []
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A cross-platform browser ML framework."
+source = "repo"
+source_url = "https://github.com/huggingface/ratchet"
+
+[distribution]
+docker = []
+repology = "ratchet"

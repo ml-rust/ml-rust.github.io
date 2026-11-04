@@ -1,0 +1,13 @@
+name = "voxr"
+kind = "library"
+repo = "https://github.com/ml-rust/voxr"
+crates = ["voxr", "voxr-narrate"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "Audio and speech: codecs, DSP, G2P, voices, and TTS/ASR pipelines over boostr models"
+source = "crate"
+source_url = "https://crates.io/crates/voxr"

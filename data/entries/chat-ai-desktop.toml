@@ -1,0 +1,14 @@
+name = "chat-ai-desktop"
+kind = "app"
+repo = "https://github.com/sonnylazuardi/chat-ai-desktop"
+homepage = "https://twitter.com/sonnylazuardi/status/1624281443022286848"
+crates = []
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Unofficial ChatGPT desktop app for Mac & Windows menubar using Tauri & Rust"
+source = "repo"
+source_url = "https://github.com/sonnylazuardi/chat-ai-desktop"

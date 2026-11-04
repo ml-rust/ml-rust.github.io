@@ -1,0 +1,14 @@
+name = "delta"
+kind = "app"
+repo = "https://github.com/blackportal-ai/delta"
+homepage = "https://blackportal.ai/"
+crates = []
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An Open-Source Machine Learning Framework in Rust Δ"
+source = "repo"
+source_url = "https://github.com/blackportal-ai/delta"

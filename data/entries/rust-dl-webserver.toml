@@ -1,0 +1,13 @@
+name = "rust-dl-webserver"
+kind = "app"
+repo = "https://github.com/epwalsh/rust-dl-webserver"
+crates = []
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "🦀 Example of serving deep learning models in Rust with batched prediction"
+source = "repo"
+source_url = "https://github.com/epwalsh/rust-dl-webserver"

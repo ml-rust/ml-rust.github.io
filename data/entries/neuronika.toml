@@ -1,0 +1,14 @@
+name = "neuronika"
+kind = "library"
+repo = "https://github.com/neuronika/neuronika"
+homepage = "https://docs.rs/neuronika"
+crates = ["neuronika"]
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Tensors and dynamic neural networks."
+source = "crate"
+source_url = "https://crates.io/crates/neuronika"

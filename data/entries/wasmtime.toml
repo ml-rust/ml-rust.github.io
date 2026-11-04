@@ -1,0 +1,13 @@
+name = "wasmtime"
+kind = "library"
+repo = "https://github.com/bytecodealliance/wasmtime"
+crates = ["wasmtime-wasi-nn", "wasmtime-wasi-threads"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wasmtime implementation of the wasi-nn API"
+source = "crate"
+source_url = "https://crates.io/crates/wasmtime-wasi-nn"

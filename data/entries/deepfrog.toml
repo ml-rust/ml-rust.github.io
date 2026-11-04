@@ -1,0 +1,14 @@
+name = "deepfrog"
+kind = "library"
+repo = "https://github.com/proycon/deepfrog"
+homepage = "https://github.com/proycon/deepfrog"
+crates = ["deepfrog"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A deep learning NLP suite (PoS,lemmatiser,NER) with FoLiA XML support"
+source = "crate"
+source_url = "https://crates.io/crates/deepfrog"

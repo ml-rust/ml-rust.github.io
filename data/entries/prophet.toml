@@ -1,0 +1,13 @@
+name = "prophet"
+kind = "library"
+repo = "https://github.com/robbepop/prophet"
+crates = ["prophet"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A neural network implementation with a focus on cache-efficiency and sequential performance."
+source = "crate"
+source_url = "https://crates.io/crates/prophet"

@@ -1,0 +1,14 @@
+name = "hora"
+kind = "library"
+repo = "https://github.com/hora-search/hora"
+homepage = "https://horasearch.com/"
+crates = ["hora"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Hora Search Everywhere"
+source = "crate"
+source_url = "https://crates.io/crates/hora"

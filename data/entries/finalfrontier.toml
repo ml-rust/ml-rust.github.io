@@ -1,0 +1,14 @@
+name = "finalfrontier"
+kind = "library"
+repo = "https://github.com/finalfusion/finalfrontier"
+homepage = "https://finalfusion.github.io/finalfrontier"
+crates = ["finalfrontier", "finalfrontier-utils", "hogwild"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Train/use word embeddings with subword units"
+source = "crate"
+source_url = "https://crates.io/crates/finalfrontier"

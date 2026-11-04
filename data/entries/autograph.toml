@@ -1,0 +1,14 @@
+name = "autograph"
+kind = "library"
+repo = "https://github.com/charles-r-earp/autograph"
+homepage = "https://github.com/charles-r-earp/autograph"
+crates = ["autograph", "autograph_derive"]
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A machine learning library for Rust."
+source = "crate"
+source_url = "https://crates.io/crates/autograph"

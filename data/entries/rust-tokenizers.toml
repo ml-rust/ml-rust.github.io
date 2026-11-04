@@ -1,0 +1,13 @@
+name = "rust_tokenizers"
+kind = "library"
+repo = "https://github.com/guillaume-be/rust-tokenizers"
+crates = ["rust_tokenizers", "rust_transformers"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High performance tokenizers for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/rust_tokenizers"

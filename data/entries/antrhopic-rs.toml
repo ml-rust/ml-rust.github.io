@@ -1,0 +1,14 @@
+name = "antrhopic-rs"
+kind = "library"
+repo = "https://github.com/abdelhamidbakhta/antrhopic-rs"
+homepage = "https://github.com/abdelhamidbakhta/anthropic-rs"
+crates = ["anthropic"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Anthropic Rust SDK."
+source = "crate"
+source_url = "https://crates.io/crates/anthropic"

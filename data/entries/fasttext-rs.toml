@@ -1,0 +1,13 @@
+name = "fasttext-rs"
+kind = "library"
+repo = "https://github.com/messense/fasttext-rs"
+crates = ["fasttext", "cfasttext-sys"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "fastText pure Rust implementation"
+source = "crate"
+source_url = "https://crates.io/crates/fasttext"

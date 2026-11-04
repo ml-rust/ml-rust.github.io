@@ -1,0 +1,13 @@
+name = "autoagents"
+kind = "library"
+repo = "https://github.com/liquidos-ai/autoagents"
+crates = ["autoagents", "autoagents-burn", "autoagents-core", "autoagents-derive", "autoagents-guardrails", "autoagents-llamacpp", "autoagents-llm", "autoagents-mistral-rs", "autoagents-onnx", "autoagents-protocol", "autoagents-qdrant", "autoagents-speech", "autoagents-telemetry", "autoagents-toolkit", "liquid-edge"]
+topics = ["llm-apps", "run-models"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Agent Framework for Building Autonomous Agents"
+source = "crate"
+source_url = "https://crates.io/crates/autoagents"

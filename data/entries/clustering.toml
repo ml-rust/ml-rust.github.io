@@ -1,0 +1,13 @@
+name = "clustering"
+kind = "library"
+repo = "https://github.com/xgillard/clustering"
+crates = ["clustering"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "easy way to perform kmeans clustering on arbitrary data"
+source = "crate"
+source_url = "https://crates.io/crates/clustering"

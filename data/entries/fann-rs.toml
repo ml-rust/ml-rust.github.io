@@ -1,0 +1,13 @@
+name = "fann-rs"
+kind = "library"
+repo = "https://github.com/afck/fann-rs"
+crates = ["fann"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wrapper for the Fast Artificial Neural Networks library"
+source = "crate"
+source_url = "https://crates.io/crates/fann"

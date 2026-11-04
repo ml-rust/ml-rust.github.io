@@ -1,0 +1,14 @@
+name = "blingfire-rs"
+kind = "library"
+repo = "https://github.com/reinfer/blingfire-rs"
+homepage = "https://github.com/reinfer/blingfire-rs"
+crates = ["blingfire", "blingfire-sys"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wrapper for the BlingFire tokenization library"
+source = "crate"
+source_url = "https://crates.io/crates/blingfire"

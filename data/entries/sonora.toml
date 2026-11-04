@@ -1,0 +1,13 @@
+name = "sonora"
+kind = "library"
+repo = "https://github.com/dignifiedquire/sonora"
+crates = ["sonora-agc2"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Automatic Gain Control 2 (AGC2) with RNN VAD for WebRTC Audio Processing"
+source = "crate"
+source_url = "https://crates.io/crates/sonora-agc2"

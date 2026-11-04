@@ -1,0 +1,13 @@
+name = "toon-rs"
+kind = "library"
+repo = "https://github.com/jadjabbour/toon-rs"
+crates = ["toon"]
+topics = ["llm-apps"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Token-Oriented Object Notation – a token-efficient JSON alternative for LLM prompts"
+source = "crate"
+source_url = "https://crates.io/crates/toon"

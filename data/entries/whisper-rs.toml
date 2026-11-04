@@ -1,0 +1,13 @@
+name = "whisper-rs"
+kind = "library"
+repo = "https://codeberg.org/tazz4843/whisper-rs"
+crates = ["whisper-rs", "piper1-rs", "piper1-rs-sys", "whisper-rs-sys"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for whisper.cpp"
+source = "crate"
+source_url = "https://crates.io/crates/whisper-rs"

@@ -1,0 +1,14 @@
+name = "rustfst"
+kind = "library"
+repo = "https://github.com/garvys-org/rustfst"
+homepage = "https://docs.rs/rustfst"
+crates = ["rustfst", "rustfst-ffi"]
+topics = ["speech-audio", "text-search"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Library for constructing, combining, optimizing, and searching weighted finite-state transducers (FSTs)."
+source = "crate"
+source_url = "https://crates.io/crates/rustfst"

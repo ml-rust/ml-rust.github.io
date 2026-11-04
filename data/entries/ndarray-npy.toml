@@ -1,0 +1,14 @@
+name = "ndarray-npy"
+kind = "library"
+repo = "https://github.com/jturner314/ndarray-npy"
+crates = ["ndarray-npy"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+part_of = "ndarray"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = ".npy and .npz file format support for ndarray"
+source = "crate"
+source_url = "https://crates.io/crates/ndarray-npy"

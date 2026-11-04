@@ -1,0 +1,14 @@
+name = "zarrs"
+kind = "library"
+repo = "https://github.com/zarrs/zarrs"
+homepage = "https://zarrs.dev/"
+crates = ["zarrs"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A library for the Zarr storage format for multidimensional arrays and metadata"
+source = "crate"
+source_url = "https://crates.io/crates/zarrs"

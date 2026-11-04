@@ -1,0 +1,14 @@
+name = "whatlang-rs"
+kind = "library"
+repo = "https://github.com/greyblake/whatlang-rs"
+homepage = "https://github.com/greyblake/whatlang-rs"
+crates = ["whatlang"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast and lightweight language identification library for Rust."
+source = "crate"
+source_url = "https://crates.io/crates/whatlang"

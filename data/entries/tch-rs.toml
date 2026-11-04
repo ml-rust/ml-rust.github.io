@@ -1,0 +1,13 @@
+name = "tch-rs"
+kind = "library"
+repo = "https://github.com/laurentmazare/tch-rs"
+crates = ["tch", "pyo3-tch", "tch-ext", "torch-sys"]
+topics = ["run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust wrappers for the PyTorch C++ api (libtorch)."
+source = "crate"
+source_url = "https://crates.io/crates/tch"

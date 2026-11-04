@@ -1,0 +1,14 @@
+name = "leptess"
+kind = "library"
+repo = "https://github.com/houqp/leptess"
+homepage = "https://github.com/houqp/leptess"
+crates = ["leptess"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Productive Rust binding for Tesseract and Leptonica."
+source = "crate"
+source_url = "https://crates.io/crates/leptess"

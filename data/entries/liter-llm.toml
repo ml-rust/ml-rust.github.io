@@ -1,0 +1,14 @@
+name = "liter-llm"
+kind = "library"
+repo = "https://github.com/xberg-io/liter-llm"
+homepage = "https://xberg.io/"
+crates = ["liter-llm", "liter-llm-cli", "liter-llm-ffi", "liter-llm-proxy"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Universal LLM API client — 174 providers, streaming, tool calling. Rust-powered, type-safe, compiled."
+source = "crate"
+source_url = "https://crates.io/crates/liter-llm"

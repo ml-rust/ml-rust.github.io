@@ -1,0 +1,14 @@
+name = "instant-distance"
+kind = "library"
+repo = "https://github.com/instantdomain/instant-distance"
+homepage = "https://github.com/InstantDomain/instant-distance"
+crates = ["instant-distance"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast minimal implementation of HNSW maps for approximate nearest neighbors searches"
+source = "crate"
+source_url = "https://crates.io/crates/instant-distance"

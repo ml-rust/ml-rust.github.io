@@ -1,0 +1,14 @@
+name = "nexar"
+kind = "library"
+repo = "https://github.com/ml-rust/nexar"
+homepage = "https://crates.io/crates/nexar"
+crates = ["nexar", "nexar-nccl", "nexar-rdma"]
+topics = ["train-models"]
+category = "developer-tools"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "Distributed runtime with QUIC transport, stream-multiplexed messaging, and built-in collectives"
+source = "crate"
+source_url = "https://crates.io/crates/nexar"

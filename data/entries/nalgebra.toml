@@ -1,0 +1,14 @@
+name = "nalgebra"
+kind = "library"
+repo = "https://github.com/dimforge/nalgebra"
+homepage = "https://nalgebra.rs/"
+crates = ["nalgebra", "nalgebra-glm", "nalgebra-lapack", "nalgebra-macros", "nalgebra-sparse"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "General-purpose linear algebra library with transformations and statically-sized or dynamically-sized matrices."
+source = "crate"
+source_url = "https://crates.io/crates/nalgebra"

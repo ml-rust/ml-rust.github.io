@@ -1,0 +1,14 @@
+name = "rten"
+kind = "library"
+repo = "https://github.com/robertknight/rten"
+homepage = "https://github.com/robertknight/rten"
+crates = ["rten-tensor", "rten-imageproc", "rten-model-file", "rten-onnx", "rten-serialize", "rten-shape-inference"]
+topics = ["math-gpu"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Tensor library for the RTen machine learning runtime"
+source = "crate"
+source_url = "https://crates.io/crates/rten-tensor"

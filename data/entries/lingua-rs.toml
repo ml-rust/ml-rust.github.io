@@ -1,0 +1,14 @@
+name = "lingua-rs"
+kind = "library"
+repo = "https://github.com/pemistahl/lingua-rs"
+homepage = "https://github.com/pemistahl/lingua-rs"
+crates = ["lingua", "lingua-afrikaans-language-model", "lingua-albanian-language-model", "lingua-arabic-language-model", "lingua-armenian-language-model", "lingua-azerbaijani-language-model", "lingua-basque-language-model", "lingua-belarusian-language-model", "lingua-bengali-language-model", "lingua-bokmal-language-model", "lingua-bosnian-language-model", "lingua-bulgarian-language-model", "lingua-catalan-language-model", "lingua-chinese-language-model", "lingua-croatian-language-model", "lingua-czech-language-model", "lingua-danish-language-model", "lingua-dutch-language-model", "lingua-english-language-model", "lingua-esperanto-language-model", "lingua-estonian-language-model", "lingua-finnish-language-model", "lingua-french-language-model", "lingua-ganda-language-model", "lingua-georgian-language-model", "lingua-german-language-model", "lingua-greek-language-model", "lingua-gujarati-language-model", "lingua-hebrew-language-model", "lingua-hindi-language-model", "lingua-hungarian-language-model", "lingua-icelandic-language-model", "lingua-indonesian-language-model", "lingua-irish-language-model", "lingua-italian-language-model", "lingua-japanese-language-model", "lingua-kazakh-language-model", "lingua-korean-language-model", "lingua-latin-language-model", "lingua-latvian-language-model", "lingua-lithuanian-language-model", "lingua-macedonian-language-model", "lingua-malay-language-model", "lingua-maori-language-model", "lingua-marathi-language-model", "lingua-mongolian-language-model", "lingua-nynorsk-language-model", "lingua-persian-language-model", "lingua-polish-language-model", "lingua-portuguese-language-model", "lingua-punjabi-language-model", "lingua-romanian-language-model", "lingua-russian-language-model", "lingua-serbian-language-model", "lingua-shona-language-model", "lingua-slovak-language-model", "lingua-slovene-language-model", "lingua-somali-language-model", "lingua-sotho-language-model", "lingua-spanish-language-model", "lingua-swahili-language-model", "lingua-swedish-language-model", "lingua-tagalog-language-model", "lingua-tamil-language-model", "lingua-telugu-language-model", "lingua-thai-language-model", "lingua-tsonga-language-model", "lingua-tswana-language-model", "lingua-turkish-language-model", "lingua-ukrainian-language-model", "lingua-urdu-language-model", "lingua-vietnamese-language-model", "lingua-welsh-language-model", "lingua-xhosa-language-model", "lingua-yoruba-language-model", "lingua-zulu-language-model"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An accurate natural language detection library, suitable for short text and mixed-language text"
+source = "crate"
+source_url = "https://crates.io/crates/lingua"

@@ -1,0 +1,13 @@
+name = "ngt-rs"
+kind = "library"
+repo = "https://github.com/lerouxrgd/ngt-rs"
+crates = ["ngt", "ngt-sys"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust wrappers for NGT nearest neighbor search."
+source = "crate"
+source_url = "https://crates.io/crates/ngt"

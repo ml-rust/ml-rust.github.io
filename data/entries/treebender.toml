@@ -1,0 +1,13 @@
+name = "treebender"
+kind = "library"
+repo = "https://github.com/vgel/treebender"
+crates = ["treebender"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An HDPSG inspired symbolic NLP library for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/treebender"

@@ -1,0 +1,14 @@
+name = "rstats"
+kind = "library"
+repo = "https://github.com/liborty/rstats"
+homepage = "https://github.com/liborty/rstats"
+crates = ["rstats"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Statistics, Information Measures, Data Analysis, Linear Algebra, Clifford Algebra, Machine Learning, Geometric Median, Matrix Decompositions, Mahalanobis Distance, Hulls, Multithreading.."
+source = "crate"
+source_url = "https://crates.io/crates/rstats"

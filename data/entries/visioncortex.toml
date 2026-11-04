@@ -1,0 +1,13 @@
+name = "visioncortex"
+kind = "library"
+repo = "https://github.com/visioncortex/visioncortex"
+crates = ["visioncortex"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Semantic Computer Vision"
+source = "crate"
+source_url = "https://crates.io/crates/visioncortex"

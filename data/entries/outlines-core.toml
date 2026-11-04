@@ -1,0 +1,14 @@
+name = "outlines-core"
+kind = "library"
+repo = "https://github.com/dottxt-ai/outlines-core"
+homepage = "https://docs.rs/outlines-core"
+crates = ["outlines-core"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Structured Generation"
+source = "crate"
+source_url = "https://crates.io/crates/outlines-core"

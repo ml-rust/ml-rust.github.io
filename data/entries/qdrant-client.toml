@@ -1,0 +1,15 @@
+name = "qdrant-client"
+kind = "library"
+repo = "https://github.com/qdrant/rust-client"
+homepage = "https://qdrant.tech/"
+crates = ["qdrant-client"]
+topics = ["text-search"]
+category = "vector-databases"
+part_of = "qdrant"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust client for Qdrant Vector Search Engine"
+source = "crate"
+source_url = "https://crates.io/crates/qdrant-client"

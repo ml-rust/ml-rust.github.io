@@ -1,0 +1,14 @@
+name = "dfdx"
+kind = "library"
+repo = "https://github.com/chelsea0x3b/dfdx"
+homepage = "https://github.com/coreylowman/dfdx"
+crates = ["dfdx"]
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ergonomic auto differentiation in Rust, with pytorch like apis."
+source = "crate"
+source_url = "https://crates.io/crates/dfdx"

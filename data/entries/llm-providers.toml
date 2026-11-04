@@ -1,0 +1,13 @@
+name = "llm_providers"
+kind = "library"
+repo = "https://github.com/lipish/llm-providers"
+crates = ["llm_providers"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A unified source of truth for LLM providers, models, pricing, and capabilities."
+source = "crate"
+source_url = "https://crates.io/crates/llm_providers"

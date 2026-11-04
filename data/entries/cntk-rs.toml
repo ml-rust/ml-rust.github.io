@@ -1,0 +1,13 @@
+name = "cntk-rs"
+kind = "library"
+repo = "https://github.com/usamec/cntk-rs"
+crates = ["cntk"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wrapper around Microsoft CNTK library"
+source = "crate"
+source_url = "https://crates.io/crates/cntk"

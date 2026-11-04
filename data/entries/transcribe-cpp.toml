@@ -1,0 +1,14 @@
+name = "transcribe-cpp"
+kind = "library"
+repo = "https://github.com/handy-computer/transcribe.cpp"
+homepage = "https://github.com/handy-computer/transcribe.cpp"
+crates = ["transcribe-cpp", "transcribe-cpp-sys"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for transcribe.cpp, a C/C++ speech-to-text library built on ggml"
+source = "crate"
+source_url = "https://crates.io/crates/transcribe-cpp"

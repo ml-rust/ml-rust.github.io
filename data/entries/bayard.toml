@@ -1,0 +1,14 @@
+name = "bayard"
+kind = "library"
+repo = "https://github.com/mosuka/bayard"
+homepage = "https://github.com/mosuka/bayard"
+crates = ["bayard", "bayard-cli", "bayard-client", "bayard-common", "bayard-rest", "bayard-server"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A distributed search server."
+source = "crate"
+source_url = "https://crates.io/crates/bayard"

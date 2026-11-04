@@ -1,0 +1,13 @@
+name = "vtext"
+kind = "library"
+repo = "https://github.com/rth/vtext"
+crates = ["vtext"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "NLP with Rust"
+source = "crate"
+source_url = "https://crates.io/crates/vtext"

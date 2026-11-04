@@ -1,0 +1,13 @@
+name = "rust-autograd"
+kind = "library"
+repo = "https://github.com/raskr/rust-autograd"
+crates = ["autograd"]
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Tensors and differentiable operations in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/autograd"

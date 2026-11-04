@@ -1,0 +1,13 @@
+name = "netcdf"
+kind = "library"
+repo = "https://github.com/georust/netcdf"
+crates = ["netcdf"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-level NetCDF bindings for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/netcdf"

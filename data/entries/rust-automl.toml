@@ -1,0 +1,14 @@
+name = "rust-automl"
+kind = "library"
+repo = "https://github.com/cmccomb/rust-automl"
+homepage = "https://github.com/cmccomb/rust-automl"
+crates = ["automl"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Automated machine learning for classification and regression"
+source = "crate"
+source_url = "https://crates.io/crates/automl"

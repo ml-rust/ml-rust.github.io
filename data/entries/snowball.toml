@@ -1,0 +1,14 @@
+name = "snowball"
+kind = "library"
+repo = "https://github.com/snowballstem/snowball"
+homepage = "https://snowballstem.org/"
+crates = ["waken_snowball"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation of Snowball stemming algorithms for 33 languages"
+source = "crate"
+source_url = "https://crates.io/crates/waken_snowball"

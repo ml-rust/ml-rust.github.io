@@ -1,0 +1,13 @@
+name = "llguidance"
+kind = "library"
+repo = "https://github.com/guidance-ai/llguidance"
+crates = ["toktrie", "toktrie_hf_downloader", "toktrie_hf_tokenizers", "toktrie_tiktoken"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "LLM Token Trie library"
+source = "crate"
+source_url = "https://crates.io/crates/toktrie"

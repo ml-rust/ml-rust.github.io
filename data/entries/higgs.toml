@@ -1,0 +1,13 @@
+name = "higgs"
+kind = "app"
+repo = "https://github.com/panbanda/higgs"
+crates = []
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A rust mlx server, ui, and model router for fast, dependency free inference on apple architecture"
+source = "repo"
+source_url = "https://github.com/panbanda/higgs"

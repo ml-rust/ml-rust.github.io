@@ -1,0 +1,14 @@
+name = "trieve"
+kind = "app"
+repo = "https://github.com/devflowinc/trieve"
+homepage = "https://trieve.ai/"
+crates = []
+topics = ["llm-apps", "text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "All-in-one platform for search, recommendations, RAG, and analytics offered via API"
+source = "repo"
+source_url = "https://github.com/devflowinc/trieve"

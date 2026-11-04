@@ -1,0 +1,13 @@
+name = "diffusion-rs"
+kind = "library"
+repo = "https://github.com/newfla/diffusion-rs"
+crates = ["diffusion-rs", "diffusion-rs-sys"]
+topics = ["run-models", "vision-documents"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High level API for stable-diffusion.cpp"
+source = "crate"
+source_url = "https://crates.io/crates/diffusion-rs"

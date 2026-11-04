@@ -1,0 +1,14 @@
+name = "rurel"
+kind = "library"
+repo = "https://github.com/milanboers/rurel"
+homepage = "https://github.com/milanboers/rurel"
+crates = ["rurel"]
+topics = ["train-models"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Flexible, reusable reinforcement learning (Q learning) implementation"
+source = "crate"
+source_url = "https://crates.io/crates/rurel"

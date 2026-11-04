@@ -1,0 +1,13 @@
+name = "RustNN"
+kind = "app"
+repo = "https://github.com/jackm321/rustnn"
+crates = []
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A neural network crate"
+source = "repo"
+source_url = "https://github.com/jackm321/rustnn"

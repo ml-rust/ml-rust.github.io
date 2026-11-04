@@ -1,0 +1,14 @@
+name = "revonet"
+kind = "library"
+repo = "https://github.com/yurytsoy/revonet"
+homepage = "https://github.com/yurytsoy/revonet"
+crates = ["revonet"]
+topics = ["tabular-ml", "train-models"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation of real-coded genetic algorithm for solving optimization problems and training of neural networks. The latter is also known as neuroevolution."
+source = "crate"
+source_url = "https://crates.io/crates/revonet"

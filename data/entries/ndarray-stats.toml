@@ -1,0 +1,14 @@
+name = "ndarray-stats"
+kind = "library"
+repo = "https://github.com/rust-ndarray/ndarray-stats"
+crates = ["ndarray-stats"]
+topics = ["math-gpu"]
+category = "math-libraries"
+part_of = "ndarray"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Statistical routines for the n-dimensional array data structures provided by ndarray."
+source = "crate"
+source_url = "https://crates.io/crates/ndarray-stats"

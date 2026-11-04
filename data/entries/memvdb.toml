@@ -1,0 +1,13 @@
+name = "memvdb"
+kind = "library"
+repo = "https://github.com/aspadax/memvdb"
+crates = ["memvdb"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust in-memory vector database"
+source = "crate"
+source_url = "https://crates.io/crates/memvdb"

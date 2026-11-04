@@ -1,0 +1,14 @@
+name = "spm_precompiled"
+kind = "library"
+repo = "https://github.com/huggingface/spm_precompiled"
+homepage = "https://github.com/huggingface/spm_precompiled"
+crates = ["spm_precompiled"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "This crate aims to emulate https://github.com/google/sentencepiece Dart::DoubleArray struct and it's Normalizer. This crate is highly specialized and not intended for general use."
+source = "crate"
+source_url = "https://crates.io/crates/spm_precompiled"

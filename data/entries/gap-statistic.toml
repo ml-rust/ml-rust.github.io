@@ -1,0 +1,13 @@
+name = "gap_statistic"
+kind = "app"
+repo = "https://github.com/milesgranger/gap_statistic"
+crates = []
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Dynamically get the suggested clusters in the data for unsupervised learning."
+source = "repo"
+source_url = "https://github.com/milesgranger/gap_statistic"

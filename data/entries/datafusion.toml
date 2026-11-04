@@ -1,0 +1,14 @@
+name = "datafusion"
+kind = "library"
+repo = "https://github.com/apache/datafusion"
+homepage = "https://datafusion.apache.org/"
+crates = ["datafusion", "datafusion-catalog", "datafusion-catalog-listing", "datafusion-cli", "datafusion-common", "datafusion-common-runtime", "datafusion-data-access", "datafusion-datasource", "datafusion-datasource-arrow", "datafusion-datasource-avro", "datafusion-datasource-csv", "datafusion-datasource-json", "datafusion-datasource-parquet", "datafusion-doc", "datafusion-execution", "datafusion-expr", "datafusion-expr-common", "datafusion-ffi", "datafusion-functions", "datafusion-functions-aggregate", "datafusion-functions-aggregate-common", "datafusion-functions-array", "datafusion-functions-nested", "datafusion-functions-table", "datafusion-functions-window", "datafusion-functions-window-common", "datafusion-gpu", "datafusion-jit", "datafusion-macros", "datafusion-optimizer", "datafusion-physical-expr", "datafusion-physical-expr-adapter", "datafusion-physical-expr-common", "datafusion-physical-optimizer", "datafusion-physical-plan", "datafusion-proto", "datafusion-proto-common", "datafusion-proto-models", "datafusion-pruning", "datafusion-row", "datafusion-session", "datafusion-spark", "datafusion-sql", "datafusion-sqllogictest", "datafusion-substrait"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "DataFusion is an in-memory query engine that uses Apache Arrow as the memory model"
+source = "crate"
+source_url = "https://crates.io/crates/datafusion"

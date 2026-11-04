@@ -1,0 +1,13 @@
+name = "cmf"
+kind = "app"
+repo = "https://github.com/infosave2007/cmf"
+crates = []
+topics = ["data-formats", "run-models"]
+category = "model-formats"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "One backbone, many specialists. CMF is a self-describing, memory-mappable single-file format and a dependency-free runtime for quantized LLMs — zero-copy execution on CPU or GPU (Vulkan · Metal · DX12) that overlays task-specialized skills onto one shared model, with no per-model duplication."
+source = "repo"
+source_url = "https://github.com/infosave2007/cmf"

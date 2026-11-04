@@ -1,0 +1,13 @@
+name = "text2num-rs"
+kind = "library"
+repo = "https://github.com/allo-media/text2num-rs"
+crates = ["text2num"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Parse and convert numbers written in English, Danish, Dutch, Spanish, Portuguese, German, Italian or French into their digit representation."
+source = "crate"
+source_url = "https://crates.io/crates/text2num"

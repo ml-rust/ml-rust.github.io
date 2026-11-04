@@ -1,0 +1,13 @@
+name = "candle-vllm"
+kind = "app"
+repo = "https://github.com/ericlbuehler/candle-vllm"
+crates = []
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Efficent platform for inference and serving local LLMs including an OpenAI compatible API server."
+source = "repo"
+source_url = "https://github.com/ericlbuehler/candle-vllm"

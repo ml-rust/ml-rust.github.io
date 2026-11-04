@@ -1,0 +1,13 @@
+name = "ctranslate2-rs"
+kind = "library"
+repo = "https://github.com/jkawamoto/ctranslate2-rs"
+crates = ["ct2rs", "ct2rs-platform"]
+topics = ["run-models", "text-search"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for OpenNMT/CTranslate2"
+source = "crate"
+source_url = "https://crates.io/crates/ct2rs"

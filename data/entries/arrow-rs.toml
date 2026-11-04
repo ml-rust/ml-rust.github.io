@@ -1,0 +1,14 @@
+name = "arrow-rs"
+kind = "library"
+repo = "https://github.com/apache/arrow-rs"
+homepage = "https://arrow.apache.org/"
+crates = ["arrow", "arrow-arith", "arrow-array", "arrow-avro", "arrow-buffer", "arrow-cast", "arrow-cmp", "arrow-csv", "arrow-data", "arrow-flight", "arrow-gpu", "arrow-integration-test", "arrow-ipc", "arrow-json", "arrow-ord", "arrow-pyarrow", "arrow-row", "arrow-schema", "arrow-select", "arrow-string", "parquet", "parquet-geospatial", "parquet-variant", "parquet-variant-compute", "parquet-variant-json", "parquet_derive"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation of Apache Arrow"
+source = "crate"
+source_url = "https://crates.io/crates/arrow"

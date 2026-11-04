@@ -1,0 +1,13 @@
+name = "onnx-extractor"
+kind = "library"
+repo = "https://github.com/void-research/onnx-extractor"
+crates = ["onnx-extractor"]
+topics = ["data-formats", "run-models"]
+category = "model-formats"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Minimal ONNX model loader for extracting weights, tensors, operations, and graph structure"
+source = "crate"
+source_url = "https://crates.io/crates/onnx-extractor"

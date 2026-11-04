@@ -1,0 +1,13 @@
+name = "tokie"
+kind = "library"
+repo = "https://github.com/chonkie-inc/tokie"
+crates = ["tokie", "pretokie"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Blazingly fast tokenizer - 50x faster tokenization, 10x smaller model files, 100% accurate drop-in replacement for HuggingFace"
+source = "crate"
+source_url = "https://crates.io/crates/tokie"

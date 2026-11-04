@@ -1,0 +1,14 @@
+name = "rust-tiktoken"
+kind = "library"
+repo = "https://github.com/goliajp/rust-tiktoken"
+homepage = "https://github.com/goliajp/rust-tiktoken"
+crates = ["tiktoken"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A high-performance pure-Rust implementation of OpenAI's tiktoken BPE tokenizer"
+source = "crate"
+source_url = "https://crates.io/crates/tiktoken"

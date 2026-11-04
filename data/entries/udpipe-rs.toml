@@ -1,0 +1,13 @@
+name = "udpipe-rs"
+kind = "library"
+repo = "https://github.com/ccostello97/udpipe-rs"
+crates = ["udpipe-rs"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for UDPipe - a trainable pipeline for tokenization, tagging, lemmatization and dependency parsing of CoNLL-U files"
+source = "crate"
+source_url = "https://crates.io/crates/udpipe-rs"

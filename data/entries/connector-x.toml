@@ -1,0 +1,13 @@
+name = "connector-x"
+kind = "library"
+repo = "https://github.com/sfu-db/connector-x"
+crates = ["connectorx"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Load data from databases to dataframes, the fastest way."
+source = "crate"
+source_url = "https://crates.io/crates/connectorx"

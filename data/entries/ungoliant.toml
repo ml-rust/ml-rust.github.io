@@ -1,0 +1,14 @@
+name = "ungoliant"
+kind = "library"
+repo = "https://github.com/oscar-project/ungoliant"
+homepage = "https://github.com/oscar-project/ungoliant"
+crates = ["ungoliant"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The pipeline for the OSCAR corpus."
+source = "crate"
+source_url = "https://crates.io/crates/ungoliant"

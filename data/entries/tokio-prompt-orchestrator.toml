@@ -1,0 +1,14 @@
+name = "tokio-prompt-orchestrator"
+kind = "library"
+repo = "https://github.com/mattbusel/tokio-prompt-orchestrator"
+homepage = "https://tokio-prompt-orchestrator.vercel.app/"
+crates = ["tokio-prompt-orchestrator"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Put a queue, deduplication and a circuit breaker in front of any LLM API, so repeated prompts cost one call and outages fail fast. Rust library, HTTP server and CLI."
+source = "crate"
+source_url = "https://crates.io/crates/tokio-prompt-orchestrator"

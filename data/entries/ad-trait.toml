@@ -1,0 +1,13 @@
+name = "ad_trait"
+kind = "library"
+repo = "https://github.com/djrakita/ad_trait"
+crates = ["ad_trait"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Easy to use, efficient, and highly flexible automatic differentiation in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/ad_trait"

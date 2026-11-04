@@ -1,0 +1,13 @@
+name = "annembed"
+kind = "library"
+repo = "https://github.com/jean-pierreboth/annembed"
+crates = ["annembed"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "a Rust implementation of a dimension reduction à la Umap"
+source = "crate"
+source_url = "https://crates.io/crates/annembed"

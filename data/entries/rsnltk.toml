@@ -1,0 +1,14 @@
+name = "rsnltk"
+kind = "library"
+repo = "https://github.com/dhchenx/rsnltk"
+homepage = "https://crates.io/crates/rsnltk"
+crates = ["rsnltk"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust-based Natural Language Toolkit"
+source = "crate"
+source_url = "https://crates.io/crates/rsnltk"

@@ -1,0 +1,14 @@
+name = "alpino-tokenizer"
+kind = "library"
+repo = "https://github.com/danieldk/alpino-tokenizer"
+homepage = "https://github.com/danieldk/alpino-tokenizer"
+crates = ["alpino-tokenizer", "alpino-tokenize", "alpino-tokenizer-sys"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wrapper around the Alpino tokenizer for Dutch"
+source = "crate"
+source_url = "https://crates.io/crates/alpino-tokenizer"

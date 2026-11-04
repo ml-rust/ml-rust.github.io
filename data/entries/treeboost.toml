@@ -1,0 +1,14 @@
+name = "treeboost"
+kind = "library"
+repo = "https://github.com/ml-rust/treeboost"
+homepage = "https://github.com/ml-rust/treeboost"
+crates = ["treeboost"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "High-performance Gradient Boosted Decision Tree engine for large-scale tabular data"
+source = "crate"
+source_url = "https://crates.io/crates/treeboost"

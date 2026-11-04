@@ -1,0 +1,13 @@
+name = "granne"
+kind = "library"
+repo = "https://github.com/granne/granne"
+crates = ["granne"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Graph-based Retrieval of Approximate Nearest Neighbors"
+source = "crate"
+source_url = "https://crates.io/crates/granne"

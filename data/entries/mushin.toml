@@ -1,0 +1,14 @@
+name = "mushin"
+kind = "library"
+repo = "https://github.com/c0dearm/mushin"
+homepage = "https://github.com/c0dearm/mushin"
+crates = ["mushin", "mushin_derive"]
+topics = ["math-gpu"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Computational graphs with reverse automatic differentation in the GPU"
+source = "crate"
+source_url = "https://crates.io/crates/mushin"

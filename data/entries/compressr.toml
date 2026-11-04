@@ -1,0 +1,14 @@
+name = "compressr"
+kind = "library"
+repo = "https://github.com/ml-rust/compressr"
+homepage = "https://github.com/ml-rust/compressr"
+crates = ["compressr"]
+topics = ["data-formats", "run-models"]
+category = "model-formats"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "High-performance model conversion and compression suite for LLMs"
+source = "crate"
+source_url = "https://crates.io/crates/compressr"

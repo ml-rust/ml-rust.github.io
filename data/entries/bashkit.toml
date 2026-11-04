@@ -1,0 +1,13 @@
+name = "bashkit"
+kind = "library"
+repo = "https://github.com/everruns/bashkit"
+crates = ["bashkit", "bashkit-cli", "bashkit-scripted-tool"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Awesomely fast virtual sandbox with bash and file system"
+source = "crate"
+source_url = "https://crates.io/crates/bashkit"

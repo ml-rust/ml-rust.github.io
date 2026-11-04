@@ -1,0 +1,13 @@
+name = "candle"
+kind = "library"
+repo = "https://github.com/huggingface/candle"
+crates = ["candle-core", "candle-datasets", "candle-examples", "candle-flash-attn", "candle-flash-attn-v3", "candle-kernels", "candle-metal-kernels", "candle-nn", "candle-onnx", "candle-pyo3", "candle-transformers", "candle-ug", "tensor-tools"]
+topics = ["math-gpu", "run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Minimalist ML framework."
+source = "crate"
+source_url = "https://crates.io/crates/candle-core"

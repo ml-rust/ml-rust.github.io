@@ -1,0 +1,14 @@
+name = "orkhon"
+kind = "library"
+repo = "https://github.com/vertexclique/orkhon"
+homepage = "https://github.com/vertexclique/orkhon"
+crates = ["orkhon"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine Learning Inference Framework and Server Runtime"
+source = "crate"
+source_url = "https://crates.io/crates/orkhon"

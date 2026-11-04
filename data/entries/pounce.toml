@@ -1,0 +1,13 @@
+name = "pounce"
+kind = "library"
+repo = "https://github.com/jkitchin/pounce"
+crates = ["pounce-rs", "pounce-algorithm", "pounce-cinterface", "pounce-cli", "pounce-common", "pounce-convex", "pounce-l1penalty", "pounce-linalg", "pounce-minima", "pounce-nlp", "pounce-presolve", "pounce-qp", "pounce-restoration", "pounce-sensitivity", "pounce-studio-core"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Single-crate facade for POUNCE from Rust: re-exports the TNLP trait, the IpoptApplication driver, and the supporting types in one place (plus a prelude), with feature-gated modules for the convex/LP/QP, active-set QP, and sensitivity paths."
+source = "crate"
+source_url = "https://crates.io/crates/pounce-rs"

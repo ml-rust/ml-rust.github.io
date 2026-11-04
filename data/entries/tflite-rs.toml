@@ -1,0 +1,13 @@
+name = "tflite-rs"
+kind = "library"
+repo = "https://github.com/boncheolgu/tflite-rs"
+crates = ["tflite"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for TensorFlow Lite"
+source = "crate"
+source_url = "https://crates.io/crates/tflite"

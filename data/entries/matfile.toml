@@ -1,0 +1,13 @@
+name = "matfile"
+kind = "library"
+repo = "https://github.com/dthul/matfile"
+crates = ["matfile", "matfile-ndarray"]
+topics = ["data-formats"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = 'Matfile is a library for reading and writing Matlab ".mat" data files.'
+source = "crate"
+source_url = "https://crates.io/crates/matfile"

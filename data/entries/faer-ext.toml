@@ -1,0 +1,14 @@
+name = "faer-ext"
+kind = "library"
+repo = "https://github.com/sarah-ek/faer-ext"
+crates = ["faer-ext"]
+topics = ["math-gpu"]
+category = "math-libraries"
+part_of = "faer"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "faer API for interoperability with external libraries"
+source = "crate"
+source_url = "https://crates.io/crates/faer-ext"

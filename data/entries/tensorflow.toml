@@ -1,0 +1,13 @@
+name = "tensorflow"
+kind = "library"
+repo = "https://github.com/tensorflow/rust"
+crates = ["tensorflow", "tensorflow-internal-macros", "tensorflow-sys", "tensorflow-sys-runtime"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust language bindings for TensorFlow."
+source = "crate"
+source_url = "https://crates.io/crates/tensorflow"

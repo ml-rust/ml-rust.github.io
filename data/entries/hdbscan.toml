@@ -1,0 +1,13 @@
+name = "hdbscan"
+kind = "library"
+repo = "https://github.com/tom-whitehead/hdbscan"
+crates = ["hdbscan"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "HDBSCAN clustering in pure Rust. A huge improvement on DBSCAN, capable of identifying clusters of varying densities."
+source = "crate"
+source_url = "https://crates.io/crates/hdbscan"

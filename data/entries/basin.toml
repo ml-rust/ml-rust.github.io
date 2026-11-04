@@ -1,0 +1,14 @@
+name = "basin"
+kind = "library"
+repo = "https://github.com/jolars/basin"
+homepage = "https://basin.rs/"
+crates = ["basin"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Numerical optimization in pure Rust, with pluggable linear-algebra backends and WASM support."
+source = "crate"
+source_url = "https://crates.io/crates/basin"

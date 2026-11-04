@@ -1,0 +1,14 @@
+name = "silero"
+kind = "library"
+repo = "https://github.com/findit-ai/silero"
+homepage = "https://github.com/Findit-AI/silero"
+crates = ["silero"]
+topics = ["run-models", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Production-oriented Rust wrapper for the Silero VAD ONNX model."
+source = "crate"
+source_url = "https://crates.io/crates/silero"

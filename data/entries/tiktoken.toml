@@ -1,0 +1,17 @@
+name = "tiktoken"
+kind = "app"
+repo = "https://github.com/openai/tiktoken"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "tiktoken is a fast BPE tokeniser for use with OpenAI's models."
+source = "repo"
+source_url = "https://github.com/openai/tiktoken"
+
+[distribution]
+docker = []
+repology = "tiktoken"

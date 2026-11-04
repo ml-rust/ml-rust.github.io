@@ -1,0 +1,14 @@
+name = "rllama"
+kind = "library"
+repo = "https://github.com/noeda/rllama"
+homepage = "https://github.com/Noeda/rllama"
+crates = ["rllama"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust implementation of LLaMA-family of models, executable"
+source = "crate"
+source_url = "https://crates.io/crates/rllama"

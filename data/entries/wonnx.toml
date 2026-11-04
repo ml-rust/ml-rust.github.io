@@ -1,0 +1,14 @@
+name = "wonnx"
+kind = "library"
+repo = "https://github.com/webonnx/wonnx"
+homepage = "https://github.com/webonnx/wonnx"
+crates = ["wonnx", "wonnx-cli", "wonnx-preprocessing"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wonnx is an ONNX runtime based on wgpu aimed at being a universal GPU runtime, written in Rust."
+source = "crate"
+source_url = "https://crates.io/crates/wonnx"

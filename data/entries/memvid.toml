@@ -1,0 +1,13 @@
+name = "memvid"
+kind = "library"
+repo = "https://github.com/memvid/memvid"
+crates = ["memvid-core", "memvid-ask-model", "memvid-cli"]
+topics = ["llm-apps", "text-search"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Core library for Memvid v2, a crash-safe, deterministic, single-file AI memory."
+source = "crate"
+source_url = "https://crates.io/crates/memvid-core"

@@ -1,0 +1,13 @@
+name = "ndarray-interp"
+kind = "library"
+repo = "https://github.com/jonasboss/ndarray-interp"
+crates = ["ndarray-interp"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Interpolation package for ndarray"
+source = "crate"
+source_url = "https://crates.io/crates/ndarray-interp"

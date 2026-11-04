@@ -1,0 +1,13 @@
+name = "sherpa-rs"
+kind = "library"
+repo = "https://github.com/thewh1teagle/sherpa-rs"
+crates = ["sherpa-rs", "sherpa-rs-sys"]
+topics = ["speech-audio", "text-search"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings to https://github.com/k2-fsa/sherpa-onnx"
+source = "crate"
+source_url = "https://crates.io/crates/sherpa-rs"

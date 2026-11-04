@@ -1,0 +1,14 @@
+name = "model2vec-rs"
+kind = "library"
+repo = "https://github.com/minishlab/model2vec-rs"
+homepage = "https://github.com/MinishLab/model2vec-rs"
+crates = ["model2vec-rs"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Official Rust Implementation of Model2Vec"
+source = "crate"
+source_url = "https://crates.io/crates/model2vec-rs"

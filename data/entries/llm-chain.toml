@@ -1,0 +1,14 @@
+name = "llm-chain"
+kind = "library"
+repo = "https://github.com/sobelio/llm-chain"
+homepage = "https://llm-chain.xyz/"
+crates = ["llm-chain", "llm-chain-hnsw", "llm-chain-llama", "llm-chain-llama-sys", "llm-chain-local", "llm-chain-macros", "llm-chain-milvus", "llm-chain-mock", "llm-chain-openai", "llm-chain-qdrant", "llm-chain-sagemaker-endpoint", "llm-chain-tools"]
+topics = ["llm-apps", "run-models"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A library for running chains of LLMs (such as ChatGPT) in series to complete complex tasks, such as text summation."
+source = "crate"
+source_url = "https://crates.io/crates/llm-chain"

@@ -1,0 +1,14 @@
+name = "polars"
+kind = "library"
+repo = "https://github.com/pola-rs/polars"
+homepage = "https://www.pola.rs/"
+crates = ["polars", "polars-buffer", "polars-compute", "polars-core", "polars-error", "polars-io", "polars-json", "polars-lazy", "polars-pipe", "polars-plan", "polars-python", "polars-row", "polars-schema", "polars-stream", "polars-testing", "polars-time", "polars-utils"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "DataFrame library based on Apache Arrow"
+source = "crate"
+source_url = "https://crates.io/crates/polars"

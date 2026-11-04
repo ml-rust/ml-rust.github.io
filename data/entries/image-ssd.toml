@@ -1,0 +1,13 @@
+name = "image-ssd"
+kind = "app"
+repo = "https://github.com/mermoldy/image-ssd"
+crates = []
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust library for object detection via SSD MobileNet."
+source = "repo"
+source_url = "https://github.com/mermoldy/image-ssd"

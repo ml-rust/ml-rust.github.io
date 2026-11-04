@@ -1,0 +1,13 @@
+name = "peroxide"
+kind = "library"
+repo = "https://github.com/axect/peroxide"
+crates = ["peroxide"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust comprehensive scientific computation library contains linear algebra, numerical analysis, statistics and machine learning tools with familiar syntax"
+source = "crate"
+source_url = "https://crates.io/crates/peroxide"

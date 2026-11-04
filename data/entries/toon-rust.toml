@@ -1,0 +1,14 @@
+name = "toon-rust"
+kind = "library"
+repo = "https://github.com/toon-format/toon-rust"
+homepage = "https://toonformat.dev/"
+crates = ["toon-format"]
+topics = ["llm-apps"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Token-Oriented Object Notation (TOON) - a token-efficient JSON alternative for LLM prompts"
+source = "crate"
+source_url = "https://crates.io/crates/toon-format"

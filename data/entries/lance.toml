@@ -1,0 +1,13 @@
+name = "lance"
+kind = "library"
+repo = "https://github.com/lance-format/lance"
+crates = ["lance", "fsst", "lance-arrow", "lance-arrow-scalar", "lance-arrow-stats", "lance-bitpacking", "lance-core", "lance-datafusion", "lance-datagen", "lance-derive", "lance-encoding", "lance-examples", "lance-file", "lance-geo", "lance-index", "lance-index-core", "lance-io", "lance-jsonb", "lance-linalg", "lance-namespace", "lance-namespace-datafusion", "lance-namespace-impls", "lance-select", "lance-table", "lance-test-macros", "lance-testing", "lance-tokenizer", "lance-tools"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A columnar data format that is 100x faster than Parquet for random access."
+source = "crate"
+source_url = "https://crates.io/crates/lance"

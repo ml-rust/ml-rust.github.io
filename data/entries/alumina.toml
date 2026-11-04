@@ -1,0 +1,13 @@
+name = "alumina"
+kind = "library"
+repo = "https://github.com/millardjn/alumina"
+crates = ["alumina"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An Experimental Deep Learning Library"
+source = "crate"
+source_url = "https://crates.io/crates/alumina"

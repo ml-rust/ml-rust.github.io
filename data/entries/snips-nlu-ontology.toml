@@ -1,0 +1,13 @@
+name = "snips-nlu-ontology"
+kind = "app"
+repo = "https://github.com/snipsco/snips-nlu-ontology"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ontology of Snips NLU"
+source = "repo"
+source_url = "https://github.com/snipsco/snips-nlu-ontology"

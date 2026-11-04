@@ -1,0 +1,13 @@
+name = "neuroflow"
+kind = "library"
+repo = "https://github.com/mikhailkravets/neuroflow"
+crates = ["neuroflow"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The neural network library implemented in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/neuroflow"

@@ -1,0 +1,14 @@
+name = "imageproc"
+kind = "library"
+repo = "https://github.com/image-rs/imageproc"
+homepage = "https://github.com/image-rs/imageproc"
+crates = ["imageproc"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Image processing operations"
+source = "crate"
+source_url = "https://crates.io/crates/imageproc"

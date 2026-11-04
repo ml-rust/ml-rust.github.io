@@ -1,0 +1,13 @@
+name = "kiddo"
+kind = "library"
+repo = "https://github.com/sdd/kiddo"
+crates = ["kiddo"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A high-performance, flexible, ergonomic k-d tree library. Ideal for geo- and astro- nearest-neighbour and k-nearest-neighbor queries"
+source = "crate"
+source_url = "https://crates.io/crates/kiddo"

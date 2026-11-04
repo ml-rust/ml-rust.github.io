@@ -1,0 +1,13 @@
+name = "mnist"
+kind = "library"
+repo = "https://github.com/davidmcneil/mnist"
+crates = ["mnist"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "MNIST data set parser."
+source = "crate"
+source_url = "https://crates.io/crates/mnist"

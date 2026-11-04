@@ -1,0 +1,14 @@
+name = "kodama"
+kind = "library"
+repo = "https://github.com/diffeo/kodama"
+homepage = "https://github.com/diffeo/kodama"
+crates = ["kodama", "kodama-bin", "kodama-capi"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Agglomerative hierarchical clustering."
+source = "crate"
+source_url = "https://crates.io/crates/kodama"

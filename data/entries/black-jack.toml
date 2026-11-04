@@ -1,0 +1,13 @@
+name = "black-jack"
+kind = "library"
+repo = "https://github.com/milesgranger/black-jack"
+crates = ["black-jack"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "DataFrame / Series / general data processing in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/black-jack"

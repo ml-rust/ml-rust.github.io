@@ -1,0 +1,14 @@
+name = "finalfusion-rust"
+kind = "library"
+repo = "https://github.com/finalfusion/finalfusion-rust"
+homepage = "https://github.com/finalfusion/finalfusion-rust"
+crates = ["finalfusion", "finalfusion-utils"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Reader and writer for common word embedding formats"
+source = "crate"
+source_url = "https://crates.io/crates/finalfusion"

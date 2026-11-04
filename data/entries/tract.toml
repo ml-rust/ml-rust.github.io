@@ -1,0 +1,13 @@
+name = "tract"
+kind = "library"
+repo = "https://github.com/snipsco/tract"
+crates = ["tract", "tract-core", "tract-cuda", "tract-data", "tract-extra", "tract-ffi", "tract-gpu", "tract-hir", "tract-kaldi", "tract-libcli", "tract-linalg", "tract-metal", "tract-nnef", "tract-nnef-resources", "tract-onnx", "tract-onnx-opl", "tract-pulse", "tract-pulse-opl", "tract-tensorflow", "tract-tflite", "tract-transformers"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Tiny, no-nonsense, self contained, TensorFlow and ONNX inference"
+source = "crate"
+source_url = "https://crates.io/crates/tract"

@@ -1,0 +1,14 @@
+name = "awaken"
+kind = "library"
+repo = "https://github.com/awakenworks/awaken"
+homepage = "https://github.com/AwakenWorks/awaken"
+crates = ["awaken", "awaken-agent", "awaken-contract", "awaken-eval", "awaken-ext-deferred-tools", "awaken-ext-generative-ui", "awaken-ext-mcp", "awaken-ext-observability", "awaken-ext-permission", "awaken-ext-reminder", "awaken-ext-skills", "awaken-protocol-a2a", "awaken-runtime", "awaken-runtime-contract", "awaken-server", "awaken-server-contract", "awaken-stores", "awaken-tool-pattern"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust AI agent backend: build capabilities once, tune behavior live, serve every client"
+source = "crate"
+source_url = "https://crates.io/crates/awaken"

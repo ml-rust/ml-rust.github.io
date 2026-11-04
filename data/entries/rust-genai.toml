@@ -1,0 +1,14 @@
+name = "rust-genai"
+kind = "library"
+repo = "https://github.com/jeremychone/rust-genai"
+homepage = "https://github.com/jeremychone/rust-genai"
+crates = ["genai"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Multi-AI Providers Library for Rust. (OpenAI, Gemini, Anthropic, DeepSeek, Ollama, OMLX, AWS Bedrock, Vertex, Xai, Groq, Kimi, GLM and many more)"
+source = "crate"
+source_url = "https://crates.io/crates/genai"

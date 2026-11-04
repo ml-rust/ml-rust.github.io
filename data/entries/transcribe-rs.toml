@@ -1,0 +1,13 @@
+name = "transcribe-rs"
+kind = "library"
+repo = "https://github.com/cjpais/transcribe-rs"
+crates = ["transcribe-rs"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A simple library to help you transcribe audio"
+source = "crate"
+source_url = "https://crates.io/crates/transcribe-rs"

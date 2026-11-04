@@ -1,0 +1,14 @@
+name = "pdf_oxide"
+kind = "library"
+repo = "https://github.com/yfedoseev/pdf_oxide"
+homepage = "https://oxide.fyi/"
+crates = ["pdf_oxide", "pdf_oxide_mcp"]
+topics = ["llm-apps", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The fastest Rust PDF library — 0.8ms mean, 5× faster than the industry leaders, 100% pass rate on 3,830 real-world PDFs. Text extraction, Markdown/HTML conversion, PDF creation and editing."
+source = "crate"
+source_url = "https://crates.io/crates/pdf_oxide"

@@ -1,0 +1,14 @@
+name = "dlpark"
+kind = "library"
+repo = "https://github.com/sundoge/dlpark"
+homepage = "https://crates.io/crates/dlpark"
+crates = ["dlpark"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust DLPack implementation for zero-copy tensor interoperability"
+source = "crate"
+source_url = "https://crates.io/crates/dlpark"

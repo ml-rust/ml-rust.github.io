@@ -1,0 +1,13 @@
+name = "faer"
+kind = "library"
+repo = "https://codeberg.org/sarah-quinones/faer"
+crates = ["faer"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "linear algebra library"
+source = "crate"
+source_url = "https://crates.io/crates/faer"

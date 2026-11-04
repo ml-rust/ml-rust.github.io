@@ -1,0 +1,14 @@
+name = "lumberjack"
+kind = "library"
+repo = "https://github.com/sebpuetz/lumberjack"
+homepage = "https://github.com/sebpuetz/lumberjack"
+crates = ["lumberjack", "lumberjack-utils"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Read and modify constituency trees."
+source = "crate"
+source_url = "https://crates.io/crates/lumberjack"

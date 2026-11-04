@@ -1,0 +1,13 @@
+name = "sprs"
+kind = "library"
+repo = "https://github.com/sparsemat/sprs"
+crates = ["sprs"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A sparse matrix library"
+source = "crate"
+source_url = "https://crates.io/crates/sprs"

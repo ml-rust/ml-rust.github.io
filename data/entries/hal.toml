@@ -1,0 +1,14 @@
+name = "hal"
+kind = "library"
+repo = "https://github.com/jramapuram/hal"
+homepage = "https://github.com/jramapuram/hal"
+crates = ["hal-ml"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "HAL: a machine learning library that is able to run on Nvidia, OpenCL or CPU BLAS based compute backends. It currently provides stackable classical neural networks, RNN's and soon to be LSTM's."
+source = "crate"
+source_url = "https://crates.io/crates/hal-ml"

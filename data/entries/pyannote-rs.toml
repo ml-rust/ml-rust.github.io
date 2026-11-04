@@ -1,0 +1,13 @@
+name = "pyannote-rs"
+kind = "library"
+repo = "https://github.com/thewh1teagle/pyannote-rs"
+crates = ["pyannote-rs", "knf-rs"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Speaker diarization using pyannote in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/pyannote-rs"

@@ -1,0 +1,13 @@
+name = "chunk"
+kind = "library"
+repo = "https://github.com/chonkie-inc/chunk"
+crates = ["chunk"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "The fastest semantic text chunking library — up to 1TB/s chunking throughput"
+source = "crate"
+source_url = "https://crates.io/crates/chunk"

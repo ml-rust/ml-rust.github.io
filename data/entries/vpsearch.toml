@@ -1,0 +1,14 @@
+name = "vpsearch"
+kind = "library"
+repo = "https://github.com/kornelski/vpsearch"
+homepage = "https://lib.rs/crates/vpsearch"
+crates = ["vpsearch"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Vantage Point Tree search algorithm for fast nearest neighbour search in multi-dimensional metric spaces."
+source = "crate"
+source_url = "https://crates.io/crates/vpsearch"

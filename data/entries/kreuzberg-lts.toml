@@ -1,0 +1,14 @@
+name = "kreuzberg-lts"
+kind = "library"
+repo = "https://github.com/kreuzberg-dev/kreuzberg-lts"
+homepage = "https://kreuzberg.dev/"
+crates = ["kreuzberg", "kreuzberg-paddle-ocr", "kreuzberg-tesseract"]
+topics = ["run-models", "vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance document intelligence library for Rust. Extract text, metadata, and structured data from PDFs, Office documents, images, and 91+ formats and 248 programming languages via tree-sitter code intelligence with async/sync APIs."
+source = "crate"
+source_url = "https://crates.io/crates/kreuzberg"

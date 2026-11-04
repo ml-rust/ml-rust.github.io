@@ -1,0 +1,13 @@
+name = "snips-nlu-parsers"
+kind = "app"
+repo = "https://github.com/snipsco/snips-nlu-parsers"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust crate for entity parsing"
+source = "repo"
+source_url = "https://github.com/snipsco/snips-nlu-parsers"

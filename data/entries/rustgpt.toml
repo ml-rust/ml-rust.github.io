@@ -1,0 +1,13 @@
+name = "RustGPT"
+kind = "app"
+repo = "https://github.com/tekaratzas/rustgpt"
+crates = []
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An transformer based LLM. Written completely in Rust"
+source = "repo"
+source_url = "https://github.com/tekaratzas/rustgpt"

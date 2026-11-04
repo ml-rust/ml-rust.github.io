@@ -1,0 +1,13 @@
+name = "regexr"
+kind = "library"
+repo = "https://github.com/ml-rust/regexr"
+crates = ["regexr"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "A high-performance regex engine built from scratch with JIT compilation and SIMD acceleration"
+source = "crate"
+source_url = "https://crates.io/crates/regexr"

@@ -1,0 +1,14 @@
+name = "oxidized-transformers"
+kind = "library"
+repo = "https://github.com/oxidized-transformers/oxidized-transformers"
+homepage = "https://github.com/oxidized-transformers/oxidized-transformers"
+crates = ["oxidized-transformers", "oxidized-cuda-kernels"]
+topics = ["run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Transformers library (not functional yet)"
+source = "crate"
+source_url = "https://crates.io/crates/oxidized-transformers"

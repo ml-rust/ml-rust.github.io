@@ -1,0 +1,13 @@
+name = "mel_spec"
+kind = "library"
+repo = "https://github.com/wavey-ai/mel-spec"
+crates = ["mel_spec", "mel_spec_pipeline"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Mel spectrograms aligned to the results from the whisper.cpp, pytorch and librosa reference implementations and suited to streaming audio."
+source = "crate"
+source_url = "https://crates.io/crates/mel_spec"

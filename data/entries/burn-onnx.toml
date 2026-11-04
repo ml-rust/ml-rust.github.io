@@ -1,0 +1,14 @@
+name = "burn-onnx"
+kind = "library"
+repo = "https://github.com/tracel-ai/burn-onnx"
+crates = ["burn-onnx", "burn-import", "onnx-ir", "onnx-ir-derive"]
+topics = ["data-formats", "run-models"]
+category = "model-formats"
+part_of = "burn"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Import and export ONNX models with the Burn framework"
+source = "crate"
+source_url = "https://crates.io/crates/burn-onnx"

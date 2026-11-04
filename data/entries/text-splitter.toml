@@ -1,0 +1,13 @@
+name = "text-splitter"
+kind = "library"
+repo = "https://github.com/benbrandt/text-splitter"
+crates = ["text-splitter"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Split text into semantic chunks, up to a desired chunk size. Supports calculating length by characters and tokens, and is callable from Rust and Python."
+source = "crate"
+source_url = "https://crates.io/crates/text-splitter"

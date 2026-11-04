@@ -1,0 +1,14 @@
+name = "frostem"
+kind = "library"
+repo = "https://github.com/xuanwo/frostem"
+homepage = "https://github.com/Xuanwo/frostem"
+crates = ["frostem"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pre-built Snowball stemmers for Rust (tracks snowball main)"
+source = "crate"
+source_url = "https://crates.io/crates/frostem"

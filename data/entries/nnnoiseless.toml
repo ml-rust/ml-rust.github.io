@@ -1,0 +1,13 @@
+name = "nnnoiseless"
+kind = "library"
+repo = "https://github.com/jneem/nnnoiseless"
+crates = ["nnnoiseless"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Audio denoising, derived from Xiph's RNNoise library"
+source = "crate"
+source_url = "https://crates.io/crates/nnnoiseless"

@@ -1,0 +1,14 @@
+name = "sticker"
+kind = "library"
+repo = "https://github.com/stickeritis/sticker"
+homepage = "https://github.com/stickeritis/sticker"
+crates = ["sticker2", "sticker2-utils"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Neural sequence labeler, superseded by SyntaxDot"
+source = "crate"
+source_url = "https://crates.io/crates/sticker2"

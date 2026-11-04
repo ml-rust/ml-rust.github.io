@@ -1,0 +1,13 @@
+name = "gemini-rust"
+kind = "library"
+repo = "https://github.com/flachesis/gemini-rust"
+crates = ["gemini-rust"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust client for Google Gemini API"
+source = "crate"
+source_url = "https://crates.io/crates/gemini-rust"

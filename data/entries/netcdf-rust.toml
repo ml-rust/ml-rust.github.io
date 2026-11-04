@@ -1,0 +1,14 @@
+name = "netcdf-rust"
+kind = "library"
+repo = "https://github.com/roteiro-gis/netcdf-rust"
+homepage = "https://github.com/roteiro-gis/netcdf-rust"
+crates = ["netcdf-reader", "hdf5-reader", "netcdf-core"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure-Rust NetCDF-3 classic and NetCDF-4 (HDF5-backed) file reader"
+source = "crate"
+source_url = "https://crates.io/crates/netcdf-reader"

@@ -1,0 +1,13 @@
+name = "lancedb"
+kind = "library"
+repo = "https://github.com/lancedb/lancedb"
+crates = ["lancedb", "vectordb"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "LanceDB: A serverless, low-latency vector database for AI applications"
+source = "crate"
+source_url = "https://crates.io/crates/lancedb"

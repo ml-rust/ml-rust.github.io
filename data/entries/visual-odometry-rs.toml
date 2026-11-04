@@ -1,0 +1,14 @@
+name = "visual-odometry-rs"
+kind = "library"
+repo = "https://github.com/mpizenberg/visual-odometry-rs"
+homepage = "https://github.com/mpizenberg/visual-odometry-rs"
+crates = ["visual-odometry-rs"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Visual odometry in Rust (vors)"
+source = "crate"
+source_url = "https://crates.io/crates/visual-odometry-rs"

@@ -1,0 +1,13 @@
+name = "rustfft"
+kind = "library"
+repo = "https://github.com/ejmahler/rustfft"
+crates = ["rustfft"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance FFT library written in pure Rust."
+source = "crate"
+source_url = "https://crates.io/crates/rustfft"

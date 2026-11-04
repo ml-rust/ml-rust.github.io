@@ -1,0 +1,14 @@
+name = "rust-stop-words"
+kind = "library"
+repo = "https://github.com/cmccomb/rust-stop-words"
+homepage = "https://github.com/cmccomb/rust-stop-words"
+crates = ["stop-words"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Common stop words in many languages"
+source = "crate"
+source_url = "https://crates.io/crates/stop-words"

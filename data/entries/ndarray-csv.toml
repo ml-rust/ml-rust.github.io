@@ -1,0 +1,13 @@
+name = "ndarray-csv"
+kind = "library"
+repo = "https://github.com/paulkernfeld/ndarray-csv"
+crates = ["ndarray-csv"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Easily read and write homogeneous CSV data to and from 2D ndarrays"
+source = "crate"
+source_url = "https://crates.io/crates/ndarray-csv"

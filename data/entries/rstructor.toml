@@ -1,0 +1,13 @@
+name = "rstructor"
+kind = "library"
+repo = "https://github.com/clifton/rstructor"
+crates = ["rstructor", "rstructor_derive"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Get structured, validated data out of LLMs as native Rust structs and enums. Derive a type and rstructor generates the JSON Schema, prompts the model, parses the reply, and retries on validation errors — across OpenAI, Anthropic Claude, Google Gemini, and xAI Grok."
+source = "crate"
+source_url = "https://crates.io/crates/rstructor"

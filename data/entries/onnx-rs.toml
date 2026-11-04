@@ -1,0 +1,13 @@
+name = "onnx-rs"
+kind = "library"
+repo = "https://github.com/universalmind303/onnx-rs"
+crates = ["onnx-rs"]
+topics = ["data-formats", "run-models"]
+category = "model-formats"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Zero-dependency ONNX model parser in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/onnx-rs"

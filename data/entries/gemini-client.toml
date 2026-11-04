@@ -1,0 +1,13 @@
+name = "gemini-client"
+kind = "library"
+repo = "https://github.com/adriftdev/gemini-client"
+crates = ["gemini_client_rs"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust SDK for the Google Gemini API"
+source = "crate"
+source_url = "https://crates.io/crates/gemini_client_rs"

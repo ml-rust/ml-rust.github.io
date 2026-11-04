@@ -1,0 +1,13 @@
+name = "openai"
+kind = "library"
+repo = "https://github.com/rellfy/openai"
+crates = ["openai"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An unofficial Rust library for the OpenAI API."
+source = "crate"
+source_url = "https://crates.io/crates/openai"

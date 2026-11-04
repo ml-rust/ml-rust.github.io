@@ -1,0 +1,13 @@
+name = "piper-rs"
+kind = "library"
+repo = "https://github.com/thewh1teagle/piper-rs"
+crates = ["piper-rs", "espeak-rs", "piper-rs-cli", "sonic-rs-sys"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Use piper TTS models in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/piper-rs"

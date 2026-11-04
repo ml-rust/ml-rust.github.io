@@ -1,0 +1,14 @@
+name = "solvr"
+kind = "library"
+repo = "https://github.com/ml-rust/solvr"
+homepage = "https://github.com/ml-rust/solvr"
+crates = ["solvr"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "Advanced computing library for real-world problem solving - optimization, differential equations, interpolation, statistics, and more"
+source = "crate"
+source_url = "https://crates.io/crates/solvr"

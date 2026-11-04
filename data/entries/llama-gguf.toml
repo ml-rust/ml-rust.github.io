@@ -1,0 +1,13 @@
+name = "llama-gguf"
+kind = "library"
+repo = "https://github.com/lexmata/llama-gguf"
+crates = ["llama-gguf"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A high-performance Rust implementation of llama.cpp - LLM inference engine with full GGUF support"
+source = "crate"
+source_url = "https://crates.io/crates/llama-gguf"

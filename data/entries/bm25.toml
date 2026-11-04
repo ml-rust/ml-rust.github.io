@@ -1,0 +1,13 @@
+name = "bm25"
+kind = "library"
+repo = "https://github.com/michael-jb/bm25"
+crates = ["bm25"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "BM25 embedder, scorer, and search engine"
+source = "crate"
+source_url = "https://crates.io/crates/bm25"

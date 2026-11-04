@@ -1,0 +1,13 @@
+name = "hdf5-rust"
+kind = "library"
+repo = "https://github.com/metno/hdf5-rust"
+crates = ["hdf5-metno"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Thread-safe Rust bindings for the HDF5 library."
+source = "crate"
+source_url = "https://crates.io/crates/hdf5-metno"

@@ -1,0 +1,13 @@
+name = "llama-cpp-rs"
+kind = "library"
+repo = "https://github.com/utilityai/llama-cpp-rs"
+crates = ["llama-cpp-2", "llama-cpp-sys-2"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "llama.cpp bindings for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/llama-cpp-2"

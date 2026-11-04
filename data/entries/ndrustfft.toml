@@ -1,0 +1,13 @@
+name = "ndrustfft"
+kind = "library"
+repo = "https://github.com/preiter93/ndrustfft"
+crates = ["ndrustfft"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "N-dimensional FFT, real-to-complex FFT and real-to-real DCT"
+source = "crate"
+source_url = "https://crates.io/crates/ndrustfft"

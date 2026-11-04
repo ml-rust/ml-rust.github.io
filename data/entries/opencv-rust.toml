@@ -1,0 +1,13 @@
+name = "opencv-rust"
+kind = "library"
+repo = "https://github.com/twistedfall/opencv-rust"
+crates = ["opencv", "opencv-binding-generator"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust bindings for OpenCV"
+source = "crate"
+source_url = "https://crates.io/crates/opencv"

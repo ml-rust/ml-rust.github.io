@@ -1,0 +1,14 @@
+name = "tantivy"
+kind = "library"
+repo = "https://github.com/quickwit-oss/tantivy"
+homepage = "https://github.com/quickwit-oss/tantivy"
+crates = ["tantivy", "tantivy-query-grammar"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Search engine library"
+source = "crate"
+source_url = "https://crates.io/crates/tantivy"

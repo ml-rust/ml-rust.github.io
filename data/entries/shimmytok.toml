@@ -1,0 +1,14 @@
+name = "shimmytok"
+kind = "library"
+repo = "https://github.com/michael-a-kuykendall/shimmytok"
+homepage = "https://docs.rs/shimmytok"
+crates = ["shimmytok"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust tokenizer for GGUF models with llama.cpp compatibility (SentencePiece + BPE + WPM + UGM + RWKV)"
+source = "crate"
+source_url = "https://crates.io/crates/shimmytok"

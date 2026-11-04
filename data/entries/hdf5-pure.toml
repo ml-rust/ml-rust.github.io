@@ -1,0 +1,13 @@
+name = "hdf5-pure"
+kind = "library"
+repo = "https://github.com/crambl/hdf5-pure"
+crates = ["hdf5-pure"]
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure-Rust HDF5 library: read, write, and edit files in place (WASM-compatible, no C dependencies)"
+source = "crate"
+source_url = "https://crates.io/crates/hdf5-pure"

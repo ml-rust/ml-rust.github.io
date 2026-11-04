@@ -1,0 +1,13 @@
+name = "jpreprocess"
+kind = "library"
+repo = "https://github.com/jpreprocess/jpreprocess"
+crates = ["jpreprocess", "jpreprocess-core", "jpreprocess-dictionary", "jpreprocess-dictionary-builder", "jpreprocess-jpcommon", "jpreprocess-naist-jdic", "jpreprocess-njd", "jpreprocess-window"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Japanese text preprocessor for Text-to-Speech application (OpenJTalk rewrite in rust language)."
+source = "crate"
+source_url = "https://crates.io/crates/jpreprocess"

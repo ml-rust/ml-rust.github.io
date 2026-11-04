@@ -1,0 +1,13 @@
+name = "milli"
+kind = "app"
+repo = "https://github.com/meilisearch/milli"
+crates = []
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Search engine library for Meilisearch ⚡️"
+source = "repo"
+source_url = "https://github.com/meilisearch/milli"

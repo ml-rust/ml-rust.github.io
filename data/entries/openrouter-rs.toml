@@ -1,0 +1,14 @@
+name = "openrouter-rs"
+kind = "library"
+repo = "https://github.com/realmorrisliu/openrouter-rs"
+homepage = "https://github.com/realmorrisliu/openrouter-rs"
+crates = ["openrouter-rs", "openrouter-cli"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A type-safe OpenRouter Rust SDK"
+source = "crate"
+source_url = "https://crates.io/crates/openrouter-rs"

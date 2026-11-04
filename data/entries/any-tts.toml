@@ -1,0 +1,14 @@
+name = "any-tts"
+kind = "library"
+repo = "https://github.com/tm9657/any-tts"
+homepage = "https://flow-like.com/"
+crates = ["any-tts"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust TTS library with Candle backends and runtime adapters for modern open TTS models"
+source = "crate"
+source_url = "https://crates.io/crates/any-tts"

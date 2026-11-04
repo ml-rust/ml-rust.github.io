@@ -1,0 +1,13 @@
+name = "dpar"
+kind = "app"
+repo = "https://github.com/danieldk/dpar"
+crates = []
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Neural network transition-based dependency parser (in Rust)"
+source = "repo"
+source_url = "https://github.com/danieldk/dpar"

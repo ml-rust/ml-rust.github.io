@@ -1,0 +1,13 @@
+name = "parakeet-rs"
+kind = "library"
+repo = "https://github.com/altunenes/parakeet-rs"
+crates = ["parakeet-rs"]
+topics = ["run-models", "speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast ASR & Speaker Diarization with NVIDIA Parakeet via ONNX"
+source = "crate"
+source_url = "https://crates.io/crates/parakeet-rs"

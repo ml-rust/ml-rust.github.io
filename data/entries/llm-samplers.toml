@@ -1,0 +1,13 @@
+name = "llm-samplers"
+kind = "library"
+repo = "https://github.com/kerfufflev2/llm-samplers"
+crates = ["llm-samplers"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Token samplers for large language models"
+source = "crate"
+source_url = "https://crates.io/crates/llm-samplers"

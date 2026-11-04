@@ -1,0 +1,13 @@
+name = "jieba-rs"
+kind = "library"
+repo = "https://github.com/messense/jieba-rs"
+crates = ["jieba-rs", "jieba-macros"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Jieba Chinese Word Segmentation in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/jieba-rs"

@@ -1,0 +1,14 @@
+name = "edgequake"
+kind = "library"
+repo = "https://github.com/raphaelmansuy/edgequake"
+homepage = "https://edgequake.com/"
+crates = ["edgequake-sdk"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust SDK for the EdgeQuake RAG platform"
+source = "crate"
+source_url = "https://crates.io/crates/edgequake-sdk"

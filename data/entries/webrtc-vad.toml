@@ -1,0 +1,13 @@
+name = "webrtc-vad"
+kind = "library"
+repo = "https://github.com/kaegi/webrtc-vad"
+crates = ["webrtc-vad"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust interface for the WebRTC Voice-Activity-Detction Module"
+source = "crate"
+source_url = "https://crates.io/crates/webrtc-vad"

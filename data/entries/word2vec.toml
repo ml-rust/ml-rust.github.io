@@ -1,0 +1,14 @@
+name = "word2vec"
+kind = "library"
+repo = "https://github.com/dimakudosh/word2vec"
+homepage = "https://github.com/DimaKudosh/word2vec"
+crates = ["word2vec"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust interface to word2vec."
+source = "crate"
+source_url = "https://crates.io/crates/word2vec"

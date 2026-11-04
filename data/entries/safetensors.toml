@@ -1,0 +1,14 @@
+name = "safetensors"
+kind = "library"
+repo = "https://github.com/huggingface/safetensors"
+homepage = "https://github.com/huggingface/safetensors"
+crates = ["safetensors"]
+topics = ["data-formats"]
+category = "model-formats"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Provides functions to read and write safetensors which aim to be safer than their PyTorch counterpart."
+source = "crate"
+source_url = "https://crates.io/crates/safetensors"

@@ -1,0 +1,13 @@
+name = "openvino-rs"
+kind = "library"
+repo = "https://github.com/intel/openvino-rs"
+crates = ["openvino", "openvino-finder", "openvino-genai", "openvino-genai-sys", "openvino-sys"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-level bindings for OpenVINO."
+source = "crate"
+source_url = "https://crates.io/crates/openvino"

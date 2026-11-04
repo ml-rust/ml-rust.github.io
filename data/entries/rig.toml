@@ -1,0 +1,13 @@
+name = "rig"
+kind = "library"
+repo = "https://github.com/0xplaygrounds/rig"
+crates = ["rig", "rig-acp", "rig-candle", "rig-claude-cloak", "rig-core", "rig-ecs", "rig-fastembed", "rig-gemini-grpc", "rig-harness", "rig-helixdb", "rig-lancedb", "rig-login-chatgpt", "rig-mcp-client", "rig-memory", "rig-mongodb", "rig-neo4j", "rig-postgres", "rig-qdrant", "rig-redis", "rig-rmcp", "rig-scylladb", "rig-traffic", "rig-vectorize"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An opinionated library for building LLM powered applications."
+source = "crate"
+source_url = "https://crates.io/crates/rig"

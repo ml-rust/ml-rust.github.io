@@ -1,0 +1,13 @@
+name = "oxigen"
+kind = "library"
+repo = "https://github.com/martin1887/oxigen"
+crates = ["oxigen", "fd-oxigen", "knapsack-oxigen", "nqueens-oxigen", "onemax-oxigen"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast, parallel, extensible and adaptable genetic algorithm library."
+source = "crate"
+source_url = "https://crates.io/crates/oxigen"

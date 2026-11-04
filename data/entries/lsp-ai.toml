@@ -1,0 +1,13 @@
+name = "lsp-ai"
+kind = "library"
+repo = "https://github.com/silasmarvin/lsp-ai"
+crates = ["lsp-ai", "splitter-tree-sitter", "utils-tree-sitter"]
+topics = ["llm-apps"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "LSP-AI is an open-source language server that serves as a backend for AI-powered functionality, designed to assist and empower software engineers, not replace them."
+source = "crate"
+source_url = "https://crates.io/crates/lsp-ai"

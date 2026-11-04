@@ -1,0 +1,14 @@
+name = "flodl"
+kind = "library"
+repo = "https://github.com/flodl-labs/flodl"
+homepage = "https://flodl.dev/"
+crates = ["flodl", "flodl-cli", "flodl-hf", "flodl-hw", "flodl-sys"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "floDl — a flow-graph deep learning framework built on libtorch"
+source = "crate"
+source_url = "https://crates.io/crates/flodl"

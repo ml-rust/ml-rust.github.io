@@ -1,0 +1,14 @@
+name = "tvm"
+kind = "library"
+repo = "https://github.com/apache/tvm"
+homepage = "https://github.com/apache/tvm"
+crates = ["tvm", "tvm-graph-rt", "tvm-macros", "tvm-rt"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust frontend support for TVM"
+source = "crate"
+source_url = "https://crates.io/crates/tvm"

@@ -1,0 +1,14 @@
+name = "oxidizr"
+kind = "library"
+repo = "https://github.com/ml-rust/oxidizr"
+homepage = "https://github.com/ml-rust/oxidizr"
+crates = ["oxidizr"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "A Rust-based LLM training framework"
+source = "crate"
+source_url = "https://crates.io/crates/oxidizr"

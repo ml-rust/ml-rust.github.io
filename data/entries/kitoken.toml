@@ -1,0 +1,14 @@
+name = "kitoken"
+kind = "library"
+repo = "https://github.com/systemcluster/kitoken"
+homepage = "https://kitoken.dev/"
+crates = ["kitoken"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast tokenizer for language models, supporting BPE, Unigram and WordPiece tokenization"
+source = "crate"
+source_url = "https://crates.io/crates/kitoken"

@@ -1,0 +1,13 @@
+name = "cv"
+kind = "library"
+repo = "https://github.com/rust-cv/cv"
+crates = ["cv"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Batteries-included pure-Rust computer vision crate"
+source = "crate"
+source_url = "https://crates.io/crates/cv"

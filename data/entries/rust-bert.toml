@@ -1,0 +1,13 @@
+name = "rust-bert"
+kind = "library"
+repo = "https://github.com/guillaume-be/rust-bert"
+crates = ["rust-bert"]
+topics = ["run-models", "text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ready-to-use NLP pipelines and language models"
+source = "crate"
+source_url = "https://crates.io/crates/rust-bert"

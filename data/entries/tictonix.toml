@@ -1,0 +1,13 @@
+name = "tictonix"
+kind = "library"
+repo = "https://github.com/ave-sergeev/tictonix"
+crates = ["tictonix"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A library that provides the ability to convert tokens into embeddings, as well as to encode their positions"
+source = "crate"
+source_url = "https://crates.io/crates/tictonix"

@@ -1,0 +1,14 @@
+name = "swiftide"
+kind = "library"
+repo = "https://github.com/bosun-ai/swiftide"
+homepage = "https://swiftide.rs/"
+crates = ["swiftide", "swiftide-agents", "swiftide-core", "swiftide-indexing", "swiftide-integrations", "swiftide-langfuse", "swiftide-macros", "swiftide-query", "swiftide-tasks"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Composable LLM agents, typed task graphs, and streaming RAG pipelines in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/swiftide"

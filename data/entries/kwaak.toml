@@ -1,0 +1,14 @@
+name = "kwaak"
+kind = "library"
+repo = "https://github.com/bosun-ai/kwaak"
+homepage = "https://github.com/bosun-ai/kwaak"
+crates = ["kwaak"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Run a team of autonomous agents on your code, right from your terminal"
+source = "crate"
+source_url = "https://crates.io/crates/kwaak"

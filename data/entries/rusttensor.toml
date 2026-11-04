@@ -1,0 +1,14 @@
+name = "RustTensor"
+kind = "app"
+repo = "https://github.com/ramsyana/rusttensor"
+homepage = "https://deepwiki.com/ramsyana/RustTensor"
+crates = []
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A learning-focused, high-performance tensor computation library built from scratch in Rust, featuring automatic differentiation and CPU/CUDA backends."
+source = "repo"
+source_url = "https://github.com/ramsyana/rusttensor"

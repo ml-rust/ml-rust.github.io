@@ -1,0 +1,14 @@
+name = "textstat"
+kind = "library"
+repo = "https://github.com/trananhtung/textstat"
+homepage = "https://github.com/trananhtung/textstat"
+crates = ["textstat"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Readability metrics for English text: Flesch Reading Ease, Flesch-Kincaid, Gunning Fog, SMOG, ARI, Coleman-Liau, plus word/sentence/syllable counts. Zero-dependency, no_std."
+source = "crate"
+source_url = "https://crates.io/crates/textstat"

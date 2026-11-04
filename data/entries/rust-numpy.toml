@@ -1,0 +1,13 @@
+name = "rust-numpy"
+kind = "library"
+repo = "https://github.com/pyo3/rust-numpy"
+crates = ["numpy"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "PyO3-based Rust bindings of the NumPy C-API"
+source = "crate"
+source_url = "https://crates.io/crates/numpy"

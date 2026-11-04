@@ -1,0 +1,13 @@
+name = "msedge-tts"
+kind = "library"
+repo = "https://github.com/hs-cn/msedge-tts"
+crates = ["msedge-tts"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "This library is a wrapper of MSEdge Read aloud function API. You can use it to synthesize text to speech with many voices MS provided."
+source = "crate"
+source_url = "https://crates.io/crates/msedge-tts"

@@ -1,0 +1,13 @@
+name = "ndarray"
+kind = "library"
+repo = "https://github.com/rust-ndarray/ndarray"
+crates = ["ndarray", "ndarray-rand"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An n-dimensional array for general elements and for numerics. Lightweight array views and slicing; views support chunking and splitting."
+source = "crate"
+source_url = "https://crates.io/crates/ndarray"

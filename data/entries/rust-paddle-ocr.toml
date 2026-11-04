@@ -1,0 +1,13 @@
+name = "rust-paddle-ocr"
+kind = "library"
+repo = "https://github.com/zibo-chen/rust-paddle-ocr"
+crates = ["ocr-rs"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A lightweight and efficient OCR library based on PaddleOCR models, using the MNN inference framework for high-performance text detection and recognition"
+source = "crate"
+source_url = "https://crates.io/crates/ocr-rs"

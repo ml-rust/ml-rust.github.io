@@ -1,0 +1,13 @@
+name = "drug"
+kind = "library"
+repo = "https://github.com/caspern/drug"
+crates = ["drug"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A differentiable computation graph for neural networks."
+source = "crate"
+source_url = "https://crates.io/crates/drug"

@@ -1,0 +1,14 @@
+name = "entroly"
+kind = "app"
+repo = "https://github.com/juyterman1000/entroly"
+homepage = "https://juyterman1000.github.io/entroly/docs/index.html"
+crates = []
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Cut AI context cost without trusting the compressor. Every reduction is reversible, byte-exact recoverable, and carries an auditable receipt. Local-first, works through proxy, MCP, SDK, or agent wrapper."
+source = "repo"
+source_url = "https://github.com/juyterman1000/entroly"

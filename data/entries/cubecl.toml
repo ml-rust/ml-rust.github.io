@@ -1,0 +1,13 @@
+name = "cubecl"
+kind = "library"
+repo = "https://github.com/tracel-ai/cubecl"
+crates = ["cubecl", "cubecl-runtime", "cubecl-server"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Multi-platform high-performance compute language extension for Rust."
+source = "crate"
+source_url = "https://crates.io/crates/cubecl"

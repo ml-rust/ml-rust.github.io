@@ -1,0 +1,13 @@
+name = "usearch"
+kind = "library"
+repo = "https://github.com/unum-cloud/usearch"
+crates = ["usearch"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Smaller & Faster Single-File Vector Search Engine from Unum"
+source = "crate"
+source_url = "https://crates.io/crates/usearch"

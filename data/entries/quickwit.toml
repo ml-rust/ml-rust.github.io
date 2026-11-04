@@ -1,0 +1,17 @@
+name = "quickwit"
+kind = "app"
+repo = "https://github.com/quickwit-oss/quickwit"
+homepage = "https://quickwit.io/"
+crates = []
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Cloud-native OSS search engine for observability"
+source = "repo"
+source_url = "https://github.com/quickwit-oss/quickwit"
+
+[distribution]
+docker = ["quickwit/quickwit"]

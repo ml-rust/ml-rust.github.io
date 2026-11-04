@@ -1,0 +1,14 @@
+name = "arroy"
+kind = "library"
+repo = "https://github.com/meilisearch/arroy"
+homepage = "https://docs.rs/arroy"
+crates = ["arroy"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Annoy-inspired Approximate Nearest Neighbors in Rust, based on LMDB and optimized for memory usage"
+source = "crate"
+source_url = "https://crates.io/crates/arroy"

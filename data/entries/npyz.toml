@@ -1,0 +1,14 @@
+name = "npyz"
+kind = "library"
+repo = "https://github.com/exphp/npyz"
+homepage = "https://github.com/ExpHP/npyz"
+crates = ["npyz"]
+topics = ["data-formats", "math-gpu"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "NumPy file format (de-)serialization. Fork of outdated npy-rs."
+source = "crate"
+source_url = "https://crates.io/crates/npyz"

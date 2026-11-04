@@ -1,0 +1,14 @@
+name = "oxionnx"
+kind = "library"
+repo = "https://github.com/cool-japan/oxionnx"
+homepage = "https://github.com/cool-japan/oxionnx"
+crates = ["oxionnx", "oxionnx-core", "oxionnx-coreml", "oxionnx-cuda", "oxionnx-directml", "oxionnx-gpu", "oxionnx-ops", "oxionnx-proto"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Pure Rust ONNX inference engine — zero C/C++ dependencies"
+source = "crate"
+source_url = "https://crates.io/crates/oxionnx"

@@ -1,0 +1,14 @@
+name = "rust-lstm"
+kind = "library"
+repo = "https://github.com/syntaxspirits/rust-lstm"
+homepage = "https://github.com/SyntaxSpirits/rust-lstm"
+crates = ["rust-lstm"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A complete LSTM neural network library with training capabilities, multiple optimizers, and peephole variants."
+source = "crate"
+source_url = "https://crates.io/crates/rust-lstm"

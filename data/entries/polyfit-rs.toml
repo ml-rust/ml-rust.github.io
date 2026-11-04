@@ -1,0 +1,13 @@
+name = "polyfit-rs"
+kind = "library"
+repo = "https://github.com/stefanod/polyfit-rs"
+crates = ["polyfit-rs"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Polynomial fitting of data like in numpy.polyfit()."
+source = "crate"
+source_url = "https://crates.io/crates/polyfit-rs"

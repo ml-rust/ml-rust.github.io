@@ -1,0 +1,14 @@
+name = "leaf"
+kind = "library"
+repo = "https://github.com/autumnai/leaf"
+homepage = "https://github.com/autumnai/leaf"
+crates = ["leaf"]
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine Learning Framework for Hackers"
+source = "crate"
+source_url = "https://crates.io/crates/leaf"

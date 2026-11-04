@@ -1,0 +1,14 @@
+name = "reductive"
+kind = "library"
+repo = "https://github.com/finalfusion/reductive"
+homepage = "https://github.com/finalfusion/reductive"
+crates = ["reductive"]
+topics = ["text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Optimized vector quantization for dense vectors"
+source = "crate"
+source_url = "https://crates.io/crates/reductive"

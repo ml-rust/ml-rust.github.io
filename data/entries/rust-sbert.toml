@@ -1,0 +1,13 @@
+name = "rust-sbert"
+kind = "library"
+repo = "https://github.com/cpcdoy/rust-sbert"
+crates = ["sbert"]
+topics = ["run-models", "text-search"]
+category = "embeddings"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust implementation of Sentence Bert (SBert)"
+source = "crate"
+source_url = "https://crates.io/crates/sbert"

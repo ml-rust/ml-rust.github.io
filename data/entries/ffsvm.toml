@@ -1,0 +1,13 @@
+name = "ffsvm"
+kind = "library"
+repo = "https://github.com/ralfbiedert/ffsvm"
+crates = ["ffsvm"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A libSVM compatible support vector machine, but up to 10x faster, for games or VR."
+source = "crate"
+source_url = "https://crates.io/crates/ffsvm"

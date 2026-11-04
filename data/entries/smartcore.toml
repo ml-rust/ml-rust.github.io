@@ -1,0 +1,14 @@
+name = "smartcore"
+kind = "library"
+repo = "https://github.com/smartcorelib/smartcore"
+homepage = "https://smartcorelib.github.io/"
+crates = ["smartcore"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine Learning in Rust."
+source = "crate"
+source_url = "https://crates.io/crates/smartcore"

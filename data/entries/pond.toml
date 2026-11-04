@@ -1,0 +1,14 @@
+name = "pond"
+kind = "library"
+repo = "https://github.com/tenequm/pond"
+homepage = "https://pond.locker/"
+crates = ["pond-db"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Lossless storage and search for sessions from any AI agent client"
+source = "crate"
+source_url = "https://crates.io/crates/pond-db"

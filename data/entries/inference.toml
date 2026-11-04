@@ -1,0 +1,14 @@
+name = "inference"
+kind = "library"
+repo = "https://github.com/ultralytics/inference"
+homepage = "https://www.ultralytics.com/"
+crates = ["ultralytics-inference"]
+topics = ["run-models", "vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Ultralytics YOLO inference library and CLI for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/ultralytics-inference"

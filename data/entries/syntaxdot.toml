@@ -1,0 +1,14 @@
+name = "syntaxdot"
+kind = "library"
+repo = "https://github.com/tensordot/syntaxdot"
+homepage = "https://github.com/tensordot/syntaxdot"
+crates = ["syntaxdot", "syntaxdot-cli", "syntaxdot-encoders", "syntaxdot-summary", "syntaxdot-tch-ext", "syntaxdot-tokenizers", "syntaxdot-transformers"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Neural sequence labeler"
+source = "crate"
+source_url = "https://crates.io/crates/syntaxdot"

@@ -1,0 +1,14 @@
+name = "kmeans_colors"
+kind = "library"
+repo = "https://github.com/okaneco/kmeans-colors"
+homepage = "https://github.com/okaneco/kmeans-colors"
+crates = ["kmeans_colors"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Simple k-means clustering to find dominant colors in images. Backed by a generic k-means implementation offered as a standalone library."
+source = "crate"
+source_url = "https://crates.io/crates/kmeans_colors"

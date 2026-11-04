@@ -1,0 +1,13 @@
+name = "tts-rs"
+kind = "library"
+repo = "https://github.com/ndarilek/tts-rs"
+crates = ["tts"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-level Text-To-Speech (TTS) interface"
+source = "crate"
+source_url = "https://crates.io/crates/tts"

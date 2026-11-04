@@ -1,0 +1,14 @@
+name = "GraphScope"
+kind = "app"
+repo = "https://github.com/alibaba/graphscope"
+homepage = "https://graphscope.io/"
+crates = []
+topics = ["data-formats"]
+category = "data-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "🔨 🍇 💻 🚀 GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba | 一站式图计算系统"
+source = "repo"
+source_url = "https://github.com/alibaba/graphscope"

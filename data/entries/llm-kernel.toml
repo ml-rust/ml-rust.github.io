@@ -1,0 +1,14 @@
+name = "llm-kernel"
+kind = "library"
+repo = "https://github.com/epicsagas/llm-kernel"
+homepage = "https://github.com/epicsagas/llm-kernel"
+crates = ["llm-kernel"]
+topics = ["llm-apps", "text-search"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Foundation library for Rust AI-native apps — provider catalog, LLM client, MCP server, search, telemetry, and safety"
+source = "crate"
+source_url = "https://crates.io/crates/llm-kernel"

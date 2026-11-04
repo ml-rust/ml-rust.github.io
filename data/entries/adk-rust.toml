@@ -1,0 +1,14 @@
+name = "adk-rust"
+kind = "library"
+repo = "https://github.com/zavora-ai/adk-rust"
+homepage = "https://github.com/zavora-ai/adk-rust"
+crates = ["adk-rust", "adk-acp", "adk-action", "adk-agent", "adk-anthropic", "adk-artifact", "adk-audio", "adk-auth", "adk-bench", "adk-cli", "adk-code", "adk-codeact-monty", "adk-computer-use", "adk-core", "adk-devtools", "adk-enterprise", "adk-eval", "adk-gcp", "adk-gemini", "adk-graph", "adk-guardrail", "adk-managed", "adk-memory", "adk-mistralrs", "adk-model", "adk-plugin", "adk-rag", "adk-realtime", "adk-runner", "adk-rust-macros", "adk-server", "adk-session", "adk-telemetry", "adk-tool", "cargo-adk"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust Agent Development Kit - Build AI agents in Rust with modular components for models, tools, memory, and more."
+source = "crate"
+source_url = "https://crates.io/crates/adk-rust"

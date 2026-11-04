@@ -1,0 +1,13 @@
+name = "hnsw"
+kind = "library"
+repo = "https://github.com/rust-cv/hnsw"
+crates = ["hnsw"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast approximate nearest neighbors"
+source = "crate"
+source_url = "https://crates.io/crates/hnsw"

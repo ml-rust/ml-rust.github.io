@@ -1,0 +1,13 @@
+name = "ollama-rs"
+kind = "library"
+repo = "https://github.com/pepperoni21/ollama-rs"
+crates = ["ollama-rs", "ollama-rs-macros"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A Rust library for interacting with the Ollama API"
+source = "crate"
+source_url = "https://crates.io/crates/ollama-rs"

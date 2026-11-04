@@ -1,0 +1,13 @@
+name = "kdtree-rs"
+kind = "library"
+repo = "https://github.com/mrhooray/kdtree-rs"
+crates = ["kdtree"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "K-dimensional tree in Rust for fast geospatial indexing and nearest neighbors lookup"
+source = "crate"
+source_url = "https://crates.io/crates/kdtree"

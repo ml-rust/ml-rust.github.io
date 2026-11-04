@@ -1,0 +1,13 @@
+name = "agent-client-protocol"
+kind = "library"
+repo = "https://github.com/agentclientprotocol/rust-sdk"
+crates = ["agent-client-protocol", "agent-client-protocol-conductor", "agent-client-protocol-cookbook", "agent-client-protocol-polyfill", "agent-client-protocol-rmcp", "agent-client-protocol-tokio"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Core protocol types and traits for the Agent Client Protocol"
+source = "crate"
+source_url = "https://crates.io/crates/agent-client-protocol"

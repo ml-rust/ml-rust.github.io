@@ -1,0 +1,13 @@
+name = "furnace"
+kind = "library"
+repo = "https://github.com/gilfeather/furnace"
+crates = ["furnace-server", "amate", "furnace-burn", "furnace-cli", "kamui", "kuebiko", "rustls-pure"]
+topics = ["llm-apps", "run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast, unified, Rust-native, Axum-compatible inference endpoints and nervous system for tensor models and LLMs: KServe / Triton and OpenAI APIs from one pure-Rust server"
+source = "crate"
+source_url = "https://crates.io/crates/furnace-server"

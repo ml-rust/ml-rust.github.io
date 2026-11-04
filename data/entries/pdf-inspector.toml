@@ -1,0 +1,13 @@
+name = "pdf-inspector"
+kind = "library"
+repo = "https://github.com/firecrawl/pdf-inspector"
+crates = ["pdf-inspector"]
+topics = ["vision-documents"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast PDF inspection, classification, and text extraction with smart scanned vs text-based detection"
+source = "crate"
+source_url = "https://crates.io/crates/pdf-inspector"

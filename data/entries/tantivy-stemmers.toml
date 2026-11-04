@@ -1,0 +1,13 @@
+name = "tantivy-stemmers"
+kind = "library"
+repo = "https://github.com/testuj-to/tantivy-stemmers"
+crates = ["tantivy-stemmers"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A collection of Tantivy stemmer tokenizers"
+source = "crate"
+source_url = "https://crates.io/crates/tantivy-stemmers"

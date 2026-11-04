@@ -1,0 +1,13 @@
+name = "mlx-rs"
+kind = "library"
+repo = "https://github.com/oxiglade/mlx-rs"
+crates = ["mlx-rs", "mlx-internal-macros", "mlx-macros", "mlx-sys"]
+topics = ["run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Unofficial rust wrapper for Apple's mlx machine learning library."
+source = "crate"
+source_url = "https://crates.io/crates/mlx-rs"

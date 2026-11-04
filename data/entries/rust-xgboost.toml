@@ -1,0 +1,14 @@
+name = "rust-xgboost"
+kind = "library"
+repo = "https://github.com/davechallis/rust-xgboost"
+homepage = "https://github.com/davechallis/rust-xgboost"
+crates = ["xgboost", "xgboost-sys"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine learning using XGBoost"
+source = "crate"
+source_url = "https://crates.io/crates/xgboost"

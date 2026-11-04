@@ -1,0 +1,14 @@
+name = "opentelemetry-langfuse"
+kind = "library"
+repo = "https://github.com/genai-rs/opentelemetry-langfuse"
+homepage = "https://github.com/genai-rs/opentelemetry-langfuse"
+crates = ["opentelemetry-langfuse"]
+topics = ["llm-apps"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "OpenTelemetry components and utilities for Langfuse LLM observability"
+source = "crate"
+source_url = "https://crates.io/crates/opentelemetry-langfuse"

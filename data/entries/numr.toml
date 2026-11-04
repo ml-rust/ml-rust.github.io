@@ -1,0 +1,14 @@
+name = "numr"
+kind = "library"
+repo = "https://github.com/ml-rust/numr"
+homepage = "https://crates.io/crates/numr"
+crates = ["numr"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "High-performance numerical computing with multi-backend GPU acceleration (CPU/CUDA/WebGPU)"
+source = "crate"
+source_url = "https://crates.io/crates/numr"

@@ -1,0 +1,14 @@
+name = "oar-ocr"
+kind = "library"
+repo = "https://github.com/greatv/oar-ocr"
+homepage = "https://github.com/greatv/oar-ocr"
+crates = ["oar-ocr", "oar-ocr-cli", "oar-ocr-core", "oar-ocr-derive", "oar-ocr-vl"]
+topics = ["run-models", "vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "An Optical Character Recognition (OCR) and Document Layout Analysis library written in Rust."
+source = "crate"
+source_url = "https://crates.io/crates/oar-ocr"

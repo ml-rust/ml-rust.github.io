@@ -1,0 +1,14 @@
+name = "linregress"
+kind = "library"
+repo = "https://github.com/n1m3/linregress"
+homepage = "https://github.com/n1m3/linregress"
+crates = ["linregress"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "ordinary least squared linear regression with some basic statistics"
+source = "crate"
+source_url = "https://crates.io/crates/linregress"

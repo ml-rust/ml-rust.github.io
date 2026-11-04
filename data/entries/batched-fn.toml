@@ -1,0 +1,14 @@
+name = "batched-fn"
+kind = "library"
+repo = "https://github.com/epwalsh/batched-fn"
+homepage = "https://github.com/epwalsh/batched-fn"
+crates = ["batched-fn"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Middleware for serving deep learning models with batched prediction"
+source = "crate"
+source_url = "https://crates.io/crates/batched-fn"

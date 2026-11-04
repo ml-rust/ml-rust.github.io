@@ -1,0 +1,13 @@
+name = "faiss-rs"
+kind = "library"
+repo = "https://github.com/enet4/faiss-rs"
+crates = ["faiss", "faiss-sys"]
+topics = ["text-search"]
+category = "vector-databases"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-level bindings for Faiss, the vector similarity search engine"
+source = "crate"
+source_url = "https://crates.io/crates/faiss"

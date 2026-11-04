@@ -1,0 +1,14 @@
+name = "gline-rs"
+kind = "library"
+repo = "https://github.com/fbilhaut/gline-rs"
+homepage = "https://github.com/fbilhaut/gline-rs"
+crates = ["gline-rs"]
+topics = ["run-models", "text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Inference engine for GLiNER models"
+source = "crate"
+source_url = "https://crates.io/crates/gline-rs"

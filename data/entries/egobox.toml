@@ -1,0 +1,14 @@
+name = "egobox"
+kind = "library"
+repo = "https://github.com/relf/egobox"
+homepage = "https://github.com/relf/egobox"
+crates = ["egobox", "egobox-doe", "egobox-ego", "egobox-gp", "egobox-gpx", "egobox-moe", "gpqa"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A python binding for egobox crates"
+source = "crate"
+source_url = "https://crates.io/crates/egobox"

@@ -1,0 +1,13 @@
+name = "rust-mcp-schema"
+kind = "library"
+repo = "https://github.com/rust-mcp-stack/rust-mcp-schema"
+crates = ["rust-mcp-schema"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Type-safe implementation of the Model Context Protocol in Rust, designed to reduce errors and accelerate development with powerful utilities."
+source = "crate"
+source_url = "https://crates.io/crates/rust-mcp-schema"

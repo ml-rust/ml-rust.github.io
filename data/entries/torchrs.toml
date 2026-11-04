@@ -1,0 +1,13 @@
+name = "torchrs"
+kind = "app"
+repo = "https://github.com/torchrs/torchrs"
+crates = []
+topics = ["train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Deep Learning in Rust with the PyTorch API"
+source = "repo"
+source_url = "https://github.com/torchrs/torchrs"

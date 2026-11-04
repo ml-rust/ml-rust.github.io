@@ -1,0 +1,13 @@
+name = "rustface"
+kind = "library"
+repo = "https://github.com/atomashpolskiy/rustface"
+crates = ["rustface"]
+topics = ["vision-documents"]
+category = "computer-vision"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Face detection library, based on the C++ SeetaFace engine."
+source = "crate"
+source_url = "https://crates.io/crates/rustface"

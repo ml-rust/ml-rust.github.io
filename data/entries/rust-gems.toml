@@ -1,0 +1,13 @@
+name = "rust-gems"
+kind = "library"
+repo = "https://github.com/github/rust-gems"
+crates = ["bpe", "bpe-openai"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fast byte-pair encoding implementation."
+source = "crate"
+source_url = "https://crates.io/crates/bpe"

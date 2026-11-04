@@ -1,0 +1,13 @@
+name = "burn"
+kind = "library"
+repo = "https://github.com/tracel-ai/burn"
+crates = ["burn", "burn-autodiff", "burn-backend", "burn-collective", "burn-compute", "burn-core", "burn-cpu", "burn-cubecl", "burn-cubecl-fusion", "burn-cuda", "burn-dataset", "burn-dispatch", "burn-flex", "burn-fusion", "burn-group", "burn-hip", "burn-instrument", "burn-instrument-report", "burn-ir", "burn-jit", "burn-linalg", "burn-nn", "burn-optim", "burn-pack", "burn-remote", "burn-rl", "burn-rocm", "burn-router", "burn-signal", "burn-store", "burn-tensor", "burn-tensor-testgen", "burn-train", "burn-vision", "burn-wgpu", "pytorch-reader"]
+topics = ["math-gpu", "run-models", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Flexible and Comprehensive Deep Learning Framework in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/burn"

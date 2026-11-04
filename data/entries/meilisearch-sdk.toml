@@ -1,0 +1,13 @@
+name = "meilisearch-sdk"
+kind = "library"
+repo = "https://github.com/meilisearch/meilisearch-sdk"
+crates = ["meilisearch-sdk"]
+topics = ["text-search"]
+category = "search-engines"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust wrapper for the Meilisearch API. Meilisearch is a powerful, fast, open-source, easy to use and deploy search engine."
+source = "crate"
+source_url = "https://crates.io/crates/meilisearch-sdk"

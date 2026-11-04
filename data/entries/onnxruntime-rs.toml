@@ -1,0 +1,14 @@
+name = "onnxruntime-rs"
+kind = "library"
+repo = "https://github.com/nbigaouette/onnxruntime-rs"
+homepage = "https://github.com/nbigaouette/onnxruntime-rs"
+crates = ["onnxruntime", "onnxruntime-sys"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Wrapper around Microsoft's ONNX Runtime"
+source = "crate"
+source_url = "https://crates.io/crates/onnxruntime"

@@ -1,0 +1,17 @@
+name = "mosec"
+kind = "app"
+repo = "https://github.com/mosecorg/mosec"
+homepage = "https://mosecorg.github.io/mosec/"
+crates = ["mosec"]
+topics = ["run-models"]
+category = "inference-runtimes"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A high-performance ML model serving framework, offers dynamic batching and CPU/GPU pipelines to fully exploit your compute machine"
+source = "repo"
+source_url = "https://github.com/mosecorg/mosec"
+
+[distribution]
+docker = ["mosecorg/mosec"]

@@ -1,0 +1,14 @@
+name = "hf-hub"
+kind = "library"
+repo = "https://github.com/huggingface/hf-hub"
+homepage = "https://github.com/huggingface/hf-hub"
+crates = ["hf-hub"]
+topics = ["data-formats"]
+category = "developer-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Rust client for the Hugging Face Hub API"
+source = "crate"
+source_url = "https://crates.io/crates/hf-hub"

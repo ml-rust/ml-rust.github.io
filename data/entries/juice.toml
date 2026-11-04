@@ -1,0 +1,14 @@
+name = "juice"
+kind = "library"
+repo = "https://github.com/fff-rs/juice"
+homepage = "https://github.com/spearow/juice"
+crates = ["juice", "juice-traits", "rcublas", "rcublas-sys", "rcudnn", "rcudnn-sys", "rust-blas"]
+topics = ["math-gpu", "train-models"]
+category = "ml-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Machine Learning Framework for Hackers"
+source = "crate"
+source_url = "https://crates.io/crates/juice"

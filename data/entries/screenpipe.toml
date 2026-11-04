@@ -1,0 +1,14 @@
+name = "screenpipe"
+kind = "app"
+repo = "https://github.com/screenpipe/screenpipe"
+homepage = "https://screenpi.pe/"
+crates = []
+topics = ["llm-apps", "speech-audio", "vision-documents"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "YC (S26) | Open Computer History | Continuously record your company computer work, map your workflows, help you find work worth automating, and power your agents' context"
+source = "repo"
+source_url = "https://github.com/screenpipe/screenpipe"

@@ -1,0 +1,13 @@
+name = "vosk-rs"
+kind = "library"
+repo = "https://github.com/bear-03/vosk-rs"
+crates = ["vosk", "vosk-sys"]
+topics = ["speech-audio"]
+category = "speech-audio"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Safe wrapper around the Vosk API Speech Recognition Toolkit"
+source = "crate"
+source_url = "https://crates.io/crates/vosk"

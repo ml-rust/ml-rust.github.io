@@ -1,0 +1,14 @@
+name = "argmin"
+kind = "library"
+repo = "https://github.com/argmin-rs/argmin"
+homepage = "https://argmin-rs.org/"
+crates = ["argmin", "argmin-checkpointing-file", "argmin-math", "argmin-observer-paramwriter", "argmin-observer-slog", "argmin_testfunctions", "finitediff", "spectator"]
+topics = ["math-gpu"]
+category = "math-libraries"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Numerical optimization in pure Rust"
+source = "crate"
+source_url = "https://crates.io/crates/argmin"

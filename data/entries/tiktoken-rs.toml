@@ -1,0 +1,14 @@
+name = "tiktoken-rs"
+kind = "library"
+repo = "https://github.com/zurawiki/tiktoken-rs"
+homepage = "https://github.com/zurawiki/tiktoken-rs"
+crates = ["tiktoken-rs"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Library for encoding and decoding with the tiktoken library in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/tiktoken-rs"

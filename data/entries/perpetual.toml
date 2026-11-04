@@ -1,0 +1,14 @@
+name = "perpetual"
+kind = "library"
+repo = "https://github.com/perpetual-ml/perpetual"
+homepage = "https://perpetual-ml.com/"
+crates = ["perpetual"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A self-generalizing gradient boosting machine that doesn't need hyperparameter optimization"
+source = "crate"
+source_url = "https://crates.io/crates/perpetual"

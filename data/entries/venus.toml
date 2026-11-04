@@ -1,0 +1,14 @@
+name = "venus"
+kind = "library"
+repo = "https://github.com/ml-rust/venus"
+homepage = "https://crates.io/crates/venus"
+crates = ["venus", "venus-core", "venus-macros", "venus-server", "venus-sync"]
+topics = ["math-gpu"]
+category = "developer-tools"
+org_affiliated = true
+added = 2026-11-03
+
+[description]
+text = "Reactive notebook environment for Rust"
+source = "crate"
+source_url = "https://crates.io/crates/venus"

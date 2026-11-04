@@ -1,0 +1,14 @@
+name = "litellm-rs"
+kind = "library"
+repo = "https://github.com/majiayu000/litellm-rs"
+homepage = "https://github.com/majiayu000/litellm-rs"
+crates = ["litellm-rs"]
+topics = ["llm-apps"]
+category = "llm-clients"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A high-performance AI Gateway written in Rust, providing OpenAI-compatible APIs with intelligent routing, load balancing, and enterprise features"
+source = "crate"
+source_url = "https://crates.io/crates/litellm-rs"

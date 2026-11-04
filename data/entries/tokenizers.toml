@@ -1,0 +1,14 @@
+name = "tokenizers"
+kind = "library"
+repo = "https://github.com/huggingface/tokenizers"
+homepage = "https://github.com/huggingface/tokenizers"
+crates = ["tokenizers", "bitcannon", "bitcanon", "tk-convert", "tk-encode", "tk-serialize", "tk-train"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Fastest implementation of the most used tokenizers in AI."
+source = "crate"
+source_url = "https://crates.io/crates/tokenizers"

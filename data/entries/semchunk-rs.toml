@@ -1,0 +1,13 @@
+name = "semchunk-rs"
+kind = "library"
+repo = "https://github.com/dominictarro/semchunk-rs"
+crates = ["semchunk-rs"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fast and lightweight Rust library for splitting text into semantically meaningful chunks."
+source = "crate"
+source_url = "https://crates.io/crates/semchunk-rs"

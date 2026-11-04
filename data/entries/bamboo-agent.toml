@@ -1,0 +1,14 @@
+name = "bamboo-agent"
+kind = "library"
+repo = "https://github.com/bigduu/bamboo-agent"
+homepage = "https://github.com/bigduu/Bamboo-agent"
+crates = ["bamboo-agent", "bamboo-agent-core", "bamboo-sdk"]
+topics = ["llm-apps"]
+category = "agent-frameworks"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fully self-contained AI agent backend framework with built-in web services, multi-LLM provider support, and comprehensive tool execution"
+source = "crate"
+source_url = "https://crates.io/crates/bamboo-agent"

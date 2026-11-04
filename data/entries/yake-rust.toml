@@ -1,0 +1,13 @@
+name = "yake-rust"
+kind = "library"
+repo = "https://github.com/quesurifn/yake-rust"
+crates = ["yake-rust"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "Yake (Yet Another Keyword Extractor) in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/yake-rust"

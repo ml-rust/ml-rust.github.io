@@ -1,0 +1,14 @@
+name = "whichlang"
+kind = "library"
+repo = "https://github.com/quickwit-oss/whichlang"
+homepage = "https://github.com/quickwit-oss/whichlang"
+crates = ["whichlang"]
+topics = ["text-search"]
+category = "text-tools"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A blazingly fast and lightweight language detection library for Rust."
+source = "crate"
+source_url = "https://crates.io/crates/whichlang"

@@ -1,0 +1,13 @@
+name = "leiden-rs"
+kind = "library"
+repo = "https://gitcode.com/lileeei/leiden-rs"
+crates = ["leiden-rs"]
+topics = ["tabular-ml"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "High-performance Leiden community detection algorithm for graphs in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/leiden-rs"

@@ -1,0 +1,14 @@
+name = "rsrl"
+kind = "library"
+repo = "https://github.com/tspooner/rsrl"
+homepage = "https://crates.io/crates/rsrl"
+crates = ["rsrl", "rsrl_derive", "rsrl_domains"]
+topics = ["train-models"]
+category = "classical-ml"
+org_affiliated = false
+added = 2026-11-03
+
+[description]
+text = "A fast, extensible reinforcement learning framework in Rust"
+source = "crate"
+source_url = "https://crates.io/crates/rsrl"
