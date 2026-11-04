@@ -27,7 +27,7 @@ pub(super) fn description_of<'a>(
 }
 
 /// The whole description, or its leading whole sentences when the whole text is too long.
-fn usable_text(raw: Option<&str>) -> Result<String, String> {
+pub(super) fn usable_text(raw: Option<&str>) -> Result<String, String> {
     description_text(raw).or_else(|error| leading_sentences(raw.unwrap_or_default()).ok_or(error))
 }
 

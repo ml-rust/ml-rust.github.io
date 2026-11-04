@@ -149,6 +149,8 @@ mod tests {
             rust_version: None,
             edition: None,
             published_by: None,
+            has_lib: Some(true),
+            has_bin: false,
         }
     }
 

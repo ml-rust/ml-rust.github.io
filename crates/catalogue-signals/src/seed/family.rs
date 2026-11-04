@@ -19,7 +19,14 @@ pub(super) struct Family<'a> {
     /// Crates that claim the repository and stay out, as `(crate name, reason)`.
     pub(super) left_out: Vec<(String, String)>,
     /// The most active users on one member.
-    users: f64,
+    pub(super) users: f64,
+}
+
+impl<'a> Family<'a> {
+    /// The primary, then the other members.
+    pub(super) fn members(&self) -> impl Iterator<Item = &'a Candidate> {
+        std::iter::once(self.primary).chain(self.rest.iter().copied())
+    }
 }
 
 /// Groups the candidates into families, the most used family first, then by primary crate name.
@@ -75,7 +82,8 @@ pub(super) fn families<'a>(
     found
 }
 
-fn family<'a>(
+/// The family of the crates `members` that claim the repository `key`, by the rules of [`families`].
+pub(super) fn family<'a>(
     snapshot: &DumpSnapshot,
     key: &str,
     members: Vec<Member<'a>>,

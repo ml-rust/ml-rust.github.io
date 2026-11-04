@@ -44,6 +44,8 @@ pub enum DescriptionSource {
     Crate,
     /// Written by a person.
     Human,
+    /// The GitHub repository description. Requires `source_url`, the entry's repo.
+    Repo,
 }
 
 /// The short text that describes an entry.
@@ -54,7 +56,7 @@ pub struct Description {
     pub text: String,
     /// Where the text comes from.
     pub source: DescriptionSource,
-    /// The page the text was taken from. Required for `readme` and `crate`.
+    /// The page the text was taken from. Required for `readme`, `crate` and `repo`.
     pub source_url: Option<Url>,
 }
 
@@ -76,7 +78,22 @@ impl Description {
         if self.source == DescriptionSource::Crate && self.source_url.is_none() {
             out.push("a `crate` description requires `source_url`".to_owned());
         }
+        if self.source == DescriptionSource::Repo && self.source_url.is_none() {
+            out.push("a `repo` description requires `source_url`".to_owned());
+        }
         out
+    }
+
+    /// Lists the rules a `repo` description breaks against the repo of its entry.
+    ///
+    /// The `source_url` must equal `repo`.
+    fn repo_source_problems(&self, repo: &Url) -> Vec<String> {
+        match self.source_url.as_ref() {
+            Some(url) if self.source == DescriptionSource::Repo && url != repo => vec![format!(
+                "a `repo` description needs `source_url` equal to the entry's repo `{repo}`, found `{url}`"
+            )],
+            _ => Vec::new(),
+        }
     }
 
     /// Lists the rules a `crate` description breaks against the crates of its entry.
@@ -171,6 +188,7 @@ impl Entry {
         }
         out.extend(self.description.problems());
         out.extend(self.description.crate_source_problems(&self.crates));
+        out.extend(self.description.repo_source_problems(&self.repo));
         out
     }
 }
@@ -304,6 +322,25 @@ mod tests {
         ] {
             let found = problems(&crate_source(crates, bad));
             assert!(has(&found, "needs `source_url`"), "{bad}: {found:?}");
+        }
+    }
+
+    #[test]
+    fn repo_description_needs_the_repo_of_the_entry() {
+        let text = ALPHA.replace("source = \"human\"", "source = \"repo\"");
+        assert!(has(
+            &problems(&text),
+            "`repo` description requires `source_url`"
+        ));
+        let same = format!("{text}source_url = \"https://github.com/ml-rust/alpha\"\n");
+        assert!(problems(&same).is_empty());
+        for bad in [
+            "https://github.com/ml-rust/beta",
+            "https://github.com/ml-rust/alpha#readme",
+            "https://crates.io/crates/alpha-crate",
+        ] {
+            let found = problems(&format!("{text}source_url = \"{bad}\"\n"));
+            assert!(has(&found, "equal to the entry's repo"), "{bad}: {found:?}");
         }
     }
 

@@ -51,8 +51,15 @@ pub(super) fn matching_topics(
 /// A term matches whole words in order, ignoring case and punctuation. It never matches across
 /// the name and the description.
 pub(super) fn topics_by_terms(topics: &Topics, name: &str, description: Option<&str>) -> Vec<Slug> {
-    let name = words(name);
-    let description = words(description.unwrap_or_default());
+    topics_by_terms_in(topics, &[name, description.unwrap_or_default()])
+}
+
+/// The ids of the topics with a term in one of `texts`, sorted.
+///
+/// A term matches whole words in order, ignoring case and punctuation. It never matches across
+/// two texts.
+pub(super) fn topics_by_terms_in(topics: &Topics, texts: &[&str]) -> Vec<Slug> {
+    let texts: Vec<Vec<String>> = texts.iter().map(|text| words(text)).collect();
     let found: BTreeSet<&Slug> = topics
         .topic
         .iter()
@@ -60,7 +67,7 @@ pub(super) fn topics_by_terms(topics: &Topics, name: &str, description: Option<&
             topic
                 .terms
                 .iter()
-                .any(|term| holds_term(&name, term) || holds_term(&description, term))
+                .any(|term| texts.iter().any(|text| holds_term(text, term)))
         })
         .map(|topic| &topic.id)
         .collect();
@@ -256,6 +263,61 @@ keywords = ["tensor"]
         ] {
             assert!(by_terms(name, description).is_empty(), "{name}");
         }
+    }
+
+    /// The published topics.
+    const PUBLISHED: &str = include_str!("../../../../data/topics.toml");
+
+    #[test]
+    fn published_terms_reject_a_parallelism_library_and_a_cloud_sdk() {
+        let published = topics(PUBLISHED);
+        for texts in [
+            [
+                "work-stealer",
+                "A data parallelism library for Rust.",
+                "parallelism",
+                "concurrency",
+            ],
+            [
+                "cloud-sdk-rust",
+                "The SDK for a cloud platform, with one client per service.",
+                "cloud",
+                "sdk",
+            ],
+            [
+                "string-search",
+                "Fast multiple substring searching.",
+                "text",
+                "search",
+            ],
+        ] {
+            assert!(
+                topics_by_terms_in(&published, &texts).is_empty(),
+                "{texts:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn published_keywords_reject_a_plain_text_crate() {
+        let words = vec!["text".to_owned(), "string".to_owned(), "search".to_owned()];
+        assert!(matching_topics(&topics(PUBLISHED), &words, &[]).is_empty());
+    }
+
+    #[test]
+    fn published_terms_read_github_topics() {
+        let published = topics(PUBLISHED);
+        let found = ids(topics_by_terms_in(
+            &published,
+            &["tool", "A tool.", "deep-learning"],
+        ));
+        assert_eq!(found, ["train-models"]);
+    }
+
+    #[test]
+    fn a_term_does_not_span_two_texts() {
+        let terms = topics(TERMS);
+        assert!(topics_by_terms_in(&terms, &["vector", "database"]).is_empty());
     }
 
     #[test]

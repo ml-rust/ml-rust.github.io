@@ -26,6 +26,7 @@ impl<'a> DescriptionView<'a> {
             DescriptionSource::Readme => "the project README",
             DescriptionSource::Crate => "the crates.io description",
             DescriptionSource::Human => "written for the catalogue",
+            DescriptionSource::Repo => "the GitHub repository description",
         };
         Self {
             text: &description.text,
@@ -87,4 +88,35 @@ pub(crate) fn link_rows(entry: &Entry) -> Vec<LinkRow> {
         rows.push(LinkRow::new("Repology", project, &url));
     }
     rows
+}
+
+#[cfg(test)]
+mod tests {
+    use catalogue_core::{Date, Description, EntryKind, Slug};
+
+    use super::*;
+
+    #[test]
+    fn a_repo_description_names_its_source_and_links_the_repository() {
+        let repo = Url::parse("https://github.com/o/tool").expect("repo");
+        let entry = Entry {
+            name: "tool".to_owned(),
+            kind: EntryKind::App,
+            repo: repo.clone(),
+            homepage: None,
+            crates: Vec::new(),
+            topics: vec![Slug::new("topic").expect("slug")],
+            description: Description {
+                text: "A tool.".to_owned(),
+                source: DescriptionSource::Repo,
+                source_url: Some(repo.clone()),
+            },
+            org_affiliated: false,
+            distribution: None,
+            added: Date::new(2026, 11, 3).expect("date"),
+        };
+        let view = DescriptionView::of(&entry);
+        assert_eq!(view.source, "the GitHub repository description");
+        assert_eq!(view.href, Some(SafeHref::from(&repo)));
+    }
 }

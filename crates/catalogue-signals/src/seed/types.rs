@@ -1,16 +1,18 @@
 //! The input index and the result of drafting.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use catalogue_core::{Catalogue, Entry, Slug, canonical_crate_name};
+use catalogue_core::{Catalogue, Entry, Slug, canonical_crate_name, normalize_repo_url};
 
-/// The crate names and slugs of the entries that already exist.
+/// The crate names, slugs and repositories of the entries that already exist.
 ///
 /// Crate names use the form crates.io compares: [`canonical_crate_name`].
+/// Repositories use the form [`normalize_repo_url`] gives.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ExistingIndex {
     crates: HashSet<String>,
     slugs: HashSet<String>,
+    repos: HashMap<String, String>,
 }
 
 impl ExistingIndex {
@@ -19,6 +21,9 @@ impl ExistingIndex {
         let mut index = Self::default();
         for (slug, entry) in catalogue.entries() {
             index.slugs.insert(slug.as_str().to_owned());
+            if let Some(key) = normalize_repo_url(entry.repo.as_str()) {
+                index.repos.insert(key, slug.as_str().to_owned());
+            }
             for name in &entry.crates {
                 index.crates.insert(name.normalized());
             }
@@ -34,7 +39,15 @@ impl ExistingIndex {
         Self {
             crates: crates.into_iter().map(canonical_crate_name).collect(),
             slugs: slugs.into_iter().map(str::to_owned).collect(),
+            repos: HashMap::new(),
         }
+    }
+
+    /// Records that the entry `slug` holds the repository `key`.
+    #[must_use]
+    pub fn with_repo(mut self, key: &str, slug: &str) -> Self {
+        self.repos.insert(key.to_owned(), slug.to_owned());
+        self
     }
 
     /// Whether an existing entry lists crate `name`, in any spelling crates.io treats as equal.
@@ -45,6 +58,11 @@ impl ExistingIndex {
     /// Whether an existing entry has `slug`.
     pub fn has_slug(&self, slug: &Slug) -> bool {
         self.slugs.contains(slug.as_str())
+    }
+
+    /// The slug of the entry that holds the repository `key`.
+    pub fn repo_slug(&self, key: &str) -> Option<&str> {
+        self.repos.get(key).map(String::as_str)
     }
 }
 

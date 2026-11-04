@@ -1,6 +1,7 @@
 //! The facts request.
 
 use jiff::civil::Date;
+use serde::de::DeserializeOwned;
 
 use super::derive::derive_facts;
 use super::query::{ENDPOINT, request_body, window_start};
@@ -36,14 +37,26 @@ pub fn repo_facts(
     pacer: &mut dyn Pacer,
 ) -> Result<RepoFacts, GithubError> {
     let body = request_body(repo, window_start(today));
+    let envelope = post_query(transport, token, &body, pacer)?;
+    interpret(envelope, repo, today)
+}
+
+/// Posts the query `body` and parses the answer.
+///
+/// `token` is sent as a bearer token. A 403 or 429 answer with a wait hint is retried.
+pub(super) fn post_query<R: DeserializeOwned>(
+    transport: &dyn Transport,
+    token: &str,
+    body: &[u8],
+    pacer: &mut dyn Pacer,
+) -> Result<Envelope<R>, GithubError> {
     let headers = [
         ("Authorization", format!("Bearer {token}")),
         ("Content-Type", "application/json".to_owned()),
     ];
     let mut paced = Paced::new(pacer);
-    let bytes = paced.fetch(ENDPOINT, || transport.post(ENDPOINT, &headers, &body))?;
-    let envelope: Envelope = parse_json(ENDPOINT, &bytes)?;
-    interpret(envelope, repo, today)
+    let bytes = paced.fetch(ENDPOINT, || transport.post(ENDPOINT, &headers, body))?;
+    parse_json(ENDPOINT, &bytes)
 }
 
 /// Whether `error` reports that the repository does not exist.
@@ -57,6 +70,21 @@ pub(crate) fn is_missing_repository(error: &ApiError) -> bool {
 
 /// Turns an answer into facts, or into the first error it holds.
 fn interpret(envelope: Envelope, repo: &RepoRef, today: Date) -> Result<RepoFacts, GithubError> {
+    Ok(match repository_of(envelope, repo)? {
+        Some(repository) => RepoFacts::Found(derive_facts(&repository, repo, today)),
+        None => RepoFacts::Gone {
+            requested: repo.clone(),
+        },
+    })
+}
+
+/// The repository in an answer, `None` when GitHub holds no repo of that name.
+///
+/// Any API error other than a missing repo is an error that names `repo`.
+pub(super) fn repository_of<R>(
+    envelope: Envelope<R>,
+    repo: &RepoRef,
+) -> Result<Option<R>, GithubError> {
     let graphql = |message: String| GithubError::Graphql {
         repo: repo.to_string(),
         message,
@@ -74,16 +102,9 @@ fn interpret(envelope: Envelope, repo: &RepoRef, today: Date) -> Result<RepoFact
         if envelope.errors.is_empty() {
             return Err(graphql("the answer holds no data".to_owned()));
         }
-        return Ok(RepoFacts::Gone {
-            requested: repo.clone(),
-        });
+        return Ok(None);
     };
-    Ok(match data.repository {
-        Some(repository) => RepoFacts::Found(derive_facts(&repository, repo, today)),
-        None => RepoFacts::Gone {
-            requested: repo.clone(),
-        },
-    })
+    Ok(data.repository)
 }
 
 #[cfg(test)]

@@ -9,6 +9,7 @@ mod bot;
 mod commits;
 mod derive;
 mod fetch;
+mod profile;
 mod query;
 mod repo_ref;
 mod response;
@@ -17,6 +18,7 @@ mod types;
 
 pub use fetch::repo_facts;
 pub(crate) use fetch::{NOT_FOUND, is_missing_repository};
+pub use profile::{RepoProfile, repo_profile};
 pub(crate) use query::ENDPOINT as GRAPHQL_ENDPOINT;
 pub use query::LATEST_SAMPLE;
 pub use repo_ref::{RepoRef, RepoRefError};

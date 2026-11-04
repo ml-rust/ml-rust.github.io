@@ -41,6 +41,8 @@ fn version(crate_id: u32, num: &str, created_at: &str) -> VersionRow {
         rust_version: None,
         edition: None,
         published_by: None,
+        has_lib: Some(true),
+        has_bin: false,
     }
 }
 

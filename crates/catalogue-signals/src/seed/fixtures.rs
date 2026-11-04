@@ -65,6 +65,10 @@ pub(super) struct Spec {
     /// The crate ids its default version depends on, with the kind.
     pub(super) deps: Vec<(u32, DependencyKind)>,
     pub(super) owners: Vec<Owner>,
+    /// The `has_lib` value of its default version.
+    pub(super) has_lib: Option<bool>,
+    /// Whether its default version names a binary target.
+    pub(super) has_bin: bool,
 }
 
 impl Spec {
@@ -83,6 +87,8 @@ impl Spec {
             users: 5.0,
             deps: Vec::new(),
             owners: vec![user(1)],
+            has_lib: Some(true),
+            has_bin: false,
         }
     }
 }
@@ -148,6 +154,8 @@ impl World {
                 rust_version: None,
                 edition: None,
                 published_by: None,
+                has_lib: spec.has_lib,
+                has_bin: spec.has_bin,
             },
         );
         self.snapshot.default_version.insert(spec.id, spec.id);

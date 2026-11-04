@@ -247,9 +247,9 @@ fn missing_metadata_is_an_error() {
 
 #[test]
 fn bad_boolean_names_table_column_and_record() {
-    let versions = "id,crate_id,num,created_at,yanked,rust_version,edition,published_by\n\
-        10,1,0.1.0,2025-01-01 10:00:00+00,f,,,\n\
-        11,1,0.2.0,2026-02-01 00:00:00+00,maybe,,,\n";
+    let versions = "id,crate_id,num,created_at,yanked,rust_version,edition,published_by,has_lib,bin_names\n\
+        10,1,0.1.0,2025-01-01 10:00:00+00,f,,,,t,{}\n\
+        11,1,0.2.0,2026-02-01 00:00:00+00,maybe,,,,t,{}\n";
     let error = error_of(valid().table("versions", versions));
     match &error {
         DumpError::BadValue {

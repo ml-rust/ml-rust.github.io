@@ -3,11 +3,13 @@
 use std::io;
 use std::path::PathBuf;
 
+use catalogue_signals::github::GithubError;
 use thiserror::Error;
 
 use crate::discover::DiscoverError;
 use crate::dump::DumpCommandError;
 use crate::exit::{INVALID, IO};
+use crate::token::NoToken;
 
 /// A `catalogue seed` run that fails.
 #[derive(Debug, Error)]
@@ -46,19 +48,56 @@ pub enum SeedError {
         /// The error from the operating system.
         source: io::Error,
     },
+    /// The lead file cannot be read.
+    #[error("cannot read the lead file {}: {source}. Pass a readable file to --leads", .path.display())]
+    ReadLeads {
+        /// The lead file.
+        path: PathBuf,
+        /// The error from the operating system.
+        source: io::Error,
+    },
+    /// A line of the lead file is not a repo.
+    #[error("{}:{line}: `{input}` is not a repo in the form owner/name. Fix the line, then rerun", .path.display())]
+    BadLead {
+        /// The lead file.
+        path: PathBuf,
+        /// The line number, from 1.
+        line: usize,
+        /// The rejected text.
+        input: String,
+    },
+    /// The lead file names no repo.
+    #[error("the lead file {} names no repo. Add one owner/name per line, then rerun", .path.display())]
+    NoLeads {
+        /// The lead file.
+        path: PathBuf,
+    },
+    /// `GITHUB_TOKEN` is unset or empty.
+    #[error(transparent)]
+    Token(#[from] NoToken),
+    /// GitHub rejects the token, or the HTTP client cannot start.
+    #[error(transparent)]
+    Github(#[from] GithubError),
 }
 
 impl SeedError {
     /// The process exit code.
     ///
-    /// 1 for rule breaks, a missing thresholds file and an existing entry file.
-    /// 2 for IO errors. The inner code for discover and dump errors.
+    /// 1 for rule breaks, a missing thresholds file, an existing entry file, a bad lead file, a
+    /// missing token and a rejected token. 2 for IO and network errors. The inner code for
+    /// discover and dump errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Discover(error) => error.exit_code(),
             Self::Dump(error) => error.exit_code(),
-            Self::NoThresholds { .. } | Self::Exists { .. } | Self::Serialize { .. } => INVALID,
-            Self::Io { .. } => IO,
+            Self::NoThresholds { .. }
+            | Self::Exists { .. }
+            | Self::Serialize { .. }
+            | Self::BadLead { .. }
+            | Self::NoLeads { .. }
+            | Self::Token(_)
+            | Self::Github(GithubError::Status { status: 401, .. }) => INVALID,
+            Self::Io { .. } | Self::ReadLeads { .. } | Self::Github(_) => IO,
         }
     }
 }
@@ -83,5 +122,39 @@ mod tests {
             path: PathBuf::from("data/thresholds.toml"),
         };
         assert!(thresholds.to_string().contains("--min-users"));
+    }
+
+    #[test]
+    fn lead_errors_name_the_input_and_the_next_action() {
+        let bad = SeedError::BadLead {
+            path: PathBuf::from("leads.txt"),
+            line: 3,
+            input: "nope".to_owned(),
+        };
+        assert_eq!(bad.exit_code(), INVALID);
+        assert_eq!(
+            bad.to_string(),
+            "leads.txt:3: `nope` is not a repo in the form owner/name. Fix the line, then rerun"
+        );
+        let read = SeedError::ReadLeads {
+            path: PathBuf::from("leads.txt"),
+            source: io::Error::from(io::ErrorKind::NotFound),
+        };
+        assert_eq!(read.exit_code(), IO);
+        assert!(read.to_string().contains("--leads"), "{read}");
+        assert_eq!(SeedError::Token(NoToken).exit_code(), INVALID);
+    }
+
+    #[test]
+    fn a_rejected_token_exits_one_and_other_github_errors_exit_two() {
+        let status = |status| {
+            SeedError::Github(GithubError::Status {
+                url: "u".to_owned(),
+                status,
+                action: "a",
+            })
+        };
+        assert_eq!(status(401).exit_code(), INVALID);
+        assert_eq!(status(500).exit_code(), IO);
     }
 }

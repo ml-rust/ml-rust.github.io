@@ -1,0 +1,168 @@
+//! The run over one lead list.
+
+use std::collections::{BTreeMap, HashMap, HashSet};
+
+use catalogue_core::{Date, EntryKind, Slug};
+
+use super::channels::lookup_channels;
+use super::claims::Claims;
+use super::decide::{Context, Drafted, Outcome, decide, github_key};
+use super::resolve::{Answer, resolve};
+use super::types::{DraftDetail, LeadDrafts, LeadInputs, LeadPacers};
+use crate::dump::utc_date;
+use crate::github::{GithubError, RepoRef};
+use crate::http::{Headers, Transport};
+use crate::usage;
+
+/// Drafts one entry per lead.
+///
+/// The run resolves every lead with one paced GitHub batch and reads the dump once. Then it
+/// decides each lead in list order and looks up the channels of each app draft. The `added` date
+/// is the date of the dump, as in the dump flow. Two leads that resolve to one repository make
+/// one draft, and the first of two drafts with one slug keeps it.
+///
+/// A lead that yields no draft appears in `drafts.skipped` with the reason. A lead an entry
+/// covers appears in `listed`.
+///
+/// # Errors
+///
+/// Returns the [`GithubError`] of a 401 answer, which stops the run. Every other failed fetch
+/// stays on its own lead.
+pub fn seed_leads(
+    inputs: &LeadInputs<'_>,
+    leads: &[RepoRef],
+    transport: &dyn Transport,
+    token: &str,
+    pacers: &mut LeadPacers<'_>,
+) -> Result<LeadDrafts, GithubError> {
+    let mut out = LeadDrafts::default();
+    let unique = unique_leads(leads, &mut out.drafts.skipped);
+    let answers = resolve(transport, token, &unique, &mut *pacers.github)?;
+
+    let claims = Claims::of(inputs.snapshot, &wanted_keys(&unique, &answers));
+    let today = utc_date(inputs.snapshot.meta.timestamp);
+    let signals = usage::compute(inputs.snapshot, &claims.ids(), today);
+    let ctx = Context {
+        inputs,
+        claims: &claims,
+        usage: &signals,
+        added: Date::from(today),
+    };
+
+    let mut pending: Vec<(String, Drafted)> = Vec::new();
+    let mut resolved_by: HashMap<String, String> = HashMap::new();
+    let mut taken: BTreeMap<Slug, String> = BTreeMap::new();
+    for (lead, answer) in unique.iter().zip(&answers) {
+        let name = lead.to_string();
+        let profile = match answer {
+            Answer::Found(profile) => profile,
+            Answer::Gone => {
+                let reason = "GitHub holds no repository of this name".to_owned();
+                out.drafts.skipped.push((name, reason));
+                continue;
+            }
+            Answer::Failed(error) => {
+                let reason = format!("fetch failed: {error}");
+                out.drafts.skipped.push((name, reason));
+                continue;
+            }
+        };
+        let key = profile.name_with_owner.to_lowercase();
+        if let Some(first) = resolved_by.get(&key) {
+            let reason = format!("resolves to `{key}`, the same repository as lead `{first}`");
+            out.drafts.skipped.push((name, reason));
+            continue;
+        }
+        resolved_by.insert(key, name.clone());
+        let decision = decide(&ctx, lead, profile);
+        out.drafts.skipped.extend(decision.left_out);
+        match decision.outcome {
+            Outcome::Listed(text) => out.listed.push((name, text)),
+            Outcome::Skip(reason) => out.drafts.skipped.push((name, reason)),
+            Outcome::Draft(drafted) => {
+                let slug = drafted.slug.clone();
+                if inputs.existing.has_slug(&slug) {
+                    let reason = format!("slug `{slug}` is already an entry");
+                    out.drafts.skipped.push((name, reason));
+                } else if let Some(first) = taken.get(&slug) {
+                    let reason = format!("slug `{slug}` is already drafted for `{first}`");
+                    out.drafts.skipped.push((name, reason));
+                } else {
+                    taken.insert(slug, name.clone());
+                    pending.push((name, *drafted));
+                }
+            }
+        }
+    }
+    finish(&mut out, pending, transport, pacers);
+    out.drafts.entries.sort_by(|a, b| a.0.cmp(&b.0));
+    out.drafts.skipped.sort();
+    out.listed.sort();
+    Ok(out)
+}
+
+/// The leads without repeats, in list order, ignoring case. A repeat goes to `skipped`.
+fn unique_leads(leads: &[RepoRef], skipped: &mut Vec<(String, String)>) -> Vec<RepoRef> {
+    let mut seen = HashSet::new();
+    let mut unique = Vec::with_capacity(leads.len());
+    for lead in leads {
+        if seen.insert(github_key(lead)) {
+            unique.push(lead.clone());
+        } else {
+            skipped.push((
+                lead.to_string(),
+                "repeats an earlier line of the lead list".to_owned(),
+            ));
+        }
+    }
+    unique
+}
+
+/// The keys of every lead and of every canonical name.
+fn wanted_keys(leads: &[RepoRef], answers: &[Answer]) -> HashSet<String> {
+    let mut wanted: HashSet<String> = leads.iter().map(github_key).collect();
+    for answer in answers {
+        if let Answer::Found(profile) = answer
+            && let Ok(canonical) = RepoRef::parse(&profile.name_with_owner)
+        {
+            wanted.insert(github_key(&canonical));
+        }
+    }
+    wanted
+}
+
+/// Looks up the channels of each app draft and moves every draft into `out`.
+fn finish(
+    out: &mut LeadDrafts,
+    pending: Vec<(String, Drafted)>,
+    transport: &dyn Transport,
+    pacers: &mut LeadPacers<'_>,
+) {
+    let mut asked = false;
+    for (lead, drafted) in pending {
+        let Drafted {
+            slug,
+            mut entry,
+            users,
+            mut notes,
+            canonical,
+            keys,
+        } = drafted;
+        if entry.kind == EntryKind::App {
+            if asked {
+                let headers = Headers::default();
+                pacers.homebrew.wait(&headers);
+                pacers.repology.wait(&headers);
+                pacers.docker.wait(&headers);
+            }
+            asked = true;
+            let found = lookup_channels(transport, &canonical, &keys, pacers);
+            entry.distribution = found.distribution;
+            notes.extend(found.notes);
+            out.warnings.extend(found.warnings);
+        }
+        out.details
+            .insert(slug.clone(), DraftDetail { lead, users, notes });
+        out.drafts.entries.push((slug, entry));
+    }
+}

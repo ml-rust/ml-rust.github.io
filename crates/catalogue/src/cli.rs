@@ -106,6 +106,9 @@ pub enum Command {
     /// enough active users, is not listed yet, and maps to a topic in
     /// `topics.toml`. A reviewer merges crate families and checks every draft.
     /// Without `--write` the command prints the drafts and the skipped crates.
+    ///
+    /// With `--leads FILE` the command drafts from a list of GitHub repos instead,
+    /// and prints the libraries, the apps, the listed leads and the skips.
     Seed(SeedArgs),
     /// Check issue forms, sync repo labels and run the issue checks of the catalogue bot.
     Bot {

@@ -97,6 +97,10 @@ pub struct VersionRow {
     pub edition: Option<u16>,
     /// The user id that published the version. A NULL value reads as `None`.
     pub published_by: Option<u32>,
+    /// Whether the version holds a library target. A NULL value reads as `None`.
+    pub has_lib: Option<bool>,
+    /// Whether the version names a binary target. A NULL or empty list reads as `false`.
+    pub has_bin: bool,
 }
 
 /// The `dependencies.kind` code.

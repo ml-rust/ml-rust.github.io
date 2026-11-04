@@ -8,7 +8,8 @@
 //!
 //! [`repo_facts`] reads the facts of one repo with a single GraphQL request:
 //! its state, its human commits and how fast its maintainers answer issues and
-//! pull requests.
+//! pull requests. [`repo_profile`] reads what a lead needs: the canonical name,
+//! the state, the description, the homepage, the topics, the language and the license.
 
 mod error;
 mod facts;
@@ -22,7 +23,10 @@ mod search;
 pub use crate::http::Pacer;
 pub use error::GithubError;
 pub(crate) use facts::{ApiError, GRAPHQL_ENDPOINT, NOT_FOUND, is_missing_repository};
-pub use facts::{CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoRef, RepoRefError, repo_facts};
+pub use facts::{
+    CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoProfile, RepoRef, RepoRefError, repo_facts,
+    repo_profile,
+};
 pub use headers::rest_headers;
 pub(crate) use json::parse_json;
 pub use pacer::GITHUB_INTERVAL;

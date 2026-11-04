@@ -4,8 +4,8 @@ use serde::Deserialize;
 
 /// The top level of an answer.
 #[derive(Debug, Deserialize)]
-pub(super) struct Envelope {
-    pub(super) data: Option<Data>,
+pub(super) struct Envelope<R = Repository> {
+    pub(super) data: Option<Data<R>>,
     #[serde(default)]
     pub(super) errors: Vec<ApiError>,
 }
@@ -23,8 +23,8 @@ pub(crate) struct ApiError {
 
 /// The `data` object.
 #[derive(Debug, Deserialize)]
-pub(super) struct Data {
-    pub(super) repository: Option<Repository>,
+pub(super) struct Data<R = Repository> {
+    pub(super) repository: Option<R>,
 }
 
 /// A list the API wraps in `nodes`. A node can be null.

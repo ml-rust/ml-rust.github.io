@@ -100,6 +100,14 @@ impl<'a> Row<'a> {
         parse::boolean(text).ok_or_else(|| self.bad(col, text, "`t` or `f`"))
     }
 
+    /// A psql boolean, or `None` when the field is NULL or empty.
+    pub(crate) fn optional_flag(&self, col: Col) -> Result<Option<bool>, DumpError> {
+        if self.bytes(col)?.is_empty() {
+            return Ok(None);
+        }
+        self.flag(col).map(Some)
+    }
+
     /// A psql `timestamptz`.
     pub(crate) fn timestamp(&self, col: Col) -> Result<Timestamp, DumpError> {
         let text = self.text(col)?;

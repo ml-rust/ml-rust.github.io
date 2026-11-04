@@ -27,10 +27,7 @@ pub(super) fn draft_family(
     topics: &Topics,
     today: Date,
 ) -> Result<(Slug, Entry), String> {
-    let members: Vec<(u32, &str)> = std::iter::once(family.primary)
-        .chain(family.rest.iter().copied())
-        .map(|member| (member.crate_id, member.name.as_str()))
-        .collect();
+    let members = family_members(family);
     let row = snapshot
         .crates
         .get(&family.primary.crate_id)
@@ -38,12 +35,7 @@ pub(super) fn draft_family(
     let crate_name = row.name.as_str();
     let (repo, org_affiliated) = repo_link(row.repository.as_deref())?;
     let (text, described_by) = description_of(snapshot, &members)?;
-    let mut matched: BTreeSet<Slug> = BTreeSet::new();
-    for (id, _) in &members {
-        let keywords = snapshot.keywords.get(id).map_or(&[][..], Vec::as_slice);
-        let categories = snapshot.categories.get(id).map_or(&[][..], Vec::as_slice);
-        matched.extend(matching_topics(topics, keywords, categories));
-    }
+    let mut matched = member_topics(snapshot, &members, topics);
     if matched.is_empty() {
         matched.extend(topics_by_terms(
             topics,
@@ -55,14 +47,7 @@ pub(super) fn draft_family(
         return Err("no topic matches".to_owned());
     }
     let (name, slug) = entry_name(crate_name, &repo)?;
-    let mut others: Vec<&str> = members.iter().skip(1).map(|(_, name)| *name).collect();
-    others.sort_unstable();
-    let crates = std::iter::once(crate_name)
-        .chain(others)
-        .map(|member| {
-            CrateName::new(member).map_err(|error| format!("the crate name is not valid: {error}"))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    let crates = crate_names(crate_name, &members)?;
     let source_url = crate_page(described_by)
         .ok_or_else(|| "the crates.io page is not a valid link".to_owned())?;
     let entry = Entry {
@@ -82,6 +67,44 @@ pub(super) fn draft_family(
         added: today,
     };
     Ok((slug, entry))
+}
+
+/// The id and name of each member, the primary first.
+pub(super) fn family_members<'a>(family: &Family<'a>) -> Vec<(u32, &'a str)> {
+    family
+        .members()
+        .map(|member| (member.crate_id, member.name.as_str()))
+        .collect()
+}
+
+/// The topics whose keywords or categories match any of `members`.
+pub(super) fn member_topics(
+    snapshot: &DumpSnapshot,
+    members: &[(u32, &str)],
+    topics: &Topics,
+) -> BTreeSet<Slug> {
+    let mut matched = BTreeSet::new();
+    for (id, _) in members {
+        let keywords = snapshot.keywords.get(id).map_or(&[][..], Vec::as_slice);
+        let categories = snapshot.categories.get(id).map_or(&[][..], Vec::as_slice);
+        matched.extend(matching_topics(topics, keywords, categories));
+    }
+    matched
+}
+
+/// The crate list of a draft: `primary`, then the other `members` sorted by name.
+pub(super) fn crate_names(
+    primary: &str,
+    members: &[(u32, &str)],
+) -> Result<Vec<CrateName>, String> {
+    let mut others: Vec<&str> = members.iter().skip(1).map(|(_, name)| *name).collect();
+    others.sort_unstable();
+    std::iter::once(primary)
+        .chain(others)
+        .map(|member| {
+            CrateName::new(member).map_err(|error| format!("the crate name is not valid: {error}"))
+        })
+        .collect()
 }
 
 #[cfg(test)]

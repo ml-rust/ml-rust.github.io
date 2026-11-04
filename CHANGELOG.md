@@ -23,6 +23,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue calibrate`: percentiles of the tier signals, for setting thresholds.
 - `catalogue seed`: drafts entries from discovery for human review.
 - `catalogue seed`: lists a repository's main crate first, leaves out crates of other owners, and matches topic `terms` in names and descriptions.
+- `catalogue seed --leads`: drafts library and app entries from a list of GitHub repos.
 - `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
 - `catalogue tiers`: a failed network fetch falls back to the previous snapshot and the run summary names it.
 - `catalogue tiers --json`: writes each entry's tier, reasons and signals with source links and dates.

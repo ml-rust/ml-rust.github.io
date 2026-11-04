@@ -107,6 +107,21 @@ impl RepoName {
     fn shares_lead(&self, name: &str) -> bool {
         self.lead.is_some() && lead_word(name) == self.lead
     }
+
+    /// Whether crate `name` is named for Rust use of this repository.
+    ///
+    /// It matches the repository name, shares its first word, or carries a language marker at
+    /// either end. A crate that only names the repository link has none of these.
+    pub(super) fn is_rust_named(&self, name: &str) -> bool {
+        let all = words(name);
+        let marked = |word: Option<&String>| {
+            word.is_some_and(|word| LANGUAGE_MARKERS.contains(&word.as_str()))
+        };
+        self.match_tier(name) > 0
+            || self.shares_lead(name)
+            || marked(all.first())
+            || marked(all.last())
+    }
 }
 
 fn is_auxiliary(name: &str) -> bool {
@@ -516,6 +531,24 @@ mod tests {
         build.deps = vec![(2, DependencyKind::Build)];
         let found = ranked("repo", vec![build, member(2, "x-b", 1.0, &[])]);
         assert_eq!(found, ["x-b", "x-a"]);
+    }
+
+    #[test]
+    fn a_rust_named_crate_relates_to_the_repository_or_carries_a_marker() {
+        let repo = RepoName::new("some-engine");
+        for name in [
+            "some-engine",
+            "some_engine",
+            "some-engine-sys",
+            "some",
+            "rust-other",
+            "other-rs",
+        ] {
+            assert!(repo.is_rust_named(name), "{name}");
+        }
+        for name in ["other", "other-engine"] {
+            assert!(!repo.is_rust_named(name), "{name}");
+        }
     }
 
     #[test]

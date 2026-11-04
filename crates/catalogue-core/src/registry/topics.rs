@@ -34,6 +34,7 @@ pub struct Topic {
     /// Whole words or phrases that map a crate to this topic when no keyword or category does.
     ///
     /// `catalogue seed` looks for them in the name and description of the primary crate.
+    /// `catalogue seed --leads` also reads the repository name, description and GitHub topics.
     /// Lowercase words of `[a-z0-9]`, separated by one space.
     #[serde(default)]
     pub terms: Vec<String>,

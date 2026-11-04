@@ -33,6 +33,8 @@ fn version(crate_id: u32, num: &str, day: &str, yanked: bool, by: Option<u32>) -
         rust_version: None,
         edition: None,
         published_by: by,
+        has_lib: Some(true),
+        has_bin: false,
     }
 }
 
