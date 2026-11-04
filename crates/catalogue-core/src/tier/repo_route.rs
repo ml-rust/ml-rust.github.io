@@ -5,11 +5,24 @@ use crate::registry::RepoRouteThresholds;
 /// The text that opens every statement of the route. The site's sentence parser reads it.
 const ROUTE: &str = "repository route";
 
+/// The main crate that keeps a library off the route. An app has no such crate.
+fn left_out(signals: &Signals) -> Option<&str> {
+    signals
+        .main_crate_left_out
+        .as_deref()
+        .filter(|_| signals.is_library())
+}
+
 /// The repository route: stars, forks and contributors each reach their limit.
 ///
-/// Stars alone never pass. A value below its limit fails the route even when another value is
-/// unknown. Otherwise a missing value leaves the route unknown, never false.
+/// The route measures a whole repository, so a library that leaves out the repository's main crate
+/// fails it whatever the numbers say. Stars alone never pass. A value below its limit fails the
+/// route even when another value is unknown. Otherwise a missing value leaves the route unknown,
+/// never false.
 pub(super) fn repo_route(signals: &Signals, t: &RepoRouteThresholds) -> Fact {
+    if left_out(signals).is_some() {
+        return Fact::known(false);
+    }
     Fact::all(vec![
         Fact::of("stars", signals.stars, |n| n >= t.min_stars),
         Fact::of("forks", signals.forks, |n| n >= t.min_forks),
@@ -19,8 +32,12 @@ pub(super) fn repo_route(signals: &Signals, t: &RepoRouteThresholds) -> Fact {
     ])
 }
 
-/// Every part of the route with its value and its limit.
+/// Every part of the route with its value and its limit, or the main crate that the entry leaves
+/// out.
 pub(super) fn route_text(signals: &Signals, t: &RepoRouteThresholds) -> String {
+    if let Some(name) = left_out(signals) {
+        return format!("{ROUTE}: the repo's main crate {name} is not in this entry");
+    }
     format!(
         "{ROUTE} stars {} (needs {}), forks {} (needs {}), contributors {} (needs {})",
         show(signals.stars),
@@ -97,6 +114,54 @@ mod tests {
         let fact = route(&signals(Some(1), None, Some(1)));
         assert!(fact.is_false());
         assert!(fact.needs.is_empty());
+    }
+
+    /// An entry of `kind` far past every limit that leaves out `wasmtime`.
+    fn side_crates_only(kind: EntryKind) -> Signals {
+        Signals {
+            stars: Some(u64::MAX),
+            forks: Some(u64::MAX),
+            contributors: Some(u64::MAX),
+            main_crate_left_out: Some("wasmtime".to_owned()),
+            ..Signals::unknown(kind)
+        }
+    }
+
+    #[test]
+    fn a_library_without_the_main_crate_fails_at_any_numbers_and_says_why() {
+        let found = side_crates_only(EntryKind::Library);
+        assert!(route(&found).is_false());
+        assert_eq!(
+            route_text(&found, &thresholds().repo_route),
+            "repository route: the repo's main crate wasmtime is not in this entry"
+        );
+    }
+
+    #[test]
+    fn a_library_without_the_main_crate_fails_with_unknown_numbers() {
+        let found = Signals {
+            stars: None,
+            ..side_crates_only(EntryKind::Library)
+        };
+        let fact = route(&found);
+        assert!(fact.is_false());
+        assert!(fact.needs.is_empty());
+    }
+
+    #[test]
+    fn a_library_with_its_main_crate_listed_passes_on_the_numbers() {
+        let found = Signals {
+            main_crate_left_out: None,
+            ..side_crates_only(EntryKind::Library)
+        };
+        assert!(route(&found).is_true());
+    }
+
+    #[test]
+    fn an_app_route_ignores_the_main_crate() {
+        let found = side_crates_only(EntryKind::App);
+        assert!(route(&found).is_true());
+        assert!(route_text(&found, &thresholds().repo_route).contains("stars "));
     }
 
     #[test]

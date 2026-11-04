@@ -25,4 +25,5 @@ mod types;
 
 pub use draft::draft_entries;
 pub use leads::{DraftDetail, LeadDrafts, LeadInputs, LeadPacers, seed_leads};
+pub(crate) use primary::RepoName;
 pub use types::{Drafts, ExistingIndex, Mappings};

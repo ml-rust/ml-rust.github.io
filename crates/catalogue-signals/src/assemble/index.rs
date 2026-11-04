@@ -2,18 +2,20 @@
 
 use std::collections::{HashMap, HashSet};
 
-use catalogue_core::canonical_crate_name;
+use catalogue_core::{canonical_crate_name, normalize_repo_url};
 
 use crate::dump::{DumpSnapshot, IdMap};
 
-/// Crate ids by name, deleted crate names, and version ids by crate id.
+/// Crate ids by name, deleted crate names, version ids by crate id, and crate ids by repository.
 ///
-/// Names use the form crates.io compares: [`canonical_crate_name`].
+/// Names use the form crates.io compares: [`canonical_crate_name`]. Repositories use the form
+/// [`normalize_repo_url`] gives.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CrateIndex {
     by_name: HashMap<String, u32>,
     deleted: HashSet<String>,
     versions: IdMap<Vec<u32>>,
+    claimants: HashMap<String, Vec<u32>>,
 }
 
 impl CrateIndex {
@@ -36,10 +38,17 @@ impl CrateIndex {
         for ids in versions.values_mut() {
             ids.sort_unstable();
         }
+        let mut claimants: HashMap<String, Vec<u32>> = HashMap::new();
+        for (&id, row) in &dump.crates {
+            if let Some(key) = row.repository.as_deref().and_then(normalize_repo_url) {
+                claimants.entry(key).or_default().push(id);
+            }
+        }
         Self {
             by_name,
             deleted,
             versions,
+            claimants,
         }
     }
 
@@ -57,6 +66,15 @@ impl CrateIndex {
     pub fn versions(&self, crate_id: u32) -> &[u32] {
         self.versions
             .get(&crate_id)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+    }
+
+    /// The ids of the crates that name the repository `key` as their link. Empty for a repository
+    /// no crate names.
+    pub fn claimants(&self, key: &str) -> &[u32] {
+        self.claimants
+            .get(key)
             .map(Vec::as_slice)
             .unwrap_or_default()
     }
@@ -82,5 +100,15 @@ mod tests {
         assert!(!index.is_deleted("foo-bar"));
         assert_eq!(index.versions(1), [11, 12]);
         assert!(index.versions(9).is_empty());
+    }
+
+    #[test]
+    fn any_link_form_claims_a_repository() {
+        let mut dump = Dump::new();
+        dump.add_crate(1, "a").repository = Some("https://github.com/O/R.git".to_owned());
+        dump.add_crate(2, "b");
+        let index = CrateIndex::new(&dump.snapshot);
+        assert_eq!(index.claimants("github.com/o/r"), [1]);
+        assert!(index.claimants("github.com/o/other").is_empty());
     }
 }

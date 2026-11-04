@@ -51,6 +51,8 @@ pub(super) fn family_span(
 /// - `all_yanked`: the crate has versions and every one is yanked.
 /// - `all_prerelease`: every unyanked version carries a pre-release suffix
 ///   or is `0.0.x`. Unknown when no version is unyanked.
+/// - `all_zero_zero`: every unyanked version is `0.0.x`, with or without a
+///   pre-release suffix. Unknown when no version is unyanked.
 pub(super) fn primary_releases(
     dump: &DumpSnapshot,
     index: &CrateIndex,
@@ -73,12 +75,19 @@ pub(super) fn primary_releases(
     signals.all_yanked = Some(has_versions && unyanked.is_empty());
     signals.all_prerelease =
         (!unyanked.is_empty()).then(|| unyanked.iter().all(|(_, row)| is_prerelease(&row.num)));
+    signals.all_zero_zero =
+        (!unyanked.is_empty()).then(|| unyanked.iter().all(|(_, row)| is_zero_zero(&row.num)));
 }
 
 /// Whether `num` has a pre-release suffix or is `0.0.x`. Build metadata is ignored.
 fn is_prerelease(num: &str) -> bool {
     let core = num.split('+').next().unwrap_or(num);
-    core.contains('-') || core.starts_with("0.0.")
+    core.contains('-') || is_zero_zero(core)
+}
+
+/// Whether `num` is `0.0.x`, with or without a suffix.
+fn is_zero_zero(num: &str) -> bool {
+    num.starts_with("0.0.")
 }
 
 #[cfg(test)]
@@ -143,6 +152,7 @@ mod tests {
         assert_eq!(signals.release_count, Some(0));
         assert_eq!(signals.latest_version, None);
         assert_eq!(signals.all_prerelease, None);
+        assert_eq!(signals.all_zero_zero, None);
     }
 
     #[test]
@@ -159,9 +169,44 @@ mod tests {
         dump.add_version(10, 1, "0.0.3", day(2024, 1, 1), false);
         dump.add_version(11, 1, "0.1.0-alpha.1+build.5", day(2024, 2, 1), false);
         dump.add_version(12, 1, "0.1.0", day(2024, 3, 1), true);
-        assert_eq!(primary_of(&dump).all_prerelease, Some(true));
+        let found = primary_of(&dump);
+        assert_eq!(found.all_prerelease, Some(true));
+        assert_eq!(found.all_zero_zero, Some(false));
         assert!(!is_prerelease("1.0.0+build-7"));
         assert!(is_prerelease("1.0.0-rc.1"));
         assert!(!is_prerelease("0.1.0"));
+    }
+
+    #[test]
+    fn only_zero_zero_versions_are_all_zero_zero() {
+        let mut dump = Dump::new();
+        dump.add_crate(1, "a");
+        dump.add_version(10, 1, "0.0.1", day(2024, 1, 1), false);
+        dump.add_version(11, 1, "0.0.2-rc.1", day(2024, 2, 1), false);
+        dump.add_version(12, 1, "1.0.0", day(2024, 3, 1), true);
+        let found = primary_of(&dump);
+        assert_eq!(found.all_prerelease, Some(true));
+        assert_eq!(found.all_zero_zero, Some(true));
+    }
+
+    #[test]
+    fn release_candidates_alone_are_prerelease_and_not_zero_zero() {
+        let mut dump = Dump::new();
+        dump.add_crate(1, "a");
+        dump.add_version(10, 1, "2.0.0-rc.1", day(2024, 1, 1), false);
+        let found = primary_of(&dump);
+        assert_eq!(found.all_prerelease, Some(true));
+        assert_eq!(found.all_zero_zero, Some(false));
+    }
+
+    #[test]
+    fn a_stable_version_clears_both_facts() {
+        let mut dump = Dump::new();
+        dump.add_crate(1, "a");
+        dump.add_version(10, 1, "0.0.1", day(2024, 1, 1), false);
+        dump.add_version(11, 1, "0.1.0", day(2024, 2, 1), false);
+        let found = primary_of(&dump);
+        assert_eq!(found.all_prerelease, Some(false));
+        assert_eq!(found.all_zero_zero, Some(false));
     }
 }

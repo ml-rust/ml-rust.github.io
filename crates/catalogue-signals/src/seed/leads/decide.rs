@@ -4,7 +4,8 @@ use catalogue_core::{Date, DescriptionSource, Entry, EntryKind, Slug};
 
 use super::super::family::{Family, family};
 use super::super::owners::Member;
-use super::super::primary::RepoName;
+use super::super::primary::{RepoName, names_owner};
+use super::super::types::EXCLUDED_REASON;
 use super::claims::Claims;
 use super::entry::build_entry;
 use super::kind::{Kind, classify};
@@ -32,7 +33,8 @@ pub(super) struct Drafted {
     pub(super) users: f64,
     pub(super) notes: Vec<String>,
     pub(super) canonical: RepoRef,
-    pub(super) keys: [String; 2],
+    /// The canonical key, then every other name of the repository that the leads hold.
+    pub(super) keys: Vec<String>,
 }
 
 /// What one lead becomes.
@@ -65,11 +67,12 @@ pub(super) fn github_key(repo: &RepoRef) -> String {
     format!("github.com/{repo}").to_lowercase()
 }
 
-/// Decides what the lead `lead` with the profile `profile` becomes.
+/// Decides what the repository with the profile `profile` becomes.
 ///
-/// The order: an entry that holds the repository, a fork, the language rule, an entry that lists
-/// a family crate, then the draft. The crates that claim the canonical repository or the name in
-/// the lead form the family, with no discovery rule and no active-user floor.
+/// `spellings` holds the keys of every lead that resolves to the repository. The order:
+/// `excluded_repos`, an entry that holds the repository, a fork, the language rule, an entry that
+/// lists a family crate, then the draft. The crates that claim the canonical repository or a
+/// spelling form the family, with no discovery rule and no active-user floor.
 ///
 /// The language rule passes a repo whose primary language is Rust, a repo with a Rust-named
 /// family, and a repo with no family when `lists_rust` says GitHub lists Rust among its
@@ -77,7 +80,7 @@ pub(super) fn github_key(repo: &RepoRef) -> String {
 /// last case makes an app draft with the label `language-list:rust`.
 pub(super) fn decide(
     ctx: &Context<'_>,
-    lead: &RepoRef,
+    spellings: &[String],
     profile: &RepoProfile,
     lists_rust: bool,
 ) -> Decision {
@@ -88,7 +91,16 @@ pub(super) fn decide(
         )));
     };
     let inputs = ctx.inputs;
-    let keys = [github_key(&canonical), github_key(lead)];
+    let canonical_key = github_key(&canonical);
+    let mut keys = vec![canonical_key.clone()];
+    for spelling in spellings {
+        if !keys.contains(spelling) {
+            keys.push(spelling.clone());
+        }
+    }
+    if keys.iter().any(|key| inputs.existing.is_excluded(key)) {
+        return Decision::alone(Outcome::Skip(EXCLUDED_REASON.to_owned()));
+    }
     if let Some(slug) = keys.iter().find_map(|key| inputs.existing.repo_slug(key)) {
         return Decision::alone(Outcome::Listed(format!(
             "entry `{slug}` holds the repository"
@@ -105,7 +117,7 @@ pub(super) fn decide(
         .collect();
     let (members, unnamed) = split_unnamed(&canonical, members);
     let claimed = !members.is_empty();
-    let found = family(inputs.snapshot, &keys[0], members, 0.0);
+    let found = family(inputs.snapshot, &canonical_key, members, 0.0);
     let rust_listed = lists_rust && found.is_none();
     if !is_rust(profile) && !rust_listed && !has_rust_named_crate(found.as_ref(), &canonical) {
         return Decision::alone(Outcome::Skip(language_reason(profile)));
@@ -133,17 +145,17 @@ pub(super) fn decide(
 /// Splits the crates that claim a repository into the ones to keep and the ones to leave out.
 ///
 /// A repository link alone does not make a crate part of a project. When no claiming crate
-/// shares a word with the repository name (see [`RepoName::names_repo`]), every claimant is left
-/// out with the reason, and the lead drafts as an app with no crates.
+/// shares a word with the repository name (see [`RepoName::names_repo`]) or its owner (see
+/// [`names_owner`]), every claimant is left out with the reason, and the lead drafts as an app with
+/// no crates.
 fn split_unnamed<'a>(
     canonical: &RepoRef,
     members: Vec<Member<'a>>,
 ) -> (Vec<Member<'a>>, Vec<(String, String)>) {
     let repo = RepoName::new(&canonical.name);
-    if members
-        .iter()
-        .any(|(candidate, _)| repo.names_repo(&candidate.name))
-    {
+    if members.iter().any(|(candidate, _)| {
+        repo.names_repo(&candidate.name) || names_owner(&candidate.name, &canonical.owner)
+    }) {
         return (members, Vec::new());
     }
     let left_out = members
@@ -152,8 +164,8 @@ fn split_unnamed<'a>(
             (
                 candidate.name.clone(),
                 format!(
-                    "name shares no word with repository `{}`, so no crate joins the draft",
-                    canonical.name
+                    "name shares no word with repository `{}` or owner `{}`, so no crate joins the draft",
+                    canonical.name, canonical.owner
                 ),
             )
         })
@@ -164,7 +176,7 @@ fn split_unnamed<'a>(
 fn draft(
     ctx: &Context<'_>,
     canonical: RepoRef,
-    keys: [String; 2],
+    keys: Vec<String>,
     profile: &RepoProfile,
     found: Option<&Family<'_>>,
 ) -> Outcome {
@@ -300,8 +312,26 @@ mod tests {
         found: &RepoProfile,
         lists_rust: bool,
     ) -> Decision {
+        decide_spellings(&[lead], specs, existing, found, lists_rust)
+    }
+
+    fn decide_spellings(
+        leads: &[&str],
+        specs: Vec<Spec>,
+        existing: &ExistingIndex,
+        found: &RepoProfile,
+        lists_rust: bool,
+    ) -> Decision {
         let world = World::new(specs);
-        let keys = HashSet::from([format!("github.com/{}", lead.to_lowercase())]);
+        let spellings: Vec<String> = leads
+            .iter()
+            .map(|lead| format!("github.com/{}", lead.to_lowercase()))
+            .collect();
+        let mut keys: HashSet<String> = spellings.iter().cloned().collect();
+        keys.insert(format!(
+            "github.com/{}",
+            found.name_with_owner.to_lowercase()
+        ));
         let claims = Claims::of(&world.snapshot, &keys);
         let topics = topics();
         let categories = categories();
@@ -320,12 +350,7 @@ mod tests {
             usage: &world.usage,
             added: Date::new(2026, 11, 3).expect("date"),
         };
-        decide(
-            &ctx,
-            &RepoRef::parse(lead).expect("lead"),
-            found,
-            lists_rust,
-        )
+        decide(&ctx, &spellings, found, lists_rust)
     }
 
     fn claim(id: u32, name: &'static str) -> Spec {
@@ -485,6 +510,95 @@ mod tests {
         };
         assert_eq!(name, "unrelated");
         assert!(reason.contains("shares no word"), "{reason}");
+    }
+
+    /// A library draft of `lead` whose only claimant is `name`.
+    fn one_claimant(lead: &str, name: &'static str) -> Decision {
+        let mut spec = Spec::new(1, name);
+        spec.repository = Some(format!("https://github.com/{lead}"));
+        spec.users = 0.0;
+        run_for(lead, vec![spec], &profile(Some("Rust")))
+    }
+
+    #[test]
+    fn a_crate_that_shares_a_word_with_the_owner_keeps_a_library() {
+        let decision = one_claimant("tensorflow/rust", "tensorflow");
+        let found = drafted(&decision);
+        assert_eq!(found.entry.kind, EntryKind::Library);
+        assert_eq!(found.entry.crates.len(), 1);
+        assert!(decision.left_out.is_empty());
+    }
+
+    #[test]
+    fn a_crate_word_that_starts_with_a_repo_word_keeps_a_library() {
+        let decision = one_claimant("delta-io/delta-rs", "deltalake");
+        let found = drafted(&decision);
+        assert_eq!(found.entry.kind, EntryKind::Library);
+        assert_eq!(found.entry.crates.len(), 1);
+    }
+
+    #[test]
+    fn a_crate_that_shares_nothing_with_repo_or_owner_leaves_the_draft_crate_less() {
+        let decision = one_claimant("tensorflow/rust", "unrelated");
+        let found = drafted(&decision);
+        assert_eq!(found.entry.kind, EntryKind::App);
+        assert!(found.entry.crates.is_empty());
+        let [(name, reason)] = decision.left_out.as_slice() else {
+            panic!("one crate left out");
+        };
+        assert_eq!(name, "unrelated");
+        assert_eq!(
+            reason,
+            "name shares no word with repository `rust` or owner `tensorflow`, so no crate joins the draft"
+        );
+    }
+
+    #[test]
+    fn a_crate_link_with_other_separators_joins_the_draft() {
+        let mut spec = Spec::new(1, "deltalake");
+        spec.repository = Some("https://github.com/delta-io/delta.rs".to_owned());
+        spec.users = 0.0;
+        let decision = run_for("delta-io/delta-rs", vec![spec], &profile(Some("Rust")));
+        assert_eq!(drafted(&decision).entry.crates.len(), 1);
+    }
+
+    #[test]
+    fn two_spellings_merge_their_claims() {
+        let mut old = Spec::new(1, "dfdx");
+        old.repository = Some("https://github.com/coreylowman/dfdx".to_owned());
+        old.users = 0.0;
+        let mut found = profile(Some("Rust"));
+        found.name_with_owner = "chelsea0x3b/dfdx".to_owned();
+        let decision = decide_spellings(
+            &["chelsea0x3b/dfdx", "coreylowman/dfdx"],
+            vec![old],
+            &ExistingIndex::default(),
+            &found,
+            false,
+        );
+        let drafted = drafted(&decision);
+        assert_eq!(drafted.entry.kind, EntryKind::Library);
+        assert_eq!(drafted.entry.crates.len(), 1);
+        assert_eq!(
+            drafted.keys,
+            ["github.com/chelsea0x3b/dfdx", "github.com/coreylowman/dfdx"]
+        );
+    }
+
+    #[test]
+    fn an_excluded_repository_is_skipped_under_any_spelling() {
+        for key in ["github.com/o/proj", "github.com/old/proj"] {
+            let existing = ExistingIndex::default().with_excluded(key);
+            let decision = decide_spellings(
+                &["o/proj", "old/proj"],
+                vec![claim(1, "proj")],
+                &existing,
+                &profile(Some("Rust")),
+                false,
+            );
+            assert_eq!(skip_reason(&decision), "excluded by discovery.toml");
+            assert!(decision.left_out.is_empty());
+        }
     }
 
     #[test]

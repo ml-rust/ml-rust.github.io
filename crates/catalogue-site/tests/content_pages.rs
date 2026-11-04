@@ -318,7 +318,6 @@ fn an_entry_page_shows_every_signal_with_its_source() {
             "<a href=\"https://github.com/ml-rust/ml-rust.github.io/issues/11\">#11</a></td><td>Correctness</td>",
         ],
     );
-    assert!(!alpha.contains("banner-org"), "{alpha}");
 }
 
 /// The page text from the start of the `#signals` section to its closing tag.
@@ -396,7 +395,6 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
         &[
             "<span class=\"entry-kind\">App</span> <span class=\"entry-label\">Product</span>",
             "<span class=\"tier-badge tier-listed\">Listed</span> <span class=\"stable-label\">Stable</span>",
-            "The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.",
             "Homebrew: <a href=\"https://formulae.brew.sh/formula/beta\">beta</a>",
             "Docker Hub: <a href=\"https://hub.docker.com/r/ml-rust/beta\">ml-rust/beta</a>",
             "Repology: <a href=\"https://repology.org/project/beta/versions\">beta</a>",

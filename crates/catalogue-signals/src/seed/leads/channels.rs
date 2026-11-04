@@ -27,7 +27,7 @@ pub(super) struct Channels {
 pub(super) fn lookup_channels(
     transport: &dyn Transport,
     canonical: &RepoRef,
-    keys: &[String; 2],
+    keys: &[String],
     pacers: &mut LeadPacers<'_>,
 ) -> Channels {
     let owner = canonical.owner.to_ascii_lowercase();
@@ -90,7 +90,7 @@ pub(super) fn lookup_channels(
     }
 }
 
-fn names_repository(links: &[String], keys: &[String; 2]) -> bool {
+fn names_repository(links: &[String], keys: &[String]) -> bool {
     links
         .iter()
         .filter_map(|link| normalize_repo_url(link))

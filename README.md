@@ -19,10 +19,10 @@ The tier rules run in a fixed order on every check. Each entry gets one tier per
 | --- | --- |
 | Archived | The author or RustSec ends the project. Any one of these archives it: an archived repository, an `unmaintained` advisory, a deprecation notice, every version yanked, or a deleted crate. A dead entry also archives after enough consecutive dead checks. |
 | New | The first release is recent. New takes precedence over Featured. |
-| Featured | A library passes its adoption, health, and docs gates. Adoption means enough active dependents, enough new dependents, or the repository route. An app passes enough of its five use signals: binary downloads, Homebrew installs, Repology packaging, Docker pull growth, and the repository route. The entry must be active or finished. A library, or an app that ships a crate, needs at least one version that is neither a prerelease nor `0.0.x`. |
+| Featured | A library passes its adoption, health, and docs gates. Adoption means enough active dependents, enough new dependents, or the repository route. An app passes enough of its five use signals: binary downloads, Homebrew installs, Repology packaging, Docker pull growth, and the repository route. The entry must be active or finished. A library needs at least one version that is neither a prerelease nor `0.0.x`. A library with only prereleases passes this gate when its active or new dependents reach their limit. The repository route never lifts it. A library whose every version is `0.0.x` never passes, because that only reserves the name. |
 | Listed | No other tier applies. |
 
-The repository route needs stars, forks, and contributors to each reach their limit on the same check. It is a gate of separate limits, never a score.
+The repository route needs stars, forks, and contributors to each reach their limit on the same check. It is a gate of separate limits, never a score. The route measures a whole repository, so a library must also list the repository's main crate: the crate with the repository's own name that claims the repository.
 
 Health covers unpatched vulnerabilities, a repository link that the release commit or a manifest in the repository proves, and the share of peak active dependents that stay active.
 

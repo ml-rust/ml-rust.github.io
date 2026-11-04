@@ -22,7 +22,6 @@
 {%- for stat in strip.stats %}
 <div class="stat"><dt>{{ stat.label }}</dt><dd><span class="stat-value{% if stat.quiet %} fact-quiet{% endif %}">{{ stat.value }}</span>{% if let Some(iso) = stat.date %}{% if let Some(text) = stat.date_text %}<time class="stat-sub" datetime="{{ iso }}">{{ text }}</time>{% endif %}{% endif %}</dd></div>
 {%- endfor %}
-<div class="stat"><dt>Checked</dt><dd><time class="stat-value" datetime="{{ strip.checked }}">{{ strip.checked_text }}</time><a class="stat-link" href="#signals">Sources</a></dd></div>
 </dl>
 {%- if !strip.repository.is_empty() %}
 <dl class="stat-strip stat-strip-repo">
@@ -31,12 +30,10 @@
 {%- endfor %}
 </dl>
 {%- endif %}
+<p class="stat-foot">Checked <time datetime="{{ strip.checked }}">{{ strip.checked_text }}</time> · <a class="stat-link" href="#signals">Sources</a></p>
 {%- endif %}
 {%- if header.stable %}
 <p class="banner">Stable means the project is finished: dormant by design, not decayed.</p>
-{%- endif %}
-{%- if header.org_affiliated %}
-<p class="banner banner-org">The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.</p>
 {%- endif %}
 {%- if !action.archived %}{% if let Some(link) = header.superseded_by %}
 <p class="banner banner-superseded"><a href="{{ link.href }}">{{ link.name }}</a> replaces this project.</p>

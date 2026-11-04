@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::ids::CrateName;
+use crate::ids::{CrateName, normalize_repo_url};
 
 /// The longest keyword crates.io stores.
 const KEYWORD_MAX_CHARS: usize = 50;
@@ -37,6 +37,9 @@ pub struct Discovery {
     /// The fewest stars a GitHub lead has. Zero keeps every repo.
     #[serde(default)]
     pub github_min_stars: u32,
+    /// Normalised repositories that never get a draft, such as `github.com/owner/name`.
+    #[serde(default)]
+    pub excluded_repos: Vec<String>,
 }
 
 impl Discovery {
@@ -74,6 +77,18 @@ impl Discovery {
                 ));
             }
         }
+        for repo in &self.excluded_repos {
+            if !is_repo_key(repo) {
+                out.push(format!(
+                    "excluded repo `{repo}` must be a lowercase `host/owner/name`, such as `github.com/owner/name`"
+                ));
+            }
+        }
+        duplicates(
+            "excluded repo",
+            self.excluded_repos.iter().map(|r| (r.clone(), r.as_str())),
+            &mut out,
+        );
         duplicates(
             "GitHub topic",
             self.github_topics.iter().map(|t| (t.clone(), t.as_str())),
@@ -114,6 +129,15 @@ impl Discovery {
         }
         out
     }
+}
+
+/// Whether `value` is a repository as the seed compares it: [`normalize_repo_url`] leaves it
+/// unchanged and its host holds a dot.
+fn is_repo_key(value: &str) -> bool {
+    let host = value.split('/').next().unwrap_or_default();
+    host.contains('.')
+        && !value.contains(char::is_whitespace)
+        && normalize_repo_url(value).as_deref() == Some(value)
 }
 
 /// Whether `value` is `segment(::segment)*` with segments of `[a-z0-9_-]`.
@@ -309,6 +333,56 @@ mod tests {
     fn the_same_text_in_different_lists_is_not_a_duplicate() {
         let file = parse("categories = [\"ml\"]\nkeywords = [\"ml\"]\n");
         assert!(file.problems().is_empty());
+    }
+
+    #[test]
+    fn excluded_repos_default_to_empty_and_admit_nothing_alone() {
+        assert!(parse("keywords = [\"llm\"]").excluded_repos.is_empty());
+        assert!(found(
+            "excluded_repos = [\"github.com/o/r\"]",
+            "must not all be empty"
+        ));
+    }
+
+    #[test]
+    fn repo_keys_on_any_host_pass() {
+        let file = parse(
+            "keywords = [\"llm\"]\n\
+             excluded_repos = [\"github.com/owner/name\", \"codeberg.org/o/my.repo-rs\"]\n",
+        );
+        assert_eq!(file.problems(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_value_that_is_not_host_owner_name_is_reported() {
+        for bad in [
+            "",
+            "owner/name",
+            "github.com/owner",
+            "github.com/owner/name/extra",
+            "https://github.com/owner/name",
+            "github.com/Owner/Name",
+            "github.com/owner/name.git",
+            "www.github.com/owner/name",
+            "github/owner/name",
+            "github.com/own er/name",
+            " github.com/owner/name",
+            "git@github.com:owner/name",
+        ] {
+            let text = format!("keywords = [\"llm\"]\nexcluded_repos = [\"{bad}\"]\n");
+            assert!(
+                found(&text, "must be a lowercase `host/owner/name`"),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_repeated_excluded_repo_is_reported() {
+        assert!(found(
+            "excluded_repos = [\"github.com/o/r\", \"github.com/o/r\"]",
+            "excluded repo `github.com/o/r` is listed twice"
+        ));
     }
 
     #[test]

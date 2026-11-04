@@ -98,7 +98,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "",
-                            text: "At least one version is neither a prerelease nor 0.0.x.",
+                            text: "At least one version is neither a prerelease nor 0.0.x. A library with only prereleases passes this gate when its active or new dependents reach their limit. The repository route never lifts it. A library whose every version is 0.0.x never passes, because that only reserves the name.",
                         },
                     ],
                     notes: &["A gate that lacks its signal does not pass."],
@@ -138,7 +138,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                     ],
                     notes: &[
-                        "An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.",
+                        "An app skips the release gate, because its versions come from GitHub releases.",
                         "Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.",
                     ],
                     rows: rows(app_rows),
@@ -153,6 +153,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     lead: &[
                         "The repository route passes when stars, forks and contributors each reach their limit on the same check.",
                         "Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.",
+                        "The route measures a whole repository, so a library must list the repository's main crate: the crate with the repository's own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.",
                         "A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.",
                         "This is a gate of separate limits. No page adds them into a score.",
                     ],

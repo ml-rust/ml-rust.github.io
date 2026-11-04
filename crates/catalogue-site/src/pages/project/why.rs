@@ -147,6 +147,8 @@ impl Why {
         if let Some(meets) = featured_meets(detail, thresholds) {
             self.meets
                 .extend(meets.into_iter().map(|line| WhyLine::new(line, None)));
+            self.found
+                .extend(reason_text::prerelease_only(detail).map(|line| WhyLine::new(line, None)));
             return;
         }
         let label = |name: &str| {
@@ -528,6 +530,28 @@ mod tests {
         let why = Why::new(&record, EntryKind::Library, None);
         assert_eq!(why.rules[0].href.as_str(), "/rules/#dead");
         assert!(why.found[0].text.contains("so the entry is archived"));
+    }
+
+    #[test]
+    fn a_featured_prerelease_only_library_says_so_in_what_the_check_found() {
+        let record = record(
+            Tier::Featured,
+            vec![reason(
+                Rule::Featured,
+                "featured: active_users 684, new_adopters 20, former_glory 1, every version is a prerelease",
+            )],
+            Vec::new(),
+        );
+        let why = Why::new(&record, EntryKind::Library, None);
+        assert_eq!(why.lead, ["It passes every Featured gate."]);
+        assert_eq!(texts(&why.found), ["Every version is a prerelease."]);
+        assert!(
+            why.meets
+                .iter()
+                .all(|line| !line.text.contains("neither a prerelease")),
+            "{:?}",
+            why.meets
+        );
     }
 
     #[test]

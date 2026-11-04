@@ -252,11 +252,6 @@ function resultRow(hit) {
       head.append(" ", element("span", "row-tag", kind));
     }
   }
-  if (found.row_python) {
-    const python = element("span", "row-tag", found.row_python);
-    python.setAttribute("title", found.row_python_full ?? "");
-    head.append(" ", python);
-  }
   const tier = found.tier ? labelText("tier", found.tier) : null;
   if (tier && TIER_VALUE.test(found.tier)) {
     head.append(" ", element("span", `tier-badge tier-${found.tier}`, tier));
@@ -272,6 +267,13 @@ function resultRow(hit) {
   const description = found.row_description ?? hit.snippet;
   if (description) {
     project.append(element("p", "row-description", description));
+  }
+  if (found.row_python) {
+    const python = element("span", "row-tag", found.row_python);
+    python.setAttribute("title", found.row_python_full ?? "");
+    const features = element("p", "row-features");
+    features.append(python);
+    project.append(features);
   }
   row.append(
     project,

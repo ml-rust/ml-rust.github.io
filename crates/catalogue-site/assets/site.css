@@ -590,8 +590,6 @@ section > h2 {
 
 .stat-link {
   color: var(--secondary);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
 }
 
 .compare-note {
@@ -1063,6 +1061,7 @@ h1 + .lede {
   color: var(--secondary);
 }
 
+.row-features,
 .row-install,
 .row-related {
   margin: var(--space-1) 0 0;
@@ -1497,21 +1496,24 @@ h1 + .lede {
 
 .stat-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3) var(--space-5);
-  margin: var(--space-4) 0 var(--space-2);
+  margin: var(--space-4) 0 0;
   padding-top: var(--space-4);
   border-top: 1px solid var(--border);
 }
 
 .stat-strip-repo {
-  margin-top: 0;
-  padding-top: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: 0;
+  border-top: 0;
 }
 
-.stat-strip-repo .stat-value {
-  font-size: 1rem;
-  line-height: 1.5rem;
+.stat-foot {
+  margin: var(--space-3) 0 0;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .stat dt {
@@ -1551,10 +1553,6 @@ h1 + .lede {
   border: 1px solid var(--border);
   border-left: 3px solid var(--border-strong);
   border-radius: var(--radius-m);
-}
-
-.banner-org {
-  border-left-color: var(--accent);
 }
 
 .banner-superseded {
@@ -1942,7 +1940,11 @@ h1 + .lede {
 .entry-row-current td,
 .entry-row-current:hover th,
 .entry-row-current:hover td {
-  background: var(--wash);
+  background: transparent;
+}
+
+.entry-row-current th:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .compare-more {

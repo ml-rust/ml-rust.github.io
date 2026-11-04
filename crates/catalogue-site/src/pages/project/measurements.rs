@@ -62,6 +62,7 @@ const GROUPS: [(&str, &str, &[&str]); 6] = [
             "docker_pull_growth_90d",
             "docker_pull_baseline",
             "all_prerelease",
+            "all_zero_zero",
             "all_yanked",
             "crate_deleted",
         ],
@@ -69,7 +70,13 @@ const GROUPS: [(&str, &str, &[&str]); 6] = [
     (
         "repository",
         "Repository",
-        &["stars", "forks", "contributors", "commits"],
+        &[
+            "stars",
+            "forks",
+            "contributors",
+            "commits",
+            "main_crate_left_out",
+        ],
     ),
     (
         "choice-facts",
@@ -142,7 +149,8 @@ fn group<'a>(
     rows: Vec<SignalRow<'a>>,
 ) -> SignalGroup<'a> {
     let empty = rows.iter().filter(|row| row.value.is_none()).count();
-    let missing = (empty > 0 && summary != NOT_MEASURED).then(|| format!("{empty} not measured"));
+    let missing = (empty > 0 && summary != NOT_MEASURED && !summary.is_empty())
+        .then(|| format!("{empty} not measured"));
     SignalGroup {
         id,
         title,
@@ -152,8 +160,11 @@ fn group<'a>(
     }
 }
 
-/// The summary line of the group `id`.
+/// The summary line of the group `id`. The group of facts that never count has none.
 fn summary(id: &str, report: &TierReport, record: &EntryReport) -> String {
+    if id == "choice-facts" {
+        return String::new();
+    }
     let value = |name| record.value_of(name);
     let whole = |name| {
         value(name)
@@ -181,7 +192,6 @@ fn summary(id: &str, report: &TierReport, record: &EntryReport) -> String {
                 .collect();
             (!parts.is_empty()).then(|| format!("{}. {STARS_ALONE}", parts.join(", ")))
         }
-        "choice-facts" => value("license").map(|license| format!("License: {license}")),
         _ => None,
     };
     text.unwrap_or_else(|| NOT_MEASURED.to_owned())
@@ -336,7 +346,8 @@ mod tests {
             "1,200 stars, 80 forks, 38 contributors, 4,200 commits. Stars alone never qualify a project."
         );
         assert_eq!(groups[1].id, "choice-facts");
-        assert_eq!(groups[1].summary, "License: MIT");
+        assert_eq!(groups[1].summary, "");
+        assert_eq!(groups[1].missing, None);
         assert_eq!(groups[1].rows.len(), 1);
     }
 

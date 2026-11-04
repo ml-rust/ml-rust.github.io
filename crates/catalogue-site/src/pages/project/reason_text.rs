@@ -10,7 +10,16 @@ use crate::href::SafeHref;
 use crate::pages::shared::{date_text, grouped};
 
 /// What a failed gate writes before the repository route.
-const AND_ROUTE: &str = " and repository route ";
+const AND_ROUTE: &str = " and repository route";
+
+/// What the failed route writes before the main crate that the entry leaves out.
+const MAIN_CRATE_OPEN: &str = ": the repo's main crate ";
+
+/// What the failed route writes after the main crate that the entry leaves out.
+const MAIN_CRATE_CLOSE: &str = " is not in this entry";
+
+/// What the passed reason of a prerelease-only library ends with.
+const PRERELEASE_ONLY: &str = ", every version is a prerelease";
 
 /// What a passed reason writes before the repository route of a library.
 const ROUTE_FIRST: &str = "repository route ";
@@ -336,9 +345,6 @@ fn one_failure(failure: &str) -> Lack {
         "docs missing" => {
             Sentence::plain("Docs are missing: the primary crate publishes no README.")
         }
-        "every version is a prerelease or 0.0.x" => {
-            Sentence::plain("Every version is a prerelease or 0.0.x.")
-        }
         other => parse_adoption(other)
             .or_else(|| parse_glory(other, "below the Featured floor of"))
             .or_else(|| parse_use_signals(other))
@@ -432,7 +438,15 @@ fn with_route_lack(text: String, route: Option<&str>) -> Option<Sentence> {
     let Some(route) = route else {
         return Some(Sentence::plain(text));
     };
-    let route = Route::parse(route)?;
+    let left_out = route
+        .strip_prefix(MAIN_CRATE_OPEN)
+        .and_then(|rest| rest.strip_suffix(MAIN_CRATE_CLOSE));
+    if let Some(name) = left_out {
+        return Some(Sentence::plain(format!(
+            "{text} The repository route does not pass: the repo's main crate {name} is not in this entry."
+        )));
+    }
+    let route = Route::parse(route.strip_prefix(' ')?)?;
     Some(Sentence::plain(format!(
         "{text} The repository route reads {}. {}",
         route.values(),
@@ -471,7 +485,20 @@ pub(super) fn featured_meets(
     thresholds: Option<&Thresholds>,
 ) -> Option<Vec<Sentence>> {
     let values = detail.strip_prefix("featured: ")?;
-    library_meets(values, thresholds).or_else(|| app_meets(values, thresholds))
+    let (values, stable) = match values.strip_suffix(PRERELEASE_ONLY) {
+        Some(rest) => (rest, false),
+        None => (values, true),
+    };
+    library_meets(values, stable, thresholds).or_else(|| app_meets(values, thresholds))
+}
+
+/// The line a passed `featured` reason adds to what the check found. `None` for an entry with a
+/// stable release.
+pub(super) fn prerelease_only(detail: &str) -> Option<Sentence> {
+    detail
+        .strip_suffix(PRERELEASE_ONLY)
+        .filter(|rest| rest.starts_with("featured: "))
+        .map(|_| Sentence::plain("Every version is a prerelease."))
 }
 
 /// The sentences of a library that passes on the repository route.
@@ -494,7 +521,11 @@ fn route_meets(route: &Route<'_>, users: &str, adopters: &str) -> Vec<Sentence> 
     vec![passes, Sentence::plain(dependents)]
 }
 
-fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Sentence>> {
+fn library_meets(
+    values: &str,
+    stable: bool,
+    thresholds: Option<&Thresholds>,
+) -> Option<Vec<Sentence>> {
     let (route, rest) = match values.strip_prefix(ROUTE_FIRST) {
         Some(after) => {
             let (route, rest) = after.split_once(", active_users ")?;
@@ -526,6 +557,11 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
             shown(adopters)
         ))],
     };
+    let release = if stable {
+        "At least one version is neither a prerelease nor 0.0.x."
+    } else {
+        "At least one version is outside 0.0.x."
+    };
     let mut lines = adoption;
     lines.extend([
         Sentence::plain(format!(
@@ -535,9 +571,9 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
         Sentence::plain(
             "Docs are present. The release commit or a manifest ties the crate to the repository.",
         ),
-        Sentence::plain(
-            "No vulnerability advisory stays unpatched past the grace window. At least one version is neither a prerelease nor 0.0.x.",
-        ),
+        Sentence::plain(format!(
+            "No vulnerability advisory stays unpatched past the grace window. {release}"
+        )),
     ]);
     Some(lines)
 }
@@ -740,13 +776,14 @@ mod tests {
     fn a_failed_featured_reason_lists_each_gate_it_lacks() {
         assert_eq!(
             lacks(
-                "not featured: active_users 2 < 11 and new_adopters 2 < 9; repository link not verified; docs missing; every version is a prerelease or 0.0.x; dormant and not stable"
+                "not featured: active_users 2 < 11 and new_adopters 2 < 9; repository link not verified; docs missing; every version is a prerelease, and dependents are below their limits; every version is 0.0.x; dormant and not stable"
             ),
             [
                 "It has 2 active dependents and 2 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days.",
                 "The check finds no release commit or manifest that ties the crate to the repository.",
                 "Docs are missing: the primary crate publishes no README.",
-                "Every version is a prerelease or 0.0.x.",
+                "Every version is a prerelease, and dependents are below their limits.",
+                "Every version is 0.0.x.",
                 "The project is dormant and not finished.",
             ]
         );
@@ -852,6 +889,55 @@ mod tests {
             [
                 "It has 1 active dependents and 0 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days. The repository route reads 2,000 stars, 0 forks and 0 contributors. It needs 2,000 stars, 200 forks and 25 contributors together."
             ]
+        );
+    }
+
+    #[test]
+    fn a_left_out_main_crate_reads_as_the_reason_the_route_fails() {
+        let failed = rule_text(&Signals {
+            main_crate_left_out: Some("wasmtime".to_owned()),
+            ..low_dependents(u64::MAX, u64::MAX, u64::MAX)
+        });
+        assert_eq!(
+            lacks(&failed),
+            [
+                "It has 1 active dependents and 0 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days. The repository route does not pass: the repo's main crate wasmtime is not in this entry."
+            ]
+        );
+    }
+
+    #[test]
+    fn a_prerelease_only_pass_reads_the_exact_text_the_rule_writes() {
+        let passed = rule_text(&Signals {
+            all_prerelease: Some(true),
+            all_zero_zero: Some(false),
+            active_users: Some(684.0),
+            ..low_dependents(0, 0, 0)
+        });
+        let meets = featured_meets(&passed, None).expect("a pass");
+        assert_eq!(
+            meets[0].text,
+            "It has 684 active dependents and 0 new dependents in 365 days."
+        );
+        assert_eq!(
+            meets.last().expect("a line").text,
+            "No vulnerability advisory stays unpatched past the grace window. At least one version is outside 0.0.x."
+        );
+        assert_eq!(
+            prerelease_only(&passed).map(text).as_deref(),
+            Some("Every version is a prerelease.")
+        );
+    }
+
+    #[test]
+    fn a_stable_pass_and_a_failure_add_no_prerelease_line() {
+        assert_eq!(
+            prerelease_only("featured: active_users 3, new_adopters 2, former_glory 1"),
+            None
+        );
+        assert_eq!(
+            prerelease_only("not featured: x, every version is a prerelease"),
+            None
         );
     }
 

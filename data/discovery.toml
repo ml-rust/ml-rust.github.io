@@ -90,3 +90,31 @@ github_topics = [
 # The star floor for a GitHub lead. It cuts abandoned experiments, not
 # unknown projects: a lead still needs review.
 github_min_stars = 10
+
+# Repositories that never get a draft from the dump or from a lead. The seed output lists each one
+# as a skip. A value is a normalised key: `github.com/owner/name` in lowercase, and other hosts as
+# `codeberg.org/owner/name`.
+excluded_repos = [
+    "codeberg.org/catboomer/trotter",
+    "github.com/a4lg/fast-tlsh",
+    "github.com/dtcxzyw/agent-detector",
+    "github.com/github/copilot-sdk",
+    "github.com/jvdd/argminmax",
+    "github.com/liminalism/lege",
+    "github.com/majiayu000/jsonrepair-rs",
+    "github.com/max-sixty/worktrunk",
+    "github.com/mrseanryan/in_definite",
+    "github.com/oddity-ai/video-rs",
+    "github.com/odilia-app/atspi",
+    "github.com/plotly/plotly.rs",
+    "github.com/rerun-io/egui_crates",
+    "github.com/romelium/mpatch",
+    "github.com/rustgd/cgmath",
+    "github.com/sdairs/is-ai-agent",
+    "github.com/spensercai/dingtalk-stream-sdk-rs",
+    "github.com/sunsided/detect-coding-agent",
+    "github.com/theunitedstatesofamerica/yn.rs",
+    "github.com/trypsynth/prismer",
+    "github.com/weggli-rs/weggli",
+    "tulpa.dev/cadey/maj",
+]

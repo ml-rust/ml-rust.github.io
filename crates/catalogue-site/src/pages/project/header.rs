@@ -23,8 +23,6 @@ pub(crate) struct Header<'a> {
     pub stable: bool,
     /// What the word dormant means, when the entry is dormant and not Archived.
     pub dormant: Option<&'static str>,
-    /// Whether the ml-rust organization maintains the entry.
-    pub org_affiliated: bool,
     /// The entry that replaces this one.
     pub superseded_by: Option<NamedLink<'a>>,
     /// The entries this one replaces.
@@ -59,7 +57,6 @@ impl<'a> Header<'a> {
                 .flat_map(row_statuses)
                 .find(|status| status.word == DORMANT)
                 .map(|_| DORMANT_MEANING),
-            org_affiliated: entry.org_affiliated,
             superseded_by: effective
                 .superseded_by
                 .and_then(|slug| entry_link(catalogue, slug)),

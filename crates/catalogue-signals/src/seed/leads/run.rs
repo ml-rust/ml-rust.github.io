@@ -20,11 +20,11 @@ use crate::usage;
 /// The run resolves every lead with one paced GitHub batch and reads the dump once. Then it
 /// decides each lead in list order and looks up the channels of each app draft. The `added` date
 /// is the date of the dump, as in the dump flow. A repo whose primary language is not Rust adds
-/// one language list request. Two leads that resolve to one repository make
-/// one draft, and the first of two drafts with one slug keeps it.
+/// one language list request. Two leads that resolve to one repository make one draft from the
+/// claims of both names, and the first of two drafts with one slug keeps it.
 ///
-/// A lead that yields no draft appears in `drafts.skipped` with the reason. A lead an entry
-/// covers appears in `listed`.
+/// A lead that yields no draft appears in `drafts.skipped` with the reason. So does a lead whose
+/// repository `excluded_repos` lists. A lead an entry covers appears in `listed`.
 ///
 /// # Errors
 ///
@@ -51,6 +51,7 @@ pub fn seed_leads(
         added: Date::from(today),
     };
 
+    let spellings = spellings_by_repo(&unique, &answers);
     let mut pending: Vec<(String, Drafted)> = Vec::new();
     let mut resolved_by: HashMap<String, String> = HashMap::new();
     let mut taken: BTreeMap<Slug, String> = BTreeMap::new();
@@ -76,8 +77,9 @@ pub fn seed_leads(
             out.drafts.skipped.push((name, reason));
             continue;
         }
+        let names = spellings.get(&key).map_or(&[][..], Vec::as_slice);
         resolved_by.insert(key, name.clone());
-        let decision = decide(&ctx, lead, &found.profile, found.lists_rust);
+        let decision = decide(&ctx, names, &found.profile, found.lists_rust);
         out.drafts.skipped.extend(decision.left_out);
         match decision.outcome {
             Outcome::Listed(text) => out.listed.push((name, text)),
@@ -120,6 +122,20 @@ fn unique_leads(leads: &[RepoRef], skipped: &mut Vec<(String, String)>) -> Vec<R
         }
     }
     unique
+}
+
+/// The keys of the leads that resolve to each repository, by lowercase `owner/name`.
+fn spellings_by_repo(leads: &[RepoRef], answers: &[Answer]) -> HashMap<String, Vec<String>> {
+    let mut spellings: HashMap<String, Vec<String>> = HashMap::new();
+    for (lead, answer) in leads.iter().zip(answers) {
+        if let Answer::Found(found) = answer {
+            spellings
+                .entry(found.profile.name_with_owner.to_lowercase())
+                .or_default()
+                .push(github_key(lead));
+        }
+    }
+    spellings
 }
 
 /// The keys of every lead and of every canonical name.
@@ -168,5 +184,53 @@ fn finish(
         out.details
             .insert(slug.clone(), DraftDetail { lead, users, notes });
         out.drafts.entries.push((slug, entry));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::resolve::Found;
+    use super::*;
+    use crate::github::RepoProfile;
+
+    fn found(name_with_owner: &str) -> Answer {
+        Answer::Found(Found {
+            profile: RepoProfile {
+                name_with_owner: name_with_owner.to_owned(),
+                archived: false,
+                fork: false,
+                description: None,
+                homepage: None,
+                topics: Vec::new(),
+                language: None,
+                license: None,
+            },
+            lists_rust: false,
+            warning: None,
+        })
+    }
+
+    fn lead(text: &str) -> RepoRef {
+        RepoRef::parse(text).expect("lead")
+    }
+
+    #[test]
+    fn leads_of_one_repository_share_their_spellings_in_either_order() {
+        let leads = [
+            lead("chelsea0x3b/dfdx"),
+            lead("coreylowman/dfdx"),
+            lead("acme/gone"),
+        ];
+        let answers = [
+            found("chelsea0x3b/dfdx"),
+            found("Chelsea0x3b/dfdx"),
+            Answer::Gone,
+        ];
+        let spellings = spellings_by_repo(&leads, &answers);
+        assert_eq!(spellings.len(), 1);
+        assert_eq!(
+            spellings["chelsea0x3b/dfdx"],
+            ["github.com/chelsea0x3b/dfdx", "github.com/coreylowman/dfdx"]
+        );
     }
 }

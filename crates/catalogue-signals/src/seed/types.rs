@@ -6,6 +6,9 @@ use catalogue_core::{
     Catalogue, Categories, Entry, Slug, Topics, canonical_crate_name, normalize_repo_url,
 };
 
+/// The reason of a skip whose repository `excluded_repos` lists.
+pub(super) const EXCLUDED_REASON: &str = "excluded by discovery.toml";
+
 /// The data files that map crate metadata to the topics and the category of a draft.
 #[derive(Debug, Clone, Copy)]
 pub struct Mappings<'a> {
@@ -15,7 +18,8 @@ pub struct Mappings<'a> {
     pub categories: &'a Categories,
 }
 
-/// The crate names, slugs and repositories of the entries that already exist.
+/// The crate names, slugs and repositories of the entries that already exist, and the repositories
+/// that never get a draft.
 ///
 /// Crate names use the form crates.io compares: [`canonical_crate_name`].
 /// Repositories use the form [`normalize_repo_url`] gives.
@@ -25,14 +29,18 @@ pub struct ExistingIndex {
     slugs: HashSet<String>,
     repos: HashMap<String, String>,
     parents: Vec<(Slug, String)>,
+    excluded: HashSet<String>,
 }
 
 impl ExistingIndex {
-    /// Indexes the entries of `catalogue`.
+    /// Indexes the entries of `catalogue` and the `excluded_repos` of its discovery rules.
     pub fn from_catalogue(catalogue: &Catalogue) -> Self {
         let mut index = Self::default();
         for (slug, entry) in catalogue.entries() {
             index.add(slug, entry);
+        }
+        if let Some(rules) = catalogue.discovery() {
+            index.excluded.extend(rules.excluded_repos.iter().cloned());
         }
         index
     }
@@ -72,6 +80,7 @@ impl ExistingIndex {
             slugs: slugs.into_iter().map(str::to_owned).collect(),
             repos: HashMap::new(),
             parents: Vec::new(),
+            excluded: HashSet::new(),
         }
     }
 
@@ -92,6 +101,18 @@ impl ExistingIndex {
     pub fn with_repo(mut self, key: &str, slug: &str) -> Self {
         self.repos.insert(key.to_owned(), slug.to_owned());
         self
+    }
+
+    /// Records that the repository `key` never gets a draft.
+    #[must_use]
+    pub fn with_excluded(mut self, key: &str) -> Self {
+        self.excluded.insert(key.to_owned());
+        self
+    }
+
+    /// Whether the repository `key` never gets a draft.
+    pub fn is_excluded(&self, key: &str) -> bool {
+        self.excluded.contains(key)
     }
 
     /// Whether an existing entry lists crate `name`, in any spelling crates.io treats as equal.

@@ -42,7 +42,7 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
             "<dt>Version</dt><dd><span class=\"stat-value\">0.4.2</span>",
             "<dt>Released</dt>",
             "<time class=\"stat-sub\" datetime=\"2026-09-01\">1 Sep 2026</time>",
-            "<dt>Checked</dt>",
+            "<p class=\"stat-foot\">Checked",
             "<h2 id=\"compatibility\">",
             "<dt>Runs on</dt>",
             "CUDA, Metal",
@@ -178,12 +178,12 @@ fn the_entry_page_shows_the_repository_row_below_the_stat_strip() {
     in_order(
         &site[ALPHA],
         &[
-            "<dt>Checked</dt>",
             "<dl class=\"stat-strip stat-strip-repo\">",
             "<dt>Stars</dt><dd><span class=\"stat-value\">1,200</span>",
             "<dt>Forks</dt><dd><span class=\"stat-value\">80</span>",
             "<dt>Contributors</dt><dd><span class=\"stat-value\">38</span>",
             "<dt>Commits</dt><dd><span class=\"stat-value\">4,200</span>",
+            "<p class=\"stat-foot\">Checked",
             "<h2 id=\"compatibility\">",
         ],
     );

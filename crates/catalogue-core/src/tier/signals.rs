@@ -4,8 +4,8 @@ use crate::entry::EntryKind;
 /// Raw signals for one entry on one check.
 ///
 /// `None` means the signal is unknown. A rule never reads an unknown signal as zero or false.
-/// The three text fields `rustsec_unmaintained`, `deprecation_notice` and
-/// `deprecated_requirement` hold the finding when one exists and `None` when none exists.
+/// The four text fields `rustsec_unmaintained`, `deprecation_notice`, `deprecated_requirement` and
+/// `main_crate_left_out` hold the finding when one exists and `None` when none exists.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Signals {
     /// Library or app. Picks the adoption gates.
@@ -24,6 +24,8 @@ pub struct Signals {
     pub crate_deleted: Option<bool>,
     /// Whether every version is a prerelease or `0.0.x`.
     pub all_prerelease: Option<bool>,
+    /// Whether every version is `0.0.x`, with or without a prerelease suffix.
+    pub all_zero_zero: Option<bool>,
     /// Active dependents: crates from other owners, weighted so one owner adds at most 1.
     pub active_users: Option<f64>,
     /// Active dependents whose dependency began in the last 365 days.
@@ -65,6 +67,9 @@ pub struct Signals {
     pub forks: Option<u64>,
     /// Contributors with a GitHub account. A part of the repository route.
     pub contributors: Option<u64>,
+    /// A crate with the repository's own name that claims the repository and that the entry does
+    /// not list. Libraries only.
+    pub main_crate_left_out: Option<String>,
     /// Whether published docs exist.
     pub docs_present: Option<bool>,
     /// Whether the release commit or a manifest in the repository proves the repository link.
@@ -93,6 +98,7 @@ impl Signals {
             all_yanked: None,
             crate_deleted: None,
             all_prerelease: None,
+            all_zero_zero: None,
             active_users: None,
             new_adopters: None,
             peak_users: None,
@@ -113,6 +119,7 @@ impl Signals {
             stars: None,
             forks: None,
             contributors: None,
+            main_crate_left_out: None,
             docs_present: None,
             repo_link_verified: None,
             binary_downloads_last3: None,
@@ -146,6 +153,8 @@ mod tests {
         assert!(signals.stars.is_none());
         assert!(signals.forks.is_none());
         assert!(signals.contributors.is_none());
+        assert!(signals.all_zero_zero.is_none());
+        assert!(signals.main_crate_left_out.is_none());
         assert!(Signals::unknown(EntryKind::Library).is_library());
     }
 }

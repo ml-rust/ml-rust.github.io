@@ -377,10 +377,11 @@ mod tests {
     }
 
     #[test]
-    fn prerelease_only_library_with_high_adoption_is_listed_with_the_gate_text() {
+    fn zero_zero_only_library_with_high_adoption_is_listed_with_the_gate_text() {
         let signals = Signals {
             first_release: Some(days_ago(1000)),
             all_prerelease: Some(true),
+            all_zero_zero: Some(true),
             active_users: Some(400.0),
             ..featured_library()
         };
@@ -388,12 +389,47 @@ mod tests {
         assert_eq!(verdict.tier, Tier::Listed);
         assert!(!rules(&verdict).contains(&Rule::New));
         assert!(
-            verdict.reasons.iter().any(|reason| reason
-                .detail
-                .contains("every version is a prerelease or 0.0.x")),
+            verdict
+                .reasons
+                .iter()
+                .any(|reason| reason.detail.contains("every version is 0.0.x")),
             "{:?}",
             verdict.reasons
         );
+    }
+
+    #[test]
+    fn prerelease_only_library_with_high_adoption_is_featured() {
+        let signals = Signals {
+            all_prerelease: Some(true),
+            all_zero_zero: Some(false),
+            active_users: Some(400.0),
+            ..featured_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Featured);
+        assert!(verdict.unknown.is_empty(), "{:?}", verdict.unknown);
+    }
+
+    #[test]
+    fn prerelease_only_library_on_the_route_alone_is_listed() {
+        let signals = Signals {
+            all_prerelease: Some(true),
+            all_zero_zero: Some(false),
+            ..route_library()
+        };
+        assert_eq!(run(&signals, &context()).tier, Tier::Listed);
+    }
+
+    #[test]
+    fn the_route_without_the_main_crate_leaves_a_library_listed() {
+        let signals = Signals {
+            main_crate_left_out: Some("wasmtime".to_owned()),
+            ..route_library()
+        };
+        let verdict = run(&signals, &context());
+        assert_eq!(verdict.tier, Tier::Listed);
+        assert!(verdict.unknown.is_empty(), "{:?}", verdict.unknown);
     }
 
     #[test]

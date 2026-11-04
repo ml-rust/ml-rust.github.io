@@ -7,6 +7,7 @@ use super::assembled::Assembled;
 use super::build::apply_build_checks;
 use super::facts::apply_facts;
 use super::link::apply_link;
+use super::main_crate::main_crate_left_out;
 use super::requirements::deprecated_requirement;
 use super::sources::LibrarySources;
 use super::versions::{family_span, primary_releases};
@@ -24,7 +25,8 @@ const MONTH_DAYS: usize = 30;
 ///
 /// - `first_release`, `last_release`: the earliest and latest unyanked
 ///   publish day across the family.
-/// - `latest_version`, `release_count`, `all_yanked`, `all_prerelease`: the primary's versions.
+/// - `latest_version`, `release_count`, `all_yanked`, `all_prerelease`, `all_zero_zero`: the
+///   primary's versions.
 /// - `crate_deleted`: true when the primary is absent from `crates` and named
 ///   in `deleted_crates`, false when present, unknown otherwise.
 /// - `active_users`, `new_adopters`, `peak_users`, `former_glory`: the family
@@ -46,6 +48,8 @@ const MONTH_DAYS: usize = 30;
 ///   missing commit, a release without commit data, an unsupported host and a
 ///   dirty release each add a note.
 /// - Repository signals come from `facts`. `None` leaves them unknown.
+/// - `main_crate_left_out`: a crate with the repository's own name that claims the repository and
+///   that the entry does not list.
 ///
 /// Each family crate missing from the dump, and each requirement the
 /// deprecated list cannot parse, adds a note.
@@ -65,6 +69,7 @@ pub fn library_signals(
         return Assembled { signals, notes };
     };
     let index = sources.index;
+    signals.main_crate_left_out = main_crate_left_out(entry, sources.dump, index);
     let mut family = Vec::with_capacity(entry.crates.len());
     for name in &entry.crates {
         match index.id(name.as_str()) {

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.ea50def5.css">
+<link rel="stylesheet" href="/assets/site.6ee165fe.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -124,7 +124,7 @@
 <li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count. When the release records no commit, or the repository is on Codeberg or GitLab, a Cargo.toml on the default branch that declares the crate counts instead. A recorded commit that the GitHub repository lacks still fails.</li>
 <li>Former glory reaches its floor.</li>
 <li>Docs are present.</li>
-<li>At least one version is neither a prerelease nor 0.0.x.</li>
+<li>At least one version is neither a prerelease nor 0.0.x. A library with only prereleases passes this gate when its active or new dependents reach their limit. The repository route never lifts it. A library whose every version is 0.0.x never passes, because that only reserves the name.</li>
 </ul>
 <p class="why-note">A gate that lacks its signal does not pass.</p>
 </div>
@@ -154,7 +154,7 @@
 <li>Docker pull growth over 90 days.</li>
 <li>The repository route.</li>
 </ul>
-<p class="why-note">An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.</p>
+<p class="why-note">An app skips the release gate, because its versions come from GitHub releases.</p>
 <p class="why-note">Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
 </div>
 <div class="table-scroll rule-rows">
@@ -178,6 +178,7 @@
 <h3 id="repository-route">Repository route <span class="tier-word tier-featured">Featured</span></h3>
 <p>The repository route passes when stars, forks and contributors each reach their limit on the same check.</p>
 <p>Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.</p>
+<p>The route measures a whole repository, so a library must list the repository&#39;s main crate: the crate with the repository&#39;s own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.</p>
 <p>A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.</p>
 <p>This is a gate of separate limits. No page adds them into a score.</p>
 <ul>

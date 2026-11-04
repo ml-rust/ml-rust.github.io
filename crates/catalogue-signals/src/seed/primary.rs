@@ -72,7 +72,7 @@ pub(super) fn lead_word(name: &str) -> Option<String> {
 }
 
 /// How a crate name relates to the name of the repository.
-pub(super) struct RepoName {
+pub(crate) struct RepoName {
     joined: String,
     stem: String,
     lead: Option<String>,
@@ -82,7 +82,7 @@ pub(super) struct RepoName {
 
 impl RepoName {
     /// Reads the last segment of a repository link.
-    pub(super) fn new(segment: &str) -> Self {
+    pub(crate) fn new(segment: &str) -> Self {
         let all = words(segment);
         let kept = without_markers(&all);
         let mut key_words: Vec<String> = all
@@ -113,6 +113,16 @@ impl RepoName {
         } else {
             0
         }
+    }
+
+    /// Whether crate `name` is the repository's own name, apart from case and separators.
+    ///
+    /// A language marker on the repository name does not count, so `tch` and `tch-rs` are both
+    /// own names of `tch-rs`. A marker on the crate name does, so `wasmtime-rust` is a side crate
+    /// of `wasmtime`.
+    pub(crate) fn is_own_name(&self, name: &str) -> bool {
+        let joined = words(name).concat();
+        joined == self.joined || joined == self.stem
     }
 
     /// Whether crate `name` shares a word with the repository name.
@@ -152,6 +162,17 @@ impl RepoName {
             || marked(all.first())
             || marked(all.last())
     }
+}
+
+/// Whether crate `name` shares a whole word with the repository owner `owner`.
+///
+/// Filler words (`rust`, `rs`, `lib`) do not count. So `tensorflow` belongs to `tensorflow/rust`,
+/// a repository whose name says nothing about its project.
+pub(super) fn names_owner(name: &str, owner: &str) -> bool {
+    let owner = words(owner);
+    words(name)
+        .iter()
+        .any(|word| !FILLER_WORDS.contains(&word.as_str()) && owner.contains(word))
 }
 
 fn is_auxiliary(name: &str) -> bool {
@@ -343,6 +364,37 @@ mod tests {
             .iter()
             .map(|c| c.name.clone())
             .collect()
+    }
+
+    #[test]
+    fn own_names_ignore_separators_and_a_marker_on_the_repo_name() {
+        let own = |repo: &str, name: &str| RepoName::new(repo).is_own_name(name);
+        assert!(own("foo-bar", "foo_bar"));
+        assert!(own("tch-rs", "tch"));
+        assert!(own("tch-rs", "tch-rs"));
+        assert!(own("rust-tch", "tch"));
+        assert!(own("mistral.rs", "mistralrs"));
+        assert!(!own("wasmtime", "wasmtime-rust"));
+        assert!(!own("wasmtime", "wasmtime-wasi-nn"));
+        assert!(!own("candle", "candle-core"));
+    }
+
+    #[test]
+    fn an_owner_word_names_a_crate_and_filler_does_not() {
+        assert!(names_owner("tensorflow", "tensorflow"));
+        assert!(names_owner("tensorflow-sys", "tensorflow"));
+        assert!(names_owner("hub", "hugging-hub"));
+        assert!(!names_owner("rust-thing", "rust-lang"));
+        assert!(!names_owner("airflow", "ai"));
+        assert!(!names_owner("unrelated", "tensorflow"));
+    }
+
+    #[test]
+    fn a_crate_word_that_starts_with_a_repo_word_names_the_repo() {
+        let repo = RepoName::new("delta-rs");
+        assert!(repo.names_repo("deltalake"));
+        assert!(repo.names_repo("deltalake-core"));
+        assert!(!repo.names_repo("unrelated"));
     }
 
     fn primary(repo: &str, specs: Vec<Spec>) -> String {

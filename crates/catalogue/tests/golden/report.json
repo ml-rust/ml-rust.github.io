@@ -117,6 +117,28 @@
           "counts_toward_tier": true
         },
         {
+          "name": "all_zero_zero",
+          "label": "Every version 0.0.x",
+          "value": "false",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
+          "name": "main_crate_left_out",
+          "label": "Repository's main crate left out of the entry",
+          "value": "none",
+          "source": {
+            "label": "crates.io database dump",
+            "url": "https://crates.io/data-access"
+          },
+          "fetched": "2026-11-02",
+          "counts_toward_tier": true
+        },
+        {
           "name": "active_users",
           "label": "Active dependents",
           "value": "0",
@@ -549,6 +571,22 @@
           "counts_toward_tier": true
         },
         {
+          "name": "all_zero_zero",
+          "label": "Every version 0.0.x",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "main_crate_left_out",
+          "label": "Repository's main crate left out of the entry",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
           "name": "active_users",
           "label": "Active dependents",
           "value": null,
@@ -929,6 +967,22 @@
         {
           "name": "all_prerelease",
           "label": "Every version a prerelease",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "all_zero_zero",
+          "label": "Every version 0.0.x",
+          "value": null,
+          "source": null,
+          "fetched": null,
+          "counts_toward_tier": true
+        },
+        {
+          "name": "main_crate_left_out",
+          "label": "Repository's main crate left out of the entry",
           "value": null,
           "source": null,
           "fetched": null,

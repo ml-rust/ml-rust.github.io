@@ -19,6 +19,7 @@ mod fixtures;
 mod index;
 mod library;
 mod link;
+mod main_crate;
 mod provenance;
 mod requirements;
 mod sources;

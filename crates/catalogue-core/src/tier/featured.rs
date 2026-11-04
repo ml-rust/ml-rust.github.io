@@ -81,31 +81,58 @@ fn library_gates(
     ]
 }
 
-/// The release gate: the entry has a stable release, so not every version is a prerelease or
-/// `0.0.x`.
+/// The release gate: the entry has a stable release, or a library's own dependents vouch for its
+/// prereleases.
 ///
-/// A library with an unknown value fails the gate as unknown. An app has a crate only
-/// when it ships one, so an app with an unknown value passes.
-fn release_gate(signals: &Signals) -> Gate {
+/// - A version outside prereleases and `0.0.x` passes.
+/// - Every version `0.0.x` fails. That is a name reservation, whatever the dependents say.
+/// - Every version a prerelease passes only for a library whose dependents reach their limit. The
+///   repository route never lifts the block, and an app has no dependents.
+///
+/// A library with an unknown value leaves the gate unknown. An app has a crate only when it ships
+/// one, so an app with an unknown value passes.
+fn release_gate(signals: &Signals, t: &LibraryFeaturedThresholds) -> Gate {
+    let library = signals.is_library();
+    let zero_zero = signals.all_zero_zero == Some(true);
     let fact = match signals.all_prerelease {
-        None if !signals.is_library() => Fact::known(true),
-        known => Fact::of("all_prerelease", known, |all| !all),
+        None if !library => Fact::known(true),
+        None => Fact::unknown(vec!["all_prerelease"]),
+        Some(false) => Fact::known(true),
+        Some(true) if zero_zero || !library => Fact::known(false),
+        Some(true) => Fact::all(vec![
+            Fact::of("all_zero_zero", signals.all_zero_zero, |all| !all),
+            dependents_pass(signals, t),
+        ]),
+    };
+    let failure = if zero_zero {
+        "every version is 0.0.x"
+    } else if library {
+        "every version is a prerelease, and dependents are below their limits"
+    } else {
+        "every version is a prerelease"
     };
     Gate {
         fact,
-        failure: "every version is a prerelease or 0.0.x".to_owned(),
+        failure: failure.to_owned(),
     }
 }
 
-/// The values of a library that passes. The route leads only when it is what passed.
+/// What the Featured reason of a prerelease-only library adds. The site's sentence parser reads it.
+const PRERELEASE_ONLY_DETAIL: &str = ", every version is a prerelease";
+
+/// The values of a library that passes. The route leads only when it is what passed. A
+/// prerelease-only library says so last.
 fn library_detail(signals: &Signals, thresholds: &Thresholds) -> String {
     let route = &thresholds.repo_route;
-    let values = format!(
+    let mut values = format!(
         "active_users {}, new_adopters {}, former_glory {}",
         show_amount(signals.active_users),
         show_amount(signals.new_adopters),
         show_amount(signals.former_glory)
     );
+    if signals.all_prerelease == Some(true) {
+        values.push_str(PRERELEASE_ONLY_DETAIL);
+    }
     if dependents_pass(signals, &thresholds.library_featured).is_true() {
         values
     } else {
@@ -149,7 +176,7 @@ pub(super) fn featured(signals: &Signals, active: Fact, thresholds: &Thresholds)
             &thresholds.repo_route,
         )]
     };
-    gates.push(release_gate(signals));
+    gates.push(release_gate(signals, &thresholds.library_featured));
     gates.push(Gate {
         fact: active,
         failure: "dormant and not stable".to_owned(),
@@ -349,7 +376,10 @@ mod tests {
             all_prerelease: Some(true),
             ..on_the_route()
         };
-        fails(&prerelease, "every version is a prerelease or 0.0.x");
+        fails(
+            &prerelease,
+            "every version is a prerelease, and dependents are below their limits",
+        );
         let inactive = featured(&on_the_route(), Fact::known(false), &thresholds());
         assert!(inactive.fact.is_false());
     }
@@ -487,13 +517,128 @@ mod tests {
         assert!(found.fact.needs.is_empty());
     }
 
+    /// A library at `users` active dependents and no new ones, with every version a prerelease.
+    fn prerelease_only(users: f64) -> Signals {
+        Signals {
+            all_prerelease: Some(true),
+            active_users: Some(users),
+            new_adopters: Some(0.0),
+            ..featured_library()
+        }
+    }
+
     #[test]
-    fn all_prerelease_library_is_not_featured() {
+    fn a_zero_zero_library_stays_blocked_at_any_dependents() {
+        let signals = Signals {
+            all_zero_zero: Some(true),
+            active_users: Some(1_000_000.0),
+            new_adopters: Some(1_000_000.0),
+            ..prerelease_only(0.0)
+        };
+        let found = check(&signals);
+        assert!(found.fact.is_false(), "{found:?}");
+        assert_eq!(found.reason.detail, "not featured: every version is 0.0.x");
+    }
+
+    #[test]
+    fn a_prerelease_library_with_dependents_passes_and_says_so() {
+        let found = check(&prerelease_only(684.0));
+        assert!(found.fact.is_true(), "{found:?}");
+        assert_eq!(
+            found.reason.detail,
+            "featured: active_users 684, new_adopters 0, former_glory 0.9, every version is a prerelease"
+        );
+    }
+
+    #[test]
+    fn a_prerelease_library_passes_on_new_dependents_alone() {
+        let signals = Signals {
+            new_adopters: Some(5.0),
+            ..prerelease_only(0.0)
+        };
+        assert!(check(&signals).fact.is_true());
+    }
+
+    #[test]
+    fn a_prerelease_library_below_the_dependent_limits_is_blocked() {
+        fails(
+            &prerelease_only(9.9),
+            "every version is a prerelease, and dependents are below their limits",
+        );
+    }
+
+    #[test]
+    fn the_route_never_lifts_the_prerelease_block() {
         let signals = Signals {
             all_prerelease: Some(true),
+            ..on_the_route()
+        };
+        let found = check(&signals);
+        assert!(found.fact.is_false(), "{found:?}");
+        assert_eq!(
+            found.reason.detail,
+            "not featured: every version is a prerelease, and dependents are below their limits"
+        );
+    }
+
+    #[test]
+    fn unknown_dependents_leave_a_prerelease_library_unknown() {
+        let t = thresholds().repo_route;
+        let signals = Signals {
+            active_users: None,
+            new_adopters: None,
+            stars: Some(t.min_stars),
+            forks: Some(t.min_forks),
+            contributors: Some(t.min_contributors),
+            ..prerelease_only(0.0)
+        };
+        let found = check(&signals);
+        assert_eq!(found.fact.value, None);
+        assert_eq!(found.fact.needs, ["active_users", "new_adopters"]);
+    }
+
+    #[test]
+    fn an_unknown_zero_zero_keeps_a_prerelease_library_out_of_featured() {
+        let signals = Signals {
+            all_zero_zero: None,
+            ..prerelease_only(684.0)
+        };
+        let found = check(&signals);
+        assert_eq!(found.fact.value, None);
+        assert_eq!(found.fact.needs, ["all_zero_zero"]);
+    }
+
+    #[test]
+    fn a_stable_library_never_reads_all_zero_zero() {
+        let signals = Signals {
+            all_zero_zero: None,
             ..featured_library()
         };
-        fails(&signals, "every version is a prerelease or 0.0.x");
+        assert!(check(&signals).fact.is_true());
+    }
+
+    #[test]
+    fn the_route_fails_without_the_main_crate_at_huge_numbers() {
+        let signals = Signals {
+            stars: Some(u64::MAX),
+            forks: Some(u64::MAX),
+            contributors: Some(u64::MAX),
+            main_crate_left_out: Some("wasmtime".to_owned()),
+            ..low_dependents(None, None, None)
+        };
+        fails(
+            &signals,
+            "and repository route: the repo's main crate wasmtime is not in this entry",
+        );
+    }
+
+    #[test]
+    fn dependents_still_pass_without_the_main_crate() {
+        let signals = Signals {
+            main_crate_left_out: Some("wasmtime".to_owned()),
+            ..featured_library()
+        };
+        assert!(check(&signals).fact.is_true());
     }
 
     #[test]
@@ -513,7 +658,13 @@ mod tests {
             all_prerelease: Some(true),
             ..featured_app()
         };
-        fails(&prerelease, "every version is a prerelease or 0.0.x");
+        fails(&prerelease, "every version is a prerelease");
+        let zero_zero = Signals {
+            all_prerelease: Some(true),
+            all_zero_zero: Some(true),
+            ..featured_app()
+        };
+        fails(&zero_zero, "every version is 0.0.x");
         let no_crate = Signals {
             all_prerelease: None,
             ..featured_app()

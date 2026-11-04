@@ -4,10 +4,11 @@ use std::collections::BTreeMap;
 
 use catalogue_core::{Date, Slug, normalize_repo_url};
 
-use super::family::families;
+use super::family::{Family, families};
 use super::family_draft::draft_family;
+use super::fields::repo_key;
 use super::related::set_part_of;
-use super::types::{Drafts, ExistingIndex, Mappings};
+use super::types::{Drafts, EXCLUDED_REASON, ExistingIndex, Mappings};
 use crate::discover::Candidate;
 use crate::dump::{DumpSnapshot, IdMap};
 use crate::usage::Usage;
@@ -51,6 +52,9 @@ use crate::usage::Usage;
 /// entry holds or that has an invalid or taken slug appears in
 /// [`Drafts::skipped`] under the primary's name with the reason.
 ///
+/// A family whose repository `excluded_repos` lists yields no draft. It appears in
+/// [`Drafts::skipped`] under the primary's name with the reason.
+///
 /// A draft gets `part_of` only with evidence: a name match and a shared crate owner.
 pub fn draft_entries(
     snapshot: &DumpSnapshot,
@@ -64,6 +68,12 @@ pub fn draft_entries(
     let mut drafts = Drafts::default();
     let mut taken: BTreeMap<Slug, &str> = BTreeMap::new();
     for family in families(snapshot, candidates, usage, existing, min_active_users) {
+        if is_excluded(snapshot, &family, existing) {
+            drafts
+                .skipped
+                .push((family.primary.name.clone(), EXCLUDED_REASON.to_owned()));
+            continue;
+        }
         drafts.skipped.extend(family.left_out.iter().cloned());
         let outcome = draft_family(snapshot, &family, mappings, today).and_then(|(slug, entry)| {
             let holder = normalize_repo_url(entry.repo.as_str())
@@ -92,6 +102,15 @@ pub fn draft_entries(
     drafts.entries.sort_by(|a, b| a.0.cmp(&b.0));
     drafts.skipped.sort();
     drafts
+}
+
+/// Whether `excluded_repos` lists the repository of the primary crate of `family`.
+fn is_excluded(snapshot: &DumpSnapshot, family: &Family<'_>, existing: &ExistingIndex) -> bool {
+    snapshot
+        .crates
+        .get(&family.primary.crate_id)
+        .and_then(|row| repo_key(row.repository.as_deref()))
+        .is_some_and(|key| existing.is_excluded(&key))
 }
 
 #[cfg(test)]
@@ -175,6 +194,27 @@ mod tests {
         assert_eq!(entry.distribution, None);
         assert_eq!(entry.added, today());
         assert_eq!(entry.problems(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn an_excluded_repository_is_skipped_with_the_reason() {
+        let mut excluded = Spec::new(1, "hidden");
+        excluded.repository = Some("https://github.com/Other/Hidden.git".to_owned());
+        let mut offsite = Spec::new(2, "offsite");
+        offsite.repository = Some("https://codeberg.org/o/offsite".to_owned());
+        let world = World::new(vec![excluded, offsite, Spec::new(3, "kept")]);
+        let existing = ExistingIndex::default()
+            .with_excluded("github.com/other/hidden")
+            .with_excluded("codeberg.org/o/offsite");
+        let drafts = run(&world, &existing, 2.0);
+        assert_eq!(slugs(&drafts), ["kept"]);
+        assert_eq!(
+            skipped(&drafts),
+            [
+                ("hidden", "excluded by discovery.toml"),
+                ("offsite", "excluded by discovery.toml"),
+            ]
+        );
     }
 
     #[test]

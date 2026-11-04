@@ -43,6 +43,20 @@ mod tests {
     }
 
     #[test]
+    fn a_bad_excluded_repo_names_the_file() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "discovery.toml",
+            "keywords = [\"llm\"]\nexcluded_repos = [\"owner/name\"]\n",
+        );
+        expect_error(
+            src,
+            "discovery.toml: excluded repo `owner/name` must be a lowercase `host/owner/name`",
+        );
+    }
+
+    #[test]
     fn empty_file_is_reported() {
         let mut src = valid();
         put(&mut src, "discovery.toml", "");

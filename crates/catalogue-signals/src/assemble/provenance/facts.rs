@@ -178,6 +178,21 @@ fn dump_rows(signals: &Signals) -> Vec<Row> {
             Origin::Dump,
         ),
         (
+            "all_zero_zero",
+            "Every version 0.0.x",
+            text(signals.all_zero_zero),
+            Origin::Dump,
+        ),
+        (
+            "main_crate_left_out",
+            "Repository's main crate left out of the entry",
+            finding(
+                signals.main_crate_left_out.as_deref(),
+                signals.crate_deleted.is_some(),
+            ),
+            Origin::Dump,
+        ),
+        (
             "active_users",
             ACTIVE_DEPENDENTS_LABEL,
             amount(signals.active_users),
@@ -404,13 +419,14 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 /// A `None` signal is a row with no value, no source and no date. A finding
 /// field reads `none` when its source was read and holds no finding: the
 /// advisories for `rustsec_unmaintained`, the primary crate's dump row for
-/// `deprecation_notice` and `deprecated_requirement`.
+/// `deprecation_notice` and `deprecated_requirement`, and the dump's repository links for
+/// `main_crate_left_out` once the primary crate resolves.
 pub fn signal_facts(
     signals: &Signals,
     sources: &FactSources,
     commits: Option<u64>,
 ) -> Vec<SignalFact> {
-    let mut rows: Vec<Row> = Vec::with_capacity(36);
+    let mut rows: Vec<Row> = Vec::with_capacity(38);
     rows.extend(dump_rows(signals));
     rows.extend(rustsec_rows(signals));
     rows.extend(deprecation_rows(signals));
@@ -509,6 +525,7 @@ mod tests {
             all_yanked: Some(false),
             crate_deleted: Some(false),
             all_prerelease: Some(false),
+            all_zero_zero: Some(false),
             active_users: Some(40.0),
             new_adopters: Some(6.5),
             peak_users: Some(50.0),
@@ -529,6 +546,7 @@ mod tests {
             stars: Some(321),
             forks: Some(45),
             contributors: Some(38),
+            main_crate_left_out: Some("tool".to_owned()),
             docs_present: Some(true),
             repo_link_verified: Some(true),
             binary_downloads_last3: Some(900),
@@ -551,7 +569,7 @@ mod tests {
         let sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
         for kind in [EntryKind::App, EntryKind::Library] {
             let facts = signal_facts(&full(kind), &sources, Some(9_876));
-            assert_eq!(facts.len(), 36);
+            assert_eq!(facts.len(), 38);
             for fact in &facts {
                 assert!(fact.value.is_some(), "{}", fact.name);
                 assert!(fact.problems().is_empty(), "{:?}", fact.problems());
@@ -563,7 +581,7 @@ mod tests {
     fn unknown_signals_have_no_value_source_or_date() {
         let sources = FactSources::new(&library(&["main"]), None, day(2), FetchDates::default());
         let facts = signal_facts(&Signals::unknown(EntryKind::Library), &sources, None);
-        assert_eq!(facts.len(), 36);
+        assert_eq!(facts.len(), 38);
         for fact in &facts {
             assert_eq!(fact.value, None, "{}", fact.name);
             assert_eq!(fact.source, None, "{}", fact.name);
