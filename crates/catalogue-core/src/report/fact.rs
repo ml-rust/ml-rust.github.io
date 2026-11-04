@@ -37,7 +37,8 @@ pub struct SignalFact {
     pub name: String,
     /// The signal name shown to readers.
     pub label: String,
-    /// The raw value as text. `None` when the check did not measure it.
+    /// The raw value as text, with float noise removed from a weighted amount.
+    /// `None` when the check did not measure it.
     pub value: Option<String>,
     /// Where the value comes from. `None` when there is no value.
     pub source: Option<SourceRef>,

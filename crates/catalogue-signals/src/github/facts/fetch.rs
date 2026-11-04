@@ -12,7 +12,7 @@ use crate::github::json::parse_json;
 use crate::http::{Paced, Pacer, Transport};
 
 /// The error type GitHub gives a name it cannot resolve.
-const NOT_FOUND: &str = "NOT_FOUND";
+pub(crate) const NOT_FOUND: &str = "NOT_FOUND";
 
 /// The path key of the repository field.
 const REPOSITORY_PATH: &str = "repository";
@@ -47,7 +47,7 @@ pub fn repo_facts(
 }
 
 /// Whether `error` reports that the repository does not exist.
-fn is_missing_repository(error: &ApiError) -> bool {
+pub(crate) fn is_missing_repository(error: &ApiError) -> bool {
     error.kind.as_deref() == Some(NOT_FOUND)
         && error
             .path

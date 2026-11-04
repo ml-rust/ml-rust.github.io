@@ -15,13 +15,14 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue dump usage`: adoption signals of named crates.
 - `catalogue discover crates` and `discover github`: candidate crates and app repos for review.
 - `catalogue github facts`: repo state, human commits and maintainer response.
-- `catalogue github link`: checks that a crate was published from a commit on the default branch of its repo. A commit that only a fork holds does not verify.
+- `catalogue github link`: checks that a crate was published from a commit on a branch or tag of its repo. A commit that only a fork holds does not verify.
 - `catalogue rustsec fetch` and `rustsec show`: RustSec advisories per crate.
 - `catalogue ecosystems crates`: ecosyste.ms dependents per crate.
 - `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.
 - `catalogue tiers`: assigns each entry its tier with the reasons.
 - `catalogue calibrate`: percentiles of the tier signals, for setting thresholds.
 - `catalogue seed`: drafts entries from discovery for human review.
+- `catalogue seed`: lists a repository's main crate first, leaves out crates of other owners, and matches topic `terms` in names and descriptions.
 - `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
 - `catalogue tiers`: a failed network fetch falls back to the previous snapshot and the run summary names it.
 - `catalogue tiers --json`: writes each entry's tier, reasons and signals with source links and dates.

@@ -1,4 +1,4 @@
-use super::fact::{Fact, show};
+use super::fact::{Fact, show, show_below};
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
 use crate::date::Date;
@@ -81,7 +81,7 @@ fn lost_glory(signals: &Signals, t: &RotThresholds) -> (Fact, String) {
     };
     let detail = format!(
         "former_glory {} < {}",
-        show(signals.former_glory),
+        show_below(signals.former_glory, t.lost_glory_below),
         t.lost_glory_below
     );
     (fact, detail)

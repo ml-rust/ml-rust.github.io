@@ -1,5 +1,5 @@
 use super::context::Context;
-use super::fact::{Fact, show};
+use super::fact::{Fact, show, show_amount};
 use super::rot::Rot;
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
@@ -53,8 +53,8 @@ pub(super) fn finished(
         let evidence = if signals.is_library() {
             format!(
                 "new_adopters {}, former_glory {}",
-                show(signals.new_adopters),
-                show(signals.former_glory)
+                show_amount(signals.new_adopters),
+                show_amount(signals.former_glory)
             )
         } else {
             format!(

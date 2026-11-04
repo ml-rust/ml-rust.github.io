@@ -12,7 +12,7 @@ pub enum LinkError {
     /// The HTTP layer fails before the server answers.
     #[error(transparent)]
     Http(#[from] HttpError),
-    /// The GitHub default-branch lookup fails.
+    /// The GitHub commit lookup fails.
     #[error(transparent)]
     Github(#[from] GithubError),
     /// The crate download answers with a status other than 200.

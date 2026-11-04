@@ -8,7 +8,7 @@ use catalogue_core::{
 };
 
 use super::family::Family;
-use super::fields::{https_link, matching_topics};
+use super::fields::{https_link, matching_topics, topics_by_terms};
 use super::names::description_of;
 use crate::dump::DumpSnapshot;
 
@@ -18,7 +18,8 @@ use crate::dump::DumpSnapshot;
 /// primary crate's name and forms a valid slug; otherwise the primary does.
 /// The primary gives the repository and homepage. The description comes from
 /// the first member, primary first, with a usable crates.io description. The
-/// topics are those matched by any member.
+/// topics are those whose keywords or categories match any member. When none
+/// does, they are those with a term in the primary's name or description.
 /// The crates are the primary, then the other members sorted by name.
 pub(super) fn draft_family(
     snapshot: &DumpSnapshot,
@@ -42,6 +43,13 @@ pub(super) fn draft_family(
         let keywords = snapshot.keywords.get(id).map_or(&[][..], Vec::as_slice);
         let categories = snapshot.categories.get(id).map_or(&[][..], Vec::as_slice);
         matched.extend(matching_topics(topics, keywords, categories));
+    }
+    if matched.is_empty() {
+        matched.extend(topics_by_terms(
+            topics,
+            crate_name,
+            row.description.as_deref(),
+        ));
     }
     if matched.is_empty() {
         return Err("no topic matches".to_owned());
@@ -84,7 +92,7 @@ mod tests {
     use crate::dump::DependencyKind;
 
     use super::super::draft::draft_entries;
-    use super::super::fixtures::{Spec, World, today, topics};
+    use super::super::fixtures::{Spec, World, today, topics, user};
     use super::super::types::{Drafts, ExistingIndex};
 
     const REPO: &str = "https://github.com/ml-rust/fam";
@@ -261,8 +269,140 @@ mod tests {
         assert_eq!(slug.as_str(), "cand-le");
         assert_eq!(entry.name, "cand_le");
         let crates: Vec<&str> = entry.crates.iter().map(CrateName::as_str).collect();
-        assert_eq!(crates, ["fam-facade", "fam-core"]);
+        assert_eq!(crates, ["fam-core", "fam-facade"]);
         assert_eq!(entry.problems(), Vec::<String>::new());
+    }
+
+    /// A candle-shaped family: an examples crate on top of a core crate, and a fork.
+    fn examples_over_core() -> Vec<Spec> {
+        let mut core = member(1, "fam-core", 300.0, "nlp");
+        core.description = Some("Core types.".to_owned());
+        let mut examples = member(2, "fam-examples", 1.0, "nlp");
+        examples.description = Some("Examples.".to_owned());
+        examples.deps = vec![(1, DependencyKind::Normal), (3, DependencyKind::Normal)];
+        let mut nn = member(3, "fam-nn", 200.0, "nlp");
+        nn.description = Some("Layers.".to_owned());
+        nn.deps = vec![(1, DependencyKind::Normal)];
+        let mut fork = member(4, "fork-fam-core", 0.0, "tensor");
+        fork.description = Some("A fork.".to_owned());
+        fork.owners = vec![user(9)];
+        vec![examples, core, nn, fork]
+    }
+
+    #[test]
+    fn crates_description_source_and_primary_stay_in_step() {
+        let drafts = run(examples_over_core());
+        let [(slug, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected");
+        };
+        assert_eq!(slug.as_str(), "fam");
+        assert_eq!(entry.crates[0].as_str(), "fam-core");
+        assert_eq!(entry.description.text, "Core types.");
+        assert_eq!(
+            entry.description.source_url.as_ref().map(Url::as_str),
+            Some("https://crates.io/crates/fam-core")
+        );
+    }
+
+    #[test]
+    fn a_crate_of_another_owner_is_named_and_left_out() {
+        let drafts = run(examples_over_core());
+        let [(_, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected");
+        };
+        let crates: Vec<&str> = entry.crates.iter().map(CrateName::as_str).collect();
+        assert_eq!(crates, ["fam-core", "fam-examples", "fam-nn"]);
+        assert_eq!(
+            skipped(&drafts),
+            [(
+                "fork-fam-core",
+                "shares no owner with `fam-core`, so left out of the family"
+            )]
+        );
+    }
+
+    #[test]
+    fn a_left_out_crate_gives_the_entry_no_topic() {
+        let drafts = run(examples_over_core());
+        let found: Vec<&str> = drafts.entries[0]
+            .1
+            .topics
+            .iter()
+            .map(|t| t.as_str())
+            .collect();
+        assert_eq!(found, ["nlp"]);
+    }
+
+    #[test]
+    fn a_contributor_crate_on_the_primary_stays_in_the_family() {
+        let mut contributor = member(2, "fam-extra", 1.0, "nlp");
+        contributor.owners = vec![user(9)];
+        contributor.deps = vec![(1, DependencyKind::Normal)];
+        let drafts = run(vec![member(1, "fam", 5.0, "nlp"), contributor]);
+        assert!(drafts.skipped.is_empty(), "{:?}", drafts.skipped);
+        let crates: Vec<&str> = drafts.entries[0]
+            .1
+            .crates
+            .iter()
+            .map(CrateName::as_str)
+            .collect();
+        assert_eq!(crates, ["fam", "fam-extra"]);
+    }
+
+    #[test]
+    fn a_fork_with_users_does_not_lift_a_project_over_the_floor() {
+        let mut fork = member(2, "fork-fam", 90.0, "nlp");
+        fork.owners = vec![user(9)];
+        let drafts = run(vec![member(1, "fam", 0.0, "nlp"), fork]);
+        assert!(drafts.entries.is_empty(), "{:?}", drafts.entries);
+        assert!(drafts.skipped.is_empty(), "{:?}", drafts.skipped);
+    }
+
+    #[test]
+    fn a_term_maps_a_crate_when_no_keyword_does() {
+        let mut spec = member(1, "fam", 5.0, "zip");
+        spec.description = Some("A Sparse-Matrix library.".to_owned());
+        let drafts = run(vec![spec]);
+        let [(_, entry)] = drafts.entries.as_slice() else {
+            panic!("one draft expected, skipped {:?}", drafts.skipped);
+        };
+        let found: Vec<&str> = entry.topics.iter().map(|t| t.as_str()).collect();
+        assert_eq!(found, ["foundations"]);
+    }
+
+    #[test]
+    fn a_keyword_match_stops_the_term_step() {
+        let mut spec = member(1, "fam", 5.0, "nlp");
+        spec.description = Some("A sparse matrix library.".to_owned());
+        let drafts = run(vec![spec]);
+        let found: Vec<&str> = drafts.entries[0]
+            .1
+            .topics
+            .iter()
+            .map(|t| t.as_str())
+            .collect();
+        assert_eq!(found, ["nlp"]);
+    }
+
+    #[test]
+    fn terms_read_the_primary_and_not_the_other_members() {
+        let primary = member(1, "fam", 5.0, "zip");
+        let mut other = member(2, "fam-x", 1.0, "zip");
+        other.description = Some("A sparse matrix library.".to_owned());
+        let drafts = run(vec![primary, other]);
+        assert!(drafts.entries.is_empty());
+        assert_eq!(skipped(&drafts), [("fam", "no topic matches")]);
+    }
+
+    #[test]
+    fn a_long_description_drafts_from_its_leading_sentences() {
+        let mut spec = member(1, "fam", 5.0, "nlp");
+        spec.description = Some(format!(
+            "Reads the format. {}.",
+            "Word ".repeat(70).trim_end()
+        ));
+        let drafts = run(vec![spec]);
+        assert_eq!(drafts.entries[0].1.description.text, "Reads the format.");
     }
 
     #[test]

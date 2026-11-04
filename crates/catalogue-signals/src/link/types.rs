@@ -16,13 +16,17 @@ pub struct CrateRelease {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum LinkCheck {
-    /// The default branch of the repo contains the release commit.
+    /// A branch or tag of the repo holds the release commit.
     Verified {
         /// The commit the release records, as 40 lowercase hex digits.
         sha1: String,
         /// Whether the release was packaged from a dirty working tree.
         #[serde(default)]
         dirty: bool,
+        /// The full name of the ref that holds the commit. A result from an
+        /// older rule has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        held_by: Option<String>,
     },
     /// The release commit is absent from the repo.
     CommitMissing {
@@ -32,9 +36,11 @@ pub enum LinkCheck {
         #[serde(default)]
         dirty: bool,
     },
-    /// The release commit exists on GitHub, but the default branch does not
-    /// contain it. A commit that only a fork holds gives this result.
-    NotOnDefaultBranch {
+    /// The release commit exists on GitHub, but no branch or tag of the repo
+    /// holds it. A commit that only a fork holds gives this result. A history
+    /// snapshot from an older rule names it `not-on-default-branch`.
+    #[serde(alias = "not-on-default-branch")]
+    NotOnRepoRef {
         /// The commit the release records, as 40 lowercase hex digits.
         sha1: String,
         /// Whether the release was packaged from a dirty working tree.
@@ -49,16 +55,22 @@ pub enum LinkCheck {
 
 impl LinkCheck {
     /// The `repo_link_verified` signal: `Some(true)` for a found commit,
-    /// `Some(false)` for a missing commit, a commit off the default branch or a
-    /// release without commit data,
+    /// `Some(false)` for a missing commit, a commit that no ref of the repo
+    /// holds or a release without commit data,
     /// `None` when the host is unsupported.
     pub fn verified(&self) -> Option<bool> {
         match self {
             Self::Verified { .. } => Some(true),
-            Self::CommitMissing { .. } | Self::NotOnDefaultBranch { .. } | Self::NoVcsInfo => {
-                Some(false)
-            }
+            Self::CommitMissing { .. } | Self::NotOnRepoRef { .. } | Self::NoVcsInfo => Some(false),
             Self::UnsupportedHost => None,
+        }
+    }
+
+    /// The full name of the ref that holds the commit, when the check names one.
+    pub fn held_by(&self) -> Option<&str> {
+        match self {
+            Self::Verified { held_by, .. } => held_by.as_deref(),
+            _ => None,
         }
     }
 
@@ -67,7 +79,7 @@ impl LinkCheck {
         match self {
             Self::Verified { sha1, .. }
             | Self::CommitMissing { sha1, .. }
-            | Self::NotOnDefaultBranch { sha1, .. } => Some(sha1),
+            | Self::NotOnRepoRef { sha1, .. } => Some(sha1),
             Self::NoVcsInfo | Self::UnsupportedHost => None,
         }
     }
@@ -78,17 +90,17 @@ impl LinkCheck {
             self,
             Self::Verified { dirty: true, .. }
                 | Self::CommitMissing { dirty: true, .. }
-                | Self::NotOnDefaultBranch { dirty: true, .. }
+                | Self::NotOnRepoRef { dirty: true, .. }
         )
     }
 
-    /// The result name: `verified`, `commit-missing`, `not-on-default-branch`,
+    /// The result name: `verified`, `commit-missing`, `not-on-repo-ref`,
     /// `no-vcs-info` or `unsupported-host`.
     pub fn label(&self) -> &'static str {
         match self {
             Self::Verified { .. } => "verified",
             Self::CommitMissing { .. } => "commit-missing",
-            Self::NotOnDefaultBranch { .. } => "not-on-default-branch",
+            Self::NotOnRepoRef { .. } => "not-on-repo-ref",
             Self::NoVcsInfo => "no-vcs-info",
             Self::UnsupportedHost => "unsupported-host",
         }
@@ -116,6 +128,7 @@ mod tests {
         LinkCheck::Verified {
             sha1: SHA.to_owned(),
             dirty,
+            held_by: None,
         }
     }
 
@@ -125,14 +138,14 @@ mod tests {
             sha1: SHA.to_owned(),
             dirty: false,
         };
-        let off_branch = LinkCheck::NotOnDefaultBranch {
+        let not_held = LinkCheck::NotOnRepoRef {
             sha1: SHA.to_owned(),
             dirty: false,
         };
         assert_eq!(found(false).verified(), Some(true));
         assert_eq!(missing.verified(), Some(false));
-        assert_eq!(off_branch.verified(), Some(false));
-        assert_eq!(off_branch.label(), "not-on-default-branch");
+        assert_eq!(not_held.verified(), Some(false));
+        assert_eq!(not_held.label(), "not-on-repo-ref");
         assert_eq!(LinkCheck::NoVcsInfo.verified(), Some(false));
         assert_eq!(LinkCheck::UnsupportedHost.verified(), None);
     }
@@ -145,13 +158,41 @@ mod tests {
         assert!(!LinkCheck::UnsupportedHost.dirty());
         assert_eq!(found(false).label(), "verified");
         assert_eq!(LinkCheck::NoVcsInfo.label(), "no-vcs-info");
+        assert_eq!(found(false).held_by(), None);
+        let on_tag = LinkCheck::Verified {
+            sha1: SHA.to_owned(),
+            dirty: false,
+            held_by: Some("refs/tags/v1.0.0".to_owned()),
+        };
+        assert_eq!(on_tag.held_by(), Some("refs/tags/v1.0.0"));
+        assert_eq!(LinkCheck::NoVcsInfo.held_by(), None);
+    }
+
+    #[test]
+    fn a_snapshot_from_an_older_rule_reads_as_the_new_result() {
+        let old: LinkCheck = serde_json::from_str(&format!(
+            r#"{{"kind":"not-on-default-branch","sha1":"{SHA}","dirty":false}}"#
+        ))
+        .expect("alias");
+        assert_eq!(
+            old,
+            LinkCheck::NotOnRepoRef {
+                sha1: SHA.to_owned(),
+                dirty: false,
+            }
+        );
     }
 
     #[test]
     fn a_result_round_trips_through_json() {
         for check in [
             found(true),
-            LinkCheck::NotOnDefaultBranch {
+            LinkCheck::Verified {
+                sha1: SHA.to_owned(),
+                dirty: false,
+                held_by: Some("refs/heads/release/0.22".to_owned()),
+            },
+            LinkCheck::NotOnRepoRef {
                 sha1: SHA.to_owned(),
                 dirty: true,
             },

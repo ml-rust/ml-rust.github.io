@@ -1,8 +1,8 @@
 //! The repo link check of a library entry.
 //!
 //! A library's repo link holds when the primary crate's latest unyanked
-//! version was published from a commit that the default branch of the entry's
-//! GitHub repo contains. A commit that only a fork holds does not count.
+//! version was published from a commit that a branch or tag of the entry's
+//! GitHub repo holds. A commit that only a fork holds does not count.
 //! [`read_vcs_info`] reads `.cargo_vcs_info.json` from a `.crate` stream.
 //! [`commit_standing`] asks GitHub where the commit stands. [`check_link`]
 //! runs both for one crate release and keeps the result in the cache
@@ -12,6 +12,7 @@
 mod cache;
 mod check;
 mod error;
+mod query;
 mod types;
 mod vcs_info;
 mod verify;

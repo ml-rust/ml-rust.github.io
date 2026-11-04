@@ -47,9 +47,9 @@ pub(super) fn apply_link(link: Option<&LinkCheck>, signals: &mut Signals, notes:
         LinkCheck::CommitMissing { sha1, .. } => {
             notes.push(format!("release commit {sha1} is absent from the repo"));
         }
-        LinkCheck::NotOnDefaultBranch { sha1, .. } => {
+        LinkCheck::NotOnRepoRef { sha1, .. } => {
             notes.push(format!(
-                "published from commit {sha1} that the default branch does not contain"
+                "published from commit {sha1} that no branch or tag of the repo holds"
             ));
         }
         LinkCheck::NoVcsInfo => notes.push(
@@ -84,6 +84,7 @@ mod tests {
         let check = LinkCheck::Verified {
             sha1: SHA.to_owned(),
             dirty: false,
+            held_by: Some("refs/tags/v1.0.0".to_owned()),
         };
         assert_eq!(linked(&check), (Some(true), Vec::new()));
     }
@@ -93,6 +94,7 @@ mod tests {
         let check = LinkCheck::Verified {
             sha1: SHA.to_owned(),
             dirty: true,
+            held_by: Some("refs/heads/main".to_owned()),
         };
         let (verified, notes) = linked(&check);
         assert_eq!(verified, Some(true));
@@ -115,8 +117,8 @@ mod tests {
     }
 
     #[test]
-    fn a_commit_off_the_default_branch_fails_the_link_and_names_the_commit() {
-        let check = LinkCheck::NotOnDefaultBranch {
+    fn a_commit_that_no_ref_holds_fails_the_link_and_names_the_commit() {
+        let check = LinkCheck::NotOnRepoRef {
             sha1: SHA.to_owned(),
             dirty: false,
         };
@@ -125,7 +127,7 @@ mod tests {
         assert_eq!(
             notes,
             [format!(
-                "published from commit {SHA} that the default branch does not contain"
+                "published from commit {SHA} that no branch or tag of the repo holds"
             )]
         );
     }

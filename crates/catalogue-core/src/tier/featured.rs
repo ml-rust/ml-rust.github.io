@@ -1,5 +1,5 @@
 use super::app::app_gate;
-use super::fact::{Fact, show};
+use super::fact::{Fact, show, show_amount, show_below};
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
 use crate::registry::{LibraryFeaturedThresholds, Thresholds};
@@ -32,9 +32,9 @@ fn library_gates(signals: &Signals, t: &LibraryFeaturedThresholds) -> Vec<Gate> 
             ]),
             failure: format!(
                 "active_users {} < {} and new_adopters {} < {}",
-                show(signals.active_users),
+                show_below(signals.active_users, t.min_active_users),
                 t.min_active_users,
-                show(signals.new_adopters),
+                show_below(signals.new_adopters, t.min_new_adopters),
                 t.min_new_adopters
             ),
         },
@@ -56,7 +56,7 @@ fn library_gates(signals: &Signals, t: &LibraryFeaturedThresholds) -> Vec<Gate> 
             }),
             failure: format!(
                 "former_glory {} < {}",
-                show(signals.former_glory),
+                show_below(signals.former_glory, t.min_former_glory),
                 t.min_former_glory
             ),
         },
@@ -91,9 +91,9 @@ pub(super) fn featured(signals: &Signals, active: Fact, thresholds: &Thresholds)
     } else if signals.is_library() {
         format!(
             "active_users {}, new_adopters {}, former_glory {}",
-            show(signals.active_users),
-            show(signals.new_adopters),
-            show(signals.former_glory)
+            show_amount(signals.active_users),
+            show_amount(signals.new_adopters),
+            show_amount(signals.former_glory)
         )
     } else {
         format!(
@@ -175,6 +175,42 @@ mod tests {
             ..featured_library()
         };
         fails(&neither, "active_users 9.9 < 10 and new_adopters 4.9 < 5");
+    }
+
+    #[test]
+    fn a_reason_rounds_float_noise_and_the_comparison_keeps_the_raw_value() {
+        let noisy = Signals {
+            active_users: Some(2.9999999999999996),
+            new_adopters: Some(1.0),
+            ..featured_library()
+        };
+        fails(&noisy, "active_users 3 < 10 and new_adopters 1 < 5");
+
+        let thresholds = thresholds();
+        let limit = thresholds.library_featured.min_active_users;
+        let just_below = Signals {
+            active_users: Some(limit - 1e-12),
+            new_adopters: Some(0.0),
+            ..featured_library()
+        };
+        let found = featured(&just_below, Fact::known(true), &thresholds);
+        assert!(found.fact.is_false(), "{found:?}");
+        assert!(
+            found.reason.detail.contains("active_users 9.99 < 10"),
+            "{}",
+            found.reason.detail
+        );
+
+        let featured_noise = Signals {
+            active_users: Some(27.999999999999996),
+            new_adopters: Some(289.00000000000006),
+            former_glory: Some(0.9036144578313253),
+            ..featured_library()
+        };
+        assert_eq!(
+            check(&featured_noise).reason.detail,
+            "featured: active_users 28, new_adopters 289, former_glory 0.9"
+        );
     }
 
     #[test]

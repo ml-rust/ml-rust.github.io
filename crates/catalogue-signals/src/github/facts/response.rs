@@ -12,13 +12,13 @@ pub(super) struct Envelope {
 
 /// One entry of the `errors` array.
 #[derive(Debug, Deserialize)]
-pub(super) struct ApiError {
+pub(crate) struct ApiError {
     #[serde(rename = "type")]
-    pub(super) kind: Option<String>,
+    pub(crate) kind: Option<String>,
     #[serde(default)]
-    pub(super) path: Vec<serde_json::Value>,
+    pub(crate) path: Vec<serde_json::Value>,
     #[serde(default)]
-    pub(super) message: String,
+    pub(crate) message: String,
 }
 
 /// The `data` object.

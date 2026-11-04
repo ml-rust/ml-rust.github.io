@@ -31,6 +31,12 @@ pub struct Topic {
     /// crates.io category slugs that map a crate to this topic. A slug also matches its sub-categories.
     #[serde(default)]
     pub categories: Vec<String>,
+    /// Whole words or phrases that map a crate to this topic when no keyword or category does.
+    ///
+    /// `catalogue seed` looks for them in the name and description of the primary crate.
+    /// Lowercase words of `[a-z0-9]`, separated by one space.
+    #[serde(default)]
+    pub terms: Vec<String>,
 }
 
 /// A sourced overview of a topic.
@@ -77,8 +83,22 @@ impl Topic {
                 ));
             }
         }
+        for term in &self.terms {
+            if !is_term(term) {
+                out.push(format!(
+                    "term `{term}` must be lowercase words of `[a-z0-9]` separated by one space"
+                ));
+            }
+        }
         out
     }
+}
+
+/// Whether `value` is words of `[a-z0-9]` separated by one space.
+fn is_term(value: &str) -> bool {
+    value.split(' ').all(|word| {
+        !word.is_empty() && word.bytes().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9'))
+    })
 }
 
 #[cfg(test)]
@@ -151,6 +171,30 @@ mod tests {
             assert!(
                 t.problems().iter().any(|p| p.contains(needle)),
                 "{field} {value}: {:?}",
+                t.problems()
+            );
+        }
+    }
+
+    #[test]
+    fn valid_terms_pass_and_default_to_empty() {
+        assert!(topic("id = \"ml\"\nname = \"ML\"\n").terms.is_empty());
+        let t = topic("id = \"ml\"\nname = \"ML\"\nterms = [\"vector database\", \"t sne\"]\n");
+        assert_eq!(t.terms, ["vector database", "t sne"]);
+        assert!(t.problems().is_empty());
+    }
+
+    #[test]
+    fn bad_terms_are_reported() {
+        for value in ["LLM", " llm", "llm ", "", "two  spaces", "stable-diffusion"] {
+            let t = topic(&format!(
+                "id = \"ml\"\nname = \"ML\"\nterms = [\"{value}\"]\n"
+            ));
+            assert!(
+                t.problems()
+                    .iter()
+                    .any(|p| p.contains("must be lowercase words")),
+                "`{value}`: {:?}",
                 t.problems()
             );
         }

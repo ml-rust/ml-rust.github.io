@@ -1,5 +1,6 @@
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
+use crate::amount_text::rounded;
 use crate::registry::Thresholds;
 
 /// The expected update interval E with the signals it lacked.
@@ -100,7 +101,7 @@ pub(super) fn expected(signals: &Signals, thresholds: &Thresholds) -> Interval {
     match signals.active_users {
         Some(users) if users > t.active_users_double => {
             days = days.saturating_mul(2);
-            steps.push(format!("doubled for {users} active users"));
+            steps.push(format!("doubled for {} active users", rounded(users)));
         }
         Some(_) => {}
         None => needs.push("active_users"),

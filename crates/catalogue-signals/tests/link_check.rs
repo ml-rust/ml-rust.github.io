@@ -20,60 +20,64 @@ mod transport;
 use cache::cache;
 use catalogue_signals::github::{GithubError, RepoRef};
 use catalogue_signals::link::{CrateRelease, LinkCheck, LinkError, check_link};
-use link_setup::{SHA, compare_code, compared, package, run, then, today, vcs, verified};
+use link_setup::{
+    SHA, commit_absent, compared, lookup_code, package, run, then, today, vcs, verified,
+};
 use recording_pacer::RecordingPacer;
 use transport::{FakeResponse, FakeTransport};
 
 const PACKAGE_URL: &str = "https://static.crates.io/crates/Serde_Json/Serde_Json-1.0.1.crate";
 
+const GRAPHQL: &str = "https://api.github.com/graphql";
+
+/// The answers of a lookup that finds no ref holding the commit.
+fn no_holder(status: &str) -> Vec<FakeResponse> {
+    let empty = r#"{"data":{"repository":{"refs":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}"#;
+    let mut responses = compared(status);
+    responses.push(FakeResponse::with_body(200, &[], empty));
+    responses.push(FakeResponse::with_body(200, &[], empty));
+    responses
+}
+
 #[test]
 fn a_commit_on_the_default_branch_verifies_the_link_and_sends_three_requests() {
     let (_guard, dir) = cache();
-    let responses = then(package(Some(&vcs(false))), compared("ahead"));
+    let responses = then(package(Some(&vcs(false))), compared("BEHIND"));
     let (transport, outcome) = run(responses, "serde-rs/json", &dir);
     let outcome = outcome.expect("checks");
     assert_eq!(outcome.check, verified(false));
     assert!(!outcome.cached);
-    let urls = transport.urls();
-    assert_eq!(urls[0], PACKAGE_URL);
-    assert_eq!(urls[1], "https://api.github.com/repos/serde-rs/json");
-    assert_eq!(
-        urls[2],
-        format!("https://api.github.com/repos/serde-rs/json/compare/{SHA}...main?per_page=1")
-    );
-    assert_eq!(urls.len(), 3);
+    assert_eq!(transport.urls(), [PACKAGE_URL, GRAPHQL, GRAPHQL]);
     assert!(transport.requests()[0].is_empty());
 }
 
 #[test]
-fn a_missing_commit_is_recorded_for_404_and_422() {
-    for status in [404, 422] {
-        let (_guard, dir) = cache();
-        let responses = then(package(Some(&vcs(false))), compare_code(status));
-        let (_, outcome) = run(responses, "a/b", &dir);
-        let expected = LinkCheck::CommitMissing {
-            sha1: SHA.to_owned(),
-            dirty: false,
-        };
-        assert_eq!(outcome.expect("checks").check, expected, "{status}");
-    }
+fn a_missing_commit_is_recorded() {
+    let (_guard, dir) = cache();
+    let responses = then(package(Some(&vcs(false))), commit_absent());
+    let (_, outcome) = run(responses, "a/b", &dir);
+    let expected = LinkCheck::CommitMissing {
+        sha1: SHA.to_owned(),
+        dirty: false,
+    };
+    assert_eq!(outcome.expect("checks").check, expected);
 }
 
 #[test]
 fn identical_verifies_the_link() {
     let (_guard, dir) = cache();
-    let responses = then(package(Some(&vcs(false))), compared("identical"));
+    let responses = then(package(Some(&vcs(false))), compared("IDENTICAL"));
     let (_, outcome) = run(responses, "a/b", &dir);
     assert_eq!(outcome.expect("checks").check, verified(false));
 }
 
 #[test]
-fn a_commit_the_default_branch_lacks_is_recorded_and_cached() {
-    for status in ["behind", "diverged"] {
+fn a_commit_that_no_ref_holds_is_recorded_and_cached() {
+    for status in ["AHEAD", "DIVERGED"] {
         let (_guard, dir) = cache();
-        let responses = then(package(Some(&vcs(true))), compared(status));
+        let responses = then(package(Some(&vcs(true))), no_holder(status));
         let (_, outcome) = run(responses, "a/b", &dir);
-        let expected = LinkCheck::NotOnDefaultBranch {
+        let expected = LinkCheck::NotOnRepoRef {
             sha1: SHA.to_owned(),
             dirty: true,
         };
@@ -88,7 +92,7 @@ fn a_commit_the_default_branch_lacks_is_recorded_and_cached() {
 #[test]
 fn a_dirty_release_is_still_checked() {
     let (_guard, dir) = cache();
-    let responses = then(package(Some(&vcs(true))), compared("ahead"));
+    let responses = then(package(Some(&vcs(true))), compared("BEHIND"));
     let (_, outcome) = run(responses, "a/b", &dir);
     assert_eq!(outcome.expect("checks").check, verified(true));
 }
@@ -107,7 +111,7 @@ fn a_package_without_the_file_or_the_commit_sends_no_github_request() {
 fn a_rejected_token_is_a_github_401() {
     let (_guard, dir) = cache();
     let (_, outcome) = run(
-        then(package(Some(&vcs(false))), compare_code(401)),
+        then(package(Some(&vcs(false))), lookup_code(401)),
         "a/b",
         &dir,
     );

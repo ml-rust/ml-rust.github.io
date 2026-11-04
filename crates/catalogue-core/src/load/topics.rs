@@ -50,11 +50,13 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
     ids
 }
 
-/// Reports a keyword or category that two topics claim, or that one topic lists twice.
+/// Reports a keyword, category or term that two topics claim, or that one topic lists twice.
 fn check_mappings(topics: &[Topic], file: &Parsed<Topics>, diags: &mut Diagnostics) {
     let mut keywords: BTreeMap<&str, &Slug> = BTreeMap::new();
     let mut categories: BTreeMap<&str, &Slug> = BTreeMap::new();
+    let mut terms: BTreeMap<&str, &Slug> = BTreeMap::new();
     for topic in topics {
+        claim("term", &topic.terms, topic, &mut terms, file, diags);
         claim(
             "keyword",
             &topic.keywords,
@@ -183,6 +185,30 @@ mod tests {
             found
                 .iter()
                 .any(|m| m.contains("category `science::ml` maps to topics `tensors` and `gpu`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_term_maps_to_one_topic() {
+        let found = with_topics(
+            "terms = [\"vector database\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nterms = [\"vector database\"]\n",
+        );
+        assert!(
+            found
+                .iter()
+                .any(|m| m.contains("term `vector database` maps to topics `tensors` and `gpu`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_repeated_term_in_one_topic_is_reported() {
+        let found = with_topics("terms = [\"llm\", \"llm\"]\n");
+        assert!(
+            found
+                .iter()
+                .any(|m| m.contains("term `llm` is listed twice")),
             "{found:?}"
         );
     }

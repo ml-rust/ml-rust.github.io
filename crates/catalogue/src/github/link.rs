@@ -53,18 +53,19 @@ pub(super) fn link(
 
 /// The `key: value` lines of one link check, with no trailing newline.
 ///
-/// The keys are `crate`, `version`, `sha1`, `result` and `cached`. `crate`
-/// holds the name as crates.io stores it. `result` is `verified`,
-/// `commit-missing`, `not-on-default-branch`, `no-vcs-info` or
-/// `unsupported-host`. `sha1` prints as `-`
-/// when the release records no commit. `cached` is `true` when the cache held
-/// the result.
+/// The keys are `crate`, `version`, `sha1`, `result`, `held_by` and `cached`.
+/// `crate` holds the name as crates.io stores it. `result` is `verified`,
+/// `commit-missing`, `not-on-repo-ref`, `no-vcs-info` or `unsupported-host`.
+/// `sha1` prints as `-` when the release records no commit. `held_by` names the
+/// branch or tag that holds the commit, or prints as `-`. `cached` is `true`
+/// when the cache held the result.
 pub fn render_link(release: &CrateRelease, outcome: &LinkOutcome) -> String {
     [
         format!("crate: {}", release.name),
         format!("version: {}", release.version),
         format!("sha1: {}", or_none(outcome.check.sha1())),
         format!("result: {}", outcome.check.label()),
+        format!("held_by: {}", or_none(outcome.check.held_by())),
         format!("cached: {}", outcome.cached),
     ]
     .join("\n")
@@ -98,10 +99,13 @@ mod tests {
         let check = LinkCheck::Verified {
             sha1: SHA.to_owned(),
             dirty: false,
+            held_by: Some("refs/tags/v1.0.228".to_owned()),
         };
         assert_eq!(
             render_link(&release(), &outcome(check, false)),
-            format!("crate: serde\nversion: 1.0.228\nsha1: {SHA}\nresult: verified\ncached: false")
+            format!(
+                "crate: serde\nversion: 1.0.228\nsha1: {SHA}\nresult: verified\nheld_by: refs/tags/v1.0.228\ncached: false"
+            )
         );
     }
 
@@ -120,14 +124,16 @@ mod tests {
     }
 
     #[test]
-    fn a_commit_off_the_default_branch_keeps_the_sha_and_prints_its_label() {
-        let check = LinkCheck::NotOnDefaultBranch {
+    fn a_commit_that_no_ref_holds_keeps_the_sha_and_prints_its_label() {
+        let check = LinkCheck::NotOnRepoRef {
             sha1: SHA.to_owned(),
             dirty: false,
         };
         let text = render_link(&release(), &outcome(check, false));
         assert!(
-            text.contains(&format!("\nsha1: {SHA}\nresult: not-on-default-branch\n")),
+            text.contains(&format!(
+                "\nsha1: {SHA}\nresult: not-on-repo-ref\nheld_by: -\n"
+            )),
             "{text}"
         );
     }

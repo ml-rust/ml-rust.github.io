@@ -17,24 +17,28 @@ use crate::usage::Usage;
 /// existing entry lists it, its default version is not yanked and it carries no
 /// deprecation notice. A crate without usage counts as having no users.
 /// Eligible crates whose repository links normalise to the same
-/// `host/owner/repo` form one family. The primary crate is the top of the
-/// family's own dependency tree: the root that no other member depends on, with
-/// ties broken by the repository name, the most family dependencies, the most
-/// current active users, the shortest name and the name (see `families`). A
-/// family is eligible when it has a primary. A family member that
-/// is yanked or deprecated is left out of the entry and appears in
-/// [`Drafts::skipped`] with the reason. A crate that fails the user count or is
-/// already listed is dropped without a report.
+/// `host/owner/repo` and that share owners form one family. The primary crate
+/// is the main crate of the repository: the one named like the repository, else
+/// the crate of the family's dependency tree that connects to the most members
+/// (see `families`). A family is eligible when it has a primary. A family member
+/// that is yanked or deprecated, or that shares no owner with the family, is
+/// left out of the entry and appears in [`Drafts::skipped`] with the reason. A
+/// crate that fails the user count or is already listed is dropped without a
+/// report.
 ///
 /// Each draft is a library. Its name and slug come from the last segment of the
 /// repository link, the project name, when that differs from the primary
 /// crate's name and canonicalises to a valid slug. Otherwise they come from the
-/// primary crate. Its
-/// crates are the primary, then the other members sorted by name. Its
+/// primary crate. Of two families with one slug, the family with more active
+/// users keeps it. Its
+/// crates are the primary, then the other members sorted by name, so
+/// `crates[0]` is always the primary. Its
 /// repository is the normalised `https://<host>/<owner>/<repo>` of the
 /// primary. Its description is the crates.io description of the primary, or of
-/// the next member with one of at most 300 characters. Its topics are the
-/// union of the topics whose keywords or categories match any member.
+/// the next member with a usable one, cut to whole sentences when longer than
+/// 300 characters. Its topics are the union of the topics whose keywords or
+/// categories match any member. When that union is empty, they are the topics
+/// with a term in the primary's name or description.
 ///
 /// Any https host is accepted. GitHub-only signals stay unknown for other
 /// hosts, so such entries can be Listed but not Featured. A family whose
@@ -264,6 +268,23 @@ mod tests {
         assert_eq!(
             skipped(&drafts),
             [("foo_bar", "slug `foo-bar` is already drafted for `foo-bar`")]
+        );
+    }
+
+    #[test]
+    fn of_two_repositories_with_one_slug_the_more_used_keeps_it() {
+        let mut small = Spec::new(1, "model");
+        small.repository = Some("https://github.com/a/model-rs".to_owned());
+        small.users = 2.0;
+        let mut large = Spec::new(2, "model-rs");
+        large.repository = Some("https://github.com/b/model-rs".to_owned());
+        large.users = 41.0;
+        let drafts = plain(&World::new(vec![small, large]));
+        assert_eq!(slugs(&drafts), ["model-rs"]);
+        assert_eq!(drafts.entries[0].1.crates[0].as_str(), "model-rs");
+        assert_eq!(
+            skipped(&drafts),
+            [("model", "slug `model-rs` is already drafted for `model-rs`")]
         );
     }
 

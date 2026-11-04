@@ -21,6 +21,7 @@ mod search;
 
 pub use crate::http::Pacer;
 pub use error::GithubError;
+pub(crate) use facts::{ApiError, GRAPHQL_ENDPOINT, NOT_FOUND, is_missing_repository};
 pub use facts::{CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoRef, RepoRefError, repo_facts};
 pub use headers::rest_headers;
 pub(crate) use json::parse_json;

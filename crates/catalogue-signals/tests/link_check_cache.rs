@@ -20,14 +20,16 @@ use std::fs;
 use cache::cache;
 use catalogue_signals::github::GithubError;
 use catalogue_signals::link::{LinkCheck, LinkError, links_dir};
-use link_setup::{SHA, compare_code, compared, package, run, then, today, vcs, verified};
+use link_setup::{
+    SHA, commit_absent, compared, lookup_code, package, run, then, today, vcs, verified,
+};
 use transport::FakeResponse;
 
 #[test]
 fn a_second_run_reads_the_cache_and_sends_nothing() {
     let (_guard, dir) = cache();
     let (_, first) = run(
-        then(package(Some(&vcs(false))), compared("ahead")),
+        then(package(Some(&vcs(false))), compared("BEHIND")),
         "a/b",
         &dir,
     );
@@ -47,18 +49,18 @@ fn a_second_run_reads_the_cache_and_sends_nothing() {
 fn a_changed_repo_checks_again_and_keeps_the_first_repos_file() {
     let (_guard, dir) = cache();
     run(
-        then(package(Some(&vcs(false))), compared("ahead")),
+        then(package(Some(&vcs(false))), compared("BEHIND")),
         "a/b",
         &dir,
     )
     .1
     .expect("first");
-    let responses = then(package(Some(&vcs(false))), compare_code(404));
+    let responses = then(package(Some(&vcs(false))), commit_absent());
     let (transport, other) = run(responses, "c/d", &dir);
     let other = other.expect("second");
     assert!(!other.cached);
     assert!(matches!(other.check, LinkCheck::CommitMissing { .. }));
-    assert_eq!(transport.urls().len(), 3);
+    assert_eq!(transport.urls().len(), 2);
     let (transport, again) = run(vec![], "c/d", &dir);
     assert!(again.expect("hit").cached);
     assert!(transport.urls().is_empty());
@@ -87,12 +89,27 @@ fn a_result_from_the_first_rule_is_checked_again() {
     let old =
         format!(r#"{{"repo":"a/b","result":{{"kind":"verified","sha1":"{SHA}","dirty":false}}}}"#);
     fs::write(links_dir(&dir).join("serde-json-1.0.1@a__b.json"), old).expect("file");
-    let responses = then(package(Some(&vcs(false))), compare_code(404));
+    let responses = then(package(Some(&vcs(false))), commit_absent());
     let (transport, outcome) = run(responses, "a/b", &dir);
     let outcome = outcome.expect("checks");
     assert!(!outcome.cached);
     assert!(matches!(outcome.check, LinkCheck::CommitMissing { .. }));
-    assert_eq!(transport.urls().len(), 3);
+    assert_eq!(transport.urls().len(), 2);
+}
+
+#[test]
+fn a_result_from_the_previous_rule_is_checked_again() {
+    let (_guard, dir) = cache();
+    fs::create_dir_all(links_dir(&dir)).expect("dir");
+    let old = format!(
+        r#"{{"rule":2,"repo":"a/b","result":{{"kind":"not-on-default-branch","sha1":"{SHA}","dirty":false}},"checked":"2026-11-04"}}"#
+    );
+    fs::write(links_dir(&dir).join("serde-json-1.0.1@a__b.json"), old).expect("file");
+    let responses = then(package(Some(&vcs(false))), compared("IDENTICAL"));
+    let (_, outcome) = run(responses, "a/b", &dir);
+    let outcome = outcome.expect("checks");
+    assert!(!outcome.cached);
+    assert_eq!(outcome.check, verified(false));
 }
 
 #[test]
@@ -115,7 +132,7 @@ fn an_unreadable_cache_file_is_checked_again() {
 fn errors_are_not_cached() {
     let (_guard, dir) = cache();
     let (_, outcome) = run(
-        then(package(Some(&vcs(false))), compare_code(500)),
+        then(package(Some(&vcs(false))), lookup_code(500)),
         "a/b",
         &dir,
     );

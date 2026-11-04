@@ -2,6 +2,7 @@
 
 use std::fmt::Display;
 
+use catalogue_core::amount_text::precise;
 use catalogue_core::{Date, EntryKind, STARS_SIGNAL, SignalFact, Signals, SourceRef};
 use url::Url;
 
@@ -90,6 +91,11 @@ fn text<T: Display>(value: Option<T>) -> Option<String> {
     value.map(|value| value.to_string())
 }
 
+/// The text of a known weighted amount, with float noise removed.
+fn amount(value: Option<f64>) -> Option<String> {
+    value.map(precise)
+}
+
 /// The text of a finding: the finding, or `none` when the check looked and found none.
 fn finding(value: Option<&str>, looked: bool) -> Option<String> {
     match value {
@@ -164,25 +170,25 @@ fn dump_rows(signals: &Signals) -> Vec<Row> {
         (
             "active_users",
             "Active users",
-            text(signals.active_users),
+            amount(signals.active_users),
             Origin::Dump,
         ),
         (
             "new_adopters",
             "New adopters over 12 months",
-            text(signals.new_adopters),
+            amount(signals.new_adopters),
             Origin::Dump,
         ),
         (
             "peak_users",
             "Peak active users",
-            text(signals.peak_users),
+            amount(signals.peak_users),
             Origin::Dump,
         ),
         (
             "former_glory",
             "Active users as a share of the peak",
-            text(signals.former_glory),
+            amount(signals.former_glory),
             Origin::Dump,
         ),
         (
@@ -303,7 +309,7 @@ fn publication_rows(signals: &Signals) -> Vec<Row> {
         ),
         (
             "repo_link_verified",
-            "Release commit on the default branch",
+            "Release commit on a repo branch or tag",
             text(signals.repo_link_verified),
             Origin::Link,
         ),
@@ -548,6 +554,24 @@ mod tests {
                 .filter(|fact| fact.name != "stars")
                 .all(|fact| fact.counts_toward_tier)
         );
+    }
+
+    #[test]
+    fn weighted_amounts_lose_only_float_noise() {
+        let signals = Signals {
+            active_users: Some(2.9999999999999996),
+            new_adopters: Some(289.00000000000006),
+            peak_users: Some(38.357142857142854),
+            former_glory: Some(0.9036144578313253),
+            ..full(EntryKind::Library)
+        };
+        let sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
+        let facts = signal_facts(&signals, &sources, None);
+        let shown = |name: &str| value(&facts, name).value.clone();
+        assert_eq!(shown("active_users").as_deref(), Some("3"));
+        assert_eq!(shown("new_adopters").as_deref(), Some("289"));
+        assert_eq!(shown("peak_users").as_deref(), Some("38.3571"));
+        assert_eq!(shown("former_glory").as_deref(), Some("0.9036"));
     }
 
     #[test]

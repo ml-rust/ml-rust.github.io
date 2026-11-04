@@ -24,9 +24,9 @@ pub fn links_dir(cache_dir: &Path) -> PathBuf {
     cache_dir.join("links")
 }
 
-/// The verification rule that writes results. Rule 2 verifies a commit only
-/// when the default branch contains it.
-const RULE: u32 = 2;
+/// The verification rule that writes results. Rule 3 verifies a commit when a
+/// branch or tag of the repo holds it.
+const RULE: u32 = 3;
 
 /// One cache file.
 #[derive(Serialize, Deserialize)]

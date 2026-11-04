@@ -7,6 +7,7 @@
 //! holds every entry's tier with the source of each signal.
 //! [`Catalogue::effective`] applies an entry's merged judgments.
 
+pub mod amount_text;
 mod catalogue;
 mod date;
 pub mod date_text;

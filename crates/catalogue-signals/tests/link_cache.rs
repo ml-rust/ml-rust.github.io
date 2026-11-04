@@ -33,6 +33,7 @@ fn verified() -> LinkCheck {
     LinkCheck::Verified {
         sha1: SHA.to_owned(),
         dirty: true,
+        held_by: Some("refs/tags/v1.0.228".to_owned()),
     }
 }
 
@@ -64,7 +65,7 @@ fn the_file_holds_the_repo_and_the_result_under_the_canonical_name() {
     let text = fs::read_to_string(links_dir(&dir).join("serde-json-1.0.1@serde-rs__json.json"))
         .expect("file");
     let value: serde_json::Value = serde_json::from_str(&text).expect("json");
-    assert_eq!(value["rule"], 2);
+    assert_eq!(value["rule"], 3);
     assert_eq!(value["repo"], "serde-rs/json");
     assert_eq!(value["result"]["kind"], "no-vcs-info");
     assert_eq!(value["checked"], "2026-11-02");
@@ -140,14 +141,15 @@ fn a_file_without_a_rule_an_older_rule_or_a_check_date_misses() {
     for record in [
         format!(r#"{{"repo":"a/b",{result},{dated}}}"#),
         format!(r#"{{"rule":1,"repo":"a/b",{result},{dated}}}"#),
-        format!(r#"{{"rule":2,"repo":"a/b",{result}}}"#),
+        format!(r#"{{"rule":2,"repo":"a/b",{result},{dated}}}"#),
+        format!(r#"{{"rule":3,"repo":"a/b",{result}}}"#),
     ] {
         fs::write(&path, record).expect("file");
         assert_eq!(hit(&dir, &serde, "a/b"), None);
     }
     fs::write(
         &path,
-        format!(r#"{{"rule":2,"repo":"a/b",{result},{dated}}}"#),
+        format!(r#"{{"rule":3,"repo":"a/b",{result},{dated}}}"#),
     )
     .expect("file");
     let found = cached_check(&dir, &serde, "a/b")

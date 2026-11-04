@@ -4,9 +4,26 @@ use catalogue_core::{Date, Topics};
 use jiff::Timestamp;
 
 use crate::dump::{
-    CrateRow, DependencyKind, DumpMeta, DumpSnapshot, IdMap, Requirement, VersionRow,
+    CrateRow, DependencyKind, DumpMeta, DumpSnapshot, IdMap, Owner, OwnerKind, Requirement,
+    VersionRow,
 };
 use crate::usage::Usage;
+
+/// A user owner.
+pub(super) fn user(id: u32) -> Owner {
+    Owner {
+        id,
+        kind: OwnerKind::User,
+    }
+}
+
+/// A team owner.
+pub(super) fn team(id: u32) -> Owner {
+    Owner {
+        id,
+        kind: OwnerKind::Team,
+    }
+}
 
 /// The draft date of every test.
 pub(super) fn today() -> Date {
@@ -27,6 +44,7 @@ id = "foundations"
 name = "Foundations"
 keywords = ["tensor"]
 categories = ["science::math"]
+terms = ["sparse matrix"]
 "#,
     )
     .expect("topics parse")
@@ -46,10 +64,11 @@ pub(super) struct Spec {
     pub(super) users: f64,
     /// The crate ids its default version depends on, with the kind.
     pub(super) deps: Vec<(u32, DependencyKind)>,
+    pub(super) owners: Vec<Owner>,
 }
 
 impl Spec {
-    /// A tokenizer crate with 5 users and its own GitHub repository.
+    /// A tokenizer crate with 5 users, one owner and its own GitHub repository.
     pub(super) fn new(id: u32, name: &'static str) -> Self {
         Self {
             id,
@@ -63,6 +82,7 @@ impl Spec {
             deprecated: false,
             users: 5.0,
             deps: Vec::new(),
+            owners: vec![user(1)],
         }
     }
 }
@@ -143,6 +163,7 @@ impl World {
                 })
                 .collect(),
         );
+        self.snapshot.owners.insert(spec.id, spec.owners);
         self.snapshot.keywords.insert(
             spec.id,
             spec.keywords.iter().map(|k| (*k).to_owned()).collect(),

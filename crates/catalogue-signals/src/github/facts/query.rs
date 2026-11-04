@@ -7,7 +7,7 @@ use serde_json::json;
 use super::repo_ref::RepoRef;
 
 /// The GraphQL endpoint.
-pub(super) const ENDPOINT: &str = "https://api.github.com/graphql";
+pub(crate) const ENDPOINT: &str = "https://api.github.com/graphql";
 
 /// Commits read from the default branch history.
 pub(super) const COMMIT_PAGE: u64 = 100;

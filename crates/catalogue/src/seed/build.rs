@@ -75,7 +75,7 @@ fn render(drafts: &Drafts, current: &HashMap<&str, f64>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use catalogue_signals::dump::{CrateRow, DumpMeta, VersionRow};
+    use catalogue_signals::dump::{CrateRow, DumpMeta, Owner, OwnerKind, VersionRow};
     use jiff::Timestamp;
 
     use super::*;
@@ -190,6 +190,12 @@ mod tests {
         snap.versions.insert(3, version);
         snap.default_version.insert(3, 3);
         snap.keywords.insert(3, vec!["llm".to_owned()]);
+        let owner = Owner {
+            id: 1,
+            kind: OwnerKind::User,
+        };
+        snap.owners.insert(1, vec![owner]);
+        snap.owners.insert(3, vec![owner]);
         let seed = build_seed(&snap, &rules(), &topics(), &ExistingIndex::default(), 0.0);
         assert_eq!(seed.drafts.entries.len(), 1);
         for (low, high) in [

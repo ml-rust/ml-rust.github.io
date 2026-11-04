@@ -2,9 +2,9 @@
 //!
 //! [`draft_entries`] turns each eligible repository into one entry for human
 //! review. The result is a pure function of the dump, the usage signals, the
-//! topic mappings and the entries that already exist. Eligible crates whose
-//! repository links normalise to the same `host/owner/repo` form one family,
-//! and a family yields one draft that lists all its crates.
+//! topic mappings and the entries that already exist. Eligible crates that name
+//! the same `host/owner/repo` and share owners form one family, and a family
+//! yields one draft that lists all its crates, the main crate first.
 
 mod draft;
 mod family;
@@ -13,6 +13,8 @@ mod fields;
 #[cfg(test)]
 mod fixtures;
 mod names;
+mod owners;
+mod primary;
 mod types;
 
 pub use draft::draft_entries;

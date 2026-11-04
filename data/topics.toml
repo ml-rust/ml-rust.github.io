@@ -1,55 +1,73 @@
 # Catalogue topics.
 #
-# Each topic is a shelf on the site. `parent` nests a topic under another.
-# `keywords` and `categories` map crates.io keywords and category slugs to the
-# topic when `catalogue seed` drafts entries. A human reviews every drafted entry.
+# Each topic is a job a developer wants done, named in their words. `parent` nests a topic under another.
 # A topic `summary` is a published claim: it needs evidence links.
+#
+# `catalogue seed` maps a drafted entry to topics in two steps. A human reviews every drafted entry.
+#
+# 1. `keywords` and `categories` match the crates.io keywords and category slugs of every family crate.
+# 2. When step 1 finds no topic, `terms` match the name and description of the primary crate.
+#    A term is whole lowercase words, separated by one space. `t sne` matches `t-SNE`.
+#
+# A term must name the job or a format. It never names one crate. A word with a second common
+# meaning stays out: `inference` also means type inference, `embedding` also means embedding a
+# language, `audio` also covers plain file readers.
 #
 # Generic markers such as the `machine-learning` and `ml` keywords and the
 # `science::ml` category map to no topic: nearly every candidate carries them,
-# so they say nothing about the shelf.
+# so they say nothing about the job. The words `machine learning` and `ai` stay out of `terms` too.
 
 [[topic]]
-id = "foundations"
-name = "Foundations"
-keywords = ["tensor", "autograd", "ndarray", "linear-algebra", "gpu", "cuda"]
+id = "run-models"
+name = "Run and serve models"
+keywords = ["inference", "onnx", "onnxruntime", "gguf", "llama", "llama-cpp", "model-serving", "stable-diffusion", "transformer", "transformers"]
+terms = ["onnx", "stable diffusion", "gguf", "llama cpp", "model serving", "model inference", "machine learning inference"]
+
+[[topic]]
+id = "llm-apps"
+name = "Build LLM apps and agents"
+keywords = ["llm", "agent", "agents", "ai-agent", "mcp", "openai", "anthropic", "gemini", "openrouter", "copilot", "rag", "langchain", "chatbot"]
+terms = ["llm", "llms", "large language model", "large language models", "openai", "anthropic", "gemini", "openrouter", "ollama", "chatgpt", "github copilot", "ai agent", "ai agents", "model context protocol"]
+
+[[topic]]
+id = "train-models"
+name = "Train models"
+keywords = ["deep-learning", "neural-network", "neural-networks", "autograd", "training", "reinforcement-learning"]
+terms = ["deep learning", "neural network", "neural networks", "reinforcement learning"]
+
+[[topic]]
+id = "speech-audio"
+name = "Speech and audio"
+keywords = ["speech", "speech-recognition", "speech-to-text", "text-to-speech", "asr", "tts", "whisper", "audio-ml", "vad"]
+terms = ["speech", "transcribe", "transcription", "diarization", "spectrogram", "spectrograms", "voice activity", "audio denoising"]
+
+[[topic]]
+id = "text-search"
+name = "Text, embeddings and search"
+keywords = ["nlp", "tokenizer", "tokenizers", "embeddings", "embedding", "text", "bm25", "chunking", "language-detection", "semantic-search"]
+terms = ["nlp", "natural language", "tokenizer", "tokenizers", "embeddings", "reranking", "vector database", "vector search", "semantic search"]
+
+[[topic]]
+id = "vision-documents"
+name = "Images, video and documents"
+keywords = ["computer-vision", "image-processing", "vision", "ocr", "object-detection", "pdf", "video"]
+terms = ["computer vision", "ocr", "object detection", "image segmentation", "image classification", "pdf", "video"]
+
+[[topic]]
+id = "tabular-ml"
+name = "Tabular data and classic ML"
+keywords = ["clustering", "classification", "regression", "random-forest", "svm", "decision-tree", "gradient-boosting", "gbdt"]
+terms = ["random forest", "gradient boosting", "decision tree", "decision trees", "dimensionality reduction", "t sne"]
+
+[[topic]]
+id = "math-gpu"
+name = "Tensors, math and GPU"
+keywords = ["tensor", "tensors", "ndarray", "linear-algebra", "gpu", "cuda", "fft"]
 categories = ["science::math"]
+terms = ["tensor", "tensors", "ndarray", "numpy", "linear algebra", "sparse matrix", "fft"]
 
 [[topic]]
-id = "deep-learning"
-name = "Deep learning frameworks"
-keywords = ["deep-learning", "neural-network", "neural-networks"]
-
-[[topic]]
-id = "inference"
-name = "Inference and serving"
-keywords = ["inference", "onnx", "gguf", "llm", "transformer", "transformers"]
-
-[[topic]]
-id = "classical-ml"
-name = "Classical machine learning"
-keywords = ["clustering", "classification", "regression", "random-forest", "svm", "decision-tree", "gradient-boosting"]
-
-[[topic]]
-id = "nlp"
-name = "Language and text"
-keywords = ["nlp", "tokenizer", "tokenizers", "embeddings", "text"]
-
-[[topic]]
-id = "vision"
-name = "Computer vision"
-keywords = ["computer-vision", "image-processing", "vision"]
-
-[[topic]]
-id = "reinforcement-learning"
-name = "Reinforcement learning"
-keywords = ["reinforcement-learning"]
-
-[[topic]]
-id = "data"
-name = "Data and formats"
-keywords = ["safetensors", "dataframe", "dataset", "datasets", "arrow"]
-
-[[topic]]
-id = "applications"
-name = "Applications and tools"
+id = "data-formats"
+name = "Datasets and model formats"
+keywords = ["safetensors", "dataframe", "dataset", "datasets", "arrow", "hdf5", "npy", "data-format", "zarr"]
+terms = ["safetensors", "data format", "columnar", "parquet", "zarr", "hdf5", "netcdf", "dataframe", "dataframes", "dataset", "datasets", "data set"]

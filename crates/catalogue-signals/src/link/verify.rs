@@ -15,15 +15,15 @@ use crate::http::{Pacer, Transport};
 /// Where crates.io serves the `.crate` packages.
 const PACKAGE_HOST: &str = "https://static.crates.io/crates";
 
-/// Checks that `release` was published from a commit that the default branch
-/// of `repo` contains.
+/// Checks that `release` was published from a commit that a branch or tag of
+/// `repo` holds.
 ///
 /// A result in the link cache under `cache_dir` for the same repo returns with
 /// no request. Otherwise the check downloads the package, which needs no
 /// authentication, reads `.cargo_vcs_info.json` from its stream and stops
 /// there. A package without a `git.sha1` gives [`LinkCheck::NoVcsInfo`]. A
 /// commit gets the GitHub lookup of [`commit_standing`] with `token`. A commit
-/// that only a fork holds gives [`LinkCheck::NotOnDefaultBranch`]. The result
+/// that only a fork holds gives [`LinkCheck::NotOnRepoRef`]. The result
 /// goes into the cache with `today` as its check date. An error is never cached.
 ///
 /// # Errors
@@ -44,11 +44,17 @@ pub fn check_link(
         return Ok(outcome);
     }
     let check = match package_commit(transport, release)? {
-        (Some(sha1), dirty) => match commit_standing(transport, token, repo, &sha1, pacer)? {
-            CommitStanding::OnDefaultBranch => LinkCheck::Verified { sha1, dirty },
-            CommitStanding::NotOnDefaultBranch => LinkCheck::NotOnDefaultBranch { sha1, dirty },
-            CommitStanding::Missing => LinkCheck::CommitMissing { sha1, dirty },
-        },
+        (Some(sha1), dirty) => {
+            match commit_standing(transport, token, repo, release, &sha1, pacer)? {
+                CommitStanding::Held { held_by } => LinkCheck::Verified {
+                    sha1,
+                    dirty,
+                    held_by: Some(held_by),
+                },
+                CommitStanding::NotHeld => LinkCheck::NotOnRepoRef { sha1, dirty },
+                CommitStanding::Missing => LinkCheck::CommitMissing { sha1, dirty },
+            }
+        }
         (None, _) => LinkCheck::NoVcsInfo,
     };
     store_check(cache_dir, release, &repo.to_string(), &check, today)?;

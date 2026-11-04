@@ -141,6 +141,7 @@ mod tests {
             summary: None,
             keywords: Vec::new(),
             categories: Vec::new(),
+            terms: Vec::new(),
         }
     }
 

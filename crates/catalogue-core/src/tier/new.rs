@@ -1,4 +1,4 @@
-use super::fact::{Fact, show};
+use super::fact::{Fact, show, show_below};
 use super::signals::Signals;
 use super::verdict::{Reason, Rule};
 use crate::date::Date;
@@ -40,7 +40,7 @@ pub(super) fn new(signals: &Signals, today: Date, t: &NewThresholds) -> New {
     if few_users.is_true() {
         why.push(format!(
             "{} active users < {}",
-            show(signals.active_users),
+            show_below(signals.active_users, t.min_active_users),
             t.min_active_users
         ));
     }

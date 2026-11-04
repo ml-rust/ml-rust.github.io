@@ -16,6 +16,9 @@ mod threads;
 mod types;
 
 pub use fetch::repo_facts;
+pub(crate) use fetch::{NOT_FOUND, is_missing_repository};
+pub(crate) use query::ENDPOINT as GRAPHQL_ENDPOINT;
 pub use query::LATEST_SAMPLE;
 pub use repo_ref::{RepoRef, RepoRefError};
+pub(crate) use response::ApiError;
 pub use types::{CiState, Facts, RepoFacts};

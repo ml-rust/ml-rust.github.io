@@ -31,19 +31,36 @@ pub fn package(json: Option<&str>) -> FakeResponse {
     FakeResponse::package("Serde_Json", "1.0.1", json)
 }
 
-/// The default-branch lookup that answers the compare with `status`.
+/// The GitHub lookup that finds the commit and compares it with the default branch as `status`.
 pub fn compared(status: &str) -> Vec<FakeResponse> {
     vec![
-        FakeResponse::with_body(200, &[], r#"{"default_branch":"main"}"#),
-        FakeResponse::with_body(200, &[], &format!(r#"{{"status":"{status}"}}"#)),
+        FakeResponse::with_body(
+            200,
+            &[],
+            r#"{"data":{"repository":{"object":{"__typename":"Commit"}}}}"#,
+        ),
+        FakeResponse::with_body(
+            200,
+            &[],
+            &format!(
+                r#"{{"data":{{"repository":{{"defaultBranchRef":{{"name":"main","compare":{{"status":"{status}"}}}},"tag0":null,"tag1":null,"tag2":null,"tag3":null}}}}}}"#
+            ),
+        ),
     ]
 }
 
-/// The default-branch lookup whose compare answers with only an HTTP `code`.
-pub fn compare_code(code: u16) -> Vec<FakeResponse> {
-    let mut responses = compared("ahead");
-    responses[1] = FakeResponse::status(code);
-    responses
+/// The GitHub lookup that does not know the commit.
+pub fn commit_absent() -> Vec<FakeResponse> {
+    vec![FakeResponse::with_body(
+        200,
+        &[],
+        r#"{"data":{"repository":{"object":null}}}"#,
+    )]
+}
+
+/// The GitHub lookup whose first request answers with only an HTTP `code`.
+pub fn lookup_code(code: u16) -> Vec<FakeResponse> {
+    vec![FakeResponse::status(code)]
 }
 
 /// The package download followed by the GitHub lookup.
@@ -74,5 +91,6 @@ pub fn verified(dirty: bool) -> LinkCheck {
     LinkCheck::Verified {
         sha1: SHA.to_owned(),
         dirty,
+        held_by: Some("refs/heads/main".to_owned()),
     }
 }

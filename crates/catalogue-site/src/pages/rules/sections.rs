@@ -216,7 +216,7 @@ pub(super) fn sections(thresholds: Option<&Thresholds>) -> Vec<RuleSection> {
                 },
                 Item {
                     label: "",
-                    text: "The repository link is verified against the crate’s .cargo_vcs_info.json.",
+                    text: "The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.",
                 },
                 Item {
                     label: "",

@@ -1,6 +1,8 @@
 use std::fmt::Display;
 use std::ops::Not;
 
+use crate::amount_text::{rounded, rounded_below};
+
 /// A rule condition that is true, false, or unknown for lack of signals.
 ///
 /// `needs` names the missing signals. It is empty whenever `value` is known.
@@ -85,6 +87,16 @@ pub(super) fn show<T: Display>(value: Option<T>) -> String {
     }
 }
 
+/// A weighted amount as rounded text, or `unknown`.
+pub(super) fn show_amount(value: Option<f64>) -> String {
+    show(value.map(rounded))
+}
+
+/// A weighted amount as rounded text for a statement that it is below `limit`, or `unknown`.
+pub(super) fn show_below(value: Option<f64>, limit: f64) -> String {
+    show(value.map(|value| rounded_below(value, limit)))
+}
+
 /// Appends each name in `names` that `list` lacks.
 pub(super) fn add_unique(list: &mut Vec<&'static str>, names: &[&'static str]) {
     for name in names {
@@ -143,6 +155,15 @@ mod tests {
     fn not_flips_known_values_only() {
         assert_eq!(!yes(), no());
         assert_eq!(!missing("a"), Fact::unknown(vec!["a"]));
+    }
+
+    #[test]
+    fn amounts_print_rounded_or_unknown() {
+        assert_eq!(show_amount(Some(2.9999999999999996)), "3");
+        assert_eq!(show_amount(None), "unknown");
+        assert_eq!(show_below(Some(2.9999999999999996), 11.0), "3");
+        assert_eq!(show_below(Some(10.999999999999998), 11.0), "10.99");
+        assert_eq!(show_below(None, 11.0), "unknown");
     }
 
     #[test]

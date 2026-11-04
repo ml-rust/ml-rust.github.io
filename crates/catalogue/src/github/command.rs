@@ -36,15 +36,15 @@ pub enum GithubCommand {
         #[arg(long, value_name = "DATE")]
         today: Option<Date>,
     },
-    /// Check that a crate was published from a commit on the default branch of its repo.
+    /// Check that a crate was published from a commit on a branch or tag of its repo.
     ///
     /// Reads the token from the `GITHUB_TOKEN` environment variable and the
     /// latest unyanked version from the cached crates.io dump. Downloads the
     /// package, reads its `.cargo_vcs_info.json` and compares the commit with
-    /// the default branch on GitHub. A commit that only a fork holds does not
-    /// verify. Prints the keys `crate`, `version`, `sha1`, `result` and
-    /// `cached`. `result` is `verified`, `commit-missing`,
-    /// `not-on-default-branch`, `no-vcs-info` or `unsupported-host`.
+    /// the branches and tags of the repo on GitHub. A commit that only a fork
+    /// holds does not verify. Prints the keys `crate`, `version`, `sha1`,
+    /// `result`, `held_by` and `cached`. `result` is `verified`,
+    /// `commit-missing`, `not-on-repo-ref`, `no-vcs-info` or `unsupported-host`.
     Link {
         /// The repo, as `owner/name`.
         #[arg(value_name = "OWNER/REPO")]
