@@ -1,5 +1,5 @@
 name = "venus"
-kind = "library"
+kind = "app"
 repo = "https://github.com/ml-rust/venus"
 homepage = "https://crates.io/crates/venus"
 crates = ["venus", "venus-core", "venus-macros", "venus-server", "venus-sync"]

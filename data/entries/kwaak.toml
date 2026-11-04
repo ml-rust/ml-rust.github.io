@@ -1,5 +1,5 @@
 name = "kwaak"
-kind = "library"
+kind = "app"
 repo = "https://github.com/bosun-ai/kwaak"
 homepage = "https://github.com/bosun-ai/kwaak"
 crates = ["kwaak"]

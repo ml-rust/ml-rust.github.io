@@ -1,5 +1,5 @@
 name = "oxen"
-kind = "library"
+kind = "app"
 repo = "https://github.com/oxen-ai/oxen"
 homepage = "https://oxen.ai/"
 crates = ["oxen-server", "liboxen", "oxen-cli"]

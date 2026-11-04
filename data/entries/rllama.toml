@@ -1,5 +1,5 @@
 name = "rllama"
-kind = "library"
+kind = "app"
 repo = "https://github.com/noeda/rllama"
 homepage = "https://github.com/Noeda/rllama"
 crates = ["rllama"]

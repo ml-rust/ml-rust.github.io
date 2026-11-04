@@ -1,5 +1,5 @@
 name = "oxidizr"
-kind = "library"
+kind = "app"
 repo = "https://github.com/ml-rust/oxidizr"
 homepage = "https://github.com/ml-rust/oxidizr"
 crates = ["oxidizr"]

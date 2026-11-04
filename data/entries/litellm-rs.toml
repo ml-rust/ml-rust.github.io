@@ -1,5 +1,5 @@
 name = "litellm-rs"
-kind = "library"
+kind = "app"
 repo = "https://github.com/majiayu000/litellm-rs"
 homepage = "https://github.com/majiayu000/litellm-rs"
 crates = ["litellm-rs"]

@@ -1,5 +1,5 @@
 name = "shimmy"
-kind = "library"
+kind = "app"
 repo = "https://github.com/michael-a-kuykendall/shimmy"
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 crates = ["shimmy"]

@@ -1,5 +1,5 @@
 name = "blazr"
-kind = "library"
+kind = "app"
 repo = "https://github.com/ml-rust/blazr"
 homepage = "https://github.com/ml-rust/blazr"
 crates = ["blazr"]

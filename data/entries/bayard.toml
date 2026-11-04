@@ -1,5 +1,5 @@
 name = "bayard"
-kind = "library"
+kind = "app"
 repo = "https://github.com/mosuka/bayard"
 homepage = "https://github.com/mosuka/bayard"
 crates = ["bayard", "bayard-cli", "bayard-client", "bayard-common", "bayard-rest", "bayard-server"]

@@ -1,5 +1,5 @@
 name = "lsp-ai"
-kind = "library"
+kind = "app"
 repo = "https://github.com/silasmarvin/lsp-ai"
 crates = ["lsp-ai", "splitter-tree-sitter", "utils-tree-sitter"]
 topics = ["llm-apps"]

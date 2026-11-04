@@ -1,5 +1,5 @@
 name = "compressr"
-kind = "library"
+kind = "app"
 repo = "https://github.com/ml-rust/compressr"
 homepage = "https://github.com/ml-rust/compressr"
 crates = ["compressr"]
