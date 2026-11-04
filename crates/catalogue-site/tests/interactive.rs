@@ -328,14 +328,19 @@ fn the_scripts_keep_the_rules_of_the_page() {
 }
 
 #[test]
-fn the_sources_row_is_last_and_never_counts_as_a_difference() {
+fn the_links_row_is_last_and_never_counts_as_a_difference() {
     let compare = asset("compare.js");
     let row = compare
         .lines()
-        .position(|line| line.contains("{ label: \"Sources\", cell: sourcesCell, plain: true },"))
-        .expect("the Sources row");
+        .position(|line| line.contains("{ label: \"Links\", cell: linksCell, plain: true },"))
+        .expect("the Links row");
     let next = compare.lines().nth(row + 1).expect("the next line");
-    assert_eq!(next, "];", "the Sources row ends the table");
+    assert_eq!(next, "];", "the Links row ends the table");
+    assert!(!compare.contains("sourcesCell"), "no Sources row");
+    assert!(
+        compare.contains("Each project page lists the source and date of every value."),
+        "one note stands for the sources"
+    );
     assert!(
         compare.contains("!fact.plain && new Set("),
         "no Differs mark"

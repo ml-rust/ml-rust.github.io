@@ -34,7 +34,6 @@ fn in_order(page: &str, parts: &[&str]) {
 #[test]
 fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_order() {
     let site = tiered();
-    let dump = "<a href=\"https://crates.io/data-access\">crates.io database dump</a>, fetched <time datetime=\"2026-11-03\">3 Nov 2026</time>";
     in_order(
         &site[ALPHA],
         &[
@@ -50,26 +49,39 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
             "<p class=\"compat-lines-label\">What shows it</p>",
             "<li>CUDA: alpha-crate feature cuda (dependency cudarc)</li>",
             "<li>Metal: alpha-extra feature metal</li>",
-            dump,
             "<dt>Native code</dt>",
             "Required",
             "<li>Binds native code: openssl-sys</li>",
-            dump,
             "<dt>Python bindings</dt>",
             "Has Python bindings",
             "<li>alpha-extra needs Python</li>",
-            dump,
             "<dt>License</dt>",
             "Apache-2.0 OR MIT",
-            dump,
             "<dt>Dependents</dt>",
             ">12<",
-            dump,
             "<dt>Contributors</dt>",
             ">38<",
-            "<a href=\"https://github.com/ml-rust/alpha/graphs/contributors\">GitHub contributors</a>, fetched",
         ],
     );
+    let page = &site[ALPHA];
+    let compat = &page[page.find("id=\"compatibility\"").expect("the block")..];
+    let compat = &compat[..compat.find("</section>").expect("its end")];
+    assert!(!compat.contains("compat-source"), "{compat}");
+    assert!(!compat.contains("fetched"), "{compat}");
+}
+
+#[test]
+fn the_sources_disclosure_lists_every_source_of_the_compatibility_facts_with_its_date() {
+    let site = tiered();
+    let page = &site[ALPHA];
+    let from = &page[page.find("id=\"sources\"").expect("the disclosure")..];
+    let list = &from[..from.find("</details>").expect("its end")];
+    for source in [
+        "<a href=\"https://crates.io/data-access\">crates.io database dump</a>, fetched <time datetime=\"2026-11-03\">3 Nov 2026</time>",
+        "<a href=\"https://github.com/ml-rust/alpha/graphs/contributors\">GitHub contributors</a>, fetched <time datetime=\"2026-11-03\">3 Nov 2026</time>",
+    ] {
+        assert_eq!(list.matches(source).count(), 1, "{source} in {list}");
+    }
 }
 
 #[test]

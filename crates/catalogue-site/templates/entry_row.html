@@ -2,9 +2,9 @@
 <th scope="row" class="cell-project">
 <div class="row-head"><a class="row-name" href="{{ row.href }}"{% if row.current %} aria-current="page"{% endif %}>{{ row.name }}</a>{% if row.current %} <span class="row-tag">This page</span>{% endif %}{% if row.kind_id == "app" %} <span class="row-tag">{{ row.kind }}</span>{% endif %}{% if let Some(choice) = row.choice %}{% if let Some(python) = choice.python %} <span class="row-tag"{% if let Some(full) = python.full %} title="{{ full }}"{% endif %}>{{ python.short }}</span>{% endif %}{% endif %}{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}{% for status in row.statuses %} <span class="row-tag row-tag-notice" title="{{ status.meaning }}">{{ status.word }}</span>{% endfor %}{% if let Some(word) = row.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}</div>
 <p class="row-description">{{ row.description }}</p>
-{%- if show_install %}{% if let Some(install) = row.install %}
-<p class="row-install">{% if let Some(command) = install.command %}<code>{{ command }}</code> {% endif %}<a href="{{ install.href }}">{{ install.text }}</a></p>
-{%- endif %}{% endif %}
+{%- if show_install %}{% if let Some(install) = row.install %}{% if let Some(command) = install.command %}
+<p class="row-install"><code>{{ command }}</code></p>
+{%- endif %}{% endif %}{% endif %}
 {%- if let Some(topic) = row.also_in %}
 <p class="row-also-in">Also in <a href="{{ topic.href }}">{{ topic.name }}</a>.</p>
 {%- endif %}

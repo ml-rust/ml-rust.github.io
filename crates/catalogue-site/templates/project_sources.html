@@ -1,0 +1,9 @@
+<details class="disclosure disclosure-group" id="sources">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Sources</span><span class="disclosure-summary">{{ sources.count_text() }}</span></summary>
+<ul class="sources-list">
+<li>Description: {% if let Some(href) = description.href %}<a href="{{ href }}">{{ description.source }}</a>{% else %}{{ description.source }}{% endif %}</li>
+{%- for source in sources.notes %}
+<li>{% include "source_note.html" %}</li>
+{%- endfor %}
+</ul>
+</details>

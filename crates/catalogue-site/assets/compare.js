@@ -22,6 +22,7 @@ const TIER_NAMES = new Map([
 // Another script adds its copy buttons when it hears this event.
 const ROWS_EVENT = "catalogue:rows";
 const ONLY_DIFFERENCES = "diff";
+const SOURCES_NOTE = "Each project page lists the source and date of every value.";
 
 const status = document.getElementById("compare-status");
 const notes = document.getElementById("compare-notes");
@@ -193,34 +194,29 @@ function nativeCell(entry) {
   return { text: `${word}\n${exact ?? ""}`, node: box };
 }
 
-// The install line: the command to run and the page of the channel.
+// The install command to run. The channel page is a link in the Links row.
 function installCell(entry) {
-  const install = entry.install;
-  const command = typeof install?.command === "string" ? install.command : null;
-  const label = typeof install?.text === "string" ? install.text : null;
-  const href = safeLink(install?.url);
-  if (!command && !(label && href)) {
+  const command = typeof entry.install?.command === "string" ? entry.install.command : null;
+  if (!command) {
     return textCell(null);
   }
   const box = element("div", "compare-install");
-  if (command) {
-    const line = element("p", "install-line");
-    const code = element("code", "", command);
-    code.setAttribute("data-install-command", command);
-    line.append(code);
-    box.append(line);
-  }
-  if (label && href) {
-    box.append(link(label, href));
-  }
-  return { text: command ?? label, node: box };
+  const line = element("p", "install-line");
+  const code = element("code", "", command);
+  code.setAttribute("data-install-command", command);
+  line.append(code);
+  box.append(line);
+  return { text: command, node: box };
 }
 
 // The links of `entry`. Links always differ, so this row is never compared.
+// The install channel joins them, named by its channel, unless another link already holds its page.
 function linksCell(entry) {
   const list = element("ul", "compare-links");
+  const shown = new Set();
   const add = (text, href) => {
-    if (href) {
+    if (href && !shown.has(href)) {
+      shown.add(href);
       const item = element("li");
       item.append(link(text, href));
       list.append(item);
@@ -229,37 +225,11 @@ function linksCell(entry) {
   add("Project page", `/projects/${entry.slug}/`);
   add("Repository", safeLink(entry.repo));
   add("Documentation", safeLink(entry.docs));
-  return { text: "", node: list };
-}
-
-// Each distinct source of the signals of `entry`, in order of first appearance, with its fetch
-// date, by the rule of the entry page. A source that fails the https check keeps its name and
-// loses its link. This row is never compared.
-function sourcesCell(entry) {
-  const seen = new Set();
-  const list = element("ul", "compare-links compare-sources");
-  for (const item of Array.isArray(entry.signals) ? entry.signals : []) {
-    const label = item?.source?.label;
-    if (typeof label !== "string" || label === "") {
-      continue;
-    }
-    const url = item.source.url;
-    const fetched = typeof item.fetched === "string" ? item.fetched : "";
-    const key = JSON.stringify([label, url, fetched]);
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    const line = element("li");
-    const href = safeLink(url);
-    line.append(href ? link(label, href) : label);
-    const words = dateWords(fetched);
-    if (words) {
-      line.append(", fetched ", timeNode(fetched, words));
-    }
-    list.append(line);
+  const channel = typeof entry.install?.text === "string" ? entry.install.text : "";
+  if (channel) {
+    add(channel, safeLink(entry.install?.url));
   }
-  return list.childElementCount > 0 ? { text: "", node: list } : textCell(null);
+  return { text: "", node: list };
 }
 
 // One row per fact, in reading order.
@@ -285,7 +255,6 @@ const FACTS = [
   { label: "License", cell: (entry) => textCell(signal(entry, "license")) },
   { label: "Install", cell: installCell },
   { label: "Links", cell: linksCell, plain: true },
-  { label: "Sources", cell: sourcesCell, plain: true },
 ];
 
 // The JSON at `path`, or null when the server has no such file.
@@ -501,6 +470,7 @@ function showTable(picked, slugs) {
   } else {
     view.append(scroller);
   }
+  view.append(element("p", "compare-note", SOURCES_NOTE));
   if (picked.length < COMPARE_LIMIT) {
     view.append(picker(slugs, false));
   }

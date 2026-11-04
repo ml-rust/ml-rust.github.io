@@ -9,6 +9,7 @@ use super::compat::Compat;
 use super::header::Header;
 use super::judgments::{CorrectionRow, JudgmentRow};
 use super::links::{CrateRow, DescriptionView, crate_rows};
+use super::sources::SourceList;
 use super::stats::StatStrip;
 use super::tier::TierSection;
 use crate::forms::CORRECTNESS_FORM;
@@ -29,13 +30,15 @@ pub(crate) struct ProjectPage<'a> {
     /// Name, kind, tier and notices.
     pub header: Header<'a>,
     /// The stat strip. `None` without a report.
-    pub stats: Option<StatStrip<'a>>,
+    pub stats: Option<StatStrip>,
     /// The install line and the links to use the project.
     pub action: ActionPanel<'a>,
     /// What the project runs on and needs.
-    pub compat: Compat<'a>,
+    pub compat: Compat,
     /// The description with its source.
     pub description: DescriptionView<'a>,
+    /// Every distinct source of the signals, for the Sources disclosure.
+    pub sources: SourceList<'a>,
     /// The crates of the entry.
     pub crates: Vec<CrateRow>,
     /// The tier reasons and signals. `None` without a report.
@@ -84,6 +87,7 @@ impl<'a> ProjectPage<'a> {
             action: ActionPanel::new(entry, archived),
             compat: Compat::new(entry, record),
             description: DescriptionView::of(entry),
+            sources: SourceList::of(record),
             crates: crate_rows(entry),
             tier: found.map(|(report, record)| {
                 TierSection::new(report, record, entry.kind, catalogue.thresholds())

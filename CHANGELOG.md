@@ -61,3 +61,4 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - The New tier now means a recent first release only.
 - Row facts state only what the check found, and native code reads deeper dependencies.
 - Categories cover more projects and match description terms first.
+- Project pages gather every source and fetch date under "Measurements and sources". List rows and the compare page drop source and channel links.

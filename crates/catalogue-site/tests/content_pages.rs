@@ -174,7 +174,7 @@ fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
             "<p class=\"lede\">Libraries for multidimensional arrays and their math.</p>",
             "<tr class=\"rows-group\" id=\"tier-featured\">",
             "/projects/alpha/\">Alpha</a>",
-            "<code>cargo add alpha-crate</code> <a href=\"https://crates.io/crates/alpha-crate\">crates.io</a>",
+            "<p class=\"row-install\"><code>cargo add alpha-crate</code></p>",
             "<tr class=\"rows-group\" id=\"tier-archived\">",
             "/projects/gamma/\">Gamma</a>",
             "<code>cargo add gamma</code>",
@@ -186,13 +186,37 @@ fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
         runtimes,
         &[
             "/projects/beta/\">Beta</a>",
-            "<code>brew install beta</code> <a href=\"https://formulae.brew.sh/formula/beta\">Homebrew</a>",
+            "<p class=\"row-install\"><code>brew install beta</code></p>",
         ],
     );
 }
 
 #[test]
-fn an_app_without_a_channel_leads_with_its_repository() {
+fn list_rows_hold_the_install_command_and_no_channel_link() {
+    let site = tiered();
+    for path in [
+        "categories/tensor-libraries/index.html",
+        "categories/inference-runtimes/index.html",
+    ] {
+        let page = &site[path];
+        let start = page.find("<tr class=\"entry-row").expect("a row");
+        let end = page.rfind("</tr>").expect("the end of a row");
+        let page = &page[start..end];
+        for channel in [
+            "href=\"https://crates.io/crates/",
+            "href=\"https://formulae.brew.sh/",
+            "href=\"https://repology.org/",
+            "href=\"https://hub.docker.com/",
+        ] {
+            assert!(!page.contains(channel), "{path} links {channel}");
+        }
+        assert!(!page.contains("\">Homebrew</a>"), "{path}");
+        assert!(!page.contains("\">Repository</a>"), "{path}");
+    }
+}
+
+#[test]
+fn an_app_without_a_channel_has_no_install_line_in_its_row() {
     let mut files = fixture::files();
     for (path, contents) in &mut files {
         if path == "entries/beta.toml"
@@ -203,12 +227,7 @@ fn an_app_without_a_channel_leads_with_its_repository() {
     }
     let site = fixture::site(&files, false);
     let runtimes = &site["categories/inference-runtimes/index.html"];
-    assert!(
-        runtimes.contains(
-            "<p class=\"row-install\"><a href=\"https://github.com/ml-rust/beta\">Repository</a></p>"
-        ),
-        "{runtimes}"
-    );
+    assert!(!runtimes.contains("row-install"), "{runtimes}");
     assert!(!runtimes.contains("<code>"), "{runtimes}");
 }
 
@@ -277,15 +296,17 @@ fn an_entry_page_shows_every_signal_with_its_source() {
         alpha,
         &[
             "<span class=\"tier-badge tier-featured\">Featured</span>",
-            "Source: <a href=\"https://crates.io/crates/alpha-crate\">the crates.io description</a>.",
             "This project replaces <a href=\"/projects/gamma/\">Gamma</a>.",
-            "Homepage: <a href=\"https://alpha.example.org/\">",
+            "Homepage: <a href=\"https://alpha.example.org/\">alpha.example.org</a>",
             "crates.io: <a href=\"https://crates.io/crates/alpha-crate\">alpha-crate</a>",
             "A demotion to Listed waits for approval.",
             "Fails: active dependents 9 below 11.",
             "Not measured: Active dependents as a share of the peak.",
             "<code>featured</code>: fails: active dependents 9 below 11",
             "<a href=\"https://crates.io/crates/alpha-extra\">alpha-extra</a>",
+            "<h2 id=\"signals\">Measurements and sources</h2>",
+            "<details class=\"disclosure disclosure-group\" id=\"sources\">",
+            "<li>Description: <a href=\"https://crates.io/crates/alpha-crate\">the crates.io description</a></li>",
             "<tr><th scope=\"row\">Active dependents as a share of the peak</th><td class=\"not-measured\">Not measured</td><td></td><td></td><td>Yes</td></tr>",
             "<tr><th scope=\"row\">Latest release</th><td>2026-09-01</td><td><a href=\"https://crates.io/data-access\">crates.io database dump</a></td><td><time datetime=\"2026-11-03\">3 Nov 2026</time></td><td>Yes</td></tr>",
             "<tr><th scope=\"row\">GitHub stars</th><td>1200</td>",
@@ -300,6 +321,72 @@ fn an_entry_page_shows_every_signal_with_its_source() {
     assert!(!alpha.contains("banner-org"), "{alpha}");
 }
 
+/// The page text from the start of the `#signals` section to its closing tag.
+fn signals_section(page: &str) -> &str {
+    let start = page
+        .find("aria-labelledby=\"signals\"")
+        .expect("the signals section");
+    let end = page[start..]
+        .find("</section>")
+        .expect("the end of the signals section");
+    &page[start..start + end]
+}
+
+#[test]
+fn the_description_source_appears_only_in_the_sources_disclosure() {
+    let site = tiered();
+    let alpha = &site["projects/alpha/index.html"];
+    let source = "the crates.io description";
+    assert_eq!(alpha.matches(source).count(), 1, "{alpha}");
+    let sources = &alpha[alpha
+        .find("id=\"sources\"")
+        .expect("the Sources disclosure")..];
+    let disclosure = &sources[..sources.find("</details>").expect("its end")];
+    assert!(disclosure.contains(source), "{disclosure}");
+    assert!(disclosure.contains("<span class=\"disclosure-title\">Sources</span>"));
+    assert!(!alpha.contains("<p class=\"sources\">Source: "), "{alpha}");
+    assert!(!alpha.contains("<p class=\"sources\">From "), "{alpha}");
+    assert!(!alpha.contains("<p class=\"sources\">Sources: "), "{alpha}");
+}
+
+#[test]
+fn no_fetch_date_prints_outside_the_signals_section() {
+    let site = tiered();
+    for path in ["projects/alpha/index.html", "projects/beta/index.html"] {
+        let page = &site[path];
+        let section = signals_section(page);
+        assert!(section.contains("fetched"), "{path} lists no fetch date");
+        let outside = page.replace(section, "");
+        assert!(
+            !outside.to_lowercase().contains("fetched"),
+            "{path} prints a fetch date outside #signals"
+        );
+    }
+}
+
+#[test]
+fn the_checked_cell_links_to_the_sources() {
+    let site = tiered();
+    let alpha = &site["projects/alpha/index.html"];
+    assert!(alpha.contains("<a class=\"stat-link\" href=\"#signals\">Sources</a>"));
+}
+
+#[test]
+fn a_page_without_tiers_still_links_the_description_source() {
+    let site = untiered();
+    let alpha = &site["projects/alpha/index.html"];
+    in_order(
+        alpha,
+        &[
+            "<h2 id=\"signals\">Sources</h2>",
+            "id=\"sources\"",
+            "<span class=\"disclosure-summary\">1 source</span>",
+            "<li>Description: <a href=\"https://crates.io/crates/alpha-crate\">the crates.io description</a></li>",
+        ],
+    );
+    assert!(!alpha.contains("signal-table"), "{alpha}");
+}
+
 #[test]
 fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
     let site = tiered();
@@ -309,7 +396,6 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
         &[
             "<span class=\"entry-kind\">App</span> <span class=\"entry-label\">Product</span>",
             "<span class=\"tier-badge tier-listed\">Listed</span> <span class=\"stable-label\">Stable</span>",
-            "Source: <a href=\"https://github.com/ml-rust/beta#readme\">the project README</a>.",
             "The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.",
             "Homebrew: <a href=\"https://formulae.brew.sh/formula/beta\">beta</a>",
             "Docker Hub: <a href=\"https://hub.docker.com/r/ml-rust/beta\">ml-rust/beta</a>",
@@ -319,6 +405,7 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
             "Not measured: Repology families.",
             "<li>Homebrew returned no install count.</li>",
             "<code>featured-needs-outside-approval</code>",
+            "<li>Description: <a href=\"https://github.com/ml-rust/beta#readme\">the project README</a></li>",
             "<td>Yes — one part of the repository route</td>",
             "No correction applies to this entry.",
             "<td>Kind</td><td>Product</td>",
@@ -430,12 +517,13 @@ fn an_archived_page_leads_with_the_reason_and_the_other_projects_and_steps_the_i
             "Why Archived",
             "The repository is archived.",
             "<a href=\"/projects/alpha/\">Alpha</a> replaces this project.",
-            "<a href=\"https://github.com/someone/gamma\">GitHub</a>",
             "<h2 id=\"also-in\">",
             "<aside class=\"project-action project-action-quiet\"",
             "For existing users",
             "<a class=\"button\" href=\"https://docs.rs/gamma\">Documentation</a>",
             "<h2 id=\"compatibility\">",
+            "id=\"sources\"",
+            "<a href=\"https://github.com/someone/gamma\">GitHub</a>",
         ],
     );
     assert!(!gamma.contains("Use Gamma"), "{gamma}");

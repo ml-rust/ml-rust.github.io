@@ -20,7 +20,7 @@ pub(crate) struct SourceNote<'a> {
 
 impl<'a> SourceNote<'a> {
     /// The source of `fact`. `None` for a fact with no value or no source.
-    pub(super) fn of(fact: &'a SignalFact) -> Option<Self> {
+    fn of(fact: &'a SignalFact) -> Option<Self> {
         fact.value.as_ref()?;
         let source = fact.source.as_ref()?;
         let fetched = fact.fetched.map(|date| date.to_string());
@@ -30,6 +30,32 @@ impl<'a> SourceNote<'a> {
             fetched_text: fetched.as_deref().and_then(date_text),
             fetched,
         })
+    }
+}
+
+/// Every distinct source of an entry page, listed after the description source.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SourceList<'a> {
+    /// Each distinct source of every signal, in order of first appearance.
+    pub notes: Vec<SourceNote<'a>>,
+}
+
+impl<'a> SourceList<'a> {
+    /// The sources of every signal of `record`. Empty without a record.
+    pub(crate) fn of(record: Option<&'a EntryReport>) -> Self {
+        Self {
+            notes: record
+                .map(|record| distinct_sources(&record.signals))
+                .unwrap_or_default(),
+        }
+    }
+
+    /// The summary of the disclosure: the signal sources and the description source.
+    pub(crate) fn count_text(&self) -> String {
+        match self.notes.len() + 1 {
+            1 => "1 source".to_owned(),
+            count => format!("{count} sources"),
+        }
     }
 }
 
@@ -84,5 +110,15 @@ mod tests {
         let names: Vec<&str> = notes.iter().map(|note| note.name).collect();
         assert_eq!(names, ["dump", "other"]);
         assert_eq!(notes[0].fetched_text.as_deref(), Some("3 Nov 2026"));
+    }
+
+    #[test]
+    fn the_list_counts_the_description_source_and_reads_no_record_as_empty() {
+        assert_eq!(SourceList::of(None).count_text(), "1 source");
+        let facts = [fact(Some("1"), "dump"), fact(Some("2"), "other")];
+        let list = SourceList {
+            notes: distinct_sources(&facts),
+        };
+        assert_eq!(list.count_text(), "3 sources");
     }
 }

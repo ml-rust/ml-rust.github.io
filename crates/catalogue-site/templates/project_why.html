@@ -46,9 +46,6 @@
 </ul>
 {%- endif %}
 <p class="why-rules">Exact rules:{% for rule in why.rules %} <a href="{{ rule.href }}">{{ rule.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}. The check on <time datetime="{{ section.checked }}">{{ section.checked_text }}</time> applied thresholds version {{ section.version }}.</p>
-{%- if !why.sources.is_empty() %}
-<p class="sources">{% for source in why.sources %}{% if loop.first %}Sources: {% else %}, {% endif %}{% include "source_note.html" %}{% endfor %}.</p>
-{%- endif %}
 {%- if !section.reasons.is_empty() %}
 <details class="disclosure">
 <summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Every rule outcome, as the check records it</span></summary>

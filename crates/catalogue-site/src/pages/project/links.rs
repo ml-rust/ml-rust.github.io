@@ -86,11 +86,20 @@ pub(crate) fn crate_rows(entry: &Entry) -> Vec<CrateRow> {
         .collect()
 }
 
+/// The link text of a homepage: its host without `www.`, or the whole link when it has no host.
+fn homepage_text(url: &Url) -> String {
+    url.host_str()
+        .map(|host| host.strip_prefix("www.").unwrap_or(host))
+        .filter(|host| !host.is_empty())
+        .unwrap_or(url.as_str())
+        .to_owned()
+}
+
 /// The homepage, the crates.io page of the primary crate, and each install channel page.
 pub(crate) fn link_rows(entry: &Entry) -> Vec<LinkRow> {
     let mut rows = Vec::new();
     if let Some(homepage) = &entry.homepage {
-        rows.push(LinkRow::new("Homepage", homepage.as_str(), homepage));
+        rows.push(LinkRow::new("Homepage", &homepage_text(homepage), homepage));
     }
     if let Some(name) = entry.crates.first()
         && let Some(url) = crate_page(name.as_str())
@@ -123,6 +132,22 @@ mod tests {
     use catalogue_core::{Date, Description, EntryKind, Slug};
 
     use super::*;
+
+    fn text_of(raw: &str) -> String {
+        homepage_text(&Url::parse(raw).expect("url"))
+    }
+
+    #[test]
+    fn a_homepage_shows_its_host_only() {
+        assert_eq!(text_of("https://qdrant.tech/"), "qdrant.tech");
+        assert_eq!(text_of("https://www.qdrant.tech/docs?x=1"), "qdrant.tech");
+        assert_eq!(text_of("http://example.org:8080/a/"), "example.org");
+    }
+
+    #[test]
+    fn a_link_with_no_host_keeps_its_text() {
+        assert_eq!(text_of("mailto:a@b.c"), "mailto:a@b.c");
+    }
 
     #[test]
     fn a_repo_description_names_its_source_and_links_the_repository() {

@@ -1,11 +1,10 @@
 //! The stat strip at the top of an entry page.
 
 use catalogue_core::{
-    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryKind, EntryReport,
-    FORKS_SIGNAL, NOT_APPLICABLE, NOT_MEASURED, STARS_SIGNAL, TierReport,
+    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, Entry, EntryKind, EntryReport, FORKS_SIGNAL,
+    NOT_APPLICABLE, NOT_MEASURED, STARS_SIGNAL, TierReport,
 };
 
-use super::sources::{SourceNote, distinct_sources, fact_named};
 use crate::pages::shared::{
     ago_text, date_text, dependents_text, downloads_signal, grouped, whole_text,
 };
@@ -51,7 +50,7 @@ impl Stat {
 
 /// The data of the stat strip.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct StatStrip<'a> {
+pub(crate) struct StatStrip {
     /// The stats, with the check date last.
     pub stats: Vec<Stat>,
     /// The repository stats: stars, forks, contributors and commits. Empty when the check
@@ -61,17 +60,14 @@ pub(crate) struct StatStrip<'a> {
     pub checked: String,
     /// The check date as a person reads it.
     pub checked_text: String,
-    /// The sources of the stats.
-    pub sources: Vec<SourceNote<'a>>,
 }
 
-impl<'a> StatStrip<'a> {
+impl StatStrip {
     /// The strip for `entry` from `record` of the check `report`.
-    pub(crate) fn new(entry: &Entry, report: &TierReport, record: &'a EntryReport) -> Self {
+    pub(crate) fn new(entry: &Entry, report: &TierReport, record: &EntryReport) -> Self {
         let has_crates = !entry.crates.is_empty();
         let library = entry.kind == EntryKind::Library;
         let mut stats = Vec::new();
-        let mut names = Vec::new();
         let value_of = |name: &str| record.value_of(name).map(str::to_owned);
         let downloads = downloads_signal(entry.kind);
         stats.push(Stat::plain(
@@ -82,34 +78,26 @@ impl<'a> StatStrip<'a> {
             },
             value_of(downloads).map_or_else(|| NOT_MEASURED.to_owned(), |count| grouped(&count)),
         ));
-        names.push(downloads);
         stats.push(Stat::plain(
             "Dependents",
             dependents_text(entry.kind, Some(record)),
         ));
-        names.push(DEPENDENTS_SIGNAL);
         if library || record.value_of(VERSION_SIGNAL).is_some() {
             stats.push(Stat::plain(
                 "Version",
                 value_of(VERSION_SIGNAL).unwrap_or_else(|| NOT_MEASURED.to_owned()),
             ));
-            names.push(VERSION_SIGNAL);
         }
         if has_crates || record.value_of(RELEASE_SIGNAL).is_some() {
             stats.push(released(record, report));
-            names.push(RELEASE_SIGNAL);
         }
         let repository = repository_stats(record);
-        if !repository.is_empty() {
-            names.extend(REPOSITORY_STATS.map(|(_, name)| name));
-        }
         let checked = report.generated.to_string();
         Self {
             stats,
             repository,
             checked_text: date_text(&checked).unwrap_or_else(|| checked.clone()),
             checked,
-            sources: distinct_sources(names.iter().filter_map(|name| fact_named(record, name))),
         }
     }
 }

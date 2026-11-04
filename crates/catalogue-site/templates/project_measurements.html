@@ -1,7 +1,8 @@
 {%- if let Some(section) = tier %}
 <section class="panel" aria-labelledby="signals">
-<h2 id="signals">Measurements</h2>
-<p class="why-note">Each row shows the raw value, its source and the date of the data behind it.{% if let Some(note) = movement_note %} {{ note }}{% endif %}</p>
+<h2 id="signals">Measurements and sources</h2>
+<p class="why-note">Each signal row shows the raw value, its source and the fetch date. The Sources list gathers every distinct source on this page.{% if let Some(note) = movement_note %} {{ note }}{% endif %}</p>
+{% include "project_sources.html" %}
 {%- if section.groups.is_empty() %}
 <p>The check recorded no signal.</p>
 {%- else %}
@@ -12,7 +13,7 @@
 <table class="data-table signal-table">
 <caption class="visually-hidden">{{ group.title }} measurements</caption>
 <thead>
-<tr><th scope="col">Signal</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Fetched</th><th scope="col">Counts toward tier</th></tr>
+<tr><th scope="col">Signal</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Fetched</th><th scope="col">Counts</th></tr>
 </thead>
 <tbody>
 {%- for signal in group.rows %}
@@ -24,5 +25,10 @@
 </details>
 {%- endfor %}
 {%- endif %}
+</section>
+{%- else %}
+<section class="panel" aria-labelledby="signals">
+<h2 id="signals">Sources</h2>
+{% include "project_sources.html" %}
 </section>
 {%- endif %}

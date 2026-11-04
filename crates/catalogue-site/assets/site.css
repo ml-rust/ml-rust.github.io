@@ -588,6 +588,31 @@ section > h2 {
   line-height: 1.25rem;
 }
 
+.stat-link {
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.compare-note {
+  margin: var(--space-3) 0 0;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.sources-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.sources-list li + li {
+  margin-top: var(--space-1);
+}
+
 .more-link {
   margin: var(--space-3) 0 0;
 }
@@ -1461,10 +1486,6 @@ h1 + .lede {
   overflow-wrap: anywhere;
 }
 
-.project-head .sources {
-  margin-bottom: var(--space-2);
-}
-
 .project-links {
   display: flex;
   flex-wrap: wrap;
@@ -1794,7 +1815,7 @@ h1 + .lede {
 
 .compat-row {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr) 176px;
+  grid-template-columns: 112px minmax(0, 1fr);
   gap: var(--space-1) var(--space-4);
   padding: var(--space-3) 0;
   border-top: 1px solid var(--border);
@@ -1840,12 +1861,6 @@ h1 + .lede {
   color: var(--secondary);
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.25rem;
-}
-
-.compat-source {
-  color: var(--secondary);
-  font-size: 0.8125rem;
   line-height: 1.25rem;
 }
 
@@ -1977,7 +1992,20 @@ h1 + .lede {
   font-weight: 400;
   text-align: left;
   vertical-align: top;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+.signal-table th:first-child {
+  width: 11rem;
+}
+
+.signal-table :is(th, td):nth-child(3) {
+  min-width: 7rem;
+}
+
+.signal-table :is(th, td):nth-child(4),
+.signal-table :is(th, td):nth-child(5) {
+  white-space: nowrap;
 }
 
 .data-table thead th {
@@ -2870,10 +2898,6 @@ td.not-measured {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.compare-sources {
-  color: var(--secondary);
 }
 
 .compare-picker {

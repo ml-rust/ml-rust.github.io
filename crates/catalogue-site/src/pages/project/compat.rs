@@ -1,11 +1,10 @@
-//! The compatibility block: what the project needs and runs on, with each value's source.
+//! The compatibility block: what the project needs and runs on.
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryReport, LICENSE_SIGNAL, NATIVE_CODE_SIGNAL,
-    NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
+    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryReport, LICENSE_SIGNAL, NOT_MEASURED,
+    PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
 };
 
-use super::sources::{SourceNote, fact_named};
 use crate::pages::shared::{fact_text, native_code_fact, whole_text};
 
 /// The separator between the backends of a runs-on evidence value.
@@ -15,7 +14,7 @@ const NATIVE_SEPARATOR: &str = ". ";
 
 /// One row of the block.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct CompatRow<'a> {
+pub(crate) struct CompatRow {
     /// The fact name.
     pub label: &'static str,
     /// The value, or the plain word for it.
@@ -26,22 +25,20 @@ pub(crate) struct CompatRow<'a> {
     pub lines_label: Option<&'static str>,
     /// The exact statements behind the value.
     pub lines: Vec<String>,
-    /// The source and date of the value. `None` when not measured.
-    pub source: Option<SourceNote<'a>>,
 }
 
 /// The data of the compatibility block.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Compat<'a> {
+pub(crate) struct Compat {
     /// The rows.
-    pub rows: Vec<CompatRow<'a>>,
+    pub rows: Vec<CompatRow>,
     /// The line that stands for the facts of a crate, on an entry with no crate.
     pub no_crate: bool,
 }
 
-impl<'a> Compat<'a> {
+impl Compat {
     /// The block for `entry`, with the facts of `record` when given.
-    pub(crate) fn new(entry: &Entry, record: Option<&'a EntryReport>) -> Self {
+    pub(crate) fn new(entry: &Entry, record: Option<&EntryReport>) -> Self {
         let no_crate = entry.crates.is_empty();
         let mut rows = Vec::new();
         if !no_crate {
@@ -58,20 +55,13 @@ impl<'a> Compat<'a> {
     }
 }
 
-/// The source of the signal `name` in `record`.
-fn source<'a>(record: Option<&'a EntryReport>, name: &str) -> Option<SourceNote<'a>> {
-    record
-        .and_then(|record| fact_named(record, name))
-        .and_then(SourceNote::of)
-}
-
 /// The row of the plain fact `name`. `whole` prints an amount as a whole number.
-fn fact_row<'a>(
+fn fact_row(
     label: &'static str,
     name: &str,
-    record: Option<&'a EntryReport>,
+    record: Option<&EntryReport>,
     whole: bool,
-) -> CompatRow<'a> {
+) -> CompatRow {
     let value = if whole {
         whole_text(record, name)
     } else {
@@ -83,12 +73,11 @@ fn fact_row<'a>(
         value,
         lines_label: None,
         lines: Vec::new(),
-        source: source(record, name),
     }
 }
 
 /// The runs-on row, with what shows each backend.
-fn runs_on(record: Option<&EntryReport>) -> CompatRow<'_> {
+fn runs_on(record: Option<&EntryReport>) -> CompatRow {
     let mut row = fact_row("Runs on", RUNS_ON_SIGNAL, record, false);
     if let Some(evidence) = record.and_then(|record| record.value_of(RUNS_ON_EVIDENCE_SIGNAL)) {
         row.lines_label = Some("What shows it");
@@ -101,7 +90,7 @@ fn runs_on(record: Option<&EntryReport>) -> CompatRow<'_> {
 }
 
 /// The Python row: the statement of the check, then one line per crate it names.
-fn python(record: Option<&EntryReport>) -> CompatRow<'_> {
+fn python(record: Option<&EntryReport>) -> CompatRow {
     let mut row = fact_row("Python bindings", PYTHON_SIGNAL, record, false);
     if let Some((word, crates)) = row.value.clone().split_once(": ") {
         row.value = word.to_owned();
@@ -111,7 +100,7 @@ fn python(record: Option<&EntryReport>) -> CompatRow<'_> {
 }
 
 /// The native code row: the plain word first, then the exact statements of the check.
-fn native_code(record: Option<&EntryReport>) -> CompatRow<'_> {
+fn native_code(record: Option<&EntryReport>) -> CompatRow {
     let fact = native_code_fact(record);
     let lines = fact
         .full
@@ -124,14 +113,14 @@ fn native_code(record: Option<&EntryReport>) -> CompatRow<'_> {
         quiet: fact.quiet && fact.full.is_none(),
         lines_label: None,
         lines,
-        source: source(record, NATIVE_CODE_SIGNAL),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use catalogue_core::{
-        CrateName, Date, Description, DescriptionSource, EntryKind, SignalFact, Slug, Tier,
+        CrateName, Date, Description, DescriptionSource, EntryKind, NATIVE_CODE_SIGNAL, SignalFact,
+        Slug, Tier,
     };
     use url::Url;
 
@@ -186,7 +175,7 @@ mod tests {
         }
     }
 
-    fn row<'a>(compat: &'a Compat<'_>, label: &str) -> &'a CompatRow<'a> {
+    fn row<'a>(compat: &'a Compat, label: &str) -> &'a CompatRow {
         compat
             .rows
             .iter()

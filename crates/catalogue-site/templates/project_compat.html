@@ -19,9 +19,6 @@
 </ul>
 {%- endif %}
 </dd>
-{%- if let Some(source) = row.source %}
-<dd class="compat-source">{% include "source_note.html" %}</dd>
-{%- endif %}
 </div>
 {%- endfor %}
 {%- if compat.no_crate %}

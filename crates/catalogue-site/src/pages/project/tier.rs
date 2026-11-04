@@ -21,7 +21,7 @@ pub(crate) struct TierSection<'a> {
     /// The run date of the check as a person reads it.
     pub checked_text: String,
     /// The block that says why the entry has its tier, in plain sentences.
-    pub why: Why<'a>,
+    pub why: Why,
     /// The thresholds version the check applied.
     pub version: u32,
     /// Every rule outcome, in rule order.

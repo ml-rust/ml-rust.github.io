@@ -3,18 +3,9 @@
 use catalogue_core::{EntryKind, EntryReport, Rule, Thresholds, Tier};
 
 use super::reason_text::{self, Sentence, featured_lacks, featured_meets, verbatim};
-use super::sources::{SourceNote, distinct_sources, fact_named};
+use super::sources::fact_named;
 use crate::href::SafeHref;
 use crate::pages::shared::{TierBadge, tier_name};
-
-/// The signals behind each `instant-archive` reason.
-const ARCHIVE_SIGNALS: [&str; 5] = [
-    "repo_archived",
-    "rustsec_unmaintained",
-    "deprecation_notice",
-    "all_yanked",
-    "crate_deleted",
-];
 
 /// The verdict of a New entry. The block's lead line names the age and the limit.
 const NEW_VERDICT: &str = "The first release is under the age limit for the Featured gates.";
@@ -71,7 +62,7 @@ impl WhyLine {
 
 /// The data of the "Why <tier>" block.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Why<'a> {
+pub(crate) struct Why {
     /// The tier badge.
     pub badge: TierBadge,
     /// Whether the entry is Archived. The page then leads with this block.
@@ -86,16 +77,14 @@ pub(crate) struct Why<'a> {
     pub found: Vec<WhyLine>,
     /// The exact rules of the tier.
     pub rules: Vec<RuleLink>,
-    /// The sources of the rule inputs.
-    pub sources: Vec<SourceNote<'a>>,
     /// The first lack, with no measured value. `None` when the entry lacks nothing the rule names.
     pub first_lack: Option<String>,
 }
 
-impl<'a> Why<'a> {
+impl Why {
     /// The block for `record` of an entry of `kind`.
     pub(crate) fn new(
-        record: &'a EntryReport,
+        record: &EntryReport,
         kind: EntryKind,
         thresholds: Option<&Thresholds>,
     ) -> Self {
@@ -107,7 +96,6 @@ impl<'a> Why<'a> {
             lacks: Vec::new(),
             found: Vec::new(),
             rules: Vec::new(),
-            sources: Vec::new(),
             first_lack: None,
         };
         let mut activity = None;
@@ -176,8 +164,8 @@ impl<'a> Why<'a> {
         }));
     }
 
-    /// Adds the lead, the activity line, the rules and the sources once every reason is read.
-    fn finish(&mut self, record: &'a EntryReport, kind: EntryKind, activity: Option<WhyLine>) {
+    /// Adds the lead, the activity line and the rules once every reason is read.
+    fn finish(&mut self, record: &EntryReport, kind: EntryKind, activity: Option<WhyLine>) {
         let reasons = |rule: Rule| record.reasons.iter().any(|reason| reason.rule == rule);
         match record.tier {
             Tier::Featured => {
@@ -232,21 +220,6 @@ impl<'a> Why<'a> {
                 self.found.insert(0, line);
             }
         }
-        let fired = if record.tier == Tier::Archived && reasons(Rule::InstantArchive) {
-            distinct_sources(
-                ARCHIVE_SIGNALS
-                    .iter()
-                    .filter_map(|name| fact_named(record, name))
-                    .filter(|fact| archive_signal_fired(fact.name.as_str(), fact.value.as_deref())),
-            )
-        } else {
-            Vec::new()
-        };
-        self.sources = if fired.is_empty() {
-            distinct_sources(record.signals.iter().filter(|fact| fact.counts_toward_tier))
-        } else {
-            fired
-        };
     }
 }
 
@@ -292,14 +265,6 @@ impl WhyText {
             lacks: texts(why.lacks),
             found: texts(why.found),
         }
-    }
-}
-
-/// Whether the value of an instant archive signal is the one that archives.
-fn archive_signal_fired(name: &str, value: Option<&str>) -> bool {
-    match name {
-        "repo_archived" | "all_yanked" | "crate_deleted" => value == Some("true"),
-        _ => value.is_some_and(|value| value != "none"),
     }
 }
 
@@ -534,25 +499,24 @@ mod tests {
     }
 
     #[test]
-    fn an_archived_entry_cites_only_the_signal_that_archived_it() {
+    fn an_instant_archive_states_the_signal_that_archived_it() {
         let record = record(
             Tier::Archived,
             vec![reason(Rule::InstantArchive, "repository is archived")],
-            vec![
-                fact("repo_archived", Some("true"), "GitHub repository", true),
-                fact("all_yanked", Some("false"), "crates.io", true),
-                fact("first_release", Some("2020-01-01"), "crates.io", true),
-            ],
+            vec![fact(
+                "repo_archived",
+                Some("true"),
+                "GitHub repository",
+                true,
+            )],
         );
         let why = Why::new(&record, EntryKind::Library, None);
         assert!(why.archived);
         assert_eq!(why.lead, ["GitHub reports the repository as archived."]);
-        let names: Vec<&str> = why.sources.iter().map(|source| source.name).collect();
-        assert_eq!(names, ["GitHub repository"]);
     }
 
     #[test]
-    fn a_dead_archive_keeps_its_rule_and_cites_every_input() {
+    fn a_dead_archive_keeps_its_rule() {
         let record = record(
             Tier::Archived,
             vec![reason(
@@ -564,7 +528,6 @@ mod tests {
         let why = Why::new(&record, EntryKind::Library, None);
         assert_eq!(why.rules[0].href.as_str(), "/rules/#dead");
         assert!(why.found[0].text.contains("so the entry is archived"));
-        assert_eq!(why.sources.len(), 1);
     }
 
     #[test]
@@ -606,20 +569,5 @@ mod tests {
             WhyText::of(&found, EntryKind::Library, None).verdict,
             "It has too few dependents for Featured, and it does not pass the repository route."
         );
-    }
-
-    #[test]
-    fn signals_outside_the_rules_are_not_rule_sources() {
-        let record = record(
-            Tier::Listed,
-            Vec::new(),
-            vec![
-                fact("commits", Some("9"), "GitHub", false),
-                fact("docs_present", Some("true"), "dump", true),
-            ],
-        );
-        let why = Why::new(&record, EntryKind::Library, None);
-        let names: Vec<&str> = why.sources.iter().map(|source| source.name).collect();
-        assert_eq!(names, ["dump"]);
     }
 }
