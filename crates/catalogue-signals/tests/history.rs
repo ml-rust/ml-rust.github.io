@@ -219,6 +219,7 @@ fn with_network() -> Row {
                     oldest_unanswered_days: None,
                     maintainer_replies_365: 7,
                     license: RepoLicense::Stated("MIT".to_owned()),
+                    topics: Vec::new(),
                 },
             }),
             link: Some(Dated {

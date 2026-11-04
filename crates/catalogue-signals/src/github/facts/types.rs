@@ -107,6 +107,8 @@ pub struct Facts {
     pub ci: Option<CiState>,
     /// The license GitHub states.
     pub license: RepoLicense,
+    /// The repository topics, as GitHub spells them.
+    pub topics: Vec<String>,
     /// The date of the newest human commit, however old. `None` when the
     /// repo has no human commit or when [`Facts::last_human_commit_beyond_sample`] is set.
     pub last_human_commit: Option<civil::Date>,

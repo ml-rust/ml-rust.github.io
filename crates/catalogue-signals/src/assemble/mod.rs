@@ -25,7 +25,7 @@ mod requirements;
 mod sources;
 mod versions;
 
-pub use app::app_signals;
+pub use app::{app_crate_signals, app_signals};
 pub use assembled::Assembled;
 pub use context::context;
 pub use facts::apply_contributors;

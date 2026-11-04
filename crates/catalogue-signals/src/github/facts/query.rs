@@ -38,6 +38,7 @@ query($owner: String!, $name: String!, $since: GitTimestamp!) {
     stargazerCount
     forkCount
     licenseInfo { spdxId }
+    repositoryTopics(first: 20) { nodes { topic { name } } }
     defaultBranchRef {
       name
       target {
@@ -106,6 +107,7 @@ mod tests {
         assert!(query.contains("recent: history(first: 100, since: $since)"));
         assert!(query.contains(&format!("latest: history(first: {LATEST_SAMPLE})")));
         assert!(query.contains("forkCount"));
+        assert!(query.contains("repositoryTopics(first: 20)"));
         let latest = query.split("latest: history").nth(1).expect("latest");
         assert!(latest.contains("totalCount"), "{latest}");
     }

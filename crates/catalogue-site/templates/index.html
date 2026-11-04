@@ -36,7 +36,6 @@
 {%- if groups.is_empty() %}
 <p>No entry is Featured.</p>
 {%- else %}
-{%- let show_install = false %}
 {%- let caption = "Featured projects" %}
 {% include "entry_table.html" %}
 <p class="more-link"><a href="/featured/">All {{ featured_total }} Featured projects<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>

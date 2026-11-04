@@ -18,9 +18,6 @@
 <li class="start-card">
 <a class="start-name" href="{{ row.href }}">{{ row.name }}</a>
 <p class="start-description">{{ row.description }}</p>
-{%- if let Some(install) = row.install %}
-<p class="start-install">{% if let Some(command) = install.command %}<code>{{ command }}</code>{% else %}<a href="{{ install.href }}">{{ install.text }}</a>{% endif %}</p>
-{%- endif %}
 {%- if let Some(choice) = row.choice %}
 <p class="start-facts"><span>{{ choice.downloads_line }}</span> <span>Latest release: {% if let Some(version) = choice.version %}{{ version }}, {% endif %}{{ choice.latest_release.short }}</span></p>
 {%- endif %}

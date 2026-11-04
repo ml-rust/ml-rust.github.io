@@ -5,20 +5,17 @@ use crate::registry::RepoRouteThresholds;
 /// The text that opens every statement of the route. The site's sentence parser reads it.
 const ROUTE: &str = "repository route";
 
-/// The main crate that keeps a library off the route. An app has no such crate.
+/// The main crate that keeps an entry off the route. Only an entry that lists crates has one.
 fn left_out(signals: &Signals) -> Option<&str> {
-    signals
-        .main_crate_left_out
-        .as_deref()
-        .filter(|_| signals.is_library())
+    signals.main_crate_left_out.as_deref()
 }
 
 /// The repository route: stars, forks and contributors each reach their limit.
 ///
-/// The route measures a whole repository, so a library that leaves out the repository's main crate
-/// fails it whatever the numbers say. Stars alone never pass. A value below its limit fails the
-/// route even when another value is unknown. Otherwise a missing value leaves the route unknown,
-/// never false.
+/// The route measures a whole repository, so an entry that lists crates and leaves out the
+/// repository's main crate fails it whatever the numbers say. Stars alone never pass. A value below
+/// its limit fails the route even when another value is unknown. Otherwise a missing value leaves
+/// the route unknown, never false.
 pub(super) fn repo_route(signals: &Signals, t: &RepoRouteThresholds) -> Fact {
     if left_out(signals).is_some() {
         return Fact::known(false);
@@ -158,8 +155,21 @@ mod tests {
     }
 
     #[test]
-    fn an_app_route_ignores_the_main_crate() {
+    fn an_app_that_lists_side_crates_fails_like_a_library() {
         let found = side_crates_only(EntryKind::App);
+        assert!(route(&found).is_false());
+        assert_eq!(
+            route_text(&found, &thresholds().repo_route),
+            "repository route: the repo's main crate wasmtime is not in this entry"
+        );
+    }
+
+    #[test]
+    fn an_app_with_no_finding_passes_on_the_numbers() {
+        let found = Signals {
+            main_crate_left_out: None,
+            ..side_crates_only(EntryKind::App)
+        };
         assert!(route(&found).is_true());
         assert!(route_text(&found, &thresholds().repo_route).contains("stars "));
     }

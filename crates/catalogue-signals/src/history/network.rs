@@ -57,6 +57,10 @@ pub enum RepoValues {
         /// snapshots written before the field existed.
         #[serde(default)]
         license: RepoLicense,
+        /// The repository topics. Search input only: no tier rule reads them. Empty in snapshots
+        /// written before the field existed.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        topics: Vec<String>,
     },
 }
 
@@ -84,6 +88,14 @@ impl RepoValues {
             Self::Gone => None,
         }
     }
+
+    /// The topics of an existing repo.
+    pub fn topics(&self) -> &[String] {
+        match self {
+            Self::Found { topics, .. } => topics,
+            Self::Gone => &[],
+        }
+    }
 }
 
 impl From<&Facts> for RepoValues {
@@ -97,6 +109,7 @@ impl From<&Facts> for RepoValues {
             oldest_unanswered_days: facts.oldest_unanswered_days,
             maintainer_replies_365: facts.maintainer_replies_365,
             license: facts.license.clone(),
+            topics: facts.topics.clone(),
         }
     }
 }
@@ -117,6 +130,13 @@ pub struct ReleaseValues {
     pub binary_downloads: u64,
     /// The sampled releases.
     pub releases: u32,
+    /// The oldest publish day among them. Unknown in snapshots written before the field existed.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "plain_option"
+    )]
+    pub first_release: Option<Date>,
     /// The newest publish day among them.
     #[serde(serialize_with = "plain_option")]
     pub last_release: Option<Date>,
@@ -127,6 +147,7 @@ impl From<&ReleaseDownloads> for ReleaseValues {
         Self {
             binary_downloads: found.total_binary_downloads,
             releases: u32::try_from(found.releases.len()).unwrap_or(u32::MAX),
+            first_release: found.releases.iter().filter_map(|r| r.published).min(),
             last_release: found.releases.iter().filter_map(|r| r.published).max(),
         }
     }
@@ -196,11 +217,13 @@ mod tests {
                 oldest_unanswered_days: None,
                 maintainer_replies_365: 7,
                 license: RepoLicense::Stated("MIT".to_owned()),
+                topics: vec!["linear-algebra".to_owned()],
             }),
             link: dated(LinkCheck::NoVcsInfo),
             releases: dated(ReleaseValues {
                 binary_downloads: 900,
                 releases: 3,
+                first_release: Some(day(1)),
                 last_release: Some(day(1)),
             }),
             homebrew: dated(640),
@@ -218,10 +241,20 @@ mod tests {
         let facts = values.facts.expect("facts");
         assert_eq!(facts.value.license(), Some(&RepoLicense::NotMeasured));
         assert_eq!(facts.value.commits(), None);
+        assert!(facts.value.topics().is_empty());
         let RepoValues::Found { forks, .. } = facts.value else {
             panic!("a found repo");
         };
         assert_eq!(forks, None, "an old snapshot reads as unknown forks");
+    }
+
+    #[test]
+    fn release_values_from_before_the_first_date_read_as_unknown() {
+        let text = r#"{"binary_downloads":3,"releases":1,"last_release":"2026-10-02"}"#;
+        let values: ReleaseValues = serde_json::from_str(text).expect("parses");
+        assert_eq!(values.first_release, None);
+        assert_eq!(values.last_release, Some(day(2)));
+        assert_eq!(serde_json::to_string(&values).expect("writes"), text);
     }
 
     #[test]
@@ -291,6 +324,7 @@ mod tests {
         let values = ReleaseValues::from(&found);
         assert_eq!(values.binary_downloads, 3);
         assert_eq!(values.releases, 3);
+        assert_eq!(values.first_release, Some(day(1)));
         assert_eq!(values.last_release, Some(day(3)));
     }
 }

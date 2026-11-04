@@ -1,8 +1,8 @@
 //! The compatibility block: what the project needs and runs on.
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryReport, LICENSE_SIGNAL, NOT_MEASURED,
-    PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
+    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryKind, EntryReport, LICENSE_SIGNAL,
+    NOT_APPLICABLE, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
 };
 
 use crate::pages::shared::{fact_text, native_code_fact, whole_text};
@@ -48,10 +48,24 @@ impl Compat {
         }
         rows.push(fact_row("License", LICENSE_SIGNAL, record, false));
         if !no_crate {
-            rows.push(fact_row("Dependents", DEPENDENTS_SIGNAL, record, true));
+            rows.push(dependents(entry.kind, record));
         }
         rows.push(fact_row("Contributors", CONTRIBUTORS_SIGNAL, record, true));
         Self { rows, no_crate }
+    }
+}
+
+/// The dependents row. An app has no dependents to show, whatever crates it lists.
+fn dependents(kind: EntryKind, record: Option<&EntryReport>) -> CompatRow {
+    match kind {
+        EntryKind::Library => fact_row("Dependents", DEPENDENTS_SIGNAL, record, true),
+        EntryKind::App => CompatRow {
+            label: "Dependents",
+            value: NOT_APPLICABLE.to_owned(),
+            quiet: true,
+            lines_label: None,
+            lines: Vec::new(),
+        },
     }
 }
 
@@ -172,6 +186,7 @@ mod tests {
             unknown: Vec::new(),
             notes: Vec::new(),
             signals,
+            search_terms: Vec::new(),
         }
     }
 
@@ -233,6 +248,19 @@ mod tests {
             python.lines,
             ["a needs Python only with feature pyo3", "b needs Python"]
         );
+    }
+
+    #[test]
+    fn an_app_with_crates_reads_its_crate_facts_and_has_no_dependents() {
+        let mut app = entry(&["a"]);
+        app.kind = EntryKind::App;
+        let found = record(vec![fact(NATIVE_CODE_SIGNAL, "No native code found")]);
+        let block = Compat::new(&app, Some(&found));
+        assert!(!block.no_crate);
+        assert_eq!(row(&block, "Native code").value, "None found");
+        let dependents = row(&block, "Dependents");
+        assert_eq!(dependents.value, NOT_APPLICABLE);
+        assert!(dependents.quiet);
     }
 
     #[test]

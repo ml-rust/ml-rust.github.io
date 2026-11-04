@@ -89,8 +89,8 @@ fn library_gates(
 /// - Every version a prerelease passes only for a library whose dependents reach their limit. The
 ///   repository route never lifts the block, and an app has no dependents.
 ///
-/// A library with an unknown value leaves the gate unknown. An app has a crate only when it ships
-/// one, so an app with an unknown value passes.
+/// A library with an unknown value leaves the gate unknown. An app with an unknown value passes:
+/// it publishes no crate, or the dump does not hold the crate.
 fn release_gate(signals: &Signals, t: &LibraryFeaturedThresholds) -> Gate {
     let library = signals.is_library();
     let zero_zero = signals.all_zero_zero == Some(true);

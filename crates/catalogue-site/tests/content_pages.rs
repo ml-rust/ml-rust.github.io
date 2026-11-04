@@ -164,7 +164,7 @@ fn a_topic_page_groups_its_entries_by_tier() {
 }
 
 #[test]
-fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
+fn a_category_page_lists_its_entries_strongest_first() {
     let site = tiered();
     let tensors = &site["categories/tensor-libraries/index.html"];
     in_order(
@@ -174,25 +174,47 @@ fn a_category_page_lists_its_entries_strongest_first_with_how_to_get_each() {
             "<p class=\"lede\">Libraries for multidimensional arrays and their math.</p>",
             "<tr class=\"rows-group\" id=\"tier-featured\">",
             "/projects/alpha/\">Alpha</a>",
-            "<p class=\"row-install\"><code>cargo add alpha-crate</code></p>",
             "<tr class=\"rows-group\" id=\"tier-archived\">",
             "/projects/gamma/\">Gamma</a>",
-            "<code>cargo add gamma</code>",
         ],
     );
     assert!(!tensors.contains("Delta</a>"), "{tensors}");
     let runtimes = &site["categories/inference-runtimes/index.html"];
-    in_order(
-        runtimes,
-        &[
-            "/projects/beta/\">Beta</a>",
-            "<p class=\"row-install\"><code>brew install beta</code></p>",
-        ],
+    assert!(
+        runtimes.contains("/projects/beta/\">Beta</a>"),
+        "{runtimes}"
     );
 }
 
 #[test]
-fn list_rows_hold_the_install_command_and_no_channel_link() {
+fn no_list_page_holds_an_install_command() {
+    for site in [tiered(), fixture::site(&fixture::files(), false)] {
+        let lists = site.iter().filter(|(path, _)| {
+            path.as_str() == "index.html"
+                || path.starts_with("featured/")
+                || path.starts_with("topics/")
+                || path.starts_with("categories/")
+        });
+        for (path, page) in lists {
+            for command in [
+                "cargo add",
+                "cargo install",
+                "brew install",
+                "docker pull",
+                "row-install",
+                "start-install",
+                "data-install-command",
+            ] {
+                assert!(!page.contains(command), "{path} holds {command}");
+            }
+        }
+    }
+    let tensors = &tiered()["categories/tensor-libraries/index.html"];
+    assert!(tensors.contains("class=\"start-card\""), "{tensors}");
+}
+
+#[test]
+fn list_rows_hold_no_channel_link() {
     let site = tiered();
     for path in [
         "categories/tensor-libraries/index.html",
@@ -213,22 +235,6 @@ fn list_rows_hold_the_install_command_and_no_channel_link() {
         assert!(!page.contains("\">Homebrew</a>"), "{path}");
         assert!(!page.contains("\">Repository</a>"), "{path}");
     }
-}
-
-#[test]
-fn an_app_without_a_channel_has_no_install_line_in_its_row() {
-    let mut files = fixture::files();
-    for (path, contents) in &mut files {
-        if path == "entries/beta.toml"
-            && let Some(at) = contents.find("[distribution]")
-        {
-            contents.truncate(at);
-        }
-    }
-    let site = fixture::site(&files, false);
-    let runtimes = &site["categories/inference-runtimes/index.html"];
-    assert!(!runtimes.contains("row-install"), "{runtimes}");
-    assert!(!runtimes.contains("<code>"), "{runtimes}");
 }
 
 #[test]

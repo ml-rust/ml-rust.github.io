@@ -7,6 +7,12 @@ mod fixture;
 
 use std::collections::BTreeMap;
 
+use catalogue_core::{
+    BINARY_PER_RELEASE_SIGNAL, DOWNLOADS_SIGNAL, Date, Movement, SignalFact, Slug, SourceRef,
+};
+use catalogue_site::SiteInputs;
+use url::Url;
+
 const ALPHA: &str = "projects/alpha/index.html";
 const BETA: &str = "projects/beta/index.html";
 const TOPIC: &str = "topics/tensors/index.html";
@@ -236,6 +242,84 @@ fn an_app_row_names_its_download_unit_and_has_no_dependents() {
             "<td class=\"cell-dependents\" data-label=\"Dependents\"><span class=\"fact fact-quiet\">Not applicable</span></td>",
         ],
     );
+}
+
+/// The fixture with Beta as an app that lists a crate, reads 4,200 crate downloads and has no
+/// binary download. `channels` keeps the channels it names.
+fn app_with_a_crate(channels: bool) -> BTreeMap<String, String> {
+    let mut files = fixture::files();
+    for (path, contents) in &mut files {
+        if path == "entries/beta.toml" {
+            *contents = contents.replace("crates = []", "crates = [\"beta\"]");
+            if !channels && let Some(at) = contents.find("[distribution]") {
+                contents.truncate(at);
+            }
+        }
+    }
+    let (catalogue, mut report) = fixture::data(&files);
+    let slug = Slug::new("beta").expect("slug");
+    let beta = report.entries.get_mut(&slug).expect("beta");
+    beta.signals
+        .retain(|fact| fact.name != BINARY_PER_RELEASE_SIGNAL);
+    beta.signals.push(SignalFact {
+        name: DOWNLOADS_SIGNAL.to_owned(),
+        label: "Downloads over 30 days".to_owned(),
+        value: Some("4200".to_owned()),
+        source: Some(SourceRef::new(
+            "crates.io database dump",
+            Url::parse("https://crates.io/data-access").expect("url"),
+        )),
+        fetched: Date::new(2026, 11, 3).ok(),
+        counts_toward_tier: false,
+    });
+    build::render(&SiteInputs {
+        catalogue: &catalogue,
+        report: Some(&report),
+        changes: &[],
+        first_check: None,
+        movement: &Movement::NeedsHistory,
+    })
+}
+
+#[test]
+fn an_app_with_a_crate_and_no_binaries_shows_downloads_over_30_days() {
+    let site = app_with_a_crate(true);
+    in_order(
+        &site[BETA],
+        &[
+            "<dt>Downloads (30 days)</dt><dd><span class=\"stat-value\">4,200</span>",
+            "<dt>Dependents</dt><dd><span class=\"stat-value fact-quiet\">Not applicable</span>",
+        ],
+    );
+    in_order(
+        &site["topics/ml/index.html"],
+        &[
+            "data-slug=\"beta\"",
+            "data-downloads=\"4200\"",
+            "<td class=\"cell-downloads\" data-label=\"Downloads\"><span class=\"fact\" title=\"4,200 downloads over 30 days\"><span aria-hidden=\"true\">4.2k</span>",
+            "<td class=\"cell-dependents\" data-label=\"Dependents\"><span class=\"fact fact-quiet\">Not applicable</span></td>",
+        ],
+    );
+}
+
+#[test]
+fn an_app_with_a_crate_installs_with_cargo_after_the_channels_it_names() {
+    let named = app_with_a_crate(true);
+    assert!(
+        named[BETA].contains("<code data-install-command=\"brew install beta\">"),
+        "{}",
+        named[BETA]
+    );
+    let bare = app_with_a_crate(false);
+    assert!(
+        bare[BETA].contains(
+            "<code data-install-command=\"cargo install beta\">cargo install beta</code>"
+        ),
+        "{}",
+        bare[BETA]
+    );
+    let list = &bare["topics/ml/index.html"];
+    assert!(!list.contains("cargo install"), "{list}");
 }
 
 #[test]

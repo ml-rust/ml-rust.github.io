@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::Path;
 
-use catalogue_core::{Catalogue, Date, EntryKind, Slug};
+use catalogue_core::{Catalogue, Date, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{Failed, attempt, link_failure};
@@ -110,14 +110,14 @@ fn dated(of: String, outcome: LinkOutcome) -> Dated<LinkCheck> {
     }
 }
 
-/// Checks the repo link of every library entry.
+/// Checks the repo link of every entry that lists a crate.
 ///
-/// A library whose repo is on a host no check can read gets
-/// [`LinkCheck::UnsupportedHost`]. A library with a release in `snapshot` gets
+/// An entry whose repo is on a host no check can read gets
+/// [`LinkCheck::UnsupportedHost`]. An entry with a release in `snapshot` gets
 /// [`check_link`] on its latest unyanked version when its repo is on GitHub, and
 /// [`check_forge_link`] when its repo is a [`ForgeRepo`]. Both read and write the
 /// link cache under `cache_dir`. A new check is dated `today`, a cached one
-/// keeps its stored date. A library with no such release gets no result.
+/// keeps its stored date. An entry with no such release gets no result.
 /// [`link_failure`] sorts every error. A missing package gets a note and no
 /// result. A failed fetch lands in [`Links::failures`]. A rejected token and a
 /// cache error end the run.
@@ -133,7 +133,7 @@ pub(super) fn fetch_links(
     let mut links = Links::default();
     let mut targets: Vec<Target> = Vec::new();
     for (slug, entry) in catalogue.entries() {
-        if entry.kind != EntryKind::Library {
+        if entry.crates.is_empty() {
             continue;
         }
         let repo = github_repo(entry)

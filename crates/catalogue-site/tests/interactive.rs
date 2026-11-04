@@ -328,6 +328,20 @@ fn the_scripts_keep_the_rules_of_the_page() {
 }
 
 #[test]
+fn the_compare_page_holds_no_install_command_and_keeps_the_channel_link() {
+    let compare = asset("compare.js");
+    assert!(!compare.contains("installCell"));
+    assert!(!compare.contains("label: \"Install\""));
+    assert!(!compare.contains("data-install-command"));
+    assert!(!compare.contains("entry.install?.command"));
+    assert!(compare.contains("add(channel, safeLink(entry.install?.url));"));
+    assert!(
+        asset("list.js").contains("code[data-install-command]"),
+        "the project page keeps its copy button"
+    );
+}
+
+#[test]
 fn the_links_row_is_last_and_never_counts_as_a_difference() {
     let compare = asset("compare.js");
     let row = compare

@@ -7,6 +7,7 @@ use super::family::members;
 use super::license::{Licensed, from_primary, from_repo};
 use super::native::{native_code, python_bindings};
 use super::runs_on::{RunsOn, runs_on};
+use super::search_terms::search_terms;
 use crate::assemble::index::CrateIndex;
 use crate::dump::DumpSnapshot;
 use crate::history::RepoValues;
@@ -35,16 +36,19 @@ pub struct ChoiceFacts {
     pub native_code: Option<String>,
     /// The Python bindings statement.
     pub python: Option<String>,
-    /// The distinct crates outside the family that depend on it.
+    /// The distinct crates outside the family that depend on it. An app has none to show.
     pub dependents: Option<u64>,
+    /// What the search index reads. It is no signal row, and no tier rule reads it.
+    pub search_terms: Vec<String>,
 }
 
 /// The choice facts of `entry`.
 ///
 /// `facts` comes from the network, and `None` leaves the license it answers not measured.
-/// A library reads its license from its primary crate, and falls back to GitHub when the crate
-/// states none. An app, or a library whose primary crate the dump does not hold, reads it from
-/// GitHub. Every other fact reads every listed crate.
+/// An entry reads its license from its primary crate, and falls back to GitHub when the crate
+/// states none. An entry whose primary crate the dump does not hold, or with no crate, reads it
+/// from GitHub. Dependents read every listed crate of a library. Every other fact reads every
+/// listed crate.
 pub fn measure(
     entry: &Entry,
     inputs: &ChoiceInputs<'_>,
@@ -66,8 +70,7 @@ pub fn measure(
         .crates
         .first()
         .and_then(|name| index.id(name.as_str()))
-        .and_then(|id| dump.details.get(&id))
-        .filter(|_| entry.kind == EntryKind::Library);
+        .and_then(|id| dump.details.get(&id));
     let repo_license = facts.and_then(RepoValues::license);
     let license = match primary {
         Some(details) => from_primary(details.license.as_deref(), repo_license),
@@ -78,7 +81,10 @@ pub fn measure(
         runs_on: runs_on(&found, dump, backends),
         native_code: native_code(&found, dump, backends),
         python: python_bindings(&found, dump, backends),
-        dependents: dependents.count(&family),
+        dependents: dependents
+            .count(&family)
+            .filter(|_| entry.kind == EntryKind::Library),
+        search_terms: search_terms(entry, dump, index, facts),
     }
 }
 
@@ -176,12 +182,44 @@ mod tests {
     }
 
     #[test]
-    fn an_app_reads_its_license_from_github_even_with_a_crate() {
+    fn an_app_with_a_crate_reads_the_crate_like_a_library_and_shows_no_dependents() {
         let facts = repo_facts();
         let dump = dump();
-        let license = run(&dump, &app(), Some(&facts)).license.expect("license");
+        let found = run(&dump, &app(), Some(&facts));
+        let license = found.license.expect("license");
+        assert_eq!(
+            (license.text.as_str(), license.origin),
+            ("MIT", LicenseOrigin::Dump)
+        );
+        assert_eq!(found.runs_on.expect("runs on").value(), "CUDA");
+        assert_eq!(found.native_code.as_deref(), Some("No native code found"));
+        assert_eq!(found.dependents, None);
+    }
+
+    #[test]
+    fn an_app_with_no_crate_reads_its_license_from_github() {
+        let facts = repo_facts();
+        let dump = dump();
+        let mut entry = app();
+        entry.crates.clear();
+        let found = run(&dump, &entry, Some(&facts));
+        let license = found.license.expect("license");
         assert_eq!(license.origin, LicenseOrigin::Repo);
         assert_eq!(license.text, "MIT");
+        assert_eq!(found.runs_on, None);
+        assert!(found.search_terms.is_empty());
+    }
+
+    #[test]
+    fn the_search_terms_read_the_listed_crates_and_the_repo() {
+        let mut dump = dump();
+        dump.snapshot.keywords.insert(1, vec!["Tensor".to_owned()]);
+        let mut facts = repo_facts();
+        if let RepoValues::Found { topics, .. } = &mut facts {
+            topics.push("linear-algebra".to_owned());
+        }
+        let found = run(&dump, &library(&["tool"]), Some(&facts));
+        assert_eq!(found.search_terms, ["linear-algebra", "tensor"]);
     }
 
     #[test]
@@ -199,7 +237,8 @@ mod tests {
     #[test]
     fn a_gone_repo_and_no_fetch_leave_the_license_not_measured() {
         let dump = dump();
-        assert_eq!(run(&dump, &app(), Some(&RepoValues::Gone)).license, None);
-        assert_eq!(run(&dump, &app(), None).license, None);
+        let absent = library(&["absent"]);
+        assert_eq!(run(&dump, &absent, Some(&RepoValues::Gone)).license, None);
+        assert_eq!(run(&dump, &absent, None).license, None);
     }
 }

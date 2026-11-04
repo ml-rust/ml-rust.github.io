@@ -4,7 +4,6 @@ use catalogue_core::{Entry, EntryKind, EntryReport, Slug, Tier, TierReport};
 
 use super::badge::TierBadge;
 use super::choice::ChoiceText;
-use super::install::{InstallLine, install_line};
 use super::labels::kind_name;
 use super::paths::{NamedLink, project_href};
 use crate::href::SafeHref;
@@ -24,8 +23,6 @@ pub(crate) const STABLE_MEANING: &str = "The project is finished: dormant by des
 pub(crate) struct EntryRow<'a> {
     /// The entry slug, for the row's data attribute.
     pub slug: String,
-    /// How to get the project.
-    pub install: Option<InstallLine>,
     /// The entry name.
     pub name: &'a str,
     /// The link to the entry page.
@@ -97,7 +94,6 @@ impl<'a> EntryRow<'a> {
     pub(crate) fn new(slug: &Slug, entry: &'a Entry, tier: Option<Tier>) -> Self {
         Self {
             slug: slug.as_str().to_owned(),
-            install: None,
             name: &entry.name,
             href: project_href(slug),
             kind: kind_name(entry.kind),
@@ -130,12 +126,6 @@ impl<'a> EntryRow<'a> {
     pub(crate) fn with_choice(mut self, record: Option<&EntryReport>) -> Self {
         self.choice = Some(ChoiceText::of(self.entry_kind, record));
         self.statuses = record.map(row_statuses).unwrap_or_default();
-        self
-    }
-
-    /// The row with how to get the project.
-    pub(crate) fn with_install(mut self, entry: &Entry) -> Self {
-        self.install = Some(install_line(entry));
         self
     }
 

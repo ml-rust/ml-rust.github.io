@@ -20,7 +20,6 @@
 <p class="subtopics" id="subtopics">Subtopics:{% for link in children %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
 {%- endif %}
 {% include "list_head.html" %}
-{%- let show_install = false %}
 {%- let empty = "No project lists this job." %}
 {% include "list_section.html" %}
 {% endblock %}

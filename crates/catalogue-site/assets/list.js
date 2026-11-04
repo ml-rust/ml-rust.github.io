@@ -12,7 +12,7 @@ const NONE_FOUND = "None found";
 const COMPARE_LIMIT = 4;
 const COMPARE_STORE = "catalogue-compare";
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-// Another script sends this event after it adds rows or install commands.
+// Another script sends this event after it adds rows.
 const ROWS_EVENT = "catalogue:rows";
 const COPY_NOTE_MS = 2500;
 const WIDE_BAR = window.matchMedia("(min-width: 761px)");
@@ -710,5 +710,4 @@ selection.addBoxes();
 addCopyButtons();
 document.addEventListener(ROWS_EVENT, () => {
   selection.addBoxes();
-  addCopyButtons();
 });

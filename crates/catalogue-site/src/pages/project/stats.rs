@@ -1,8 +1,8 @@
 //! The stat strip at the top of an entry page.
 
 use catalogue_core::{
-    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, Entry, EntryKind, EntryReport, FORKS_SIGNAL,
-    NOT_APPLICABLE, NOT_MEASURED, STARS_SIGNAL, TierReport,
+    COMMITS_SIGNAL, CONTRIBUTORS_SIGNAL, DOWNLOADS_SIGNAL, Entry, EntryKind, EntryReport,
+    FORKS_SIGNAL, NOT_APPLICABLE, NOT_MEASURED, STARS_SIGNAL, TierReport,
 };
 
 use crate::pages::shared::{
@@ -69,9 +69,9 @@ impl StatStrip {
         let library = entry.kind == EntryKind::Library;
         let mut stats = Vec::new();
         let value_of = |name: &str| record.value_of(name).map(str::to_owned);
-        let downloads = downloads_signal(entry.kind);
+        let downloads = downloads_signal(entry.kind, Some(record));
         stats.push(Stat::plain(
-            if library {
+            if downloads == DOWNLOADS_SIGNAL {
                 "Downloads (30 days)"
             } else {
                 "Downloads per release"

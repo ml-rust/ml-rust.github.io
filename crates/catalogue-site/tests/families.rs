@@ -11,9 +11,9 @@ use catalogue_core::{EntryReport, Movement, Slug, Tier};
 use catalogue_site::{SiteInputs, search_records};
 
 /// The sentence the Featured lists show.
-const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
+const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days.";
 
-const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
+const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days.";
 
 /// A library on the `tensors` topic and in the tensor category, with `extra` as more fields.
 fn extra_entry(name: &str, extra: &str) -> (String, String) {
@@ -37,6 +37,7 @@ fn record(tier: Tier) -> EntryReport {
         unknown: Vec::new(),
         notes: Vec::new(),
         signals: Vec::new(),
+        search_terms: Vec::new(),
     }
 }
 

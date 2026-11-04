@@ -40,24 +40,26 @@ impl InstallLine {
 /// How to get `entry`, using only the data it holds.
 ///
 /// A library gets `cargo add` with its primary crate, the first it lists. An app gets its
-/// Homebrew formula, else its first Docker image, else its Repology project. Every other entry
-/// gets the repository link.
+/// Homebrew formula, else its first Docker image, else its Repology project, else `cargo install`
+/// with its primary crate. Every other entry gets the repository link.
 pub(crate) fn install_line(entry: &Entry) -> InstallLine {
     let channel = match entry.kind {
-        EntryKind::Library => library_line(entry),
-        EntryKind::App => app_line(entry),
+        EntryKind::Library => crate_line(entry, "add"),
+        EntryKind::App => channel_line(entry).or_else(|| crate_line(entry, "install")),
     };
     channel.unwrap_or_else(|| InstallLine::new(None, "Repository", &entry.repo))
 }
 
-fn library_line(entry: &Entry) -> Option<InstallLine> {
+/// `cargo <verb>` with the primary crate of `entry`.
+fn crate_line(entry: &Entry, verb: &str) -> Option<InstallLine> {
     let name = entry.crates.first()?;
     let url = crate_page(name.as_str())?;
-    let command = format!("cargo add {name}");
+    let command = format!("cargo {verb} {name}");
     Some(InstallLine::new(Some(command), "crates.io", &url))
 }
 
-fn app_line(entry: &Entry) -> Option<InstallLine> {
+/// The first usable channel that `entry` names.
+fn channel_line(entry: &Entry) -> Option<InstallLine> {
     let channels = entry.distribution.as_ref()?;
     let homebrew = channels
         .homebrew
@@ -180,13 +182,45 @@ mod tests {
     fn an_app_without_a_channel_links_its_repository() {
         for line in [
             install_line(&entry(EntryKind::App, &[], None)),
-            install_line(&entry(EntryKind::App, &["tool"], None)),
             app(channels(None, &[], None)),
         ] {
             assert_eq!(command(&line), None);
             assert_eq!(line.text, "Repository");
             assert_eq!(line.href.as_str(), REPO);
         }
+    }
+
+    #[test]
+    fn an_app_with_crates_and_no_channel_installs_its_primary_crate() {
+        for line in [
+            install_line(&entry(EntryKind::App, &["tool", "tool-core"], None)),
+            install_line(&entry(
+                EntryKind::App,
+                &["tool", "tool-core"],
+                Some(channels(None, &[], None)),
+            )),
+            install_line(&entry(
+                EntryKind::App,
+                &["tool", "tool-core"],
+                Some(channels(Some("a b"), &[], None)),
+            )),
+        ] {
+            assert_eq!(command(&line), Some("cargo install tool"));
+            assert_eq!(line.text, "crates.io");
+            assert_eq!(line.href.as_str(), "https://crates.io/crates/tool");
+        }
+    }
+
+    #[test]
+    fn the_channels_an_app_names_come_before_its_crate() {
+        let on = |distribution| install_line(&entry(EntryKind::App, &["tool"], Some(distribution)));
+        let homebrew = on(channels(Some("tool"), &[], None));
+        assert_eq!(command(&homebrew), Some("brew install tool"));
+        let docker = on(channels(None, &["o/tool"], None));
+        assert_eq!(command(&docker), Some("docker pull o/tool"));
+        let repology = on(channels(None, &[], Some("tool")));
+        assert_eq!(command(&repology), None);
+        assert_eq!(repology.text, "Repology");
     }
 
     #[test]

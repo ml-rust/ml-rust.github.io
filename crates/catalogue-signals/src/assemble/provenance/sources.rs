@@ -1,11 +1,12 @@
 //! The pages and data dates that back each cited signal.
 
 use catalogue_core::{
-    Date, Entry, crate_page, docker_page, homebrew_page, page_url, repology_page,
+    Date, Entry, Signals, crate_page, docker_page, homebrew_page, page_url, repology_page,
 };
 use url::Url;
 
 use crate::github::RepoRef;
+use crate::history::ReleaseValues;
 
 /// The source name of every value read from the crates.io database dump.
 pub const DUMP_SOURCE: &str = "crates.io database dump";
@@ -51,6 +52,10 @@ pub struct FactSources {
     pub contributors_page: Option<Url>,
     /// The date of the data behind each fetched source.
     pub dates: FetchDates,
+    /// Whether the `first_release` of an app comes from its GitHub releases.
+    pub first_release_from_github: bool,
+    /// Whether the `last_release` of an app comes from the dump.
+    pub last_release_from_dump: bool,
 }
 
 /// The date of the data each source supplied on one check.
@@ -121,7 +126,20 @@ impl FactSources {
             docker_page: docker.and_then(docker_page),
             contributors_page,
             dates,
+            first_release_from_github: false,
+            last_release_from_dump: false,
         }
+    }
+
+    /// Names where the release dates of an app come from: `signals` holds the dates that won, and
+    /// `releases` the dates GitHub gave. A date GitHub also gave cites GitHub.
+    pub fn cite_app_releases(&mut self, signals: &Signals, releases: Option<&ReleaseValues>) {
+        let first = releases.and_then(|found| found.first_release);
+        let last = releases.and_then(|found| found.last_release);
+        self.first_release_from_github =
+            signals.first_release.is_some() && signals.first_release == first;
+        self.last_release_from_dump =
+            signals.last_release.is_some() && signals.last_release != last;
     }
 }
 

@@ -16,6 +16,8 @@ const TOPICS_FIELD: &str = "topics";
 const CATEGORY_FIELD: &str = "category";
 /// The field of the description text.
 const DESCRIPTION_FIELD: &str = "description";
+/// The field of the crate keywords, crate categories and repository topics.
+const KEYWORDS_FIELD: &str = "keywords";
 /// The field of the synonym terms the other fields gain.
 const ALIASES_FIELD: &str = "aliases";
 
@@ -27,6 +29,8 @@ const TOPICS_WEIGHT: f32 = 2.0;
 const CATEGORY_WEIGHT: f32 = 2.0;
 /// The weight of the description.
 const DESCRIPTION_WEIGHT: f32 = 1.5;
+/// The weight of the crate keywords, crate categories and repository topics.
+const KEYWORDS_WEIGHT: f32 = 1.2;
 /// The weight of the synonym terms.
 const ALIASES_WEIGHT: f32 = 1.0;
 
@@ -57,6 +61,8 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 /// - `topics`, weight 2: the names of the effective topics.
 /// - `category`, weight 2: the name of the category. Left out without a category.
 /// - `description`, weight 1.5: the description text.
+/// - `keywords`, weight 1.2: the measured search terms of `report`, each with its words. Left out
+///   when there are none, as in a build without `report`.
 /// - `aliases`, weight 1: the synonym terms the fields above gain from
 ///   [`Catalogue::synonyms`]. Left out when there are none.
 ///
@@ -106,10 +112,17 @@ fn record(
         .and_then(|id| Some((id, category_link(catalogue, id)?.name)));
     let category_name = category.map_or("", |(_, name)| name);
     let description = entry.description.text.as_str();
-    let aliases = alias_terms(
-        catalogue.synonyms(),
-        &[&name_text, &topics_text, category_name, description],
-    );
+    let found = report.and_then(|report| report.entries.get(effective.slug));
+    let terms = found.map_or(&[][..], |found| found.search_terms.as_slice());
+    // Each term is its own text, so a synonym never spans two terms.
+    let mut texts = vec![
+        name_text.as_str(),
+        topics_text.as_str(),
+        category_name,
+        description,
+    ];
+    texts.extend(terms.iter().map(String::as_str));
+    let aliases = alias_terms(catalogue.synonyms(), &texts);
 
     record.fields = vec![
         weighted(NAME_FIELD, name_text, NAME_WEIGHT),
@@ -127,6 +140,13 @@ fn record(
         description.to_owned(),
         DESCRIPTION_WEIGHT,
     ));
+    if !terms.is_empty() {
+        record.fields.push(weighted(
+            KEYWORDS_FIELD,
+            keyword_text(terms),
+            KEYWORDS_WEIGHT,
+        ));
+    }
     if !aliases.is_empty() {
         record
             .fields
@@ -148,7 +168,6 @@ fn record(
     if let Some((id, _)) = category {
         record.tags.push(tag(CATEGORY_TAG, id.as_str()));
     }
-    let found = report.and_then(|report| report.entries.get(effective.slug));
     if report.is_some() {
         let license = found.and_then(|found| found.value_of(LICENSE_SIGNAL));
         record.tags.push(tag(LICENSE_TAG, &license_value(license)));
@@ -168,6 +187,20 @@ fn record(
     record
 }
 
+/// `terms` for the index: each term, then its words split on `-`, `_` and `::`, each once.
+fn keyword_text(terms: &[String]) -> String {
+    let mut words: Vec<&str> = Vec::new();
+    for term in terms {
+        let parts = term.split(['-', '_']).flat_map(|part| part.split("::"));
+        for word in std::iter::once(term.as_str()).chain(parts) {
+            if !word.is_empty() && !words.contains(&word) {
+                words.push(word);
+            }
+        }
+    }
+    words.join(", ")
+}
+
 /// The field `name` holding `text`, with `weight`.
 fn weighted(name: &str, text: String, weight: f32) -> Field {
     Field {
@@ -179,4 +212,36 @@ fn weighted(name: &str, text: String, weight: f32) -> Field {
 /// The tag `name` with `value`.
 fn tag(name: &str, value: &str) -> (String, String) {
     (name.to_owned(), value.to_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text_of(terms: &[&str]) -> String {
+        let owned: Vec<String> = terms.iter().map(|term| (*term).to_owned()).collect();
+        keyword_text(&owned)
+    }
+
+    #[test]
+    fn a_term_keeps_its_original_and_gains_its_words() {
+        assert_eq!(
+            text_of(&["linear-algebra", "science::math", "gpu_compute"]),
+            "linear-algebra, linear, algebra, science::math, science, math, gpu_compute, gpu, compute"
+        );
+    }
+
+    #[test]
+    fn a_word_prints_once_and_a_plain_term_has_no_split() {
+        assert_eq!(
+            text_of(&["algebra", "linear-algebra"]),
+            "algebra, linear-algebra, linear"
+        );
+        assert_eq!(text_of(&["tensor"]), "tensor");
+    }
+
+    #[test]
+    fn an_empty_part_prints_nothing() {
+        assert_eq!(text_of(&["-a-"]), "-a-, a");
+    }
 }

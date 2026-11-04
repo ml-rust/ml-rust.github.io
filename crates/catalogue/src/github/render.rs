@@ -130,6 +130,7 @@ mod tests {
             commits: Some(450),
             ci: Some(CiState::Failure),
             license: RepoLicense::NoneStated,
+            topics: Vec::new(),
             last_human_commit: Some(date(2026, 10, 1)),
             last_human_commit_beyond_sample: false,
             human_commits_365: 100,

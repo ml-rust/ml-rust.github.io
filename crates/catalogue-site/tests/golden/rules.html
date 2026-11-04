@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.6ee165fe.css">
+<link rel="stylesheet" href="/assets/site.fb0faf7f.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -154,7 +154,7 @@
 <li>Docker pull growth over 90 days.</li>
 <li>The repository route.</li>
 </ul>
-<p class="why-note">An app skips the release gate, because its versions come from GitHub releases.</p>
+<p class="why-note">An app with no crate skips the release gate. An app that publishes a crate needs a version outside prereleases and 0.0.x.</p>
 <p class="why-note">Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
 </div>
 <div class="table-scroll rule-rows">
@@ -178,7 +178,7 @@
 <h3 id="repository-route">Repository route <span class="tier-word tier-featured">Featured</span></h3>
 <p>The repository route passes when stars, forks and contributors each reach their limit on the same check.</p>
 <p>Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.</p>
-<p>The route measures a whole repository, so a library must list the repository&#39;s main crate: the crate with the repository&#39;s own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.</p>
+<p>The route measures a whole repository, so an entry with crates must list the repository&#39;s main crate: the crate with the repository&#39;s own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.</p>
 <p>A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.</p>
 <p>This is a gate of separate limits. No page adds them into a score.</p>
 <ul>
@@ -427,8 +427,9 @@
 <div class="rule-text">
 <h3 id="downloads">Downloads</h3>
 <p>A library reads the downloads of its primary crate over the last 30 days, from the crates.io database dump. Raw key downloads_per_month.</p>
-<p>An app has no 30-day count. It reads binary downloads per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.</p>
-<p>An app with no release reads as not measured, never as 0.</p>
+<p>An app with binary downloads reads them per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.</p>
+<p>An app with no binary download reads the downloads of its primary crate over the last 30 days, when it lists a crate. No tier rule reads that number.</p>
+<p>An app with no release and no crate reads as not measured, never as 0.</p>
 <p class="why-note">Lists sort by these numbers. The tier rules read only the limits this page names.</p>
 </div>
 </article>
@@ -442,7 +443,7 @@
 <li><strong>Runs on</strong> Each listed crate&#39;s default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. No GPU feature found means the dump holds the crates and no row matches. It does not prove the project runs on a CPU only. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.</li>
 <li><strong>Native code</strong> No native code found, or what the project binds. The check follows the normal dependencies of each listed crate, and theirs in turn. A hit is a crate named -sys or a crate with a links key. Crates that bind no foreign library never count. An optional dependency of a listed crate names the feature that enables it. A build dependency such as cc or cmake shows that the build uses a native toolchain. C built with no links key, no -sys crate and no such build dependency stays unseen. So does native code kept outside crates.io.</li>
 <li><strong>Python bindings</strong> A direct dependency that data/backends.toml lists. A required one needs Python. An optional one needs Python only with the feature that enables it. No Python binding crate found means no such crate shows on crates.io. Bindings kept outside crates.io stay unseen.</li>
-<li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.</li>
+<li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.</li>
 </ul>
 <p class="why-note">An unknown value reads as not measured.</p>
 </div>
@@ -451,7 +452,7 @@
 <div class="rule-text">
 <h3 id="list-order">List order</h3>
 <p>Lists show the strongest tier first, then the most downloads, then the name. A value not measured sorts last.</p>
-<p>A library counts downloads over 30 days. An app counts binary downloads per release. The two units differ, and each row names its own.</p>
+<p>A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days. The two units differ, and each row names its own.</p>
 <p>This is an order and never a score. No page prints a rank, and no tier reads it.</p>
 <p>A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.</p>
 </div>

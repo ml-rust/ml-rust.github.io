@@ -377,6 +377,42 @@ mod tests {
     }
 
     #[test]
+    fn a_prerelease_only_app_with_a_crate_is_listed_and_downloads_do_not_move_it() {
+        for all_zero_zero in [false, true] {
+            let signals = Signals {
+                all_prerelease: Some(true),
+                all_zero_zero: Some(all_zero_zero),
+                downloads_per_month: Some(u64::MAX),
+                ..featured_app()
+            };
+            assert_eq!(run(&signals, &context()).tier, Tier::Listed);
+        }
+    }
+
+    #[test]
+    fn an_app_with_no_crate_facts_skips_the_release_gate_and_downloads_never_lift_it() {
+        let signals = Signals {
+            first_release: Some(days_ago(1000)),
+            latest_version: None,
+            release_count: None,
+            all_prerelease: None,
+            all_zero_zero: None,
+            ..featured_app()
+        };
+        assert_eq!(run(&signals, &context()).tier, Tier::Featured);
+        let unused = Signals {
+            first_release: Some(days_ago(1000)),
+            binary_downloads_last3: Some(0),
+            homebrew_on_request_365d: Some(0),
+            repology_families: Some(0),
+            docker_pull_growth_90d: Some(0),
+            downloads_per_month: Some(u64::MAX),
+            ..featured_app()
+        };
+        assert_eq!(run(&unused, &context()).tier, Tier::Listed);
+    }
+
+    #[test]
     fn zero_zero_only_library_with_high_adoption_is_listed_with_the_gate_text() {
         let signals = Signals {
             first_release: Some(days_ago(1000)),

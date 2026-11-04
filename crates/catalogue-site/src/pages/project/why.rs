@@ -308,6 +308,7 @@ mod tests {
             unknown: Vec::new(),
             notes: Vec::new(),
             signals,
+            search_terms: Vec::new(),
         }
     }
 

@@ -8,6 +8,8 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Added
 
+- Search reads crate keywords, crate categories and repository topics.
+- Apps that publish a crate show its release facts and `cargo install`.
 - Sort and filter on list pages, copy buttons on install lines.
 - `/compare/`: up to 4 projects side by side.
 - `catalogue validate`: checks every data file and the rules across files.
@@ -49,6 +51,8 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Changed
 
+- List pages and the compare page no longer show install commands.
+- An app that publishes a crate needs a release outside prereleases and `0.0.x` for Featured.
 - Discovery matches description terms. `sort_only` lists words that admit no crate.
 - `named_crates` in `data/discovery.toml`: admits a crate and not its dependents.
 - The repo link check accepts a `Cargo.toml` that declares the crate when the release records no commit, or the repo is on Codeberg or GitLab.

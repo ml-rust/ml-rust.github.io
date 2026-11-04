@@ -873,13 +873,6 @@ h1 + .lede {
   overflow-wrap: anywhere;
 }
 
-.start-install code,
-.row-install code {
-  padding: 2px var(--space-2);
-  background: var(--wash);
-  border-radius: var(--radius-s);
-}
-
 .start-facts {
   display: flex;
   flex-wrap: wrap;
@@ -1062,13 +1055,8 @@ h1 + .lede {
 }
 
 .row-features,
-.row-install,
 .row-related {
   margin: var(--space-1) 0 0;
-}
-
-.row-install code {
-  margin-right: var(--space-1);
 }
 
 .fact-quiet {
@@ -2887,15 +2875,6 @@ td.not-measured {
   line-height: 1.25rem;
 }
 
-.compare-install .install-line {
-  margin-bottom: var(--space-1);
-  padding: var(--space-2);
-}
-
-.compare-install .install-line code {
-  font-size: 0.8125rem;
-}
-
 .compare-links {
   margin: 0;
   padding: 0;
@@ -2961,7 +2940,6 @@ td.not-measured {
   .compare-more a,
   .compare-links a,
   .compare-remove,
-  .compare-install > a,
   .sort-button,
   .order-back,
   .row-compare {
@@ -3235,10 +3213,8 @@ td.not-measured {
     inset: 0;
   }
 
-  .row-install a,
   .row-related a,
   .row-also-in a,
-  .row-install code,
   .row-compare {
     position: relative;
     z-index: 1;
@@ -3251,8 +3227,7 @@ td.not-measured {
   }
 
   .row-related a,
-  .row-also-in a,
-  .row-install a {
+  .row-also-in a {
     display: inline-block;
     padding-block: var(--space-2);
   }

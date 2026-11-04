@@ -66,6 +66,13 @@ pub(super) fn derive_facts(repo: &Repository, requested: &RepoRef, today: Date) 
                 .as_ref()
                 .map(|info| info.spdx_id.as_deref()),
         ),
+        topics: repo
+            .repository_topics
+            .iter()
+            .flat_map(|connection| connection.items())
+            .filter_map(|node| node.topic.as_ref())
+            .map(|topic| topic.name.clone())
+            .collect(),
         last_human_commit: last_human.date,
         last_human_commit_beyond_sample: last_human.beyond_sample,
         human_commits_365: commits.human_count,
@@ -136,6 +143,28 @@ mod tests {
         let facts = derive_facts(&repo, &requested, date(2026, 11, 3));
         assert_eq!(facts.forks, Some(0), "a real zero stays known");
         assert_eq!(facts.commits, Some(4321));
+    }
+
+    #[test]
+    fn topics_read_from_the_answer_and_an_answer_without_them_has_none() {
+        let requested = RepoRef::parse("a/b").expect("parses");
+        let repo: Repository = serde_json::from_value(json!({
+            "nameWithOwner": "a/b",
+            "repositoryTopics": {"nodes": [
+                {"topic": {"name": "linear-algebra"}},
+                {"topic": null},
+                null,
+                {"topic": {"name": "gpu"}},
+            ]},
+            "defaultBranchRef": null,
+            "issues": null,
+            "pullRequests": null,
+        }))
+        .expect("repository");
+        let facts = derive_facts(&repo, &requested, date(2026, 11, 3));
+        assert_eq!(facts.topics, ["linear-algebra", "gpu"]);
+        let none = derive_facts(&repository("a/b"), &requested, date(2026, 11, 3));
+        assert!(none.topics.is_empty());
     }
 
     #[test]

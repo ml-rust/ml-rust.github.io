@@ -1,4 +1,4 @@
-//! The inputs every library entry shares on one check.
+//! The inputs every entry with crates shares on one check.
 
 use catalogue_core::{Deprecated, Thresholds};
 
@@ -8,7 +8,7 @@ use crate::rustsec::Advisories;
 use crate::sandbox::BuildChecks;
 use crate::usage::Usage;
 
-/// The inputs every library entry shares on one check.
+/// The inputs every entry with crates shares on one check. An app reads only `dump` and `index`.
 #[derive(Debug, Clone, Copy)]
 pub struct LibrarySources<'a> {
     /// The crates.io dump.

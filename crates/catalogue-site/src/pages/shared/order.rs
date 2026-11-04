@@ -11,13 +11,13 @@ use super::choice::download_count;
 use super::entry_row::tier_of;
 
 /// The sentence a list with tiers shows.
-const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
+const STRONGEST_FIRST: &str = "Order: strongest tier first, then most downloads, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days.";
 
 /// The sentence a list without tiers shows.
 const BY_NAME: &str = "Entries are sorted by name.";
 
 /// The sentence a list of one tier shows.
-const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release.";
+const MOST_DOWNLOADS_FIRST: &str = "Order: most downloads first, then name, with unmeasured values last. A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days.";
 
 /// The sentence that states the order of the Featured list.
 pub(crate) fn featured_order_text() -> &'static str {
@@ -82,8 +82,9 @@ fn most_first(a: Option<f64>, b: Option<f64>) -> Ordering {
 
 /// `slugs` in the order of every list: tier, then downloads from most to fewest, then name.
 ///
-/// A library counts downloads over 30 days and an app counts binary downloads per release. The
-/// list states both units, and no rule reads this order.
+/// A library counts downloads over 30 days. An app counts binary downloads per release, or its
+/// crate downloads over 30 days when it has none. The list states each unit, and no rule reads
+/// this order.
 ///
 /// A value not measured sorts last. Without a report, the name alone decides.
 pub(crate) fn strongest_first<'s>(

@@ -126,6 +126,7 @@ mod tests {
             native_code: Some("No native code found".to_owned()),
             python: Some("No Python binding crate found".to_owned()),
             dependents: Some(4),
+            search_terms: vec!["tensor".to_owned()],
         }
     }
 

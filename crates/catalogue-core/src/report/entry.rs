@@ -44,6 +44,10 @@ pub struct EntryReport {
     pub notes: Vec<String>,
     /// Every signal with its raw value, source link and fetch date.
     pub signals: Vec<SignalFact>,
+    /// The crate keywords, crate categories and repository topics, deduplicated, lowercase and
+    /// sorted. Search input only: no tier rule reads them, and no page states them as a claim.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub search_terms: Vec<String>,
 }
 
 impl EntryReport {
@@ -62,6 +66,7 @@ impl EntryReport {
                 .collect(),
             notes,
             signals,
+            search_terms: Vec::new(),
         }
     }
 
@@ -104,5 +109,6 @@ mod tests {
         assert_eq!(report.unknown, ["repo_gone"]);
         assert_eq!(report.notes, ["note"]);
         assert!(report.signals.is_empty());
+        assert!(report.search_terms.is_empty());
     }
 }

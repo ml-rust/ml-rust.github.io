@@ -7,7 +7,7 @@ mod fixture;
 
 use std::collections::BTreeMap;
 
-use catalogue_core::{Catalogue, Movement, TierReport};
+use catalogue_core::{Catalogue, Movement, Slug, TierReport};
 use catalogue_site::{
     NO_TIER_BOOST, OutputFile, SEARCH_DIR, SiteInputs, build_site, search_records,
 };
@@ -206,6 +206,79 @@ fn synonyms_of_the_entry_text_become_aliases() {
         delta.fields.last().map(|field| field.text.as_str()),
         Some("autodiff")
     );
+}
+
+/// The fixture report with `terms` on entry `name`.
+fn with_terms(report: &mut TierReport, name: &str, terms: &[&str]) {
+    let slug = Slug::new(name).expect("slug");
+    let found = report.entries.get_mut(&slug).expect("record");
+    found.search_terms = terms.iter().map(|term| (*term).to_owned()).collect();
+}
+
+#[test]
+fn the_keywords_field_holds_each_term_and_its_words_below_the_description() {
+    let (catalogue, mut report) = data();
+    with_terms(&mut report, "beta", &["linear-algebra", "science::math"]);
+    let records = search_records(&catalogue, Some(&report));
+    let beta = fields(record(&records, "beta"));
+    let names: Vec<&str> = beta.iter().map(|(name, _, _)| *name).collect();
+    assert_eq!(
+        names,
+        [
+            "name",
+            "topics",
+            "category",
+            "description",
+            "keywords",
+            "aliases"
+        ]
+    );
+    assert_eq!(
+        beta[4],
+        (
+            "keywords",
+            "linear-algebra, linear, algebra, science::math, science, math",
+            1.2
+        )
+    );
+    assert!(beta[3].2 > beta[4].2 && beta[4].2 >= beta[5].2, "{beta:?}");
+}
+
+#[test]
+fn a_query_for_one_word_finds_an_entry_tagged_with_the_longer_term() {
+    let (catalogue, mut report) = data();
+    with_terms(&mut report, "gamma", &["linear-algebra"]);
+    let files = build(&catalogue, Some(&report));
+    assert_eq!(hits(&files, "algebra", &[]), ["/projects/gamma/"]);
+}
+
+#[test]
+fn synonym_lookup_reads_the_terms_and_never_spans_two_of_them() {
+    let (catalogue, mut report) = data();
+    with_terms(&mut report, "gamma", &["autodiff", "machine", "learning"]);
+    let records = search_records(&catalogue, Some(&report));
+    let gamma = fields(record(&records, "gamma"));
+    let aliases = gamma
+        .iter()
+        .find(|(name, _, _)| *name == "aliases")
+        .expect("aliases");
+    assert_eq!(aliases.1, "automatic differentiation");
+}
+
+#[test]
+fn an_entry_with_no_terms_and_a_build_without_a_report_have_no_keywords_field() {
+    let (catalogue, report) = data();
+    for report in [Some(&report), None] {
+        for found in search_records(&catalogue, report) {
+            assert!(
+                fields(&found)
+                    .iter()
+                    .all(|(name, _, _)| *name != "keywords"),
+                "{}",
+                found.id
+            );
+        }
+    }
 }
 
 #[test]

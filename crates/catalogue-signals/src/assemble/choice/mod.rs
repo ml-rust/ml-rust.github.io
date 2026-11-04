@@ -12,6 +12,7 @@ mod native;
 mod native_walk;
 mod reach;
 mod runs_on;
+mod search_terms;
 
 pub use dependents::DependentIndex;
 pub use license::{LicenseOrigin, Licensed};

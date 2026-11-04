@@ -34,7 +34,7 @@ pub struct Signals {
     pub peak_users: Option<f64>,
     /// Active dependents as a share of the peak, in `[0, 1]`.
     pub former_glory: Option<f64>,
-    /// Cleaned downloads per month.
+    /// Cleaned downloads per month. No rule reads it for an app: it stays display and order.
     pub downloads_per_month: Option<u64>,
     /// Id of a RustSec `unmaintained` advisory, when one exists.
     pub rustsec_unmaintained: Option<String>,
@@ -68,7 +68,7 @@ pub struct Signals {
     /// Contributors with a GitHub account. A part of the repository route.
     pub contributors: Option<u64>,
     /// A crate with the repository's own name that claims the repository and that the entry does
-    /// not list. Libraries only.
+    /// not list. Only an entry that lists crates has one.
     pub main_crate_left_out: Option<String>,
     /// Whether published docs exist.
     pub docs_present: Option<bool>,

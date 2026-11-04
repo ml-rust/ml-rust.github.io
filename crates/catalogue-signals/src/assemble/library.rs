@@ -1,11 +1,12 @@
 //! The signals of a library entry.
 
-use catalogue_core::{Date, Entry, EntryKind, Signals};
+use catalogue_core::{CrateName, Date, Entry, EntryKind, Signals};
 
 use super::adoption::adoption;
 use super::assembled::Assembled;
 use super::build::apply_build_checks;
 use super::facts::apply_facts;
+use super::index::CrateIndex;
 use super::link::apply_link;
 use super::main_crate::main_crate_left_out;
 use super::requirements::deprecated_requirement;
@@ -70,16 +71,7 @@ pub fn library_signals(
     };
     let index = sources.index;
     signals.main_crate_left_out = main_crate_left_out(entry, sources.dump, index);
-    let mut family = Vec::with_capacity(entry.crates.len());
-    for name in &entry.crates {
-        match index.id(name.as_str()) {
-            Some(id) => family.push(id),
-            None if name == primary && index.is_deleted(name.as_str()) => {
-                notes.push(format!("crate {name} is deleted from crates.io"));
-            }
-            None => notes.push(format!("crate {name} is not in the dump")),
-        }
-    }
+    let family = listed_crates(entry, primary, index, &mut notes);
     let advisories = sources.advisories;
     signals.rustsec_unmaintained = advisories
         .unmaintained(primary.as_str())
@@ -102,6 +94,28 @@ pub fn library_signals(
         None => {}
     }
     Assembled { signals, notes }
+}
+
+/// The ids of the crates of `entry` that the dump holds, in entry order.
+///
+/// Each crate missing from the dump adds a note. `primary` gets its own note when it is deleted.
+pub(super) fn listed_crates(
+    entry: &Entry,
+    primary: &CrateName,
+    index: &CrateIndex,
+    notes: &mut Vec<String>,
+) -> Vec<u32> {
+    let mut family = Vec::with_capacity(entry.crates.len());
+    for name in &entry.crates {
+        match index.id(name.as_str()) {
+            Some(id) => family.push(id),
+            None if name == primary && index.is_deleted(name.as_str()) => {
+                notes.push(format!("crate {name} is deleted from crates.io"));
+            }
+            None => notes.push(format!("crate {name} is not in the dump")),
+        }
+    }
+    family
 }
 
 /// Sets the signals that come from the primary crate `id` alone.
@@ -127,7 +141,7 @@ fn primary_signals(
 }
 
 /// The raw downloads of crate `id` over the last 30 days of the window. 0 when the dump has none.
-fn month_downloads(dump: &DumpSnapshot, id: u32) -> u64 {
+pub(super) fn month_downloads(dump: &DumpSnapshot, id: u32) -> u64 {
     let Some(series) = dump.downloads.get(&id) else {
         return 0;
     };

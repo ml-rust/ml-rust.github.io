@@ -15,6 +15,14 @@ use super::sources::{BUILD_CHECK_PAGE, DUMP_PAGE, DUMP_SOURCE, FactSources};
 /// The value text of a finding that the check looked for and did not find.
 const NONE_FOUND: &str = "none";
 
+/// The crate rows no rule reads for an app, so they stay display and order.
+const APP_NEVER_READS: [&str; 4] = [
+    "latest_version",
+    "release_count",
+    "downloads_per_month",
+    "repo_link_verified",
+];
+
 /// One row before citing: id, label, value text and the origin of its source.
 type Row = (&'static str, &'static str, Option<String>, Origin);
 
@@ -127,19 +135,25 @@ fn ids(value: Option<&[String]>) -> Option<String> {
 
 /// The crates.io dump rows, `first_release` to `downloads_per_month`.
 ///
-/// `last_release` cites the dump for a library and the releases page for an app.
-fn dump_rows(signals: &Signals) -> Vec<Row> {
-    let release_origin = if signals.kind == EntryKind::Library {
+/// `last_release` cites the dump for a library and the releases page for an app, unless the dump
+/// gave the later date. `first_release` cites the dump, unless GitHub gave the earlier date.
+fn dump_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
+    let release_origin = if signals.kind == EntryKind::Library || sources.last_release_from_dump {
         Origin::Dump
     } else {
         Origin::Releases
+    };
+    let first_origin = if sources.first_release_from_github {
+        Origin::Releases
+    } else {
+        Origin::Dump
     };
     vec![
         (
             "first_release",
             "First release",
             text(signals.first_release),
-            Origin::Dump,
+            first_origin,
         ),
         (
             "latest_version",
@@ -188,7 +202,7 @@ fn dump_rows(signals: &Signals) -> Vec<Row> {
             "Repository's main crate left out of the entry",
             finding(
                 signals.main_crate_left_out.as_deref(),
-                signals.crate_deleted.is_some(),
+                signals.crate_deleted.is_some() || signals.release_count.is_some(),
             ),
             Origin::Dump,
         ),
@@ -405,8 +419,10 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 /// | `repology_families` | Repology project page | Repology fetch date |
 /// | `docker_pull_growth_90d` | Docker Hub page | Docker fetch date |
 ///
-/// `last_release` cites the dump for a library and the GitHub releases page for an app.
-/// The rows of the repository route and the commit total close the table:
+/// `last_release` cites the dump for a library and the GitHub releases page for an app, unless the
+/// crate of the app has the later date. `first_release` of an app cites the GitHub releases page
+/// when GitHub has the earlier date. A known [`APP_NEVER_READS`] row of an app counts toward no
+/// tier. The rows of the repository route and the commit total close the table:
 ///
 /// - `docker_pull_baseline`: the pull count growth measures against, dated by
 ///   its history snapshot. Present only with a growth value.
@@ -427,7 +443,7 @@ pub fn signal_facts(
     commits: Option<u64>,
 ) -> Vec<SignalFact> {
     let mut rows: Vec<Row> = Vec::with_capacity(38);
-    rows.extend(dump_rows(signals));
+    rows.extend(dump_rows(signals, sources));
     rows.extend(rustsec_rows(signals));
     rows.extend(deprecation_rows(signals));
     rows.extend(build_rows(signals));
@@ -464,13 +480,16 @@ pub fn signal_facts(
                 Some(_) => cite(origin, signals, sources),
                 None => (None, None),
             };
+            let app_display = signals.kind == EntryKind::App
+                && value.is_some()
+                && APP_NEVER_READS.contains(&name);
             SignalFact {
                 name: name.to_owned(),
                 label: label.to_owned(),
                 value,
                 source,
                 fetched,
-                counts_toward_tier: !never_counts(name),
+                counts_toward_tier: !never_counts(name) && !app_display,
             }
         })
         .collect()
@@ -482,6 +501,7 @@ mod tests {
     use crate::assemble::fixtures::{library, today};
     use crate::assemble::provenance::FetchDates;
     use crate::github::RepoRef;
+    use crate::history::ReleaseValues;
     use catalogue_core::Entry;
 
     fn day(on: i8) -> Date {
@@ -590,6 +610,33 @@ mod tests {
     }
 
     #[test]
+    fn an_app_cites_the_source_of_the_date_that_won() {
+        let release = |signals: &Signals, sources: &FactSources, name: &str| {
+            let facts = signal_facts(signals, sources, None);
+            let found = value(&facts, name)
+                .source
+                .as_ref()
+                .map(|s| s.url.to_string());
+            found.expect("a source")
+        };
+        let signals = full(EntryKind::App);
+        let values = ReleaseValues {
+            binary_downloads: 1,
+            releases: 1,
+            first_release: signals.first_release,
+            last_release: signals.last_release,
+        };
+        let releases_page = "https://github.com/ml-rust/tool/releases";
+        let mut sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
+        sources.cite_app_releases(&signals, Some(&values));
+        assert_eq!(release(&signals, &sources, "last_release"), releases_page);
+        assert_eq!(release(&signals, &sources, "first_release"), releases_page);
+        sources.cite_app_releases(&signals, None);
+        assert_eq!(release(&signals, &sources, "last_release"), DUMP_PAGE);
+        assert_eq!(release(&signals, &sources, "first_release"), DUMP_PAGE);
+    }
+
+    #[test]
     fn rows_follow_the_signal_order_and_only_commits_stay_out_of_the_tier() {
         let sources = FactSources::new(&app(), Some(&repo()), day(2), every_date());
         let facts = signal_facts(&full(EntryKind::App), &sources, Some(9_876));
@@ -622,12 +669,22 @@ mod tests {
         let commits = value(&facts, "commits");
         assert_eq!(commits.value.as_deref(), Some("9876"));
         assert!(!commits.counts_toward_tier);
+        for name in APP_NEVER_READS {
+            assert!(value(&facts, name).value.is_some(), "{name}");
+            assert!(!value(&facts, name).counts_toward_tier, "{name}");
+        }
         assert!(
             facts
                 .iter()
-                .filter(|fact| fact.name != "commits")
+                .filter(
+                    |fact| fact.name != "commits" && !APP_NEVER_READS.contains(&fact.name.as_str())
+                )
                 .all(|fact| fact.counts_toward_tier)
         );
+        let library = signal_facts(&full(EntryKind::Library), &sources, None);
+        assert!(value(&library, "downloads_per_month").counts_toward_tier);
+        let unknown = signal_facts(&Signals::unknown(EntryKind::App), &sources, None);
+        assert!(value(&unknown, "downloads_per_month").counts_toward_tier);
     }
 
     #[test]

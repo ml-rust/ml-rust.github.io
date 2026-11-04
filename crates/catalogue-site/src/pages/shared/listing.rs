@@ -122,7 +122,6 @@ fn family_rows<'a>(inputs: &SiteInputs<'a>, slugs: &[&Slug]) -> Vec<(Option<Tier
             let record = report.and_then(|report| report.entries.get(head.slug));
             let found = EntryRow::new(head.slug, entry, tier)
                 .with_choice(record)
-                .with_install(entry)
                 .with_family(
                     movement_word(inputs, head.slug),
                     RelatedLink::of(head.slug, head.related),

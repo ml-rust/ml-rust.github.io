@@ -74,75 +74,77 @@ fn whole_value(record: Option<&EntryReport>, name: &str) -> Option<String> {
         .and_then(whole)
 }
 
+/// The value of the fact `name` in `record` as a number. `None` when it is no finite number.
+fn amount(record: Option<&EntryReport>, name: &str) -> Option<f64> {
+    record
+        .and_then(|record| record.value_of(name))
+        .and_then(|text| text.parse::<f64>().ok())
+        .filter(|value| value.is_finite())
+}
+
 /// The signal that holds the downloads of an entry of `kind`.
 ///
-/// An app has no 30-day count. GitHub reports totals per release asset, so an app reads downloads
-/// per release, and every page names that unit.
-pub(crate) fn downloads_signal(kind: EntryKind) -> &'static str {
+/// A library reads [`DOWNLOADS_SIGNAL`]. GitHub reports totals per release asset, so an app with
+/// binary downloads reads them per release, and every page names that unit. An app with no binary
+/// download and a known crate count reads that count over 30 days.
+pub(crate) fn downloads_signal(kind: EntryKind, record: Option<&EntryReport>) -> &'static str {
+    let has_binaries = amount(record, BINARY_PER_RELEASE_SIGNAL).is_some_and(|count| count > 0.0);
     match kind {
-        EntryKind::Library => DOWNLOADS_SIGNAL,
-        EntryKind::App => BINARY_PER_RELEASE_SIGNAL,
+        EntryKind::App if has_binaries || amount(record, DOWNLOADS_SIGNAL).is_none() => {
+            BINARY_PER_RELEASE_SIGNAL
+        }
+        EntryKind::App | EntryKind::Library => DOWNLOADS_SIGNAL,
     }
 }
 
 /// The downloads of an entry of `kind` as a number for ordering. `None` when not measured.
 pub(crate) fn download_count(kind: EntryKind, record: Option<&EntryReport>) -> Option<f64> {
-    record
-        .and_then(|record| record.value_of(downloads_signal(kind)))
-        .and_then(|text| text.parse::<f64>().ok())
-        .filter(|value| value.is_finite())
+    amount(record, downloads_signal(kind, record))
 }
 
 /// The dependents of an entry of `kind` for a person to read.
 ///
-/// An app without a crate on crates.io cannot have dependents, which differs from a value the
-/// check failed to measure. An app that ships a crate keeps its measured count.
+/// An app has no dependents to show, which differs from a value the check failed to measure.
 pub(crate) fn dependents_text(kind: EntryKind, record: Option<&EntryReport>) -> String {
-    whole_value(record, DEPENDENTS_SIGNAL).map_or_else(
-        || missing_dependents(kind).to_owned(),
-        |count| grouped(&count),
-    )
-}
-
-/// What the dependents of an entry of `kind` read with no value.
-fn missing_dependents(kind: EntryKind) -> &'static str {
     match kind {
-        EntryKind::Library => NOT_MEASURED,
-        EntryKind::App => NOT_APPLICABLE,
+        EntryKind::Library => whole_value(record, DEPENDENTS_SIGNAL)
+            .map_or_else(|| NOT_MEASURED.to_owned(), |count| grouped(&count)),
+        EntryKind::App => NOT_APPLICABLE.to_owned(),
     }
 }
 
-/// The downloads cell: the short form with its unit, and the exact number in the full wording.
-fn downloads_fact(kind: EntryKind, count: Option<&str>) -> CellFact {
+/// The downloads cell of the value of `signal`: the short form with its unit, and the exact number
+/// in the full wording.
+fn downloads_fact(signal: &str, count: Option<&str>) -> CellFact {
     let parts = count.and_then(|count| Some((compact(count)?, grouped(count))));
     let Some((short, exact)) = parts else {
         return CellFact::not_measured();
     };
-    match kind {
-        EntryKind::Library => CellFact {
+    if signal == DOWNLOADS_SIGNAL {
+        CellFact {
             short,
             full: Some(format!("{exact} downloads over 30 days")),
             quiet: false,
-        },
-        EntryKind::App => CellFact {
+        }
+    } else {
+        CellFact {
             short: format!("{short}{PER_RELEASE}"),
             full: Some(format!("{exact} binary downloads per release")),
             quiet: false,
-        },
+        }
     }
 }
 
-/// The downloads as one line of text, for a place with no column heading.
-fn downloads_line(kind: EntryKind, cell: &CellFact) -> String {
+/// The downloads of `signal` as one line of text, for a place with no column heading.
+fn downloads_line(signal: &str, cell: &CellFact) -> String {
     if cell.quiet {
         return format!("Downloads: {}", cell.short);
     }
-    match kind {
-        EntryKind::Library => format!("{} downloads (30 days)", cell.short),
-        EntryKind::App => {
-            let count = cell.short.strip_suffix(PER_RELEASE).unwrap_or(&cell.short);
-            format!("{count} downloads per release")
-        }
+    if signal == DOWNLOADS_SIGNAL {
+        format!("{} downloads (30 days)", cell.short)
+    } else {
+        let count = cell.short.strip_suffix(PER_RELEASE).unwrap_or(&cell.short);
+        format!("{count} downloads per release")
     }
 }
 
@@ -252,13 +254,15 @@ pub(crate) struct ChoiceText {
 impl ChoiceText {
     /// The facts of an entry of `kind` from `record`.
     ///
-    /// Without a record, every value is [`NOT_MEASURED`], apart from the dependents an app cannot
-    /// have.
+    /// Without a record, every value is [`NOT_MEASURED`], apart from the dependents an app has
+    /// none of.
     pub(crate) fn of(kind: EntryKind, record: Option<&EntryReport>) -> Self {
         let value = |name| record.and_then(|record| record.value_of(name));
-        let downloads = whole_value(record, downloads_signal(kind));
-        let downloads_cell = downloads_fact(kind, downloads.as_deref());
-        let dependents = whole_value(record, DEPENDENTS_SIGNAL);
+        let signal = downloads_signal(kind, record);
+        let downloads = whole_value(record, signal);
+        let downloads_cell = downloads_fact(signal, downloads.as_deref());
+        let dependents =
+            whole_value(record, DEPENDENTS_SIGNAL).filter(|_| kind == EntryKind::Library);
         let stars = whole_value(record, STARS_SIGNAL);
         let release = value(LATEST_RELEASE_SIGNAL);
         Self {
@@ -266,7 +270,7 @@ impl ChoiceText {
             runs_on: value(RUNS_ON_SIGNAL).map_or_else(CellFact::not_measured, runs_on_fact),
             native_code: native_code_fact(record),
             python: value(PYTHON_SIGNAL).and_then(python_fact),
-            downloads_line: downloads_line(kind, &downloads_cell),
+            downloads_line: downloads_line(signal, &downloads_cell),
             downloads_cell,
             dependents_cell: dependents.as_deref().map_or_else(
                 || match kind {
@@ -412,6 +416,7 @@ mod tests {
             unknown: Vec::new(),
             notes: Vec::new(),
             signals,
+            search_terms: Vec::new(),
         }
     }
 
@@ -474,6 +479,31 @@ mod tests {
     }
 
     #[test]
+    fn an_app_with_no_binaries_reads_its_crate_downloads_over_30_days() {
+        for found in [
+            record(vec![fact(DOWNLOADS_SIGNAL, Some("12400"))]),
+            record(vec![
+                fact(DOWNLOADS_SIGNAL, Some("12400")),
+                fact(BINARY_PER_RELEASE_SIGNAL, None),
+            ]),
+            record(vec![
+                fact(DOWNLOADS_SIGNAL, Some("12400")),
+                fact(BINARY_PER_RELEASE_SIGNAL, Some("0")),
+            ]),
+        ] {
+            let text = ChoiceText::of(EntryKind::App, Some(&found));
+            assert_eq!(text.downloads_cell.short, "12k");
+            assert_eq!(
+                text.downloads_cell.full.as_deref(),
+                Some("12,400 downloads over 30 days")
+            );
+            assert_eq!(text.downloads_line, "12k downloads (30 days)");
+            assert_eq!(text.downloads.as_deref(), Some("12400"));
+            assert_eq!(download_count(EntryKind::App, Some(&found)), Some(12400.0));
+        }
+    }
+
+    #[test]
     fn dependents_of_an_app_are_not_applicable_and_of_a_library_not_measured() {
         let none = record(Vec::new());
         let app = ChoiceText::of(EntryKind::App, Some(&none));
@@ -481,10 +511,16 @@ mod tests {
         assert_eq!(app.dependents, None);
         let library = ChoiceText::of(EntryKind::Library, Some(&none));
         assert_eq!(library.dependents_cell, CellFact::not_measured());
-        let ships_a_crate = record(vec![fact(DEPENDENTS_SIGNAL, Some("0"))]);
-        let app = ChoiceText::of(EntryKind::App, Some(&ships_a_crate));
-        assert_eq!(app.dependents_cell, CellFact::plain("0"));
+        let measured = record(vec![fact(DEPENDENTS_SIGNAL, Some("7"))]);
+        let app = ChoiceText::of(EntryKind::App, Some(&measured));
+        assert_eq!(app.dependents_cell, CellFact::not_applicable());
+        assert_eq!(app.dependents, None);
+        assert_eq!(
+            dependents_text(EntryKind::App, Some(&measured)),
+            NOT_APPLICABLE
+        );
         assert_eq!(dependents_text(EntryKind::App, Some(&none)), NOT_APPLICABLE);
+        assert_eq!(dependents_text(EntryKind::Library, Some(&measured)), "7");
         assert_eq!(dependents_text(EntryKind::Library, None), NOT_MEASURED);
     }
 

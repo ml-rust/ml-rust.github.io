@@ -69,6 +69,7 @@ fn archived_facts(date: Date, of: &str) -> NetworkValues {
                 oldest_unanswered_days: Some(3),
                 maintainer_replies_365: 7,
                 license: RepoLicense::Stated("MIT".to_owned()),
+                topics: Vec::new(),
             },
         ),
         ..NetworkValues::default()
@@ -440,6 +441,7 @@ fn every_distribution_source_falls_back_with_its_own_date() {
             ReleaseValues {
                 binary_downloads: 900,
                 releases: 3,
+                first_release: None,
                 last_release: Some(day(9, 1)),
             },
         ),

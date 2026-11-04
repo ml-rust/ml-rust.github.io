@@ -5,6 +5,7 @@ use jiff::Timestamp;
 use jiff::civil;
 use jiff::tz::TimeZone;
 
+use super::app::{app_crate_signals, app_signals};
 use super::assembled::Assembled;
 use super::index::CrateIndex;
 use super::library::library_signals;
@@ -14,7 +15,7 @@ use crate::dump::{
     IdMap, Requirement, VersionRow,
 };
 use crate::github::{Facts, RepoFacts, RepoLicense};
-use crate::history::RepoValues;
+use crate::history::{ReleaseValues, RepoValues};
 use crate::link::LinkCheck;
 use crate::rustsec::{Advisories, Advisory, AdvisoryKind};
 use crate::sandbox::BuildChecks;
@@ -40,9 +41,18 @@ pub(crate) fn thresholds() -> Thresholds {
 
 /// A library entry that lists `crates`, primary first.
 pub(crate) fn library(crates: &[&str]) -> Entry {
+    of_kind("library", crates)
+}
+
+/// An app entry that lists `crates`, primary first.
+pub(crate) fn app(crates: &[&str]) -> Entry {
+    of_kind("app", crates)
+}
+
+fn of_kind(kind: &str, crates: &[&str]) -> Entry {
     let list: Vec<String> = crates.iter().map(|name| format!("\"{name}\"")).collect();
     entry(&format!(
-        "kind = \"library\"\ncrates = [{}]\n{BODY}",
+        "kind = \"{kind}\"\ncrates = [{}]\n{BODY}",
         list.join(", ")
     ))
 }
@@ -74,6 +84,7 @@ pub(crate) fn found_facts() -> Facts {
         commits: Some(0),
         ci: None,
         license: RepoLicense::Stated("MIT".to_owned()),
+        topics: Vec::new(),
         last_human_commit: Some(day(2026, 10, 1)),
         last_human_commit_beyond_sample: false,
         human_commits_365: 4,
@@ -258,15 +269,37 @@ impl World {
         self.assemble(crates, None, link)
     }
 
+    /// The signals of an app that lists `crates`, the way a check assembles them.
+    pub(crate) fn run_app(
+        &self,
+        crates: &[&str],
+        releases: Option<&ReleaseValues>,
+        link: Option<&LinkCheck>,
+    ) -> Assembled {
+        self.with_sources(|sources| {
+            let mut assembled = app_signals(None, releases, None, None, None, None);
+            app_crate_signals(&app(crates), sources, releases, link, &mut assembled);
+            assembled
+        })
+    }
+
     fn assemble(
         &self,
         crates: &[&str],
         facts: Option<&RepoFacts>,
         link: Option<&LinkCheck>,
     ) -> Assembled {
+        let values = facts.map(RepoValues::from);
+        self.with_sources(|sources| {
+            library_signals(&library(crates), sources, values.as_ref(), link, today())
+        })
+    }
+
+    /// The result of `run` over the sources of this world.
+    fn with_sources<R>(&self, run: impl FnOnce(&LibrarySources<'_>) -> R) -> R {
         let index = CrateIndex::new(&self.dump.snapshot);
         let thresholds = thresholds();
-        let sources = LibrarySources {
+        run(&LibrarySources {
             dump: &self.dump.snapshot,
             index: &index,
             usage: &self.usage,
@@ -274,9 +307,7 @@ impl World {
             deprecated: &self.deprecated,
             thresholds: &thresholds,
             build_checks: &self.build_checks,
-        };
-        let values = facts.map(RepoValues::from);
-        library_signals(&library(crates), &sources, values.as_ref(), link, today())
+        })
     }
 
     pub(crate) fn users(&mut self, id: u32, current: f64) {

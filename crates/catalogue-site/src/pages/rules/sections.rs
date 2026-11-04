@@ -138,7 +138,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                     ],
                     notes: &[
-                        "An app skips the release gate, because its versions come from GitHub releases.",
+                        "An app with no crate skips the release gate. An app that publishes a crate needs a version outside prereleases and 0.0.x.",
                         "Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.",
                     ],
                     rows: rows(app_rows),
@@ -153,7 +153,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     lead: &[
                         "The repository route passes when stars, forks and contributors each reach their limit on the same check.",
                         "Stars alone never qualify a project. GitHub hides who starred, so stars cannot be screened for fakes. The route also needs forks and contributors, because faking all three together is much harder.",
-                        "The route measures a whole repository, so a library must list the repository's main crate: the crate with the repository's own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.",
+                        "The route measures a whole repository, so an entry with crates must list the repository's main crate: the crate with the repository's own name that claims the repository. An entry that lists only side crates does not pass, whatever the numbers say.",
                         "A library can pass its adoption gate on this route. An app counts it as one use signal. Every other Featured gate still applies.",
                         "This is a gate of separate limits. No page adds them into a score.",
                     ],
@@ -454,8 +454,9 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     tier: None,
                     lead: &[
                         "A library reads the downloads of its primary crate over the last 30 days, from the crates.io database dump. Raw key downloads_per_month.",
-                        "An app has no 30-day count. It reads binary downloads per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.",
-                        "An app with no release reads as not measured, never as 0.",
+                        "An app with binary downloads reads them per release: GitHub release asset downloads over up to its last 3 releases, divided by those releases. Raw key binary_downloads_per_release.",
+                        "An app with no binary download reads the downloads of its primary crate over the last 30 days, when it lists a crate. No tier rule reads that number.",
+                        "An app with no release and no crate reads as not measured, never as 0.",
                     ],
                     items: &[],
                     notes: &[
@@ -490,7 +491,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "Dependents",
-                            text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app with no crate has no dependents and reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.",
+                            text: "The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. An app reads as not applicable. Active dependents weigh history and owners, so the two numbers differ.",
                         },
                     ],
                     notes: &["An unknown value reads as not measured."],
@@ -502,7 +503,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     tier: None,
                     lead: &[
                         "Lists show the strongest tier first, then the most downloads, then the name. A value not measured sorts last.",
-                        "A library counts downloads over 30 days. An app counts binary downloads per release. The two units differ, and each row names its own.",
+                        "A library counts downloads over 30 days. An app counts binary downloads per release. An app with none counts its crate downloads over 30 days. The two units differ, and each row names its own.",
                         "This is an order and never a score. No page prints a rank, and no tier reads it.",
                         "A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.",
                     ],

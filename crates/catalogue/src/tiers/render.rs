@@ -85,6 +85,8 @@ mod tests {
             docker_page: None,
             contributors_page: None,
             dates: FetchDates::default(),
+            first_release_from_github: false,
+            last_release_from_dump: false,
         };
         Assessment {
             slug: Slug::new(slug).expect("slug"),

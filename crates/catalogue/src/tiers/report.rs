@@ -12,7 +12,8 @@ use super::error::TiersError;
 
 /// The tier report of the check on `today`: one record per assessment, keyed by slug.
 ///
-/// Each record holds the verdict, the notes and every signal with its source and data date.
+/// Each record holds the verdict, the notes, every signal with its source and data date, and the
+/// search terms.
 pub(crate) fn tier_report(
     assessments: &[Assessment],
     thresholds: &Thresholds,
@@ -24,7 +25,8 @@ pub(crate) fn tier_report(
             let mut facts =
                 signal_facts(&assessment.signals, &assessment.sources, assessment.commits);
             facts.extend(choice_signal_facts(&assessment.choice, &assessment.sources));
-            let record = EntryReport::new(&assessment.verdict, assessment.notes.clone(), facts);
+            let mut record = EntryReport::new(&assessment.verdict, assessment.notes.clone(), facts);
+            record.search_terms = assessment.choice.search_terms.clone();
             (assessment.slug.clone(), record)
         })
         .collect();
@@ -114,6 +116,29 @@ mod tests {
     }
 
     #[test]
+    fn search_terms_stay_out_of_the_text_until_set_and_a_record_without_them_reads() {
+        let mut entry = EntryReport {
+            tier: catalogue_core::Tier::Listed,
+            stable: false,
+            dormant: None,
+            demotion_pending: None,
+            reasons: Vec::new(),
+            unknown: Vec::new(),
+            notes: Vec::new(),
+            signals: Vec::new(),
+            search_terms: Vec::new(),
+        };
+        let text = serde_json::to_string(&entry).expect("writes");
+        assert!(!text.contains("search_terms"), "{text}");
+        let back: EntryReport = serde_json::from_str(&text).expect("reads");
+        assert!(back.search_terms.is_empty());
+        entry.search_terms = vec!["algebra".to_owned()];
+        let text = serde_json::to_string(&entry).expect("writes");
+        let back: EntryReport = serde_json::from_str(&text).expect("reads");
+        assert_eq!(back.search_terms, ["algebra"]);
+    }
+
+    #[test]
     fn an_uncited_value_blocks_the_write() {
         let dir = scratch();
         let path = dir.path().join("report.json");
@@ -134,6 +159,7 @@ mod tests {
             unknown: Vec::new(),
             notes: Vec::new(),
             signals: vec![fact],
+            search_terms: Vec::new(),
         };
         let slug = catalogue_core::Slug::new("alpha").expect("slug");
         let report = TierReport {

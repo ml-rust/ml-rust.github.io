@@ -19,8 +19,6 @@ const TIER_NAMES = new Map([
   ["new", "New"],
   ["archived", "Archived"],
 ]);
-// Another script adds its copy buttons when it hears this event.
-const ROWS_EVENT = "catalogue:rows";
 const ONLY_DIFFERENCES = "diff";
 const SOURCES_NOTE = "Each project page lists the source and date of every value.";
 
@@ -94,21 +92,26 @@ function amountCell(entry, name) {
   return textCell(Number.isFinite(value) ? String(Math.round(value)) : null);
 }
 
-// The downloads of `entry` with their unit: 30 days for a library, per release for an app.
+// The downloads of `entry` with their unit, by the rule of the lists. A library counts 30 days.
+// An app with binary downloads counts them per release. An app without them counts its crate
+// over 30 days, and an app with neither keeps the per release unit.
 function downloadsCell(entry) {
+  const amount = (name) => Number.parseFloat(signal(entry, name) ?? "");
   const app = entry.kind === "app";
-  const raw = signal(entry, app ? "binary_downloads_per_release" : "downloads_per_month");
-  const value = Number.parseFloat(raw ?? "");
+  const binary = app ? amount("binary_downloads_per_release") : Number.NaN;
+  const monthly = amount("downloads_per_month");
+  const perRelease = binary > 0 || (app && !Number.isFinite(monthly));
+  const value = perRelease ? binary : monthly;
   if (!Number.isFinite(value)) {
     return textCell(null);
   }
   const count = Math.round(value).toLocaleString("en-US");
-  return textCell(app ? `${count} per release` : `${count} over 30 days`);
+  return textCell(perRelease ? `${count} per release` : `${count} over 30 days`);
 }
 
-// The dependents of `entry`. An app with no crate cannot have any.
+// The dependents of `entry`. An app has none to show.
 function dependentsCell(entry) {
-  if (entry.kind === "app" && signal(entry, "dependents") === null) {
+  if (entry.kind === "app") {
     return { text: NOT_APPLICABLE, node: element("span", "fact fact-quiet", NOT_APPLICABLE) };
   }
   return amountCell(entry, "dependents");
@@ -194,21 +197,6 @@ function nativeCell(entry) {
   return { text: `${word}\n${exact ?? ""}`, node: box };
 }
 
-// The install command to run. The channel page is a link in the Links row.
-function installCell(entry) {
-  const command = typeof entry.install?.command === "string" ? entry.install.command : null;
-  if (!command) {
-    return textCell(null);
-  }
-  const box = element("div", "compare-install");
-  const line = element("p", "install-line");
-  const code = element("code", "", command);
-  code.setAttribute("data-install-command", command);
-  line.append(code);
-  box.append(line);
-  return { text: command, node: box };
-}
-
 // The links of `entry`. Links always differ, so this row is never compared.
 // The install channel joins them, named by its channel, unless another link already holds its page.
 function linksCell(entry) {
@@ -253,7 +241,6 @@ const FACTS = [
   { label: "Native code", cell: nativeCell },
   { label: "Python bindings", cell: (entry) => textCell(signal(entry, "python_bindings")) },
   { label: "License", cell: (entry) => textCell(signal(entry, "license")) },
-  { label: "Install", cell: installCell },
   { label: "Links", cell: linksCell, plain: true },
 ];
 
@@ -474,7 +461,6 @@ function showTable(picked, slugs) {
   if (picked.length < COMPARE_LIMIT) {
     view.append(picker(slugs, false));
   }
-  document.dispatchEvent(new CustomEvent(ROWS_EVENT));
 }
 
 // Names each slug the page cannot show.

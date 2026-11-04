@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use catalogue_core::{Catalogue, Date, EntryKind, Signals, Slug, Verdict, assess};
 use catalogue_signals::assemble::choice::{ChoiceFacts, ChoiceInputs, DependentIndex, measure};
 use catalogue_signals::assemble::{
-    Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_signals,
+    Assembled, CrateIndex, FactSources, FetchDates, LibrarySources, app_crate_signals, app_signals,
     apply_contributors, context, library_signals,
 };
 use catalogue_signals::dump::{DumpSnapshot, IdSet, utc_date};
@@ -43,7 +43,8 @@ pub(crate) struct Assessment {
 /// no network signals. Fetch notes come before assembly notes. `history` supplies
 /// each entry's previous tier, its dead run and its Docker baseline. The baseline
 /// window counts back from the date of the pull count in use.
-/// `build_checks` supplies the sandbox results of each library's crates.
+/// `build_checks` supplies the sandbox results of each library's crates. An app with crates also
+/// reads its release facts from `snapshot`.
 ///
 /// Each network value carries its own data date: `today` for a fresh fetch, the
 /// stored date for a cached link check or a fallback. RustSec values carry the
@@ -103,16 +104,21 @@ pub(crate) fn assess_entries(
             let docker = values.docker.as_ref();
             let docker_date = docker.map_or(today, |found| found.date);
             let baseline = history.docker_baseline(slug.as_str(), docker_date);
+            let releases = values.releases.as_ref().map(|found| &found.value);
             let Assembled { mut signals, notes } = match entry.kind {
                 EntryKind::Library => library_signals(entry, &sources, facts, link, today),
-                EntryKind::App => app_signals(
-                    facts,
-                    values.releases.as_ref().map(|found| &found.value),
-                    values.homebrew.as_ref().map(|found| found.value),
-                    values.repology.as_ref().map(|found| found.value),
-                    docker.map(|found| found.value),
-                    baseline,
-                ),
+                EntryKind::App => {
+                    let mut assembled = app_signals(
+                        facts,
+                        releases,
+                        values.homebrew.as_ref().map(|found| found.value),
+                        values.repology.as_ref().map(|found| found.value),
+                        docker.map(|found| found.value),
+                        baseline,
+                    );
+                    app_crate_signals(entry, &sources, releases, link, &mut assembled);
+                    assembled
+                }
             };
             let contributors = values.contributors.as_ref().map(|found| &found.value);
             apply_contributors(contributors, &mut signals);
@@ -132,6 +138,9 @@ pub(crate) fn assess_entries(
             let mut cited = FactSources::new(entry, repo.as_ref(), dump_date, dates);
             if link.is_some_and(|check| check.manifest().is_some()) {
                 cited.manifest_repo = Some(entry.repo.clone());
+            }
+            if entry.kind == EntryKind::App {
+                cited.cite_app_releases(&signals, releases);
             }
             let commits = facts.and_then(RepoValues::commits);
             let ctx = context(slug, catalogue, history, today);

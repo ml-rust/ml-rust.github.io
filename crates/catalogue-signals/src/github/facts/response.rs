@@ -55,6 +55,8 @@ pub(super) struct Repository {
     /// The fork count. An answer that lacks it leaves the count unknown, never 0.
     pub(super) fork_count: Option<u32>,
     pub(super) license_info: Option<LicenseInfo>,
+    /// The repository topics. An answer that lacks them reads as no topic.
+    pub(super) repository_topics: Option<Connection<TopicNode>>,
     pub(super) default_branch_ref: Option<Branch>,
     pub(super) issues: Option<Connection<Item>>,
     pub(super) pull_requests: Option<Connection<Item>>,
@@ -65,6 +67,18 @@ pub(super) struct Repository {
 pub(super) struct LicenseInfo {
     #[serde(rename = "spdxId")]
     pub(super) spdx_id: Option<String>,
+}
+
+/// One repository topic link.
+#[derive(Debug, Deserialize)]
+pub(super) struct TopicNode {
+    pub(super) topic: Option<Topic>,
+}
+
+/// A topic.
+#[derive(Debug, Deserialize)]
+pub(super) struct Topic {
+    pub(super) name: String,
 }
 
 /// The default branch.

@@ -5,9 +5,6 @@
 {%- if let Some(choice) = row.choice %}{% if let Some(python) = choice.python %}
 <p class="row-features"><span class="row-tag"{% if let Some(full) = python.full %} title="{{ full }}"{% endif %}>{{ python.short }}</span></p>
 {%- endif %}{% endif %}
-{%- if show_install %}{% if let Some(install) = row.install %}{% if let Some(command) = install.command %}
-<p class="row-install"><code>{{ command }}</code></p>
-{%- endif %}{% endif %}{% endif %}
 {%- if let Some(topic) = row.also_in %}
 <p class="row-also-in">Also in <a href="{{ topic.href }}">{{ topic.name }}</a>.</p>
 {%- endif %}

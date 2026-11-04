@@ -13,7 +13,7 @@ use crate::ids::Slug;
 use crate::registry::Thresholds;
 
 /// The version of the report format. A change to any field raises it.
-pub const REPORT_SCHEMA: u32 = 1;
+pub const REPORT_SCHEMA: u32 = 2;
 
 /// The tier report of one check.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
