@@ -1,28 +1,55 @@
 {% extends "base.html" %}
 {% block title %}Rules{% endblock %}
+{% block main_class %}page-wide{% endblock %}
 {% block content %}
+<div class="page-title">
+<span class="page-icon" aria-hidden="true">{% include "icons/tier-listed.svg" %}</span>
 <h1>Tier rules</h1>
-<p>Tiers come from fixed thresholds over raw signals. There is no composite score.</p>
-<p>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</p>
-<p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
+</div>
 <div class="threshold-status">
 {%- for line in status %}
-<p>{{ line.text }}{% if let Some(date) = line.date %}<time datetime="{{ date }}">{{ date }}</time>.{% endif %}</p>
+<p>{{ line.text }}{% if let Some(date) = line.date %}{% if let Some(text) = line.date_text %}<time datetime="{{ date }}">{{ text }}</time>.{% endif %}{% endif %}</p>
 {%- endfor %}
 </div>
-
-<h2 id="tiers">Tiers</h2>
-<dl class="tier-list">
+<ul class="principles">
+<li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>Tiers come from fixed thresholds over raw signals. There is no composite score.</span></li>
+<li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</span></li>
+<li><span class="icon" aria-hidden="true">{% include "icons/ui-check.svg" %}</span><span>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</span></li>
+</ul>
+<p class="rules-file">Every threshold lives in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/thresholds.toml"><code>data/thresholds.toml</code><span class="icon" aria-hidden="true">{% include "icons/ui-external.svg" %}</span></a></p>
+<div class="rules-layout">
+<nav class="rules-contents" aria-label="On this page">
+<h2 class="rules-contents-title">On this page</h2>
+<ul>
+<li><a href="#tiers">Tiers at a glance</a></li>
+{%- for group in groups %}
+<li><a href="#{{ group.id }}">{{ group.title }}</a>
+<ul>
+{%- for section in group.sections %}
+<li><a href="#{{ section.id }}">{{ section.title }}</a></li>
+{%- endfor %}
+</ul>
+</li>
+{%- endfor %}
+</ul>
+</nav>
+<div class="rules-main">
+<section class="panel" aria-labelledby="tiers">
+<h2 id="tiers">Tiers at a glance</h2>
+<dl class="tier-overview">
 {%- for tier in tiers %}
-<dt>{{ tier.name }}</dt>
-<dd>{{ tier.meaning }}</dd>
+<div><dt><a class="tier-word {{ tier.class }}" href="#{{ tier.anchor }}">{{ tier.name }}</a></dt><dd>{{ tier.meaning }}</dd></div>
 {%- endfor %}
 </dl>
-<p>The check applies the rules below in order. A signal that is missing counts neither way.</p>
-{%- for section in sections %}
-
-<section aria-labelledby="{{ section.id }}">
-<h2 id="{{ section.id }}">{{ section.title }}</h2>
+<p class="why-note">The check applies the rules in this order: instant archive, expected update interval, dormancy, rot signals, dead, finished, New, Featured, outside approval, Listed, demotion guard. A signal that is missing counts neither way.</p>
+</section>
+{%- for group in groups %}
+<section class="rule-group" aria-labelledby="{{ group.id }}">
+<h2 id="{{ group.id }}">{{ group.title }}</h2>
+{%- for section in group.sections %}
+<article class="rule{% if !section.rows.is_empty() %} rule-with-rows{% endif %}" aria-labelledby="{{ section.id }}">
+<div class="rule-text">
+<h3 id="{{ section.id }}">{{ section.title }}{% if let Some(word) = section.tier %} <span class="tier-word {{ word.class }}">{{ word.name }}</span>{% endif %}</h3>
 {%- for line in section.lead %}
 <p>{{ line }}</p>
 {%- endfor %}
@@ -34,10 +61,13 @@
 </ul>
 {%- endif %}
 {%- for line in section.notes %}
-<p>{{ line }}</p>
+<p class="why-note">{{ line }}</p>
 {%- endfor %}
+</div>
 {%- if !section.rows.is_empty() %}
-<table>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of {{ section.title }}</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -47,7 +77,12 @@
 {%- endfor %}
 </tbody>
 </table>
+</div>
 {%- endif %}
+</article>
+{%- endfor %}
 </section>
 {%- endfor %}
+</div>
+</div>
 {% endblock %}

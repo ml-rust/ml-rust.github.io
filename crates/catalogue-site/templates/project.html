@@ -1,154 +1,56 @@
 {% extends "base.html" %}
 {% block title %}{{ header.name }}{% endblock %}
+{% block main_class %}page-wide page-project{% endblock %}
 {% block content %}
-<h1>{{ header.name }}</h1>
-<p class="entry-facts"><span class="entry-kind">{{ header.kind }}</span>{% if let Some(label) = header.label %} <span class="entry-label">{{ label }}</span>{% endif %}{% if let Some(badge) = header.badge %} {% include "tier_badge.html" %}{% endif %}{% if header.stable %} <span class="stable-label">Stable</span>{% endif %}{% if let Some(word) = header.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}</p>
-{%- if header.stable %}
-<p>Stable means the project is finished: dormant by design, not decayed.</p>
-{%- endif %}
-{%- if header.org_affiliated %}
-<p class="banner banner-org">The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.</p>
-{%- endif %}
-{%- if let Some(link) = header.superseded_by %}
-<p class="banner banner-superseded"><a href="{{ link.href }}">{{ link.name }}</a> replaces this project.</p>
-{%- endif %}
-{%- if !header.replaces.is_empty() %}
-<p class="banner">This project replaces{% for link in header.replaces %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}.</p>
-{%- endif %}
-{%- if !header.topics.is_empty() %}
-<p>Topics:{% for link in header.topics %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
-{%- endif %}
-{%- if let Some(link) = header.category %}
-<p>Category: <a href="{{ link.href }}">{{ link.name }}</a></p>
-{%- endif %}
-{%- if let Some(link) = header.part_of %}
-<p>Part of <a href="{{ link.href }}">{{ link.name }}</a>.</p>
-{%- endif %}
-{%- if let Some(note) = movement_note %}
-<p>{{ note }}</p>
-{%- endif %}
-
-<h2 id="at-a-glance">At a glance</h2>
-<ul class="glance-list">
-{%- if let Some(badge) = glance.tier %}
-<li>Tier: {% include "tier_badge.html" %}</li>
-{%- endif %}
-<li>License: {{ glance.license }}</li>
-<li>Runs on: {{ glance.runs_on }}</li>
-<li>Native code: {{ glance.native_code }}{% if let Some(python) = glance.python %}. {{ python }}{% endif %}</li>
-<li>Active users: {{ glance.active_users }}</li>
-<li>Dependents: {{ glance.dependents }}</li>
-<li>Contributors: {{ glance.contributors }}</li>
-<li>Install: {% if let Some(command) = glance.install.command %}<code>{{ command }}</code> {% endif %}<a href="{{ glance.install.href }}">{{ glance.install.text }}</a></li>
-</ul>
-
-<h2 id="description">Description</h2>
-<p>{{ description.text }}</p>
-<p class="sources">Source: {% if let Some(href) = description.href %}<a href="{{ href }}">{{ description.source }}</a>{% else %}{{ description.source }}{% endif %}.</p>
-
-<h2 id="links">Links</h2>
-<ul class="link-list">
-{%- for link in links %}
-<li>{{ link.label }}: <a href="{{ link.href }}">{{ link.text }}</a></li>
-{%- endfor %}
-</ul>
+{% include "project_head.html" %}
+{%- if action.archived %}
 {%- if let Some(section) = tier %}
-
-<h2 id="tier">Why this tier</h2>
-<p>The check on <time datetime="{{ section.checked }}">{{ section.checked }}</time> applied thresholds version {{ section.version }}. The <a href="/rules/">rules</a> say what each rule reads.</p>
-{%- if section.reasons.is_empty() %}
-<p>The check recorded no reason.</p>
+{% let why = &section.why %}{% include "project_why.html" %}
+{%- endif %}
+{% include "project_compare.html" %}
+{%- endif %}
+<div class="project-layout">
+{% include "project_action.html" %}
+<div class="project-main">
+{%- if !action.archived %}
+{%- if let Some(section) = tier %}
+{% let why = &section.why %}{% include "project_why.html" %}
 {%- else %}
-<ul class="reason-list">
-{%- for reason in section.reasons %}
-<li><code>{{ reason.rule }}</code>: {{ reason.detail }}</li>
-{%- endfor %}
-</ul>
-{%- endif %}
-{%- if let Some(lower) = section.demotion_pending %}
-<p class="banner">A demotion to {{ lower }} waits for approval. The entry stays Featured until a demotion judgment is approved.</p>
-{%- endif %}
-{%- if !section.unknown.is_empty() %}
-<p>Not measured: {% for name in section.unknown %}{{ name }}{% if !loop.last %}, {% endif %}{% endfor %}.</p>
-{%- endif %}
-{%- if !section.notes.is_empty() %}
-<ul class="note-list">
-{%- for note in section.notes %}
-<li>{{ note }}</li>
-{%- endfor %}
-</ul>
-{%- endif %}
-
-<h2 id="signals">Signals</h2>
-<p>Each row shows the raw value, its source and the date of the data behind it.</p>
-{%- if section.signals.is_empty() %}
-<p>The check recorded no signal.</p>
-{%- else %}
-<table class="signal-table">
-<thead>
-<tr><th scope="col">Signal</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Fetched</th><th scope="col">Counts toward tier</th></tr>
-</thead>
-<tbody>
-{%- for signal in section.signals %}
-<tr><th scope="row">{{ signal.label }}</th>{% if let Some(value) = signal.value %}<td>{{ value }}</td>{% else %}<td class="not-measured">Not measured</td>{% endif %}<td>{% if let Some(source) = signal.source %}<a href="{{ source.href }}">{{ source.name }}</a>{% endif %}</td><td>{% if let Some(date) = signal.fetched %}<time datetime="{{ date }}">{{ date }}</time>{% endif %}</td><td>{{ signal.counts }}</td></tr>
-{%- endfor %}
-</tbody>
-</table>
-{%- endif %}
-{%- else %}
-
+<section class="panel" aria-labelledby="tier">
 <h2 id="tier">Tier</h2>
 <p>Tiers are not published.</p>
+</section>
 {%- endif %}
-
-<h2 id="corrections">Corrections</h2>
-{%- if corrections.is_empty() %}
-<p>No correction applies to this entry.</p>
-{%- else %}
-<ul class="correction-list">
-{%- for correction in corrections %}
-<li>
-<p>{{ correction.finding }}</p>
-<p>Approved on <time datetime="{{ correction.date }}">{{ correction.date }}</time> in <a href="{{ correction.issue_href }}">issue #{{ correction.issue }}</a>.{% if !correction.evidence.is_empty() %} Evidence:{% for link in correction.evidence %} <a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %},{% endif %}{% endfor %}.{% endif %}</p>
-</li>
+{%- endif %}
+{% include "project_compat.html" %}
+{%- if !action.archived %}
+{% include "project_compare.html" %}
+{%- endif %}
+{%- if crates.len() > 1 %}
+<details class="disclosure disclosure-card" id="crates">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Crates</span><span class="disclosure-summary">{{ crates.len() }} crates</span></summary>
+<ul class="crate-list">
+{%- for row in crates %}
+<li><a href="{{ row.href }}">{{ row.name }}</a>{% if row.primary %} <span class="row-tag">Primary</span>{% endif %}</li>
 {%- endfor %}
 </ul>
-{%- endif %}
-
-<h2 id="judgments">Judgments</h2>
-<p>A judgment enters only through an approved issue and a merged pull request.</p>
-{%- if judgments.is_empty() %}
-<p>No judgment applies to this entry.</p>
-{%- else %}
-<table class="judgment-table">
-<thead>
-<tr><th scope="col">Issue</th><th scope="col">Type</th><th scope="col">Decision</th><th scope="col">Date</th><th scope="col">Reporter</th><th scope="col">Approver</th><th scope="col">Evidence</th></tr>
-</thead>
-<tbody>
-{%- for judgment in judgments %}
-<tr><td><a href="{{ judgment.issue_href }}">#{{ judgment.issue }}</a></td><td>{{ judgment.kind }}</td><td>{{ judgment.decision }}{% for link in judgment.links %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</td><td><time datetime="{{ judgment.date }}">{{ judgment.date }}</time></td><td>{{ judgment.reporter }}</td><td>{{ judgment.approver }}</td><td>{% if judgment.evidence.is_empty() %}None{% else %}{% for link in judgment.evidence %}<a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %}, {% endif %}{% endfor %}{% endif %}</td></tr>
-{%- endfor %}
-</tbody>
-</table>
+</details>
 {%- endif %}
 {%- if !related.is_empty() %}
-
+<section class="panel" aria-labelledby="related">
 <h2 id="related">Related projects</h2>
-<p>{{ order }}</p>
-<ul class="link-list">
+{%- if related.len() > 1 %}
+<p class="order-note">{{ order }}</p>
+{%- endif %}
+<ul class="related-list">
 {%- for link in related %}
 <li><a href="{{ link.href }}">{{ link.name }}</a></li>
 {%- endfor %}
 </ul>
+</section>
 {%- endif %}
-{%- if !also_in.is_empty() %}
-
-<h2 id="also-in">Also in these topics</h2>
-<p>{{ order }}</p>
-<ul class="also-in-list">
-{%- for row in also_in %}
-<li><a href="{{ row.entry.href }}">{{ row.entry.name }}</a>{% if let Some(badge) = row.badge %} {% include "tier_badge.html" %}{% endif %}{% if let Some(word) = row.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}. Also in <a href="{{ row.topic.href }}">{{ row.topic.name }}</a>.{% if let Some(related) = row.related %} <a class="entry-related" href="{{ related.href }}">{{ related.text }}</a>.{% endif %}</li>
-{%- endfor %}
-</ul>
-{%- endif %}
+{% include "project_measurements.html" %}
+{% include "project_review.html" %}
+</div>
+</div>
 {% endblock %}

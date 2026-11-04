@@ -1,28 +1,48 @@
 {% extends "base.html" %}
 {% block title %}Submit{% endblock %}
+{% block main_class %}page-wide{% endblock %}
 {% block content %}
-<h1>Submit</h1>
-<p>Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
-<ul class="form-list">
-{%- for form in forms %}
-<li><a href="{{ form.href }}">{{ form.name }}</a>: {{ form.description }}</li>
+<div class="page-title">
+<span class="page-icon" aria-hidden="true">{% include "icons/page-submit.svg" %}</span>
+<h1>Add a project or report a change</h1>
+</div>
+<p class="lede">Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
+<div class="submit-layout">
+<div class="submit-main">
+<section aria-labelledby="propose">
+<h2 id="propose">Add a project</h2>
+<ul class="form-cards form-cards-lead">
+{%- for form in propose %}
+{% include "form_card.html" %}
 {%- endfor %}
 </ul>
-
-<h2 id="approval">Approval</h2>
-<p>A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue.</p>
-<p>Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</p>
-<p>After approval, the bot opens a pull request with the data change. Merging that pull request applies it.</p>
-<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
-<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
-<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
-
-<h2 id="topics">Topics</h2>
-<p>The submit and topic forms take topic slugs from this list.</p>
+</section>
+<section aria-labelledby="report">
+<h2 id="report">Report something about a listed project</h2>
+<ul class="form-cards form-cards-two">
+{%- for form in report %}
+{% include "form_card.html" %}
+{%- endfor %}
+</ul>
+</section>
+<section aria-labelledby="approve">
+<h2 id="approve">Approve a tier change or state a project's status</h2>
+<ul class="form-cards form-cards-two">
+{%- for form in approve %}
+{% include "form_card.html" %}
+{%- endfor %}
+</ul>
+</section>
+<section aria-labelledby="reference">
+<h2 id="reference">Topic and category ids</h2>
+<details class="disclosure disclosure-card" id="topics">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Topics</span><span class="disclosure-summary">The submit and topic forms take topic slugs from this list.</span></summary>
 {%- if topics.is_empty() %}
 <p>No topic exists yet.</p>
 {%- else %}
-<table>
+<div class="table-scroll">
+<table class="data-table">
+<caption class="visually-hidden">Topic slugs</caption>
 <thead>
 <tr><th scope="col">Slug</th><th scope="col">Name</th><th scope="col">Parent</th></tr>
 </thead>
@@ -32,14 +52,17 @@
 {%- endfor %}
 </tbody>
 </table>
+</div>
 {%- endif %}
-
-<h2 id="categories">Categories</h2>
-<p>The submit form takes one optional category id from this list.</p>
+</details>
+<details class="disclosure disclosure-card" id="categories">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">Categories</span><span class="disclosure-summary">The submit form takes one optional category id from this list.</span></summary>
 {%- if categories.is_empty() %}
 <p>No category exists yet.</p>
 {%- else %}
-<table>
+<div class="table-scroll">
+<table class="data-table">
+<caption class="visually-hidden">Category ids</caption>
 <thead>
 <tr><th scope="col">Id</th><th scope="col">Name</th></tr>
 </thead>
@@ -49,5 +72,23 @@
 {%- endfor %}
 </tbody>
 </table>
+</div>
 {%- endif %}
+</details>
+</section>
+</div>
+<aside class="panel submit-next" aria-labelledby="approval">
+<h2 id="approval">What happens next</h2>
+<ol class="steps">
+<li><strong>You open an issue.</strong> The form opens on GitHub.</li>
+<li><strong>A maintainer approves it.</strong> A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue. Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</li>
+<li><strong>The bot opens a pull request.</strong> It holds the data change.</li>
+<li><strong>Merging applies the change.</strong> The entry page shows it on the next build.</li>
+</ol>
+<h3>Public review</h3>
+<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
+<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
+<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
+</aside>
+</div>
 {% endblock %}

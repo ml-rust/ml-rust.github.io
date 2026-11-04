@@ -5,7 +5,7 @@ use catalogue_core::{Category, Topic};
 
 use super::layout::Layout;
 use super::shared::{NamedLink, category_href, topic_href};
-use crate::forms::ISSUE_FORMS;
+use crate::forms::{FormGroup, ISSUE_FORMS};
 use crate::href::SafeHref;
 
 /// The submit page.
@@ -14,8 +14,12 @@ use crate::href::SafeHref;
 pub(crate) struct SubmitPage<'a> {
     /// The shared layout.
     pub layout: Layout,
-    /// One link per issue form.
-    pub forms: Vec<FormLink>,
+    /// The form that adds a project.
+    pub propose: Vec<FormLink>,
+    /// The forms that report something about a listed project.
+    pub report: Vec<FormLink>,
+    /// The forms that approve a tier change or state a project's status.
+    pub approve: Vec<FormLink>,
     /// The topics a form can name, in file order.
     pub topics: Vec<TopicRow<'a>>,
     /// The categories the submit form can name, in file order.
@@ -58,14 +62,17 @@ pub(crate) struct TopicRow<'a> {
 impl<'a> SubmitPage<'a> {
     /// The submit page in `layout`, listing `topics` and `categories`.
     pub(crate) fn new(layout: Layout, topics: &'a [Topic], categories: &'a [Category]) -> Self {
-        let forms = ISSUE_FORMS
-            .iter()
-            .map(|form| FormLink {
-                name: form.name,
-                description: form.description,
-                href: form.new_issue_href(),
-            })
-            .collect();
+        let forms = |group: FormGroup| -> Vec<FormLink> {
+            ISSUE_FORMS
+                .iter()
+                .filter(|form| form.group == group)
+                .map(|form| FormLink {
+                    name: form.name,
+                    description: form.description,
+                    href: form.new_issue_href(),
+                })
+                .collect()
+        };
         let topics = topics
             .iter()
             .map(|topic| TopicRow {
@@ -87,7 +94,9 @@ impl<'a> SubmitPage<'a> {
             .collect();
         Self {
             layout,
-            forms,
+            propose: forms(FormGroup::Propose),
+            report: forms(FormGroup::Report),
+            approve: forms(FormGroup::Approve),
             topics,
             categories,
         }

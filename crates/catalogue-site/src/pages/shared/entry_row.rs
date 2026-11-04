@@ -6,7 +6,7 @@ use super::badge::TierBadge;
 use super::choice::ChoiceText;
 use super::install::{InstallLine, install_line};
 use super::labels::kind_name;
-use super::paths::project_href;
+use super::paths::{NamedLink, project_href};
 use crate::href::SafeHref;
 
 /// The tag of an entry the dormancy rule finds dormant.
@@ -48,6 +48,10 @@ pub(crate) struct EntryRow<'a> {
     pub movement: Option<&'static str>,
     /// The link that stands for the related projects this row hides.
     pub related: Option<RelatedLink>,
+    /// The first shared topic, on a row that compares projects from an entry page.
+    pub also_in: Option<NamedLink<'a>>,
+    /// Whether the row is the project of the page that shows it.
+    pub current: bool,
 }
 
 /// One state word on a row, with its meaning.
@@ -103,6 +107,8 @@ impl<'a> EntryRow<'a> {
             statuses: Vec::new(),
             movement: None,
             related: None,
+            also_in: None,
+            current: false,
         }
     }
 
@@ -127,6 +133,18 @@ impl<'a> EntryRow<'a> {
     /// The row with how to get the project.
     pub(crate) fn with_install(mut self, entry: &Entry) -> Self {
         self.install = Some(install_line(entry));
+        self
+    }
+
+    /// The row with the topic it shares with the project of the page.
+    pub(crate) fn with_also_in(mut self, topic: NamedLink<'a>) -> Self {
+        self.also_in = Some(topic);
+        self
+    }
+
+    /// The row marked as the project of the page that shows it.
+    pub(crate) fn marked_current(mut self) -> Self {
+        self.current = true;
         self
     }
 

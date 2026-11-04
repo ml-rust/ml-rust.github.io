@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Submit · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.95dc0f8d.css">
+<link rel="stylesheet" href="/assets/site.03571439.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -40,32 +40,45 @@
 </details>
 </div>
 </header>
-<main id="main" tabindex="-1" class="page-prose">
+<main id="main" tabindex="-1" class="page-wide">
 
-<h1>Submit</h1>
-<p>Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
-<ul class="form-list">
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=submit.yml">Submit a project</a>: Propose a new library or app for the catalogue.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=correctness.yml">Correctness report</a>: Report a wrong fact on an entry.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=supersedes.yml">Supersedes or fork</a>: Report that one entry replaces another.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=kind.yml">Product or demo</a>: Set whether an entry is a product or a demo.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=topic.yml">Topic change</a>: Change the topics of an entry.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=demotion.yml">Featured demotion</a>: Approve moving a Featured entry to a lower tier.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=featured-approval.yml">Featured approval</a>: Approve Featured for an org-affiliated entry.</li>
-<li><a href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=maintainer.yml">Maintainer statement</a>: State whether a project is maintained or finished.</li>
+<div class="page-title">
+<span class="page-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H7A2 2 0 0 0 5 5.5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/><path d="M12 12v5"/><path d="M9.5 14.5h5"/></svg></span>
+<h1>Add a project or report a change</h1>
+</div>
+<p class="lede">Every change to the catalogue starts as a GitHub issue form. Pick the form for your change.</p>
+<div class="submit-layout">
+<div class="submit-main">
+<section aria-labelledby="propose">
+<h2 id="propose">Add a project</h2>
+<ul class="form-cards form-cards-lead">
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=submit.yml"><span class="form-card-name">Submit a project</span><span class="form-card-description">Propose a new library or app for the catalogue.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
 </ul>
-
-<h2 id="approval">Approval</h2>
-<p>A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue.</p>
-<p>Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</p>
-<p>After approval, the bot opens a pull request with the data change. Merging that pull request applies it.</p>
-<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
-<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
-<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
-
-<h2 id="topics">Topics</h2>
-<p>The submit and topic forms take topic slugs from this list.</p>
-<table>
+</section>
+<section aria-labelledby="report">
+<h2 id="report">Report something about a listed project</h2>
+<ul class="form-cards form-cards-two">
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=correctness.yml"><span class="form-card-name">Correctness report</span><span class="form-card-description">Report a wrong fact on an entry.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=supersedes.yml"><span class="form-card-name">Supersedes or fork</span><span class="form-card-description">Report that one entry replaces another.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=kind.yml"><span class="form-card-name">Product or demo</span><span class="form-card-description">Set whether an entry is a product or a demo.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=topic.yml"><span class="form-card-name">Topic change</span><span class="form-card-description">Change the topics of an entry.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+</ul>
+</section>
+<section aria-labelledby="approve">
+<h2 id="approve">Approve a tier change or state a project's status</h2>
+<ul class="form-cards form-cards-two">
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=demotion.yml"><span class="form-card-name">Featured demotion</span><span class="form-card-description">Approve moving a Featured entry to a lower tier.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=featured-approval.yml"><span class="form-card-name">Featured approval</span><span class="form-card-description">Approve Featured for an org-affiliated entry.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+<li><a class="form-card" href="https://github.com/ml-rust/ml-rust.github.io/issues/new?template=maintainer.yml"><span class="form-card-name">Maintainer statement</span><span class="form-card-description">State whether a project is maintained or finished.</span><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></li>
+</ul>
+</section>
+<section aria-labelledby="reference">
+<h2 id="reference">Topic and category ids</h2>
+<details class="disclosure disclosure-card" id="topics">
+<summary><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></span><span class="disclosure-title">Topics</span><span class="disclosure-summary">The submit and topic forms take topic slugs from this list.</span></summary>
+<div class="table-scroll">
+<table class="data-table">
+<caption class="visually-hidden">Topic slugs</caption>
 <thead>
 <tr><th scope="col">Slug</th><th scope="col">Name</th><th scope="col">Parent</th></tr>
 </thead>
@@ -74,10 +87,13 @@
 <tr><td><a href="/topics/tensors/"><code>tensors</code></a></td><td>Tensors</td><td><code>ml</code></td></tr>
 </tbody>
 </table>
-
-<h2 id="categories">Categories</h2>
-<p>The submit form takes one optional category id from this list.</p>
-<table>
+</div>
+</details>
+<details class="disclosure disclosure-card" id="categories">
+<summary><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></span><span class="disclosure-title">Categories</span><span class="disclosure-summary">The submit form takes one optional category id from this list.</span></summary>
+<div class="table-scroll">
+<table class="data-table">
+<caption class="visually-hidden">Category ids</caption>
 <thead>
 <tr><th scope="col">Id</th><th scope="col">Name</th></tr>
 </thead>
@@ -85,6 +101,24 @@
 <tr><td><a href="/categories/vector-databases/"><code>vector-databases</code></a></td><td>Vector databases</td></tr>
 </tbody>
 </table>
+</div>
+</details>
+</section>
+</div>
+<aside class="panel submit-next" aria-labelledby="approval">
+<h2 id="approval">What happens next</h2>
+<ol class="steps">
+<li><strong>You open an issue.</strong> The form opens on GitHub.</li>
+<li><strong>A maintainer approves it.</strong> A maintainer listed in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/maintainers.toml"><code>data/maintainers.toml</code></a> must approve the issue. Approval is the <code>approved</code> label on the issue. The bot accepts that label only from a listed maintainer.</li>
+<li><strong>The bot opens a pull request.</strong> It holds the data change.</li>
+<li><strong>Merging applies the change.</strong> The entry page shows it on the next build.</li>
+</ol>
+<h3>Public review</h3>
+<p>Every judgment is public: the issue, your login, the evidence and the approver appear on the entry page.</p>
+<p>An ml-rust organization member never approves a judgment on an org-affiliated entry.</p>
+<p>Read the <a href="/rules/">rules</a> before you file a judgment.</p>
+</aside>
+</div>
 
 </main>
 <footer class="site-footer">

@@ -1,0 +1,23 @@
+{%- if !compare.is_empty() %}
+<section class="project-compare" aria-labelledby="also-in">
+<div class="section-head">
+<h2 id="also-in">Also in these topics</h2>
+<p class="order-note">{{ order }}</p>
+</div>
+<table class="rows rows-mixed rows-compact">
+<caption class="visually-hidden">{{ header.name }} beside the projects that share a topic with it</caption>
+<thead>
+<tr><th scope="col" class="col-project">Project</th><th scope="col" class="col-users">Active users</th><th scope="col" class="col-release">Latest release</th><th scope="col" class="col-gpu">Runs on (GPU)</th><th scope="col" class="col-native">Native code</th><th scope="col" class="col-license">License</th></tr>
+</thead>
+<tbody>
+{%- let show_install = false %}
+{%- for row in compare %}
+{% include "entry_row.html" %}
+{%- endfor %}
+</tbody>
+</table>
+{%- if !compare_topics.is_empty() %}
+<p class="more-link compare-more">{% for link in compare_topics %}<a href="{{ link.href }}">All projects in {{ link.name }}<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a>{% endfor %}</p>
+{%- endif %}
+</section>
+{%- endif %}

@@ -18,7 +18,7 @@ fn the_page_states_the_tier_principles_and_the_rot_signals() {
         "Tiers come from fixed thresholds over raw signals. There is no composite score.",
         "Stars never count toward a tier.",
         "Thresholds version 3.",
-        "Calibrated on <time datetime=\"2026-11-03\">2026-11-03</time>.",
+        "Calibrated on <time datetime=\"2026-11-03\">3 Nov 2026</time>.",
         "Movement comes from the daily snapshots. It never affects a tier.",
         "This is an order and never a score.",
     ] {
@@ -93,6 +93,44 @@ fn without_thresholds_the_page_shows_no_values() {
         page.contains("data/thresholds.toml is absent. No tier is published."),
         "{page}"
     );
-    assert!(!page.contains("<table>"), "{page}");
+    assert!(!page.contains("<table"), "{page}");
     assert!(page.contains("Stars never count toward a tier."), "{page}");
+}
+
+#[test]
+fn the_contents_list_links_every_rule_and_each_tier_comes_before_its_inputs() {
+    let page = rules(Some(&thresholds(Some("2026-11-03"))));
+    for id in [
+        "featured-library",
+        "featured-app",
+        "new",
+        "listed",
+        "archived",
+        "instant-archive",
+        "dead",
+        "interval",
+        "dormancy",
+        "rot",
+        "finished",
+        "outside-approval",
+        "demotion-guard",
+        "fallback",
+        "choice-facts",
+        "list-order",
+        "movement",
+    ] {
+        assert!(
+            page.contains(&format!("<a href=\"#{id}\">")),
+            "no contents link to {id}"
+        );
+        assert!(
+            page.contains(&format!("<h3 id=\"{id}\">")),
+            "no heading {id}"
+        );
+    }
+    let tier = page
+        .find("<h3 id=\"featured-library\">")
+        .expect("tier rule");
+    let input = page.find("<h3 id=\"interval\">").expect("input rule");
+    assert!(tier < input, "a tier rule comes first");
 }

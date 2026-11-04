@@ -1,9 +1,11 @@
 //! Why an entry has its tier, and every signal behind it.
 
-use catalogue_core::{EntryReport, STARS_SIGNAL, SignalFact, TierReport};
+use catalogue_core::{EntryKind, EntryReport, STARS_SIGNAL, SignalFact, Thresholds, TierReport};
 
+use super::measurements::{SignalGroup, signal_groups};
+use super::why::Why;
 use crate::href::SafeHref;
-use crate::pages::shared::{NamedLink, tier_name};
+use crate::pages::shared::{NamedLink, date_text};
 
 /// The counts-toward-tier text of the star count.
 const STARS_NEVER_COUNT: &str = "No — stars never count toward a tier";
@@ -13,18 +15,20 @@ const STARS_NEVER_COUNT: &str = "No — stars never count toward a tier";
 pub(crate) struct TierSection<'a> {
     /// The run date of the check.
     pub checked: String,
+    /// The run date of the check as a person reads it.
+    pub checked_text: String,
+    /// The block that says why the entry has its tier, in plain sentences.
+    pub why: Why<'a>,
     /// The thresholds version the check applied.
     pub version: u32,
     /// Every rule outcome, in rule order.
     pub reasons: Vec<ReasonLine<'a>>,
-    /// The tier a Featured entry waits for while its demotion needs approval.
-    pub demotion_pending: Option<&'static str>,
     /// The signals a rule needed and did not have, by label.
     pub unknown: Vec<&'a str>,
     /// One line per input the check left unresolved.
     pub notes: &'a [String],
-    /// Every signal, in report order.
-    pub signals: Vec<SignalRow<'a>>,
+    /// Every signal, in one group each.
+    pub groups: Vec<SignalGroup<'a>>,
 }
 
 /// One rule outcome.
@@ -47,15 +51,25 @@ pub(crate) struct SignalRow<'a> {
     pub source: Option<NamedLink<'a>>,
     /// The date of the data behind the value. `None` without a value.
     pub fetched: Option<String>,
+    /// That date as a person reads it. `None` without a value.
+    pub fetched_text: Option<String>,
     /// Whether a tier rule reads the value, as text.
     pub counts: &'static str,
 }
 
 impl<'a> TierSection<'a> {
     /// The section for `record`, from the check of `report`.
-    pub(crate) fn new(report: &TierReport, record: &'a EntryReport) -> Self {
+    pub(crate) fn new(
+        report: &TierReport,
+        record: &'a EntryReport,
+        kind: EntryKind,
+        thresholds: Option<&Thresholds>,
+    ) -> Self {
+        let checked = report.generated.to_string();
         Self {
-            checked: report.generated.to_string(),
+            checked_text: date_text(&checked).unwrap_or_else(|| checked.clone()),
+            checked,
+            why: Why::new(record, kind, thresholds),
             version: report.thresholds_version,
             reasons: record
                 .reasons
@@ -65,21 +79,20 @@ impl<'a> TierSection<'a> {
                     detail: &reason.detail,
                 })
                 .collect(),
-            demotion_pending: record.demotion_pending.map(tier_name),
             unknown: record
                 .unknown
                 .iter()
                 .map(|name| label_of(&record.signals, name))
                 .collect(),
             notes: &record.notes,
-            signals: record.signals.iter().map(SignalRow::of).collect(),
+            groups: signal_groups(report, record),
         }
     }
 }
 
 impl<'a> SignalRow<'a> {
     /// The row of `fact`. A fact without a value shows no source and no date.
-    fn of(fact: &'a SignalFact) -> Self {
+    pub(super) fn of(fact: &'a SignalFact) -> Self {
         let measured = fact.value.is_some();
         let source = fact.source.as_ref().filter(|_| measured);
         let counts = if fact.counts_toward_tier {
@@ -89,6 +102,10 @@ impl<'a> SignalRow<'a> {
         } else {
             "No"
         };
+        let fetched = fact
+            .fetched
+            .filter(|_| measured)
+            .map(|date| date.to_string());
         Self {
             label: &fact.label,
             value: fact.value.as_deref(),
@@ -96,10 +113,8 @@ impl<'a> SignalRow<'a> {
                 name: &source.label,
                 href: SafeHref::from(&source.url),
             }),
-            fetched: fact
-                .fetched
-                .filter(|_| measured)
-                .map(|date| date.to_string()),
+            fetched_text: fetched.as_deref().and_then(date_text),
+            fetched,
             counts,
         }
     }

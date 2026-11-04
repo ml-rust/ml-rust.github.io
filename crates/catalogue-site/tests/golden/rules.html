@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rules · Rust ML catalogue</title>
-<link rel="stylesheet" href="/assets/site.95dc0f8d.css">
+<link rel="stylesheet" href="/assets/site.03571439.css">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.74a15e22.svg">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">
 </head>
@@ -40,33 +40,167 @@
 </details>
 </div>
 </header>
-<main id="main" tabindex="-1" class="page-prose">
+<main id="main" tabindex="-1" class="page-wide">
 
+<div class="page-title">
+<span class="page-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h.01" stroke-width="2.5"/><path d="M4 12h.01" stroke-width="2.5"/><path d="M4 18h.01" stroke-width="2.5"/><path d="M8.5 6H20.5"/><path d="M8.5 12H20.5"/><path d="M8.5 18H20.5"/></svg></span>
 <h1>Tier rules</h1>
-<p>Tiers come from fixed thresholds over raw signals. There is no composite score.</p>
-<p>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</p>
-<p>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</p>
+</div>
 <div class="threshold-status">
 <p>Thresholds version 3.</p>
-<p>Calibrated on <time datetime="2026-11-03">2026-11-03</time>.</p>
+<p>Calibrated on <time datetime="2026-11-03">3 Nov 2026</time>.</p>
 <p>The values stay frozen until the yearly recalibration. Any change raises the version.</p>
 </div>
-
-<h2 id="tiers">Tiers</h2>
-<dl class="tier-list">
-<dt>Featured</dt>
-<dd>Shown first. It passes every Featured gate.</dd>
-<dt>Listed</dt>
-<dd>Shown in the normal listing. No other tier applies.</dd>
-<dt>New</dt>
-<dd>A project whose first release is recent.</dd>
-<dt>Archived</dt>
-<dd>No longer maintained, or ended by its author.</dd>
+<ul class="principles">
+<li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>Tiers come from fixed thresholds over raw signals. There is no composite score.</span></li>
+<li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>Stars never count toward a tier. GitHub hides stargazer lists, so stars cannot be screened for fakes.</span></li>
+<li><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.75l5.25 5.25L20 6.75"/></svg></span><span>No language model decides a tier. A human judgment changes an entry only through an approved issue and a merged pull request.</span></li>
+</ul>
+<p class="rules-file">Every threshold lives in <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/thresholds.toml"><code>data/thresholds.toml</code><span class="icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5H6A2.5 2.5 0 0 0 3.5 7v11A2.5 2.5 0 0 0 6 20.5h11a2.5 2.5 0 0 0 2.5-2.5v-4.5"/><path d="M20.5 3.5L11.5 12.5"/><path d="M14.5 3.5h6v6"/></svg></span></a></p>
+<div class="rules-layout">
+<nav class="rules-contents" aria-label="On this page">
+<h2 class="rules-contents-title">On this page</h2>
+<ul>
+<li><a href="#tiers">Tiers at a glance</a></li>
+<li><a href="#tier-rules">What each tier requires</a>
+<ul>
+<li><a href="#featured-library">Featured library</a></li>
+<li><a href="#featured-app">Featured app</a></li>
+<li><a href="#new">New</a></li>
+<li><a href="#listed">Listed</a></li>
+<li><a href="#archived">Archived</a></li>
+<li><a href="#instant-archive">Instant archive</a></li>
+<li><a href="#dead">Dead</a></li>
+</ul>
+</li>
+<li><a href="#activity">How the check reads activity</a>
+<ul>
+<li><a href="#interval">Expected update interval</a></li>
+<li><a href="#dormancy">Dormancy</a></li>
+<li><a href="#rot">Rot signals</a></li>
+<li><a href="#finished">Finished</a></li>
+</ul>
+</li>
+<li><a href="#review">Review and failed fetches</a>
+<ul>
+<li><a href="#outside-approval">Outside approval</a></li>
+<li><a href="#demotion-guard">Demotion guard</a></li>
+<li><a href="#fallback">Failed fetches</a></li>
+</ul>
+</li>
+<li><a href="#facts">Facts, lists and movement</a>
+<ul>
+<li><a href="#choice-facts">Facts that never count</a></li>
+<li><a href="#list-order">List order</a></li>
+<li><a href="#movement">Movement</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<div class="rules-main">
+<section class="panel" aria-labelledby="tiers">
+<h2 id="tiers">Tiers at a glance</h2>
+<dl class="tier-overview">
+<div><dt><a class="tier-word tier-featured" href="#featured-library">Featured</a></dt><dd>Shown first. It passes every Featured gate.</dd></div>
+<div><dt><a class="tier-word tier-listed" href="#listed">Listed</a></dt><dd>Shown in the normal listing. No other tier applies.</dd></div>
+<div><dt><a class="tier-word tier-new" href="#new">New</a></dt><dd>A project whose first release is recent.</dd></div>
+<div><dt><a class="tier-word tier-archived" href="#archived">Archived</a></dt><dd>No longer maintained, or ended by its author.</dd></div>
 </dl>
-<p>The check applies the rules below in order. A signal that is missing counts neither way.</p>
-
-<section aria-labelledby="instant-archive">
-<h2 id="instant-archive">Instant archive</h2>
+<p class="why-note">The check applies the rules in this order: instant archive, expected update interval, dormancy, rot signals, dead, finished, New, Featured, outside approval, Listed, demotion guard. A signal that is missing counts neither way.</p>
+</section>
+<section class="rule-group" aria-labelledby="tier-rules">
+<h2 id="tier-rules">What each tier requires</h2>
+<article class="rule rule-with-rows" aria-labelledby="featured-library">
+<div class="rule-text">
+<h3 id="featured-library">Featured library <span class="tier-word tier-featured">Featured</span></h3>
+<p>A library is Featured when it is active and passes every gate.</p>
+<p>Active means not dormant, or finished.</p>
+<ul>
+<li>Active users or new adopters reach their limit.</li>
+<li>No vulnerability advisory is unpatched past the grace window.</li>
+<li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
+<li>Former glory reaches its floor.</li>
+<li>Docs are present.</li>
+<li>At least one version is neither a prerelease nor 0.0.x.</li>
+</ul>
+<p class="why-note">A gate that lacks its signal does not pass.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Featured library</caption>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>library_featured.min_active_users</code></th><td class="number">11</td><td>Fewest active users. This gate or the new-adopter gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_new_adopters</code></th><td class="number">9</td><td>Fewest new adopters over 12 months. This gate or the active-user gate passes.</td></tr>
+<tr><th scope="row"><code>library_featured.min_former_glory</code></th><td class="number">0.5</td><td>Lowest former glory, a share from 0 to 1.</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="featured-app">
+<div class="rule-text">
+<h3 id="featured-app">Featured app <span class="tier-word tier-featured">Featured</span></h3>
+<p>An app is Featured when it is active and enough of these use signals pass.</p>
+<ul>
+<li>Binary downloads over the last three releases.</li>
+<li>Homebrew installs on request over 365 days.</li>
+<li>Repology repository families that package the app.</li>
+<li>Docker pull growth over 90 days.</li>
+</ul>
+<p class="why-note">An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.</p>
+<p class="why-note">Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Featured app</caption>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>app_featured.min_signals</code></th><td class="number">2</td><td>How many of the four use signals must pass.</td></tr>
+<tr><th scope="row"><code>app_featured.binary_downloads</code></th><td class="number">884</td><td>Fewest binary downloads over the last three releases.</td></tr>
+<tr><th scope="row"><code>app_featured.homebrew_on_request_365d</code></th><td class="number">500</td><td>Fewest Homebrew installs on request over 365 days.</td></tr>
+<tr><th scope="row"><code>app_featured.repology_families</code></th><td class="number">2</td><td>Fewest Repology repository families that package the app.</td></tr>
+<tr><th scope="row"><code>app_featured.docker_pull_growth_90d</code></th><td class="number">10000</td><td>Smallest Docker pull growth over 90 days.</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="new">
+<div class="rule-text">
+<h3 id="new">New <span class="tier-word tier-new">New</span></h3>
+<p>An entry is New when its first release is younger than the age limit.</p>
+<p class="why-note">Age alone decides. An old entry with few users or only prerelease versions is not New.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of New</caption>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>new.max_age_days</code></th><td class="number">180</td><td>Age limit: a first release fewer days ago than this is New.</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+<article class="rule" aria-labelledby="listed">
+<div class="rule-text">
+<h3 id="listed">Listed <span class="tier-word tier-listed">Listed</span></h3>
+<p>An entry that no rule above places is Listed.</p>
+</div>
+</article>
+<article class="rule" aria-labelledby="archived">
+<div class="rule-text">
+<h3 id="archived">Archived <span class="tier-word tier-archived">Archived</span></h3>
+<p>An entry is Archived when an instant archive signal fires, or when enough dead checks come in a row.</p>
+</div>
+</article>
+<article class="rule" aria-labelledby="instant-archive">
+<div class="rule-text">
+<h3 id="instant-archive">Instant archive <span class="tier-word tier-archived">Archived</span></h3>
 <p>Any one of these signals archives an entry at once.</p>
 <ul>
 <li>The repository is archived.</li>
@@ -75,19 +209,46 @@
 <li>Every version is yanked.</li>
 <li>The crate is deleted from crates.io.</li>
 </ul>
-<p>A “maintained” statement does not override these signals.</p>
+<p class="why-note">A “maintained” statement does not override these signals.</p>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="dead">
+<div class="rule-text">
+<h3 id="dead">Dead <span class="tier-word tier-archived">Archived</span></h3>
+<p>A dormant entry is dead on a check when it has enough rot signals and no “maintained” statement.</p>
+<p>Enough dead checks in a row archive the entry.</p>
+<p>Unknown dormancy is not dead.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Dead</caption>
+<thead>
+<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>dormancy.dead_rot_signals</code></th><td class="number">2</td><td>Fewest rot signals that make a dormant entry dead.</td></tr>
+<tr><th scope="row"><code>dormancy.dead_consecutive_checks</code></th><td class="number">2</td><td>Dead checks in a row that archive an entry.</td></tr>
+</tbody>
+</table>
+</div>
+</article>
 </section>
-
-<section aria-labelledby="interval">
-<h2 id="interval">Expected update interval</h2>
+<section class="rule-group" aria-labelledby="activity">
+<h2 id="activity">How the check reads activity</h2>
+<article class="rule rule-with-rows" aria-labelledby="interval">
+<div class="rule-text">
+<h3 id="interval">Expected update interval</h3>
 <p>Each entry gets an expected update interval E, in days.</p>
 <p>A library starts from a base chosen by its latest version. The first matching base in the table applies.</p>
-<p>Then E is capped at the release count times the days-per-release cap.</p>
-<p>Then E doubles when monthly downloads pass their limit. It doubles again when active users pass theirs.</p>
-<p>E is never below the dormancy floor.</p>
-<p>An app, or a library with no known latest version, uses the dormancy floor.</p>
-<p>A step that lacks its signal is left out.</p>
-<table>
+<p class="why-note">Then E is capped at the release count times the days-per-release cap.</p>
+<p class="why-note">Then E doubles when monthly downloads pass their limit. It doubles again when active users pass theirs.</p>
+<p class="why-note">E is never below the dormancy floor.</p>
+<p class="why-note">An app, or a library with no known latest version, uses the dormancy floor.</p>
+<p class="why-note">A step that lacks its signal is left out.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Expected update interval</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -104,17 +265,19 @@
 <tr><th scope="row"><code>dormancy.min_days</code></th><td class="number">365</td><td>The dormancy floor: smallest E in days, and E for every app.</td></tr>
 </tbody>
 </table>
-</section>
-
-<section aria-labelledby="dormancy">
-<h2 id="dormancy">Dormancy</h2>
+</div>
+</article>
+<article class="rule" aria-labelledby="dormancy">
+<div class="rule-text">
+<h3 id="dormancy">Dormancy</h3>
 <p>An entry is dormant when the days since its latest release or latest human commit reach E.</p>
 <p>Bot commits do not count.</p>
 <p>With neither date known, dormancy is unknown.</p>
-</section>
-
-<section aria-labelledby="rot">
-<h2 id="rot">Rot signals</h2>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="rot">
+<div class="rule-text">
+<h3 id="rot">Rot signals</h3>
 <p>Each check counts six rot signals.</p>
 <ul>
 <li><strong>R1</strong> An outside issue is unanswered past the issue limit, and no maintainer replied within the reply window.</li>
@@ -124,11 +287,14 @@
 <li><strong>R5</strong> The repository no longer exists.</li>
 <li><strong>R6</strong> A library’s latest release fails cargo check on current stable Rust.</li>
 </ul>
-<p>Former glory is active users as a share of their peak.</p>
-<p>R3 and R6 apply to libraries only. Apps have no former glory and no crate release to check.</p>
-<p>A sandbox build check older than its age limit counts as unknown.</p>
-<p>A rot check that lacks a signal counts neither way.</p>
-<table>
+<p class="why-note">Former glory is active users as a share of their peak.</p>
+<p class="why-note">R3 and R6 apply to libraries only. Apps have no former glory and no crate release to check.</p>
+<p class="why-note">A sandbox build check older than its age limit counts as unknown.</p>
+<p class="why-note">A rot check that lacks a signal counts neither way.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Rot signals</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -140,33 +306,21 @@
 <tr><th scope="row"><code>rot.build_check_max_age_days</code></th><td class="number">45</td><td>R6 age limit: days a sandbox build check stays valid.</td></tr>
 </tbody>
 </table>
-</section>
-
-<section aria-labelledby="dead">
-<h2 id="dead">Dead</h2>
-<p>A dormant entry is dead on a check when it has enough rot signals and no “maintained” statement.</p>
-<p>Enough dead checks in a row archive the entry.</p>
-<p>Unknown dormancy is not dead.</p>
-<table>
-<thead>
-<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
-</thead>
-<tbody>
-<tr><th scope="row"><code>dormancy.dead_rot_signals</code></th><td class="number">2</td><td>Fewest rot signals that make a dormant entry dead.</td></tr>
-<tr><th scope="row"><code>dormancy.dead_consecutive_checks</code></th><td class="number">2</td><td>Dead checks in a row that archive an entry.</td></tr>
-</tbody>
-</table>
-</section>
-
-<section aria-labelledby="finished">
-<h2 id="finished">Finished</h2>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="finished">
+<div class="rule-text">
+<h3 id="finished">Finished</h3>
 <p>A dormant entry with no rot signal that is still adopted is finished.</p>
 <p>A “finished” maintainer statement with no rot signal also makes an entry finished.</p>
 <p>No rot signal means every rot check is known and none fires.</p>
-<p>A library stays adopted on new adopters or on former glory.</p>
-<p>An app stays adopted on binary downloads per release.</p>
-<p>A finished entry carries a stable label. It counts as active for Featured.</p>
-<table>
+<p class="why-note">A library stays adopted on new adopters or on former glory.</p>
+<p class="why-note">An app stays adopted on binary downloads per release.</p>
+<p class="why-note">A finished entry carries a stable label. It counts as active for Featured.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Finished</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -176,16 +330,37 @@
 <tr><th scope="row"><code>finished.min_binary_downloads_per_release</code></th><td class="number">200</td><td>Fewest binary downloads per release of a finished app.</td></tr>
 </tbody>
 </table>
+</div>
+</article>
 </section>
-
-<section aria-labelledby="fallback">
-<h2 id="fallback">Failed fetches</h2>
+<section class="rule-group" aria-labelledby="review">
+<h2 id="review">Review and failed fetches</h2>
+<article class="rule" aria-labelledby="outside-approval">
+<div class="rule-text">
+<h3 id="outside-approval">Outside approval</h3>
+<p>An org-affiliated entry that passes Featured needs a featured-approval judgment.</p>
+<p>A maintainer outside the ml-rust organization approves it. Without it, the entry is Listed.</p>
+</div>
+</article>
+<article class="rule" aria-labelledby="demotion-guard">
+<div class="rule-text">
+<h3 id="demotion-guard">Demotion guard</h3>
+<p>A Featured entry keeps Featured until a demotion judgment approves the drop.</p>
+<p>An instant archive skips this guard.</p>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="fallback">
+<div class="rule-text">
+<h3 id="fallback">Failed fetches</h3>
 <p>A network signal that fails to fetch keeps its value from the previous snapshot.</p>
 <p>That value keeps its original fetch date, and the entry notes name the source.</p>
 <p>A value past the age limit counts as unknown.</p>
-<p>An answer that a repo or a name does not exist counts as a signal. It never falls back.</p>
-<p>Values from the crates.io dump and the RustSec archive never fall back. A run without them stops.</p>
-<table>
+<p class="why-note">An answer that a repo or a name does not exist counts as a signal. It never falls back.</p>
+<p class="why-note">Values from the crates.io dump and the RustSec archive never fall back. A run without them stops.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Failed fetches</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -193,91 +368,14 @@
 <tr><th scope="row"><code>fallback.max_age_days</code></th><td class="number">14</td><td>Most days a value stands in for a failed fetch.</td></tr>
 </tbody>
 </table>
+</div>
+</article>
 </section>
-
-<section aria-labelledby="new">
-<h2 id="new">New</h2>
-<p>An entry is New when its first release is younger than the age limit.</p>
-<p>Age alone decides. An old entry with few users or only prerelease versions is not New.</p>
-<table>
-<thead>
-<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
-</thead>
-<tbody>
-<tr><th scope="row"><code>new.max_age_days</code></th><td class="number">180</td><td>Age limit: a first release fewer days ago than this is New.</td></tr>
-</tbody>
-</table>
-</section>
-
-<section aria-labelledby="featured-library">
-<h2 id="featured-library">Featured library</h2>
-<p>A library is Featured when it is active and passes every gate.</p>
-<p>Active means not dormant, or finished.</p>
-<ul>
-<li>Active users or new adopters reach their limit.</li>
-<li>No vulnerability advisory is unpatched past the grace window.</li>
-<li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
-<li>Former glory reaches its floor.</li>
-<li>Docs are present.</li>
-<li>At least one version is neither a prerelease nor 0.0.x.</li>
-</ul>
-<p>A gate that lacks its signal does not pass.</p>
-<table>
-<thead>
-<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
-</thead>
-<tbody>
-<tr><th scope="row"><code>library_featured.min_active_users</code></th><td class="number">11</td><td>Fewest active users. This gate or the new-adopter gate passes.</td></tr>
-<tr><th scope="row"><code>library_featured.min_new_adopters</code></th><td class="number">9</td><td>Fewest new adopters over 12 months. This gate or the active-user gate passes.</td></tr>
-<tr><th scope="row"><code>library_featured.min_former_glory</code></th><td class="number">0.5</td><td>Lowest former glory, a share from 0 to 1.</td></tr>
-</tbody>
-</table>
-</section>
-
-<section aria-labelledby="featured-app">
-<h2 id="featured-app">Featured app</h2>
-<p>An app is Featured when it is active and enough of these use signals pass.</p>
-<ul>
-<li>Binary downloads over the last three releases.</li>
-<li>Homebrew installs on request over 365 days.</li>
-<li>Repology repository families that package the app.</li>
-<li>Docker pull growth over 90 days.</li>
-</ul>
-<p>An app that ships a crate also needs one version that is neither a prerelease nor 0.0.x. An app with no crate skips that gate.</p>
-<p>Apps have no dependents signal. ecosyste.ms lists no dependents for a repository that publishes no package.</p>
-<table>
-<thead>
-<tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
-</thead>
-<tbody>
-<tr><th scope="row"><code>app_featured.min_signals</code></th><td class="number">2</td><td>How many of the four use signals must pass.</td></tr>
-<tr><th scope="row"><code>app_featured.binary_downloads</code></th><td class="number">884</td><td>Fewest binary downloads over the last three releases.</td></tr>
-<tr><th scope="row"><code>app_featured.homebrew_on_request_365d</code></th><td class="number">500</td><td>Fewest Homebrew installs on request over 365 days.</td></tr>
-<tr><th scope="row"><code>app_featured.repology_families</code></th><td class="number">2</td><td>Fewest Repology repository families that package the app.</td></tr>
-<tr><th scope="row"><code>app_featured.docker_pull_growth_90d</code></th><td class="number">10000</td><td>Smallest Docker pull growth over 90 days.</td></tr>
-</tbody>
-</table>
-</section>
-
-<section aria-labelledby="outside-approval">
-<h2 id="outside-approval">Outside approval</h2>
-<p>An org-affiliated entry that passes Featured needs a featured-approval judgment.</p>
-<p>A maintainer outside the ml-rust organization approves it. Without it, the entry is Listed.</p>
-</section>
-
-<section aria-labelledby="listed">
-<h2 id="listed">Listed</h2>
-<p>An entry that no rule above places is Listed.</p>
-</section>
-
-<section aria-labelledby="demotion-guard">
-<h2 id="demotion-guard">Demotion guard</h2>
-<p>A Featured entry keeps Featured until a demotion judgment approves the drop.</p>
-<p>An instant archive skips this guard.</p>
-</section>
-
-<section aria-labelledby="choice-facts">
-<h2 id="choice-facts">Facts that never count</h2>
+<section class="rule-group" aria-labelledby="facts">
+<h2 id="facts">Facts, lists and movement</h2>
+<article class="rule" aria-labelledby="choice-facts">
+<div class="rule-text">
+<h3 id="choice-facts">Facts that never count</h3>
 <p>These facts help a person choose a project. They never count toward a tier.</p>
 <p>Each comes from measured data, and each row in the signal table links its source.</p>
 <ul>
@@ -288,26 +386,31 @@
 <li><strong>Dependents</strong> The distinct crates outside the entry whose default version directly depends on a listed crate. Dev dependencies and crates with every version yanked stay out. Active users weigh history and owners, so the two numbers differ.</li>
 <li><strong>Contributors</strong> The contributors with a GitHub account, from one GitHub request. A list GitHub calls too large reads as not measured.</li>
 </ul>
-<p>An unknown value reads as not measured.</p>
-</section>
-
-<section aria-labelledby="list-order">
-<h2 id="list-order">List order</h2>
+<p class="why-note">An unknown value reads as not measured.</p>
+</div>
+</article>
+<article class="rule" aria-labelledby="list-order">
+<div class="rule-text">
+<h3 id="list-order">List order</h3>
 <p>Lists show the strongest tier first, then the most active users, then the name. A value not measured sorts last.</p>
 <p>This is an order and never a score. No page prints a rank.</p>
 <p>A list shows one row per project family. A project that belongs to a bigger project in another repo keeps its own tier and its own page.</p>
-</section>
-
-<section aria-labelledby="movement">
-<h2 id="movement">Movement</h2>
+</div>
+</article>
+<article class="rule rule-with-rows" aria-labelledby="movement">
+<div class="rule-text">
+<h3 id="movement">Movement</h3>
 <p>Movement comes from the daily snapshots. It never affects a tier.</p>
 <ul>
 <li><strong>New</strong> The entry first appears in the history inside the window. The first day of history does not count, because every entry appears then.</li>
 <li><strong>Rising</strong> Active users rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.</li>
 <li><strong>Falling</strong> Active users fell by at least the set share and the set number, over the same two snapshots.</li>
 </ul>
-<p>A value missing at either end gives no movement. History shorter than the window gives none, and pages say movement needs more history.</p>
-<table>
+<p class="why-note">A value missing at either end gives no movement. History shorter than the window gives none, and pages say movement needs more history.</p>
+</div>
+<div class="table-scroll rule-rows">
+<table class="data-table threshold-table">
+<caption class="visually-hidden">Thresholds of Movement</caption>
 <thead>
 <tr><th scope="col">Threshold</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
 </thead>
@@ -317,7 +420,11 @@
 <tr><th scope="row"><code>movement.min_users</code></th><td class="number">5</td><td>Smallest change in active users.</td></tr>
 </tbody>
 </table>
+</div>
+</article>
 </section>
+</div>
+</div>
 
 </main>
 <footer class="site-footer">

@@ -13,7 +13,7 @@ const TIER_MARKUP: [&str; 5] = [
     "data-tier",
     "signal-table",
     "tier-counts",
-    "Why this tier",
+    "class=\"panel why",
 ];
 
 fn tiered() -> BTreeMap<String, String> {
@@ -65,7 +65,8 @@ fn without_a_report_no_page_shows_a_tier_or_a_signal() {
         }
     }
     assert!(site["changes/index.html"].contains("Tiers are not published"));
-    assert!(!site["changes/index.html"].contains("<table>"));
+    assert!(!site["changes/index.html"].contains("<table"));
+    assert!(!site["changes/index.html"].contains("timeline-row"));
     let home = &site["index.html"];
     assert!(home.contains("Tiers are not published."), "{home}");
     assert!(!home.contains("id=\"featured\""), "{home}");
@@ -114,10 +115,12 @@ fn the_home_page_lists_topics_featured_recent_entries_and_changes() {
     );
     assert_eq!(home.matches("moved from").count(), 1, "{home}");
     // The first check keeps its line and its rows on the changes page.
-    assert!(
-        site["changes/index.html"].contains(
-            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1."
-        )
+    in_order(
+        &site["changes/index.html"],
+        &[
+            "The first check on <time datetime=\"2026-09-01\">1 Sep 2026</time> placed 1 entry.",
+            "<span class=\"tier-badge tier-listed\">Listed</span> <span class=\"tier-count\">1</span>",
+        ],
     );
 }
 
@@ -258,9 +261,9 @@ fn an_entry_page_links_its_category_beside_its_topics() {
     in_order(
         &site["projects/alpha/index.html"],
         &[
-            "Topics: <a href=\"/topics/tensors/\">Tensors</a>",
+            "<p class=\"project-description\">A tensor library.</p>",
+            "Jobs: <a href=\"/topics/tensors/\">Tensors</a>",
             "Category: <a href=\"/categories/tensor-libraries/\">Tensor libraries</a>",
-            "<h2 id=\"description\">Description</h2>",
         ],
     );
     assert!(!site["projects/delta/index.html"].contains("Category: <a"));
@@ -274,16 +277,17 @@ fn an_entry_page_shows_every_signal_with_its_source() {
         alpha,
         &[
             "<span class=\"tier-badge tier-featured\">Featured</span>",
-            "This project replaces <a href=\"/projects/gamma/\">Gamma</a>.",
             "Source: <a href=\"https://crates.io/crates/alpha-crate\">the crates.io description</a>.",
+            "This project replaces <a href=\"/projects/gamma/\">Gamma</a>.",
             "Homepage: <a href=\"https://alpha.example.org/\">",
             "crates.io: <a href=\"https://crates.io/crates/alpha-crate\">alpha-crate</a>",
-            "crates.io: <a href=\"https://crates.io/crates/alpha-extra\">alpha-extra</a>",
-            "<code>featured</code>: fails: active users 9 below 11",
             "A demotion to Listed waits for approval.",
+            "Fails: active users 9 below 11.",
             "Not measured: Former glory.",
-            "<tr><th scope=\"row\">Latest release</th><td>2026-09-01</td><td><a href=\"https://crates.io/data-access\">crates.io database dump</a></td><td><time datetime=\"2026-11-03\">2026-11-03</time></td><td>Yes</td></tr>",
+            "<code>featured</code>: fails: active users 9 below 11",
+            "<a href=\"https://crates.io/crates/alpha-extra\">alpha-extra</a>",
             "<tr><th scope=\"row\">Former glory</th><td class=\"not-measured\">Not measured</td><td></td><td></td><td>Yes</td></tr>",
+            "<tr><th scope=\"row\">Latest release</th><td>2026-09-01</td><td><a href=\"https://crates.io/data-access\">crates.io database dump</a></td><td><time datetime=\"2026-11-03\">3 Nov 2026</time></td><td>Yes</td></tr>",
             "<tr><th scope=\"row\">GitHub stars</th><td>1200</td>",
             "<td>No — stars never count toward a tier</td></tr>",
             "The README claims GPU support that the code lacks.",
@@ -305,14 +309,16 @@ fn an_org_affiliated_app_shows_the_notice_and_its_install_channels() {
         &[
             "<span class=\"entry-kind\">App</span> <span class=\"entry-label\">Product</span>",
             "<span class=\"tier-badge tier-listed\">Listed</span> <span class=\"stable-label\">Stable</span>",
-            "The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.",
             "Source: <a href=\"https://github.com/ml-rust/beta#readme\">the project README</a>.",
+            "The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.",
             "Homebrew: <a href=\"https://formulae.brew.sh/formula/beta\">beta</a>",
             "Docker Hub: <a href=\"https://hub.docker.com/r/ml-rust/beta\">ml-rust/beta</a>",
             "Repology: <a href=\"https://repology.org/project/beta/versions\">beta</a>",
-            "<code>featured-needs-outside-approval</code>",
+            "It passes the Featured gates and waits for outside approval.",
+            "A featured-approval judgment from a maintainer outside the organization.",
             "Not measured: Repology families.",
             "<li>Homebrew returned no install count.</li>",
+            "<code>featured-needs-outside-approval</code>",
             "<td>No — stars never count toward a tier</td>",
             "No correction applies to this entry.",
             "<td>Kind</td><td>Product</td>",
@@ -343,11 +349,122 @@ fn the_change_page_lists_every_change_newest_first() {
     in_order(
         changes,
         &[
-            "2026-11-04</time></td><td><a href=\"/projects/alpha/\">Alpha</a>",
-            "2026-11-04</time></td><td><a href=\"/projects/delta/\">Delta</a>",
-            "2026-10-28</time></td><td><a href=\"/projects/gamma/\">Gamma</a></td><td>Listed</td><td>Archived</td>",
-            "The first check on <time datetime=\"2026-09-01\">2026-09-01</time> placed 1 entry: Listed 1.",
+            "<a href=\"/changes/feed.xml\">",
+            "<h3 class=\"timeline-date\"><time datetime=\"2026-11-04\">4 Nov 2026</time></h3>",
+            "<a class=\"timeline-name\" href=\"/projects/alpha/\">Alpha</a>",
+            "<span class=\"tier-badge tier-listed\">Listed</span>",
+            "<span class=\"tier-badge tier-featured\">Featured</span>",
+            "<a class=\"timeline-name\" href=\"/projects/delta/\">Delta</a>",
+            "<span class=\"row-tag\">First check</span>",
+            "<span class=\"tier-badge tier-new\">New</span>",
+            "<h3 class=\"timeline-date\"><time datetime=\"2026-10-28\">28 Oct 2026</time></h3>",
+            "<a class=\"timeline-name\" href=\"/projects/gamma/\">Gamma</a>",
+            "<span class=\"tier-badge tier-listed\">Listed</span>",
+            "<span class=\"tier-badge tier-archived\">Archived</span>",
+            "The first check on <time datetime=\"2026-09-01\">1 Sep 2026</time> placed 1 entry.",
         ],
     );
-    assert!(!changes.contains("<td>omega</td>"), "{changes}");
+    assert!(!changes.contains(">omega</"), "{changes}");
+}
+
+#[test]
+fn with_only_the_first_check_the_change_page_says_nothing_changed() {
+    let (catalogue, report) = fixture::data(&fixture::files());
+    let changes = [catalogue_site::TierChangeRow {
+        date: fixture::first_check(),
+        slug: catalogue_core::Slug::new("alpha").expect("slug"),
+        from: None,
+        to: catalogue_core::Tier::Listed,
+    }];
+    let site = build::render(&catalogue_site::SiteInputs {
+        catalogue: &catalogue,
+        report: Some(&report),
+        changes: &changes,
+        first_check: Some(fixture::first_check()),
+        movement: &catalogue_core::Movement::NeedsHistory,
+    });
+    let page = &site["changes/index.html"];
+    assert!(
+        page.contains("No tier has changed since the first check."),
+        "{page}"
+    );
+    assert!(!page.contains("timeline-row"), "{page}");
+    assert!(
+        page.contains("It is no change, because every entry appears on it."),
+        "{page}"
+    );
+    assert!(!page.contains("No tier change is recorded."), "{page}");
+}
+
+#[test]
+fn the_action_comes_right_after_the_header_with_a_hook_on_the_install_line() {
+    let site = tiered();
+    in_order(
+        &site["projects/alpha/index.html"],
+        &[
+            "<header class=\"project-head\">",
+            "</header>",
+            "<aside class=\"project-action\"",
+            "Use Alpha",
+            "<code data-install-command=\"cargo add alpha-crate\">cargo add alpha-crate</code>",
+            "<a class=\"button button-primary\" href=\"https://docs.rs/alpha-crate\">Documentation</a>",
+            "<a class=\"button\" href=\"https://github.com/ml-rust/alpha\">Repository</a>",
+            "<h2 id=\"tier\">",
+            "<h2 id=\"compatibility\">",
+            "<h2 id=\"also-in\">",
+            "<h2 id=\"signals\">",
+            "<h2 id=\"corrections\">",
+        ],
+    );
+}
+
+#[test]
+fn an_archived_page_leads_with_the_reason_and_the_other_projects_and_steps_the_install_back() {
+    let site = tiered();
+    let gamma = &site["projects/gamma/index.html"];
+    in_order(
+        gamma,
+        &[
+            "</header>",
+            "class=\"panel why why-archived\"",
+            "Why Archived",
+            "The repository is archived.",
+            "<a href=\"/projects/alpha/\">Alpha</a> replaces this project.",
+            "<a href=\"https://github.com/someone/gamma\">GitHub</a>",
+            "<h2 id=\"also-in\">",
+            "<aside class=\"project-action project-action-quiet\"",
+            "For existing users",
+            "<a class=\"button\" href=\"https://docs.rs/gamma\">Documentation</a>",
+            "<h2 id=\"compatibility\">",
+        ],
+    );
+    assert!(!gamma.contains("Use Gamma"), "{gamma}");
+    assert!(!gamma.contains("button-primary"), "{gamma}");
+    assert_eq!(gamma.matches("id=\"tier\"").count(), 1, "{gamma}");
+    assert_eq!(gamma.matches("replaces this project").count(), 1, "{gamma}");
+}
+
+#[test]
+fn each_project_page_has_one_h1_and_no_empty_comparison() {
+    let site = tiered();
+    for slug in ["alpha", "beta", "gamma", "delta"] {
+        let page = &site[&format!("projects/{slug}/index.html")];
+        assert_eq!(page.matches("<h1").count(), 1, "{slug}");
+    }
+    let beta = &site["projects/beta/index.html"];
+    assert!(!beta.contains("rows-compact"), "{beta}");
+}
+
+#[test]
+fn the_not_found_page_offers_search_and_the_job_tiles() {
+    let site = tiered();
+    in_order(
+        &site["404.html"],
+        &[
+            "<h1 id=\"not-found-title\">Page not found</h1>",
+            "<form class=\"hero-search\" action=\"/search/\" method=\"get\" role=\"search\">",
+            "<a class=\"tile\" href=\"/topics/ml/\">",
+        ],
+    );
+    assert_eq!(site["404.html"].matches("role=\"search\"").count(), 1);
 }

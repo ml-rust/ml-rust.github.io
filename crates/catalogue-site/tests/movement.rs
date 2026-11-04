@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use catalogue_core::Movement;
 
-const NEEDS_HISTORY: &str = "<p>Movement needs more history.</p>";
+const NEEDS_HISTORY: &str = "Movement needs more history.";
 
 fn tiered() -> BTreeMap<String, String> {
     fixture::site(&fixture::files(), true)
@@ -27,13 +27,15 @@ fn in_order(page: &str, parts: &[&str]) {
 }
 
 #[test]
-fn the_changes_page_shows_movement_above_the_tier_changes() {
+fn the_changes_page_shows_the_tier_changes_above_movement() {
     let site = tiered();
     in_order(
         &site["changes/index.html"],
         &[
+            "<h2 id=\"tier-changes\">Tier changes</h2>",
+            "<ol class=\"timeline\">",
             "<h2 id=\"movement\">Movement</h2>",
-            "the check on <time datetime=\"2026-11-04\">2026-11-04</time> with the check on <time datetime=\"2026-10-05\">2026-10-05</time>",
+            "the check on <time datetime=\"2026-11-04\">4 Nov 2026</time> with the check on <time datetime=\"2026-10-05\">5 Oct 2026</time>",
             "It never affects a tier.",
             "<h3 id=\"new-this-month\">New this month</h3>",
             "<a href=\"/projects/delta/\">Delta</a></td><td><time datetime=\"2026-11-02\">",
@@ -41,8 +43,6 @@ fn the_changes_page_shows_movement_above_the_tier_changes() {
             "<a href=\"/projects/alpha/\">Alpha</a></td><td>5</td><td>9.36</td>",
             "<h3 id=\"falling\">Falling</h3>",
             "<a href=\"/projects/beta/\">Beta</a></td><td>40</td><td>20.5</td>",
-            "<h2 id=\"tier-changes\">Tier changes</h2>",
-            "<table>",
         ],
     );
 }

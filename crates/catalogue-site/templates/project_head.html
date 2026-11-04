@@ -1,0 +1,44 @@
+<header class="project-head">
+<div class="project-title">
+<h1>{{ header.name }}</h1>
+<p class="entry-facts"><span class="entry-kind">{{ header.kind }}</span>{% if let Some(label) = header.label %} <span class="entry-label">{{ label }}</span>{% endif %}{% if let Some(badge) = header.badge %} {% include "tier_badge.html" %}{% endif %}{% if header.stable %} <span class="stable-label">Stable</span>{% endif %}{% if let Some(meaning) = header.dormant %} <span class="row-tag row-tag-notice" title="{{ meaning }}">Dormant</span>{% endif %}{% if let Some(word) = header.movement %} <span class="entry-movement">{{ word }}</span>{% endif %}</p>
+</div>
+<p class="project-description">{{ description.text }}</p>
+<p class="sources">Source: {% if let Some(href) = description.href %}<a href="{{ href }}">{{ description.source }}</a>{% else %}{{ description.source }}{% endif %}.</p>
+{%- if !header.topics.is_empty() || header.category.is_some() %}
+<ul class="project-links">
+{%- if !header.topics.is_empty() %}
+<li>Jobs:{% for link in header.topics %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</li>
+{%- endif %}
+{%- if let Some(link) = header.category %}
+<li>Category: <a href="{{ link.href }}">{{ link.name }}</a></li>
+{%- endif %}
+{%- if let Some(link) = header.part_of %}
+<li>Part of <a href="{{ link.href }}">{{ link.name }}</a>.</li>
+{%- endif %}
+</ul>
+{%- endif %}
+{%- if let Some(strip) = stats %}
+<dl class="stat-strip">
+{%- for stat in strip.stats %}
+<div class="stat"><dt>{{ stat.label }}</dt><dd><span class="stat-value{% if stat.quiet %} fact-quiet{% endif %}">{{ stat.value }}</span>{% if let Some(iso) = stat.date %}{% if let Some(text) = stat.date_text %}<time class="stat-sub" datetime="{{ iso }}">{{ text }}</time>{% endif %}{% endif %}</dd></div>
+{%- endfor %}
+<div class="stat"><dt>Checked</dt><dd><time class="stat-value" datetime="{{ strip.checked }}">{{ strip.checked_text }}</time></dd></div>
+</dl>
+{%- if !strip.sources.is_empty() %}
+<p class="sources">{% for source in strip.sources %}{% if loop.first %}From {% else %}, {% endif %}{% include "source_note.html" %}{% endfor %}.</p>
+{%- endif %}
+{%- endif %}
+{%- if header.stable %}
+<p class="banner">Stable means the project is finished: dormant by design, not decayed.</p>
+{%- endif %}
+{%- if header.org_affiliated %}
+<p class="banner banner-org">The ml-rust organization maintains this project. It passes the same tier rules as every other entry. A maintainer outside the organization approves it for Featured.</p>
+{%- endif %}
+{%- if !action.archived %}{% if let Some(link) = header.superseded_by %}
+<p class="banner banner-superseded"><a href="{{ link.href }}">{{ link.name }}</a> replaces this project.</p>
+{%- endif %}{% endif %}
+{%- if !header.replaces.is_empty() %}
+<p class="banner">This project replaces{% for link in header.replaces %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}.</p>
+{%- endif %}
+</header>

@@ -1,0 +1,1 @@
+<a href="{{ source.href }}">{{ source.name }}</a>{% if let Some(iso) = source.fetched %}{% if let Some(text) = source.fetched_text %}, fetched <time datetime="{{ iso }}">{{ text }}</time>{% endif %}{% endif %}

@@ -4,8 +4,8 @@ use catalogue_core::{EffectiveEntry, EntryReport};
 
 use crate::inputs::SiteInputs;
 use crate::pages::shared::{
-    NamedLink, TierBadge, category_link, entry_link, kind_name, movement_word, project_kind_name,
-    topic_link,
+    DORMANT, DORMANT_MEANING, NamedLink, TierBadge, category_link, entry_link, kind_name,
+    movement_word, project_kind_name, row_statuses, topic_link,
 };
 
 /// The data the top of `project.html` reads.
@@ -21,6 +21,8 @@ pub(crate) struct Header<'a> {
     pub badge: Option<TierBadge>,
     /// Whether the report finds the entry finished. False without a report.
     pub stable: bool,
+    /// What the word dormant means, when the entry is dormant and not Archived.
+    pub dormant: Option<&'static str>,
     /// Whether the ml-rust organization maintains the entry.
     pub org_affiliated: bool,
     /// The entry that replaces this one.
@@ -52,6 +54,11 @@ impl<'a> Header<'a> {
             label: effective.kind_label.map(project_kind_name),
             badge: record.map(|record| TierBadge::of(record.tier)),
             stable: record.is_some_and(|record| record.stable),
+            dormant: record
+                .into_iter()
+                .flat_map(row_statuses)
+                .find(|status| status.word == DORMANT)
+                .map(|_| DORMANT_MEANING),
             org_affiliated: entry.org_affiliated,
             superseded_by: effective
                 .superseded_by

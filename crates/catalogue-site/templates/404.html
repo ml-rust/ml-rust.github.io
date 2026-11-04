@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Page not found{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+{% block header_search %}{% endblock %}
 {% block content %}
-<h1>Page not found</h1>
-<p>No page of the catalogue lives at this address.</p>
-<p><a href="/search/">Search the catalogue</a>, or start from the <a href="/topics/">topics</a>.</p>
+<section class="hero" aria-labelledby="not-found-title">
+<p class="not-found-code">404</p>
+<h1 id="not-found-title">Page not found</h1>
+<p class="hero-statement">No page of the catalogue lives at this address.</p>
+<form class="hero-search" action="/search/" method="get" role="search">
+<label class="visually-hidden" for="not-found-q">Search the catalogue</label>
+<span class="search-field"><span class="icon" aria-hidden="true">{% include "icons/ui-search.svg" %}</span><input id="not-found-q" name="q" type="search" placeholder="speech recognition, GGUF, embeddings"></span>
+<button type="submit">Search</button>
+</form>
+<p class="hero-meta"><a href="/">Home</a><a href="/topics/">All jobs</a><a href="/featured/">Featured projects</a><a href="/changes/">Changes</a></p>
+</section>
+<section aria-labelledby="topics">
+<h2 id="topics">Or start from a job</h2>
+{% include "topic_grid.html" %}
+</section>
 {% endblock %}

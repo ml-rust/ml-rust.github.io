@@ -1,0 +1,28 @@
+{%- if let Some(section) = tier %}
+<section class="panel" aria-labelledby="signals">
+<h2 id="signals">Measurements</h2>
+<p class="why-note">Each row shows the raw value, its source and the date of the data behind it.{% if let Some(note) = movement_note %} {{ note }}{% endif %}</p>
+{%- if section.groups.is_empty() %}
+<p>The check recorded no signal.</p>
+{%- else %}
+{%- for group in section.groups %}
+<details class="disclosure disclosure-group" id="signals-{{ group.id }}">
+<summary><span class="icon" aria-hidden="true">{% include "icons/ui-chevron-right.svg" %}</span><span class="disclosure-title">{{ group.title }}</span><span class="disclosure-summary">{{ group.summary }}{% if let Some(missing) = group.missing %}<span class="disclosure-missing">{{ missing }}</span>{% endif %}</span></summary>
+<div class="table-scroll">
+<table class="data-table signal-table">
+<caption class="visually-hidden">{{ group.title }} measurements</caption>
+<thead>
+<tr><th scope="col">Signal</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Fetched</th><th scope="col">Counts toward tier</th></tr>
+</thead>
+<tbody>
+{%- for signal in group.rows %}
+<tr><th scope="row">{{ signal.label }}</th>{% if let Some(value) = signal.value %}<td>{{ value }}</td>{% else %}<td class="not-measured">Not measured</td>{% endif %}<td>{% if let Some(source) = signal.source %}<a href="{{ source.href }}">{{ source.name }}</a>{% endif %}</td><td>{% if let Some(date) = signal.fetched %}{% if let Some(text) = signal.fetched_text %}<time datetime="{{ date }}">{{ text }}</time>{% endif %}{% endif %}</td><td>{{ signal.counts }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</div>
+</details>
+{%- endfor %}
+{%- endif %}
+</section>
+{%- endif %}

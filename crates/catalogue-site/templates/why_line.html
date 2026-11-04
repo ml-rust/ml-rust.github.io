@@ -1,0 +1,1 @@
+<li>{{ line.text }}{% if let Some(link) = line.link %} <a href="{{ link.1 }}">{{ link.0 }}</a>{% endif %}{% if let Some(rule) = line.rule %} <a class="why-rule" href="{{ rule.href }}">{{ rule.name }} rule</a>{% endif %}</li>

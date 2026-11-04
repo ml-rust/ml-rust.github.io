@@ -89,7 +89,7 @@ fn a_child_page_links_up_and_the_parent_page_lists_its_children() {
     let site = build_with(&[("alpha-ext", "part_of = \"alpha\"\n", Tier::Listed)]);
     assert!(
         site["projects/alpha-ext/index.html"]
-            .contains("<p>Part of <a href=\"/projects/alpha/\">Alpha</a>.</p>")
+            .contains("<li>Part of <a href=\"/projects/alpha/\">Alpha</a>.</li>")
     );
     let alpha = &site["projects/alpha/index.html"];
     assert!(

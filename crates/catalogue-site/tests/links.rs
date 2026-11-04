@@ -117,6 +117,28 @@ fn every_link_of_the_fixture_resolves_with_and_without_a_report() {
 }
 
 #[test]
+fn every_rule_link_of_an_entry_page_lands_on_a_rules_heading() {
+    let site = fixture::site(&fixture::files(), true);
+    let rules = &site["rules/index.html"];
+    let mut seen = 0;
+    for (page, html) in site
+        .iter()
+        .filter(|(path, _)| path.starts_with("projects/"))
+    {
+        for target in targets(html) {
+            if let Some(anchor) = target.strip_prefix("/rules/#") {
+                seen += 1;
+                assert!(
+                    rules.contains(&format!(" id=\"{anchor}\"")),
+                    "{page} links /rules/#{anchor}"
+                );
+            }
+        }
+    }
+    assert!(seen > 0, "no entry page links a rule");
+}
+
+#[test]
 fn the_check_rejects_links_to_missing_emitted_pages() {
     let mut site = BTreeMap::new();
     site.insert(

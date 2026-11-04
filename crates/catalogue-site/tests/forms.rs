@@ -74,7 +74,7 @@ fn the_submit_page_links_every_form() {
     let submit = &site["submit/index.html"];
     for form in ISSUE_FORMS {
         let link = format!(
-            "<a href=\"https://github.com/ml-rust/ml-rust.github.io/issues/new?template={}\">{}</a>: {}",
+            "<a class=\"form-card\" href=\"https://github.com/ml-rust/ml-rust.github.io/issues/new?template={}\"><span class=\"form-card-name\">{}</span><span class=\"form-card-description\">{}</span>",
             form.file, form.name, form.description
         );
         assert!(submit.contains(&link), "missing {link}");

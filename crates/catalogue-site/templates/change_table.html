@@ -1,19 +1,35 @@
-{%- if changes.is_empty() %}
-{%- if first_check.is_none() %}
-<p>No tier change is recorded.</p>
-{%- endif %}
+{%- if days.is_empty() %}
+{%- if first_check.is_some() %}
+<p class="panel panel-note">No tier has changed since the first check. Later checks add their changes here.</p>
 {%- else %}
-<table>
-<thead>
-<tr><th scope="col">Date</th><th scope="col">Project</th><th scope="col">From</th><th scope="col">To</th></tr>
-</thead>
-<tbody>
-{%- for change in changes %}
-<tr><td><time datetime="{{ change.date }}">{{ change.date }}</time></td><td>{% if let Some(href) = change.href %}<a href="{{ href }}">{{ change.name }}</a>{% else %}{{ change.name }}{% endif %}</td><td>{{ change.from }}</td><td>{{ change.to }}</td></tr>
+<p class="panel panel-note">No tier change is recorded.</p>
+{%- endif %}
+{%- endif %}
+<ol class="timeline">
+{%- for day in days %}
+<li class="timeline-stop">
+<h3 class="timeline-date"><time datetime="{{ day.date }}">{{ day.date_text }}</time></h3>
+<ul class="timeline-rows">
+{%- for change in day.rows %}
+<li class="timeline-row">{% if let Some(href) = change.href %}<a class="timeline-name" href="{{ href }}">{{ change.name }}</a>{% else %}<span class="timeline-name">{{ change.name }}</span>{% endif %}
+<span class="timeline-move">{% if let Some(from) = change.from_badge %}<span class="tier-badge {{ from.class }}">{{ from.name }}</span>{% else %}<span class="row-tag">{{ change.from }}</span>{% endif %}<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span><span class="visually-hidden"> to </span><span class="tier-badge {{ change.to_badge.class }}">{{ change.to_badge.name }}</span></span></li>
 {%- endfor %}
-</tbody>
-</table>
-{%- endif %}
+</ul>
+</li>
+{%- endfor %}
 {%- if let Some(first) = first_check %}
-<p>The first check on <time datetime="{{ first.date }}">{{ first.date }}</time> placed {{ first.text }}.</p>
+<li class="timeline-stop timeline-first">
+<h3 class="timeline-date"><time datetime="{{ first.date }}">{{ first.date_text }}</time></h3>
+<div class="timeline-card">
+<p class="timeline-first-title">First check</p>
+<p>The first check on <time datetime="{{ first.date }}">{{ first.date_text }}</time> placed {{ first.total }}.</p>
+<ul class="tier-counts">
+{%- for tier in first.tiers %}
+<li><span class="tier-badge {{ tier.badge.class }}">{{ tier.badge.name }}</span> <span class="tier-count">{{ tier.count }}</span></li>
+{%- endfor %}
+</ul>
+<p class="why-note">This check sets the baseline. It is no change, because every entry appears on it.</p>
+</div>
+</li>
 {%- endif %}
+</ol>

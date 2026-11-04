@@ -58,16 +58,44 @@ impl LinkRow {
     }
 }
 
-/// The repo, the homepage, the crates.io page of each crate, and each install channel page.
+/// One crate of an entry.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CrateRow {
+    /// The crate name.
+    pub name: String,
+    /// The crates.io page.
+    pub href: SafeHref,
+    /// Whether it is the primary crate: the first the entry lists.
+    pub primary: bool,
+}
+
+/// Each crate of `entry` with its crates.io page.
+pub(crate) fn crate_rows(entry: &Entry) -> Vec<CrateRow> {
+    entry
+        .crates
+        .iter()
+        .enumerate()
+        .filter_map(|(at, name)| {
+            let url = crate_page(name.as_str())?;
+            Some(CrateRow {
+                name: name.to_string(),
+                href: SafeHref::from(&url),
+                primary: at == 0,
+            })
+        })
+        .collect()
+}
+
+/// The homepage, the crates.io page of the primary crate, and each install channel page.
 pub(crate) fn link_rows(entry: &Entry) -> Vec<LinkRow> {
-    let mut rows = vec![LinkRow::new("Repository", entry.repo.as_str(), &entry.repo)];
+    let mut rows = Vec::new();
     if let Some(homepage) = &entry.homepage {
         rows.push(LinkRow::new("Homepage", homepage.as_str(), homepage));
     }
-    for name in &entry.crates {
-        if let Some(url) = crate_page(name.as_str()) {
-            rows.push(LinkRow::new("crates.io", name.as_str(), &url));
-        }
+    if let Some(name) = entry.crates.first()
+        && let Some(url) = crate_page(name.as_str())
+    {
+        rows.push(LinkRow::new("crates.io", name.as_str(), &url));
     }
     let Some(distribution) = &entry.distribution else {
         return rows;

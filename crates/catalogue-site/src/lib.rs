@@ -31,7 +31,7 @@ mod testing;
 
 pub use build::{OutputFile, build_site};
 pub use error::SiteError;
-pub use forms::{ISSUE_FORMS, IssueForm};
+pub use forms::{CORRECTNESS_FORM, FormGroup, ISSUE_FORMS, IssueForm};
 pub use href::SafeHref;
 pub use inputs::{SiteInputs, TierChangeRow};
 pub use pages::{SITE_NAME, SITE_URL};

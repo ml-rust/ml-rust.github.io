@@ -2,6 +2,7 @@
 
 use catalogue_core::Tier;
 
+use super::badge::TierBadge;
 use super::labels::tier_name;
 
 /// One tier and what it means.
@@ -11,6 +12,10 @@ pub(crate) struct TierLine {
     pub name: &'static str,
     /// What the tier means.
     pub meaning: &'static str,
+    /// The class that colours the tier word.
+    pub class: &'static str,
+    /// The anchor of the tier's own rule on the rules page.
+    pub anchor: &'static str,
 }
 
 /// The sentence that says what Featured means.
@@ -29,9 +34,17 @@ fn tier_line(tier: Tier) -> TierLine {
         Tier::New => "A project whose first release is recent.",
         Tier::Archived => "No longer maintained, or ended by its author.",
     };
+    let anchor = match tier {
+        Tier::Featured => "featured-library",
+        Tier::Listed => "listed",
+        Tier::New => "new",
+        Tier::Archived => "archived",
+    };
     TierLine {
         name: tier_name(tier),
         meaning,
+        class: TierBadge::of(tier).class,
+        anchor,
     }
 }
 

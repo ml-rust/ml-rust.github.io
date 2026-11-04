@@ -47,7 +47,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ### Changed
 
-- New site theme, home page, job, category, Featured and search pages.
+- New site theme on every page. Project pages explain each tier and compare neighbours.
 - The New tier now means a recent first release only.
 - Row facts state only what the check found, and native code reads deeper dependencies.
 - Categories cover more projects and match description terms first.

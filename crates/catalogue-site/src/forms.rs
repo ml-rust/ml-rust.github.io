@@ -4,6 +4,17 @@ use catalogue_core::ISSUE_URL_PREFIX;
 
 use crate::href::SafeHref;
 
+/// What a person wants to do with a form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FormGroup {
+    /// Add a project to the catalogue.
+    Propose,
+    /// Report something about a project in the catalogue.
+    Report,
+    /// Approve a tier change or state a project's status.
+    Approve,
+}
+
 /// One issue form.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IssueForm {
@@ -13,6 +24,8 @@ pub struct IssueForm {
     pub name: &'static str,
     /// The form's `description` line.
     pub description: &'static str,
+    /// What the form is for.
+    pub group: FormGroup,
 }
 
 impl IssueForm {
@@ -22,6 +35,14 @@ impl IssueForm {
     }
 }
 
+/// The form that reports a wrong fact on an entry.
+pub const CORRECTNESS_FORM: IssueForm = IssueForm {
+    file: "correctness.yml",
+    name: "Correctness report",
+    description: "Report a wrong fact on an entry.",
+    group: FormGroup::Report,
+};
+
 /// Every issue form, in the order the submit page lists them.
 ///
 /// A test checks this table against the files in `.github/ISSUE_TEMPLATE/`.
@@ -30,41 +51,44 @@ pub const ISSUE_FORMS: [IssueForm; 8] = [
         file: "submit.yml",
         name: "Submit a project",
         description: "Propose a new library or app for the catalogue.",
+        group: FormGroup::Propose,
     },
-    IssueForm {
-        file: "correctness.yml",
-        name: "Correctness report",
-        description: "Report a wrong fact on an entry.",
-    },
+    CORRECTNESS_FORM,
     IssueForm {
         file: "supersedes.yml",
         name: "Supersedes or fork",
         description: "Report that one entry replaces another.",
+        group: FormGroup::Report,
     },
     IssueForm {
         file: "kind.yml",
         name: "Product or demo",
         description: "Set whether an entry is a product or a demo.",
+        group: FormGroup::Report,
     },
     IssueForm {
         file: "topic.yml",
         name: "Topic change",
         description: "Change the topics of an entry.",
+        group: FormGroup::Report,
     },
     IssueForm {
         file: "demotion.yml",
         name: "Featured demotion",
         description: "Approve moving a Featured entry to a lower tier.",
+        group: FormGroup::Approve,
     },
     IssueForm {
         file: "featured-approval.yml",
         name: "Featured approval",
         description: "Approve Featured for an org-affiliated entry.",
+        group: FormGroup::Approve,
     },
     IssueForm {
         file: "maintainer.yml",
         name: "Maintainer statement",
         description: "State whether a project is maintained or finished.",
+        group: FormGroup::Approve,
     },
 ];
 

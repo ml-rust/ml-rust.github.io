@@ -1,32 +1,25 @@
-//! Other entries that share a topic with one entry.
+//! Other entries that share a topic with one entry, as rows that compare with it.
 //!
 //! A shared topic is the whole claim. The section says "Also in" and nothing about similarity.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use catalogue_core::{EffectiveEntry, Slug};
 
 use crate::inputs::SiteInputs;
 use crate::pages::shared::{
-    NamedLink, RelatedLink, TierBadge, entry_link, family_heads, movement_word, tier_of, topic_link,
+    EntryRow, FamilyHead, RelatedLink, family_heads, movement_word, tier_of, topic_link,
 };
 
 /// The most rows the section shows.
 const LIMIT: usize = 5;
 
-/// One entry that shares a topic.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct AlsoInRow<'a> {
-    /// The link to the entry.
-    pub entry: NamedLink<'a>,
-    /// The tier badge. `None` without a report.
-    pub badge: Option<TierBadge>,
-    /// The link to the first topic of the page's entry that this entry shares.
-    pub topic: NamedLink<'a>,
-    /// The plain word for how the entry moved.
-    pub movement: Option<&'static str>,
-    /// The link that stands for the related projects this row hides.
-    pub related: Option<RelatedLink>,
+/// The comparison row of `slug`, with the facts of its record.
+fn row<'a>(inputs: &SiteInputs<'a>, slug: &Slug) -> Option<EntryRow<'a>> {
+    let entry = inputs.catalogue.entry(slug)?;
+    let report = inputs.report;
+    let record = report.and_then(|report| report.entries.get(slug));
+    Some(EntryRow::new(slug, entry, tier_of(report, slug)).with_choice(record))
 }
 
 /// Up to [`LIMIT`] rows of the other entries that share a topic with `effective`.
@@ -35,9 +28,8 @@ pub(crate) struct AlsoInRow<'a> {
 pub(crate) fn also_in<'a>(
     inputs: &SiteInputs<'a>,
     effective: &EffectiveEntry<'_>,
-) -> Vec<AlsoInRow<'a>> {
+) -> Vec<EntryRow<'a>> {
     let catalogue = inputs.catalogue;
-    let report = inputs.report;
     let mut shared: BTreeMap<&'a Slug, &Slug> = BTreeMap::new();
     for topic in effective.topics {
         for slug in catalogue.entries_in_topic(topic) {
@@ -47,19 +39,71 @@ pub(crate) fn also_in<'a>(
         }
     }
     let slugs: Vec<&'a Slug> = shared.keys().copied().collect();
-    family_heads(catalogue, report, &slugs)
+    let heads = family_heads(catalogue, inputs.report, &slugs);
+    let picked = fair_share(&heads, &shared, effective.topics);
+    heads
         .into_iter()
+        .filter(|head| picked.contains(head.slug))
         .filter_map(|head| {
-            let topic = shared.get(head.slug)?;
-            Some(AlsoInRow {
-                entry: entry_link(catalogue, head.slug)?,
-                badge: tier_of(report, head.slug).map(TierBadge::of),
-                topic: topic_link(catalogue, topic)?,
-                movement: movement_word(inputs, head.slug),
-                related: RelatedLink::of(head.slug, head.related),
-            })
+            let topic = topic_link(catalogue, shared.get(head.slug)?)?;
+            let row = row(inputs, head.slug)?
+                .with_family(
+                    movement_word(inputs, head.slug),
+                    RelatedLink::of(head.slug, head.related),
+                )
+                .with_also_in(topic);
+            Some(row)
         })
-        .take(LIMIT)
+        .collect()
+}
+
+/// Up to [`LIMIT`] of `heads`, taken from each topic of `topics` in turn.
+///
+/// A big second topic never pushes out the rows of the page entry's first topic.
+fn fair_share<'s>(
+    heads: &[FamilyHead<'s>],
+    shared: &BTreeMap<&'s Slug, &Slug>,
+    topics: &[Slug],
+) -> BTreeSet<&'s Slug> {
+    let mut queues: Vec<Vec<&'s Slug>> = topics
+        .iter()
+        .map(|topic| {
+            heads
+                .iter()
+                .map(|head| head.slug)
+                .filter(|slug| shared.get(slug).is_some_and(|first| *first == topic))
+                .rev()
+                .collect()
+        })
+        .collect();
+    let mut picked = BTreeSet::new();
+    while picked.len() < LIMIT && queues.iter().any(|queue| !queue.is_empty()) {
+        for queue in &mut queues {
+            if picked.len() < LIMIT
+                && let Some(slug) = queue.pop()
+            {
+                picked.insert(slug);
+            }
+        }
+    }
+    picked
+}
+
+/// The comparison rows of the page of `effective`: its own row first, then [`also_in`].
+///
+/// Empty when no other entry shares a topic, so the section stays out.
+pub(crate) fn compare_rows<'a>(
+    inputs: &SiteInputs<'a>,
+    effective: &EffectiveEntry<'_>,
+) -> Vec<EntryRow<'a>> {
+    let others = also_in(inputs, effective);
+    if others.is_empty() {
+        return others;
+    }
+    row(inputs, effective.slug)
+        .map(EntryRow::marked_current)
+        .into_iter()
+        .chain(others)
         .collect()
 }
 
@@ -163,7 +207,7 @@ mod tests {
         let effective = data.effective(&slug).expect("entry");
         also_in(&inputs(data, report), &effective)
             .iter()
-            .map(|row| row.entry.name)
+            .map(|row| row.name)
             .collect()
     }
 
@@ -205,10 +249,61 @@ mod tests {
         let rows = also_in(&inputs(&data, None), &effective);
         let topics: Vec<(&str, &str)> = rows
             .iter()
-            .map(|row| (row.entry.name, row.topic.name))
+            .map(|row| {
+                let topic = row.also_in.as_ref().expect("a shared topic");
+                (row.name, topic.name)
+            })
             .collect();
         assert_eq!(topics, [("both", "Two"), ("only-one", "One")]);
         assert!(rows.iter().all(|row| row.badge.is_none()));
+    }
+
+    #[test]
+    fn a_big_second_topic_never_pushes_out_the_first_topic() {
+        let mut entries = vec![entry("page", "\"one\", \"two\""), entry("small", "\"one\"")];
+        for name in ["big-a", "big-b", "big-c", "big-d", "big-e", "big-f"] {
+            entries.push(entry(name, "\"two\""));
+        }
+        let data = catalogue(entries);
+        let tiers = report(vec![
+            ("small", record(Tier::Listed, Some("1"))),
+            ("big-a", record(Tier::Featured, Some("90"))),
+            ("big-b", record(Tier::Featured, Some("80"))),
+            ("big-c", record(Tier::Featured, Some("70"))),
+            ("big-d", record(Tier::Featured, Some("60"))),
+            ("big-e", record(Tier::Featured, Some("50"))),
+            ("big-f", record(Tier::Featured, Some("40"))),
+        ]);
+        assert_eq!(
+            names(&data, Some(&tiers), "page"),
+            ["big-a", "big-b", "big-c", "big-d", "small"],
+            "the one order of every list holds inside the five rows"
+        );
+    }
+
+    #[test]
+    fn the_comparison_leads_with_the_page_entry_and_keeps_the_list_facts() {
+        let data = catalogue(vec![entry("page", "\"one\""), entry("other", "\"one\"")]);
+        let tiers = report(vec![
+            ("page", record(Tier::Listed, Some("2"))),
+            ("other", record(Tier::Featured, Some("1200.4"))),
+        ]);
+        let slug = Slug::new("page").expect("slug");
+        let effective = data.effective(&slug).expect("entry");
+        let rows = compare_rows(&inputs(&data, Some(&tiers)), &effective);
+        let names: Vec<(&str, bool)> = rows.iter().map(|row| (row.name, row.current)).collect();
+        assert_eq!(names, [("page", true), ("other", false)]);
+        assert_eq!(rows[0].also_in, None);
+        let facts = rows[1].choice.as_ref().expect("facts");
+        assert_eq!(facts.active_users.short, "1200");
+    }
+
+    #[test]
+    fn with_no_other_entry_the_comparison_stays_empty() {
+        let data = catalogue(vec![entry("page", "\"one\"")]);
+        let slug = Slug::new("page").expect("slug");
+        let effective = data.effective(&slug).expect("entry");
+        assert!(compare_rows(&inputs(&data, None), &effective).is_empty());
     }
 
     #[test]

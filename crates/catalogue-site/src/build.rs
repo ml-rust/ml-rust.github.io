@@ -88,7 +88,10 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             "search/index.html".to_owned(),
             &SearchPage::new(layout(None), script.href(), catalogue, report),
         )?,
-        render("404.html".to_owned(), &NotFoundPage::new(layout(None)))?,
+        render(
+            "404.html".to_owned(),
+            &NotFoundPage::new(layout(None), catalogue, report),
+        )?,
     ];
     for topic in catalogue.topics() {
         let page = TopicPage::new(layout(Some(NavItem::Explore)), inputs, topic);

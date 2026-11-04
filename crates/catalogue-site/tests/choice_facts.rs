@@ -32,44 +32,85 @@ fn in_order(page: &str, parts: &[&str]) {
 }
 
 #[test]
-fn the_glance_list_comes_before_the_description_in_the_stated_order() {
+fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_order() {
     let site = tiered();
+    let dump = "<a href=\"https://crates.io/data-access\">crates.io database dump</a>, fetched <time datetime=\"2026-11-03\">3 Nov 2026</time>";
     in_order(
         &site[ALPHA],
         &[
-            "<h2 id=\"at-a-glance\">At a glance</h2>",
-            "Tier: <span class=\"tier-badge",
-            "<li>License: Apache-2.0 OR MIT</li>",
-            "<li>Runs on: CUDA, Metal</li>",
-            "<li>Native code: Binds native code: openssl-sys. Has Python bindings: alpha-extra needs Python</li>",
-            "<li>Active users: 9</li>",
-            "<li>Dependents: 12</li>",
-            "<li>Contributors: 38</li>",
-            "<li>Install: <code>cargo add alpha-crate</code> <a href=\"https://crates.io/crates/alpha-crate\">crates.io</a></li>",
-            "<h2 id=\"description\">",
+            "<dt>Active users</dt><dd><span class=\"stat-value\">9</span>",
+            "<dt>Released</dt>",
+            "<time class=\"stat-sub\" datetime=\"2026-09-01\">1 Sep 2026</time>",
+            "<dt>Checked</dt>",
+            "<h2 id=\"compatibility\">",
+            "<dt>Runs on</dt>",
+            "CUDA, Metal",
+            "<p class=\"compat-lines-label\">What shows it</p>",
+            "<li>CUDA: alpha-crate feature cuda (dependency cudarc)</li>",
+            "<li>Metal: alpha-extra feature metal</li>",
+            dump,
+            "<dt>Native code</dt>",
+            "Required",
+            "<li>Binds native code: openssl-sys</li>",
+            dump,
+            "<dt>Python bindings</dt>",
+            "Has Python bindings",
+            "<li>alpha-extra needs Python</li>",
+            dump,
+            "<dt>License</dt>",
+            "Apache-2.0 OR MIT",
+            dump,
+            "<dt>Dependents</dt>",
+            ">12<",
+            dump,
+            "<dt>Contributors</dt>",
+            ">38<",
+            "<a href=\"https://github.com/ml-rust/alpha/graphs/contributors\">GitHub contributors</a>, fetched",
         ],
     );
+}
+
+#[test]
+fn no_gpu_feature_stays_in_the_words_of_the_check_on_the_page() {
+    let site = tiered();
+    let page = &site["projects/delta/index.html"];
+    assert!(page.contains("No GPU feature found"), "{page}");
+    assert!(!page.contains("CPU only"), "{page}");
 }
 
 #[test]
 fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
     let site = tiered();
     let page = &site[BETA];
-    assert!(page.contains("<li>License: None stated</li>"), "{page}");
-    assert!(page.contains("<li>Runs on: Not measured</li>"), "{page}");
+    let row = |label: &str, value: &str| {
+        format!("<dt>{label}</dt>\n<dd class=\"compat-value\"><span class=\"compat-word{value}")
+    };
+    assert!(page.contains(&row("License", "\">None stated")), "{page}");
     assert!(
-        page.contains("<li>Native code: Not measured</li>"),
+        page.contains(&row("Contributors", " fact-quiet\">Not measured")),
         "{page}"
     );
+    in_order(
+        page,
+        &[
+            &row("Crate facts", " fact-quiet\">Not measured"),
+            "Runs on, Native code, Python bindings and Dependents read crates on crates.io. This entry lists no crate.",
+        ],
+    );
+    assert!(!page.contains("<dt>Runs on</dt>"), "{page}");
+    assert!(!page.contains("<dt>Native code</dt>"), "{page}");
+    assert!(!page.contains("<dt>Active users</dt>"), "{page}");
     assert!(
-        page.contains("<li>Active users: Not measured</li>"),
+        page.contains("<code data-install-command=\"brew install beta\">brew install beta</code>"),
         "{page}"
     );
+    let delta = &site["projects/delta/index.html"];
     assert!(
-        page.contains("<li>Contributors: Not measured</li>"),
-        "{page}"
+        delta.contains(
+            "<dt>Active users</dt><dd><span class=\"stat-value fact-quiet\">Not measured</span>"
+        ),
+        "{delta}"
     );
-    assert!(page.contains("<code>brew install beta</code>"), "{page}");
 }
 
 #[test]
@@ -137,12 +178,15 @@ fn python_bindings_show_as_a_tag_beside_the_name_with_the_exact_fact() {
 fn a_build_without_a_report_reads_not_measured_and_shows_no_tier() {
     let site = untiered();
     let page = &site[ALPHA];
-    assert!(page.contains("<li>License: Not measured</li>"), "{page}");
-    assert!(!page.contains("<li>Tier:"), "{page}");
     assert!(
-        page.contains("<code>cargo add alpha-crate</code>"),
+        page.contains(
+            "<dt>License</dt>\n<dd class=\"compat-value\"><span class=\"compat-word fact-quiet\">Not measured"
+        ),
         "{page}"
     );
+    assert!(!page.contains("tier-badge"), "{page}");
+    assert!(!page.contains("stat-strip"), "{page}");
+    assert!(page.contains(">cargo add alpha-crate</code>"), "{page}");
     in_order(
         &site[TOPIC],
         &[
@@ -159,10 +203,12 @@ fn the_section_names_the_shared_topic_and_nothing_more() {
         &site[ALPHA],
         &[
             "<h2 id=\"also-in\">Also in these topics</h2>",
-            "<a href=\"/projects/delta/\">Delta</a>",
+            "<a class=\"row-name\" href=\"/projects/alpha/\" aria-current=\"page\">Alpha</a> <span class=\"row-tag\">This page</span>",
+            "<a class=\"row-name\" href=\"/projects/delta/\">Delta</a>",
             "Also in <a href=\"/topics/tensors/\">Tensors</a>.",
-            "<a href=\"/projects/gamma/\">Gamma</a>",
+            "<a class=\"row-name\" href=\"/projects/gamma/\">Gamma</a>",
             "Also in <a href=\"/topics/tensors/\">Tensors</a>.",
+            "<a href=\"/topics/tensors/\">All projects in Tensors",
         ],
     );
     let page = &site[BETA];

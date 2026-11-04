@@ -4,6 +4,8 @@ use std::cmp::Reverse;
 
 use catalogue_core::{Catalogue, Date, Tier};
 
+use super::badge::TierBadge;
+use super::date_text::date_text;
 use super::labels::tier_name;
 use super::paths::project_href;
 use crate::href::SafeHref;
@@ -25,6 +27,37 @@ pub(crate) struct ChangeRow<'a> {
     pub from: &'static str,
     /// The new tier.
     pub to: &'static str,
+    /// The badge of the old tier. `None` for an entry's first check.
+    pub from_badge: Option<TierBadge>,
+    /// The badge of the new tier.
+    pub to_badge: TierBadge,
+}
+
+/// The changes of one check, as one stop of the timeline.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ChangeDay<'a> {
+    /// The date of the check.
+    pub date: String,
+    /// The date as a person reads it.
+    pub date_text: String,
+    /// The changes on the date, in input order.
+    pub rows: Vec<ChangeRow<'a>>,
+}
+
+/// `rows`, newest first, gathered by date.
+pub(crate) fn change_days<'a>(rows: Vec<ChangeRow<'a>>) -> Vec<ChangeDay<'a>> {
+    let mut days: Vec<ChangeDay<'a>> = Vec::new();
+    for row in rows {
+        match days.last_mut() {
+            Some(day) if day.date == row.date => day.rows.push(row),
+            _ => days.push(ChangeDay {
+                date_text: date_text(&row.date).unwrap_or_else(|| row.date.clone()),
+                date: row.date.clone(),
+                rows: vec![row],
+            }),
+        }
+    }
+    days
 }
 
 /// The one line that stands for every row of the first check.
@@ -32,8 +65,23 @@ pub(crate) struct ChangeRow<'a> {
 pub(crate) struct FirstCheckLine {
     /// The date of the first check.
     pub date: String,
+    /// The date as a person reads it.
+    pub date_text: String,
     /// The entry count and the count per tier, such as `3 entries: Featured 1, Listed 2`.
     pub text: String,
+    /// The entry count as words, such as `3 entries`.
+    pub total: String,
+    /// The count per tier, strongest first, with no empty tier.
+    pub tiers: Vec<TierCount>,
+}
+
+/// How many entries the first check placed in one tier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct TierCount {
+    /// The tier badge.
+    pub badge: TierBadge,
+    /// The entry count.
+    pub count: usize,
 }
 
 /// Whether `change` is a row of the first check of the history.
@@ -58,16 +106,27 @@ pub(crate) fn first_check_line(
         1 => "1 entry".to_owned(),
         more => format!("{more} entries"),
     };
-    let counts: Vec<String> = Tier::ALL
+    let tiers: Vec<TierCount> = Tier::ALL
         .into_iter()
         .filter_map(|tier| {
             let count = rows.iter().filter(|change| change.to == tier).count();
-            (count > 0).then(|| format!("{} {count}", tier_name(tier)))
+            (count > 0).then(|| TierCount {
+                badge: TierBadge::of(tier),
+                count,
+            })
         })
         .collect();
+    let counts: Vec<String> = tiers
+        .iter()
+        .map(|tier| format!("{} {}", tier.badge.name, tier.count))
+        .collect();
+    let date = date.to_string();
     Some(FirstCheckLine {
-        date: date.to_string(),
+        date_text: date_text(&date).unwrap_or_else(|| date.clone()),
+        date,
         text: format!("{total}: {}", counts.join(", ")),
+        total,
+        tiers,
     })
 }
 
@@ -97,6 +156,8 @@ pub(crate) fn change_rows<'a>(
                 href: entry.map(|_| project_href(&change.slug)),
                 from: change.from.map_or(FIRST_CHECK, tier_name),
                 to: tier_name(change.to),
+                from_badge: change.from.map(TierBadge::of),
+                to_badge: TierBadge::of(change.to),
             }
         })
         .collect()
