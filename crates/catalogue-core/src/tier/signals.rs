@@ -67,7 +67,7 @@ pub struct Signals {
     pub contributors: Option<u64>,
     /// Whether published docs exist.
     pub docs_present: Option<bool>,
-    /// Whether `.cargo_vcs_info.json` confirms the repository link.
+    /// Whether the release commit or a manifest in the repository proves the repository link.
     pub repo_link_verified: Option<bool>,
     /// Binary asset downloads over the last three releases. Apps only.
     pub binary_downloads_last3: Option<u64>,

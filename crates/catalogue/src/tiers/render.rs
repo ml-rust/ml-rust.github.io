@@ -76,6 +76,7 @@ mod tests {
         let sources = FactSources {
             dump: Date::new(2026, 11, 2).expect("date"),
             crate_page: None,
+            manifest_repo: None,
             advisory_page: None,
             repo_page: None,
             releases_page: None,

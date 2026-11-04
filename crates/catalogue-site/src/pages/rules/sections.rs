@@ -86,7 +86,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "",
-                            text: "The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.",
+                            text: "The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count. When the release records no commit, or the repository is on Codeberg or GitLab, a Cargo.toml on the default branch that declares the crate counts instead. A recorded commit that the GitHub repository lacks still fails.",
                         },
                         Item {
                             label: "",

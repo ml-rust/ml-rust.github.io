@@ -1,6 +1,7 @@
 //! The repo link checks of `catalogue tiers`.
 
 use std::collections::BTreeMap;
+use std::fmt;
 use std::path::Path;
 
 use catalogue_core::{Catalogue, Date, EntryKind, Slug};
@@ -11,14 +12,67 @@ use catalogue_signals::github::{GITHUB_INTERVAL, RepoRef};
 use catalogue_signals::history::Dated;
 use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
 use catalogue_signals::link::{
-    CrateRelease, LinkCheck, LinkError, LinkOutcome, cached_link, check_link,
+    CrateRelease, ForgeRepo, LinkCheck, LinkError, LinkOutcome, cached_forge_link, cached_link,
+    check_forge_link, check_link,
 };
 
 use super::collect::github_repo;
 use crate::batch;
 
-/// A library with a GitHub repo and the release to check.
-type Target = (Slug, RepoRef, CrateRelease);
+/// The repo a link check reads.
+#[derive(Debug)]
+enum TargetRepo {
+    /// A repo on GitHub.
+    Github(RepoRef),
+    /// A repo on another host that the manifest proof can read.
+    Forge(ForgeRepo),
+}
+
+impl TargetRepo {
+    /// The cached result for `release`, with no request.
+    fn cached(
+        &self,
+        cache_dir: &Path,
+        release: &CrateRelease,
+    ) -> Result<Option<LinkOutcome>, LinkError> {
+        match self {
+            Self::Github(repo) => cached_link(cache_dir, repo, release),
+            Self::Forge(repo) => cached_forge_link(cache_dir, repo, release),
+        }
+    }
+
+    /// Runs the link check of `release`. Only a GitHub repo gets `token`.
+    fn check(
+        &self,
+        transport: &dyn Transport,
+        token: &str,
+        release: &CrateRelease,
+        cache_dir: &Path,
+        today: Date,
+        pacer: &mut dyn Pacer,
+    ) -> Result<LinkOutcome, LinkError> {
+        match self {
+            Self::Github(repo) => {
+                check_link(transport, token, repo, release, cache_dir, today, pacer)
+            }
+            Self::Forge(repo) => {
+                check_forge_link(transport, repo, release, cache_dir, today, pacer)
+            }
+        }
+    }
+}
+
+impl fmt::Display for TargetRepo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Github(repo) => fmt::Display::fmt(repo, f),
+            Self::Forge(repo) => fmt::Display::fmt(repo, f),
+        }
+    }
+}
+
+/// A library with a readable repo and the release to check.
+type Target = (Slug, TargetRepo, CrateRelease);
 
 /// The repo link results, keyed by slug.
 #[derive(Debug, Default)]
@@ -43,7 +97,7 @@ pub(super) struct LinkFailure {
 }
 
 /// What a link result describes: the crate release and the repo.
-fn subject(repo: &RepoRef, release: &CrateRelease) -> String {
+fn subject(repo: &TargetRepo, release: &CrateRelease) -> String {
     let CrateRelease { name, version } = release;
     format!("{name} {version} in {repo}")
 }
@@ -58,9 +112,10 @@ fn dated(of: String, outcome: LinkOutcome) -> Dated<LinkCheck> {
 
 /// Checks the repo link of every library entry.
 ///
-/// A library whose repo is not on GitHub gets [`LinkCheck::UnsupportedHost`]. A
-/// library with a GitHub repo and a release in `snapshot` gets
-/// [`check_link`] on its latest unyanked version, which reads and writes the
+/// A library whose repo is on a host no check can read gets
+/// [`LinkCheck::UnsupportedHost`]. A library with a release in `snapshot` gets
+/// [`check_link`] on its latest unyanked version when its repo is on GitHub, and
+/// [`check_forge_link`] when its repo is a [`ForgeRepo`]. Both read and write the
 /// link cache under `cache_dir`. A new check is dated `today`, a cached one
 /// keeps its stored date. A library with no such release gets no result.
 /// [`link_failure`] sorts every error. A missing package gets a note and no
@@ -81,20 +136,21 @@ pub(super) fn fetch_links(
         if entry.kind != EntryKind::Library {
             continue;
         }
-        match github_repo(entry) {
-            Err(_) => {
-                let check = Dated {
-                    date: today,
-                    of: entry.repo.to_string(),
-                    value: LinkCheck::UnsupportedHost,
-                };
-                links.checks.insert(slug.clone(), check);
-            }
-            Ok(repo) => {
-                if let Some(release) = primary_release(entry, snapshot, &index) {
-                    targets.push((slug.clone(), repo, release));
-                }
-            }
+        let repo = github_repo(entry)
+            .map(TargetRepo::Github)
+            .ok()
+            .or_else(|| ForgeRepo::parse(entry.repo.as_str()).map(TargetRepo::Forge));
+        let Some(repo) = repo else {
+            let check = Dated {
+                date: today,
+                of: entry.repo.to_string(),
+                value: LinkCheck::UnsupportedHost,
+            };
+            links.checks.insert(slug.clone(), check);
+            continue;
+        };
+        if let Some(release) = primary_release(entry, snapshot, &index) {
+            targets.push((slug.clone(), repo, release));
         }
     }
     let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
@@ -120,7 +176,7 @@ fn check_targets(
     let mut misses: Vec<&Target> = Vec::new();
     for target in targets {
         let (slug, repo, release) = target;
-        match attempt(cached_link(cache_dir, repo, release), link_failure)? {
+        match attempt(repo.cached(cache_dir, release), link_failure)? {
             Ok(Some(outcome)) => {
                 let check = dated(subject(repo, release), outcome);
                 links.checks.insert(slug.clone(), check);
@@ -132,7 +188,7 @@ fn check_targets(
     let checked = batch::each(&misses, pacer, |target, pacer| {
         let (_, repo, release) = &**target;
         attempt(
-            check_link(transport, token, repo, release, cache_dir, today, pacer),
+            repo.check(transport, token, release, cache_dir, today, pacer),
             link_failure,
         )
     })?;
@@ -245,7 +301,7 @@ mod tests {
     fn target(name: &str) -> Target {
         (
             Slug::new(name).expect("slug"),
-            RepoRef::parse(&format!("o/{name}")).expect("repo"),
+            TargetRepo::Github(RepoRef::parse(&format!("o/{name}")).expect("repo")),
             CrateRelease {
                 name: name.to_owned(),
                 version: "1.0.0".to_owned(),
@@ -334,6 +390,25 @@ mod tests {
         let failure = links.failures.values().next().expect("failure");
         assert_eq!(failure.of, "aa 1.0.0 in o/aa");
         assert!(failure.error.contains("status 500"), "{}", failure.error);
+    }
+
+    #[test]
+    fn a_forge_repo_gets_the_proof_with_no_token_and_no_package_download() {
+        let target = (
+            Slug::new("aa").expect("slug"),
+            TargetRepo::Forge(ForgeRepo::parse("https://codeberg.org/o/aa").expect("repo")),
+            CrateRelease {
+                name: "aa".to_owned(),
+                version: "1.0.0".to_owned(),
+            },
+        );
+        let (links, urls, _, result) = run(404, &[target], &[]);
+        result.expect("a 404 is an absent repo");
+        assert_eq!(urls, ["https://codeberg.org/api/v1/repos/o/aa"]);
+        assert_eq!(links.fetches, 1);
+        let check = links.checks.values().next().expect("result");
+        assert_eq!(check.value, LinkCheck::UnsupportedHost);
+        assert_eq!(check.of, "aa 1.0.0 in codeberg.org/o/aa");
     }
 
     #[test]

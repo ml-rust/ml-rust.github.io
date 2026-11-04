@@ -98,12 +98,16 @@ fn a_dirty_release_is_still_checked() {
 }
 
 #[test]
-fn a_package_without_the_file_or_the_commit_sends_no_github_request() {
+fn a_package_without_the_file_or_the_commit_sends_no_commit_lookup() {
     for json in [None, Some(r#"{"path_in_vcs":""}"#)] {
         let (_guard, dir) = cache();
-        let (transport, outcome) = run(vec![package(json)], "a/b", &dir);
+        let responses = vec![package(json), FakeResponse::status(404)];
+        let (transport, outcome) = run(responses, "a/b", &dir);
         assert_eq!(outcome.expect("checks").check, LinkCheck::NoVcsInfo);
-        assert_eq!(transport.urls().len(), 1);
+        assert_eq!(
+            transport.urls(),
+            [PACKAGE_URL, "https://api.github.com/repos/a/b"]
+        );
     }
 }
 

@@ -105,7 +105,10 @@ pub fn link_failure(error: &LinkError) -> Failure {
         LinkError::Download { status: 404, .. } | LinkError::UnsafeName { .. } => {
             Failure::Definitive
         }
-        LinkError::Download { .. } | LinkError::Package { .. } => Failure::Fallback,
+        LinkError::Download { .. }
+        | LinkError::Package { .. }
+        | LinkError::Forge { .. }
+        | LinkError::ForgeJson { .. } => Failure::Fallback,
         LinkError::Cache { .. } => Failure::Fatal,
     }
 }
@@ -113,6 +116,7 @@ pub fn link_failure(error: &LinkError) -> Failure {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::http::PacedError;
 
     fn github(status: u16) -> GithubError {
         GithubError::Status {
@@ -241,6 +245,13 @@ mod tests {
             Failure::Fallback
         );
         assert_eq!(link_failure(&LinkError::Http(request())), Failure::Fallback);
+        let forge = LinkError::Forge {
+            source: PacedError::Status {
+                url: "u".to_owned(),
+                status: 401,
+            },
+        };
+        assert_eq!(link_failure(&forge), Failure::Fallback);
         let cache = LinkError::Cache {
             path: "p".into(),
             source: std::io::Error::other("full"),

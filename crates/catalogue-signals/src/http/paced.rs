@@ -12,7 +12,7 @@ use super::transport::Response;
 /// The retries after a rate-limit answer.
 const MAX_RETRIES: u32 = 3;
 /// The longest response body read, in bytes.
-const MAX_BODY: u64 = 32 << 20;
+pub const MAX_BODY: u64 = 32 << 20;
 
 /// A paced request that ends without a usable body.
 #[derive(Debug, Error)]
@@ -147,7 +147,7 @@ impl<'a> Paced<'a> {
         send: impl FnMut() -> Result<Response, HttpError>,
         accepted: &[u16],
     ) -> Result<Answer, PacedError> {
-        match self.exchange(url, send, accepted, &[], &[])? {
+        match self.exchange(url, send, accepted, &[], &[], MAX_BODY)? {
             Some(answer) => Ok(answer),
             None => Err(PacedError::Status {
                 url: url.to_owned(),
@@ -171,13 +171,31 @@ impl<'a> Paced<'a> {
         accepted: &[u16],
         refused: &[u16],
     ) -> Result<Answer, PacedError> {
-        match self.exchange(url, send, accepted, &[], refused)? {
+        match self.exchange(url, send, accepted, &[], refused, MAX_BODY)? {
             Some(answer) => Ok(answer),
             None => Err(PacedError::Status {
                 url: url.to_owned(),
                 status: 404,
             }),
         }
+    }
+
+    /// Sends the request that `send` builds and reads at most `limit` bytes of a 200 answer.
+    ///
+    /// An answer with a status in `absent` gives `None`. The answer keeps its headers. A body
+    /// past `limit` stops at `limit` with no error. Retries work as in [`fetch`](Self::fetch).
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PacedError`] as [`fetch`](Self::fetch) does.
+    pub fn fetch_capped(
+        &mut self,
+        url: &str,
+        send: impl FnMut() -> Result<Response, HttpError>,
+        absent: &[u16],
+        limit: u64,
+    ) -> Result<Option<Answer>, PacedError> {
+        self.exchange(url, send, &[200], absent, &[], limit)
     }
 
     fn run(
@@ -187,12 +205,13 @@ impl<'a> Paced<'a> {
         absent: &[u16],
     ) -> Result<Option<Vec<u8>>, PacedError> {
         Ok(self
-            .exchange(url, send, &[200], absent, &[])?
+            .exchange(url, send, &[200], absent, &[], MAX_BODY)?
             .map(|answer| answer.body))
     }
 
     /// Sends until an answer arrives. A status in `accepted` gives the answer, a status in
-    /// `absent` gives `None`, a status in `refused` without a wait hint gives the answer.
+    /// `absent` gives `None`, a status in `refused` without a wait hint gives the answer. The
+    /// answer holds at most `limit` bytes of the body.
     fn exchange(
         &mut self,
         url: &str,
@@ -200,6 +219,7 @@ impl<'a> Paced<'a> {
         accepted: &[u16],
         absent: &[u16],
         refused: &[u16],
+        limit: u64,
     ) -> Result<Option<Answer>, PacedError> {
         let mut retries = 0;
         loop {
@@ -214,7 +234,7 @@ impl<'a> Paced<'a> {
                 || (refused.contains(&response.status) && !limited)
             {
                 self.previous = Some(headers.clone());
-                let body = read_body(url, response.body)?;
+                let body = read_body(url, response.body, limit)?;
                 return Ok(Some(Answer {
                     status: response.status,
                     headers,
@@ -252,10 +272,10 @@ fn is_rate_limited(status: u16, headers: &Headers) -> bool {
                 .is_some_and(|value| value.trim() == "0"))
 }
 
-/// Reads a response body up to the size cap.
-fn read_body(url: &str, body: Box<dyn Read>) -> Result<Vec<u8>, PacedError> {
+/// Reads a response body up to `limit` bytes.
+fn read_body(url: &str, body: Box<dyn Read>, limit: u64) -> Result<Vec<u8>, PacedError> {
     let mut bytes = Vec::new();
-    body.take(MAX_BODY)
+    body.take(limit)
         .read_to_end(&mut bytes)
         .map_err(|source| PacedError::Body {
             url: url.to_owned(),
@@ -339,6 +359,22 @@ mod tests {
             error,
             PacedError::RetriesExhausted { retries: 3, .. }
         ));
+    }
+
+    #[test]
+    fn fetch_capped_stops_at_the_limit_and_keeps_the_headers() {
+        let mut pacer = Counting::default();
+        let mut paced = Paced::new(&mut pacer);
+        let answer = paced
+            .fetch_capped("u", || response(200), &[404], 1)
+            .expect("answers")
+            .expect("present");
+        assert_eq!(answer.body, b"{");
+        assert!(answer.headers.get("link").is_some());
+        let absent = paced
+            .fetch_capped("u", || response(404), &[404], 1)
+            .expect("answers");
+        assert_eq!(absent, None);
     }
 
     #[test]

@@ -22,5 +22,5 @@ pub use error::HttpError;
 pub use headers::Headers;
 pub use link::{last_link, next_link};
 pub use pace::{IntervalPacer, Pacer};
-pub use paced::{Answer, Paced, PacedError};
+pub use paced::{Answer, MAX_BODY, Paced, PacedError};
 pub use transport::{Response, Transport};

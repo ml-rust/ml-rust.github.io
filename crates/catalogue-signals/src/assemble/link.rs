@@ -34,7 +34,7 @@ pub fn latest_release(dump: &DumpSnapshot, index: &CrateIndex, name: &str) -> Op
 }
 
 /// Sets `repo_link_verified` from `link` and adds a note for each result that
-/// leaves the link unproven or unchecked.
+/// leaves the link unproven or unchecked, and for a link that a manifest proves.
 ///
 /// `None` leaves the signal unknown and adds no note.
 pub(super) fn apply_link(link: Option<&LinkCheck>, signals: &mut Signals, notes: &mut Vec<String>) {
@@ -50,6 +50,11 @@ pub(super) fn apply_link(link: Option<&LinkCheck>, signals: &mut Signals, notes:
         LinkCheck::NotOnRepoRef { sha1, .. } => {
             notes.push(format!(
                 "published from commit {sha1} that no branch or tag of the repo holds"
+            ));
+        }
+        LinkCheck::ManifestDeclares { path } => {
+            notes.push(format!(
+                "the repo manifest {path} declares the crate, and no release commit proves the link"
             ));
         }
         LinkCheck::NoVcsInfo => notes.push(
@@ -138,6 +143,23 @@ mod tests {
         assert_eq!(verified, Some(false));
         assert_eq!(notes.len(), 1);
         assert!(notes[0].contains(".cargo_vcs_info.json"), "{notes:?}");
+    }
+
+    #[test]
+    fn a_manifest_proof_verifies_the_link_and_names_the_path() {
+        let check = LinkCheck::ManifestDeclares {
+            path: "crates/a/Cargo.toml".to_owned(),
+        };
+        assert_eq!(
+            linked(&check),
+            (
+                Some(true),
+                vec![
+                    "the repo manifest crates/a/Cargo.toml declares the crate, and no release commit proves the link"
+                        .to_owned()
+                ]
+            )
+        );
     }
 
     #[test]

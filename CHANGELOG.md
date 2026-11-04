@@ -51,6 +51,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 - Discovery matches description terms. `sort_only` lists words that admit no crate.
 - `named_crates` in `data/discovery.toml`: admits a crate and not its dependents.
+- The repo link check accepts a `Cargo.toml` that declares the crate when the release records no commit, or the repo is on Codeberg or GitLab.
 - `data/leads.txt`: repositories that `catalogue seed` always drafts.
 - Featured gains a repository route: stars, forks and contributors together.
 - Lists lead with downloads and dependents, show versions, and order by downloads.

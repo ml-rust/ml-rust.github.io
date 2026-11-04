@@ -47,20 +47,26 @@ pub enum LinkCheck {
         #[serde(default)]
         dirty: bool,
     },
-    /// The release records no commit, so the check cannot run.
+    /// No commit proof applies, and a `Cargo.toml` on the repo's default branch
+    /// declares the crate.
+    ManifestDeclares {
+        /// The manifest path in the repo.
+        path: String,
+    },
+    /// The release records no commit, and no manifest in the repo declares the crate.
     NoVcsInfo,
-    /// The repo is not on GitHub, so the check cannot run.
+    /// The repo is not on GitHub, and no manifest proof finds the crate there.
     UnsupportedHost,
 }
 
 impl LinkCheck {
-    /// The `repo_link_verified` signal: `Some(true)` for a found commit,
-    /// `Some(false)` for a missing commit, a commit that no ref of the repo
-    /// holds or a release without commit data,
-    /// `None` when the host is unsupported.
+    /// The `repo_link_verified` signal: `Some(true)` for a found commit or a
+    /// manifest that declares the crate, `Some(false)` for a missing commit, a
+    /// commit that no ref of the repo holds or a release with neither commit data
+    /// nor a manifest, `None` for a repo off GitHub with no manifest.
     pub fn verified(&self) -> Option<bool> {
         match self {
-            Self::Verified { .. } => Some(true),
+            Self::Verified { .. } | Self::ManifestDeclares { .. } => Some(true),
             Self::CommitMissing { .. } | Self::NotOnRepoRef { .. } | Self::NoVcsInfo => Some(false),
             Self::UnsupportedHost => None,
         }
@@ -74,13 +80,21 @@ impl LinkCheck {
         }
     }
 
-    /// The commit the release records, when it records one.
+    /// The path of the manifest that declares the crate, when the check names one.
+    pub fn manifest(&self) -> Option<&str> {
+        match self {
+            Self::ManifestDeclares { path } => Some(path),
+            _ => None,
+        }
+    }
+
+    /// The commit the release records, when the check read one.
     pub fn sha1(&self) -> Option<&str> {
         match self {
             Self::Verified { sha1, .. }
             | Self::CommitMissing { sha1, .. }
             | Self::NotOnRepoRef { sha1, .. } => Some(sha1),
-            Self::NoVcsInfo | Self::UnsupportedHost => None,
+            Self::ManifestDeclares { .. } | Self::NoVcsInfo | Self::UnsupportedHost => None,
         }
     }
 
@@ -95,12 +109,13 @@ impl LinkCheck {
     }
 
     /// The result name: `verified`, `commit-missing`, `not-on-repo-ref`,
-    /// `no-vcs-info` or `unsupported-host`.
+    /// `manifest-declares`, `no-vcs-info` or `unsupported-host`.
     pub fn label(&self) -> &'static str {
         match self {
             Self::Verified { .. } => "verified",
             Self::CommitMissing { .. } => "commit-missing",
             Self::NotOnRepoRef { .. } => "not-on-repo-ref",
+            Self::ManifestDeclares { .. } => "manifest-declares",
             Self::NoVcsInfo => "no-vcs-info",
             Self::UnsupportedHost => "unsupported-host",
         }
@@ -169,6 +184,24 @@ mod tests {
     }
 
     #[test]
+    fn a_manifest_proof_verifies_and_names_its_path() {
+        let check = LinkCheck::ManifestDeclares {
+            path: "crates/a/Cargo.toml".to_owned(),
+        };
+        assert_eq!(check.verified(), Some(true));
+        assert_eq!(check.label(), "manifest-declares");
+        assert_eq!(check.manifest(), Some("crates/a/Cargo.toml"));
+        assert_eq!(check.sha1(), None);
+        assert_eq!(check.held_by(), None);
+        assert!(!check.dirty());
+        assert_eq!(found(false).manifest(), None);
+        assert_eq!(
+            serde_json::to_string(&check).expect("serializes"),
+            r#"{"kind":"manifest-declares","path":"crates/a/Cargo.toml"}"#
+        );
+    }
+
+    #[test]
     fn a_snapshot_from_an_older_rule_reads_as_the_new_result() {
         let old: LinkCheck = serde_json::from_str(&format!(
             r#"{{"kind":"not-on-default-branch","sha1":"{SHA}","dirty":false}}"#
@@ -195,6 +228,9 @@ mod tests {
             LinkCheck::NotOnRepoRef {
                 sha1: SHA.to_owned(),
                 dirty: true,
+            },
+            LinkCheck::ManifestDeclares {
+                path: "Cargo.toml".to_owned(),
             },
             LinkCheck::NoVcsInfo,
             LinkCheck::UnsupportedHost,

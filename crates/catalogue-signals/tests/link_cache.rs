@@ -65,7 +65,7 @@ fn the_file_holds_the_repo_and_the_result_under_the_canonical_name() {
     let text = fs::read_to_string(links_dir(&dir).join("serde-json-1.0.1@serde-rs__json.json"))
         .expect("file");
     let value: serde_json::Value = serde_json::from_str(&text).expect("json");
-    assert_eq!(value["rule"], 3);
+    assert_eq!(value["rule"], 4);
     assert_eq!(value["repo"], "serde-rs/json");
     assert_eq!(value["result"]["kind"], "no-vcs-info");
     assert_eq!(value["checked"], "2026-11-02");

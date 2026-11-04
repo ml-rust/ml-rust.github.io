@@ -16,7 +16,8 @@ use crate::dump::{DumpCommandError, read_cached};
 use crate::render::or_none;
 use crate::token::NoToken;
 
-/// Checks that the latest unyanked version of `crate_name` was published from a commit in `repo`.
+/// Checks that the latest unyanked version of `crate_name` was published from a commit in `repo`,
+/// or that a manifest in `repo` declares it when the release records no commit.
 ///
 /// The version comes from the cached dump. The token is read after the repo
 /// argument and before the dump.
@@ -53,12 +54,13 @@ pub(super) fn link(
 
 /// The `key: value` lines of one link check, with no trailing newline.
 ///
-/// The keys are `crate`, `version`, `sha1`, `result`, `held_by` and `cached`.
-/// `crate` holds the name as crates.io stores it. `result` is `verified`,
-/// `commit-missing`, `not-on-repo-ref`, `no-vcs-info` or `unsupported-host`.
-/// `sha1` prints as `-` when the release records no commit. `held_by` names the
-/// branch or tag that holds the commit, or prints as `-`. `cached` is `true`
-/// when the cache held the result.
+/// The keys are `crate`, `version`, `sha1`, `result`, `held_by`, `manifest` and
+/// `cached`. `crate` holds the name as crates.io stores it. `result` is `verified`,
+/// `commit-missing`, `not-on-repo-ref`, `manifest-declares`, `no-vcs-info` or
+/// `unsupported-host`. `sha1` prints as `-` when the release records no commit.
+/// `held_by` names the branch or tag that holds the commit, or prints as `-`.
+/// `manifest` names the manifest that declares the crate, or prints as `-`.
+/// `cached` is `true` when the cache held the result.
 pub fn render_link(release: &CrateRelease, outcome: &LinkOutcome) -> String {
     [
         format!("crate: {}", release.name),
@@ -66,6 +68,7 @@ pub fn render_link(release: &CrateRelease, outcome: &LinkOutcome) -> String {
         format!("sha1: {}", or_none(outcome.check.sha1())),
         format!("result: {}", outcome.check.label()),
         format!("held_by: {}", or_none(outcome.check.held_by())),
+        format!("manifest: {}", or_none(outcome.check.manifest())),
         format!("cached: {}", outcome.cached),
     ]
     .join("\n")
@@ -104,7 +107,7 @@ mod tests {
         assert_eq!(
             render_link(&release(), &outcome(check, false)),
             format!(
-                "crate: serde\nversion: 1.0.228\nsha1: {SHA}\nresult: verified\nheld_by: refs/tags/v1.0.228\ncached: false"
+                "crate: serde\nversion: 1.0.228\nsha1: {SHA}\nresult: verified\nheld_by: refs/tags/v1.0.228\nmanifest: -\ncached: false"
             )
         );
     }
@@ -135,6 +138,17 @@ mod tests {
                 "\nsha1: {SHA}\nresult: not-on-repo-ref\nheld_by: -\n"
             )),
             "{text}"
+        );
+    }
+
+    #[test]
+    fn a_manifest_proof_prints_its_path() {
+        let check = LinkCheck::ManifestDeclares {
+            path: "crates/serde/Cargo.toml".to_owned(),
+        };
+        assert_eq!(
+            render_link(&release(), &outcome(check, false)),
+            "crate: serde\nversion: 1.0.228\nsha1: -\nresult: manifest-declares\nheld_by: -\nmanifest: crates/serde/Cargo.toml\ncached: false"
         );
     }
 

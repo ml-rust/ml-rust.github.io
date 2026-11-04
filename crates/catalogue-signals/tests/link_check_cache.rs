@@ -121,7 +121,8 @@ fn an_unreadable_cache_file_is_checked_again() {
         "not json",
     )
     .expect("file");
-    let (_, outcome) = run(vec![package(None)], "a/b", &dir);
+    let responses = vec![package(None), FakeResponse::status(404)];
+    let (_, outcome) = run(responses, "a/b", &dir);
     let outcome = outcome.expect("checks");
     assert!(!outcome.cached);
     let (_, hit) = run(vec![], "a/b", &dir);

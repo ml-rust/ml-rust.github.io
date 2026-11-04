@@ -69,10 +69,11 @@ fn cite(
             dates.contributors,
         ),
         Origin::Link => (
-            source(
-                "crates.io package .cargo_vcs_info.json",
-                &sources.crate_page,
-            ),
+            if sources.manifest_repo.is_some() {
+                source("repo manifest", &sources.manifest_repo)
+            } else {
+                source("crates.io package", &sources.crate_page)
+            },
             dates.link,
         ),
         Origin::Releases => (
@@ -318,7 +319,7 @@ fn publication_rows(signals: &Signals) -> Vec<Row> {
         ),
         (
             "repo_link_verified",
-            "Release commit on a repo branch or tag",
+            "Release commit or manifest in the repo",
             text(signals.repo_link_verified),
             Origin::Link,
         ),
@@ -383,7 +384,7 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 /// | `build_fails`, `build_checked`, `build_toolchain` | sandbox check workflow | `build_checked` |
 /// | `repo_archived` to `maintainer_replies_365` | GitHub repo page | GitHub fetch date |
 /// | `docs_present` | crates.io database dump | dump date |
-/// | `repo_link_verified` | crates.io page of the primary crate | link check date |
+/// | `repo_link_verified` | repo page for a manifest proof, else crates.io page of the primary crate | link check date |
 /// | `binary_downloads_last3`, `binary_downloads_per_release` | GitHub releases page | releases fetch date |
 /// | `homebrew_on_request_365d` | Homebrew formula page | Homebrew fetch date |
 /// | `repology_families` | Repology project page | Repology fetch date |
@@ -690,6 +691,10 @@ mod tests {
         );
         assert_eq!(cited("repo_link_verified").1, Some(day(2)));
         assert_eq!(
+            cited("repo_link_verified").0,
+            "https://crates.io/crates/tool"
+        );
+        assert_eq!(
             cited("homebrew_on_request_365d").0,
             "https://formulae.brew.sh/formula/python@3.12"
         );
@@ -740,6 +745,27 @@ mod tests {
         let unread = signal_facts(&Signals::unknown(EntryKind::Library), &sources, None);
         assert_eq!(value(&unread, "rustsec_unmaintained").value, None);
         assert_eq!(value(&unread, "deprecation_notice").value, None);
+    }
+
+    #[test]
+    fn a_manifest_proof_cites_the_repo_and_a_commit_proof_cites_the_crate_page() {
+        let entry = library(&["tool"]);
+        let mut sources = FactSources::new(&entry, None, today(), FetchDates::default());
+        let (commit, _) = cite(
+            Origin::Link,
+            &Signals::unknown(EntryKind::Library),
+            &sources,
+        );
+        assert_eq!(commit.expect("source").label, "crates.io package");
+        sources.manifest_repo = Some(entry.repo.clone());
+        let (manifest, _) = cite(
+            Origin::Link,
+            &Signals::unknown(EntryKind::Library),
+            &sources,
+        );
+        let manifest = manifest.expect("source");
+        assert_eq!(manifest.label, "repo manifest");
+        assert_eq!(manifest.url, entry.repo);
     }
 
     #[test]

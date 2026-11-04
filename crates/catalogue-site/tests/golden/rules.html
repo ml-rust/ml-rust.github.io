@@ -121,7 +121,7 @@
 <ul>
 <li>Adoption passes on one of three routes: active dependents reach their limit, new dependents (365 days) reach their limit, or the repository route passes.</li>
 <li>No vulnerability advisory is unpatched past the grace window.</li>
-<li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count.</li>
+<li>The commit in the crate’s .cargo_vcs_info.json is on a branch or tag of the repository. A commit that only a fork holds does not count. When the release records no commit, or the repository is on Codeberg or GitLab, a Cargo.toml on the default branch that declares the crate counts instead. A recorded commit that the GitHub repository lacks still fails.</li>
 <li>Former glory reaches its floor.</li>
 <li>Docs are present.</li>
 <li>At least one version is neither a prerelease nor 0.0.x.</li>

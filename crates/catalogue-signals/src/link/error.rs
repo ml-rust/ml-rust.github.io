@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use super::vcs_info::VcsInfoError;
 use crate::github::GithubError;
-use crate::http::HttpError;
+use crate::http::{HttpError, PacedError};
 
 /// A link check that ends without a result.
 #[derive(Debug, Error)]
@@ -15,6 +15,22 @@ pub enum LinkError {
     /// The GitHub commit lookup fails.
     #[error(transparent)]
     Github(#[from] GithubError),
+    /// A repo host other than GitHub fails during the manifest proof.
+    #[error("the manifest check stopped: {source}. Rerun later")]
+    Forge {
+        /// What the request reports.
+        source: PacedError,
+    },
+    /// A repo host other than GitHub sends a listing that is not the expected JSON.
+    #[error(
+        "the response from {url} is not the expected JSON: {source}. Rerun later. If the error persists, report it"
+    )]
+    ForgeJson {
+        /// The requested URL.
+        url: String,
+        /// The parse error.
+        source: serde_json::Error,
+    },
     /// The crate download answers with a status other than 200.
     #[error("{url} answered with status {status}. Check the crate name and version, then rerun")]
     Download {

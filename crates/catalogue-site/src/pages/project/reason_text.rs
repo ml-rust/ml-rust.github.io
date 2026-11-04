@@ -331,7 +331,7 @@ fn one_failure(failure: &str) -> Lack {
             Sentence::plain("A vulnerability advisory stays unpatched past the grace window.")
         }
         "repository link not verified" => Sentence::plain(
-            "The check finds no release commit on a branch or tag of the repository.",
+            "The check finds no release commit or manifest that ties the crate to the repository.",
         ),
         "docs missing" => {
             Sentence::plain("Docs are missing: the primary crate publishes no README.")
@@ -533,7 +533,7 @@ fn library_meets(values: &str, thresholds: Option<&Thresholds>) -> Option<Vec<Se
             percent(glory)
         )),
         Sentence::plain(
-            "Docs are present. The release commit is on a branch or tag of the repository.",
+            "Docs are present. The release commit or a manifest ties the crate to the repository.",
         ),
         Sentence::plain(
             "No vulnerability advisory stays unpatched past the grace window. At least one version is neither a prerelease nor 0.0.x.",
@@ -744,7 +744,7 @@ mod tests {
             ),
             [
                 "It has 2 active dependents and 2 new dependents in 365 days. Featured needs 11 active dependents or 9 new dependents in 365 days.",
-                "The check finds no release commit on a branch or tag of the repository.",
+                "The check finds no release commit or manifest that ties the crate to the repository.",
                 "Docs are missing: the primary crate publishes no README.",
                 "Every version is a prerelease or 0.0.x.",
                 "The project is dormant and not finished.",

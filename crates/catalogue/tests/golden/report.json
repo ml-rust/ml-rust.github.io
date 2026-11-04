@@ -292,7 +292,7 @@
         },
         {
           "name": "repo_link_verified",
-          "label": "Release commit on a repo branch or tag",
+          "label": "Release commit or manifest in the repo",
           "value": null,
           "source": null,
           "fetched": null,
@@ -700,7 +700,7 @@
         },
         {
           "name": "repo_link_verified",
-          "label": "Release commit on a repo branch or tag",
+          "label": "Release commit or manifest in the repo",
           "value": null,
           "source": null,
           "fetched": null,
@@ -1080,7 +1080,7 @@
         },
         {
           "name": "repo_link_verified",
-          "label": "Release commit on a repo branch or tag",
+          "label": "Release commit or manifest in the repo",
           "value": null,
           "source": null,
           "fetched": null,

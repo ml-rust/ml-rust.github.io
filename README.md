@@ -24,7 +24,7 @@ The tier rules run in a fixed order on every check. Each entry gets one tier per
 
 The repository route needs stars, forks, and contributors to each reach their limit on the same check. It is a gate of separate limits, never a score.
 
-Health covers unpatched vulnerabilities, a repository link that the crate package confirms, and the share of peak active dependents that stay active.
+Health covers unpatched vulnerabilities, a repository link that the release commit or a manifest in the repository proves, and the share of peak active dependents that stay active.
 
 - A Featured entry keeps Featured until an approved demotion judgment allows the drop.
 - An org-affiliated entry needs approval from a maintainer outside the organization to become Featured.

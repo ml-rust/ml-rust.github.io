@@ -33,6 +33,8 @@ pub struct FactSources {
     pub dump: Date,
     /// The crates.io page of the primary crate. `None` for an entry without a crate.
     pub crate_page: Option<Url>,
+    /// The repo page when a repo manifest proves the link. `None` when a release commit decides.
+    pub manifest_repo: Option<Url>,
     /// The RustSec page of the primary crate. `None` for an entry without a crate.
     pub advisory_page: Option<Url>,
     /// The GitHub page of the repo. `None` when the repo is not on GitHub.
@@ -109,6 +111,7 @@ impl FactSources {
         Self {
             dump,
             crate_page: primary.and_then(crate_page),
+            manifest_repo: None,
             advisory_page: primary
                 .and_then(|name| Url::parse(&format!("{ADVISORY_PAGE}{name}.html")).ok()),
             repo_page,

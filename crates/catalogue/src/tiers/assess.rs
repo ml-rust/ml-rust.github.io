@@ -129,7 +129,10 @@ pub(crate) fn assess_entries(
             };
             let choice = measure(entry, &choice_inputs, facts);
             let repo = github_repo(entry).ok();
-            let cited = FactSources::new(entry, repo.as_ref(), dump_date, dates);
+            let mut cited = FactSources::new(entry, repo.as_ref(), dump_date, dates);
+            if link.is_some_and(|check| check.manifest().is_some()) {
+                cited.manifest_repo = Some(entry.repo.clone());
+            }
             let commits = facts.and_then(RepoValues::commits);
             let ctx = context(slug, catalogue, history, today);
             let verdict = assess(&signals, &ctx, thresholds);
