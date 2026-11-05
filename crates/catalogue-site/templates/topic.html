@@ -13,7 +13,7 @@
 <p class="sources">Sources:{% for link in evidence %} <a href="{{ link.href }}">{{ link.text }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>
 {%- endif %}
 {%- else %}
-<p class="lede">Rust projects in the catalogue that do this job, with the facts to compare them.</p>
+<p class="lede">{{ blurb }}</p>
 {%- endif %}
 {%- if !children.is_empty() %}
 <p class="subtopics" id="subtopics">Subtopics:{% for link in children %} <a href="{{ link.href }}">{{ link.name }}</a>{% if !loop.last %},{% endif %}{% endfor %}</p>

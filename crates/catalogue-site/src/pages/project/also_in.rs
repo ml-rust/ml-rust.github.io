@@ -137,7 +137,7 @@ mod tests {
         }
     }
 
-    const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\n\n[[topic]]\nid = \"two\"\nname = \"Two\"\n\n[[topic]]\nid = \"three\"\nname = \"Three\"\n";
+    const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\nblurb = \"A job.\"\n\n[[topic]]\nid = \"two\"\nname = \"Two\"\nblurb = \"A job.\"\n\n[[topic]]\nid = \"three\"\nname = \"Three\"\nblurb = \"A job.\"\n";
 
     fn source(path: &str, contents: String) -> SourceFile {
         SourceFile {

@@ -1,4 +1,4 @@
-//! The stylesheet, the favicon and the scripts, each named by its content hash.
+//! The stylesheet, the favicon, the share image and the scripts, each named by its content hash.
 
 use std::fmt::Write as _;
 
@@ -21,6 +21,15 @@ const COMPARE_JS: &[u8] = include_bytes!("../assets/compare.js");
 
 /// The favicon of every page. It carries its own light and dark colours.
 const FAVICON: &[u8] = include_bytes!("../assets/favicon.svg");
+
+/// The image link previews show for every page. `scripts/render_share_image.sh` renders it.
+const SHARE_IMAGE: &[u8] = include_bytes!("../assets/share-image.png");
+
+/// The width of the share image, in pixels.
+pub(crate) const SHARE_IMAGE_WIDTH: u32 = 1200;
+
+/// The height of the share image, in pixels.
+pub(crate) const SHARE_IMAGE_HEIGHT: u32 = 630;
 
 /// How many leading bytes of the SHA-256 digest go into the file name.
 const HASH_BYTES: usize = 4;
@@ -56,6 +65,11 @@ impl HashedAsset {
     /// The favicon, at `assets/favicon.<hash>.svg`.
     pub(crate) fn favicon() -> Self {
         Self::of("assets/favicon", "svg", FAVICON)
+    }
+
+    /// The share image, at `assets/share-image.<hash>.png`.
+    pub(crate) fn share_image() -> Self {
+        Self::of("assets/share-image", "png", SHARE_IMAGE)
     }
 
     /// The file with contents `bytes`, at `<stem>.<hash>.<ext>`.
@@ -116,6 +130,12 @@ mod tests {
             (HashedAsset::stylesheet(), SITE_CSS, "assets/site", "css"),
             (HashedAsset::favicon(), FAVICON, "assets/favicon", "svg"),
             (
+                HashedAsset::share_image(),
+                SHARE_IMAGE,
+                "assets/share-image",
+                "png",
+            ),
+            (
                 HashedAsset::search_script(),
                 SEARCH_JS,
                 "search/search",
@@ -135,6 +155,15 @@ mod tests {
             assert!(!asset.href().is_refused());
             assert_eq!(file.path, hashed_path(stem, ext, bytes));
         }
+    }
+
+    #[test]
+    fn the_share_image_is_a_png_of_the_published_size() {
+        // A PNG holds its signature, then the header chunk: length, type, width and height.
+        assert_eq!(&SHARE_IMAGE[..8], b"\x89PNG\r\n\x1a\n");
+        assert_eq!(&SHARE_IMAGE[12..16], b"IHDR");
+        assert_eq!(SHARE_IMAGE[16..20], SHARE_IMAGE_WIDTH.to_be_bytes());
+        assert_eq!(SHARE_IMAGE[20..24], SHARE_IMAGE_HEIGHT.to_be_bytes());
     }
 
     #[test]

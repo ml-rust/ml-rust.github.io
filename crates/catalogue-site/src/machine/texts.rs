@@ -135,7 +135,7 @@ mod tests {
         Catalogue::load(DataSources {
             topics: Some(source(
                 "topics.toml",
-                "[[topic]]\nid = \"zeta\"\nname = \"Zeta <b>\"\n\n[[topic]]\nid = \"alpha\"\nname = \"Alpha\"\n",
+                "[[topic]]\nid = \"zeta\"\nname = \"Zeta <b>\"\nblurb = \"A job.\"\n\n[[topic]]\nid = \"alpha\"\nname = \"Alpha\"\nblurb = \"A job.\"\n",
             )),
             categories: Some(source(
                 "categories.toml",

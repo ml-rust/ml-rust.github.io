@@ -2,24 +2,38 @@
 
 use catalogue_core::{Category, Slug, Topic};
 
-use super::layout::SITE_URL;
+use super::layout::{SHORT_SITE_NAME, SITE_NAME, SITE_URL};
 use super::shared::{category_href, project_href, topic_href};
 use crate::href::SafeHref;
 
 /// The longest description, in characters. Search results cut longer text.
 const MAX_DESCRIPTION: usize = 160;
 
+/// The longest `<title>`, in characters. Search results cut longer text.
+const MAX_TITLE: usize = 65;
+
+/// What a project title adds to the project name, longest first.
+const PROJECT_TITLE_DETAILS: [&str; 2] = [
+    ": usage, activity and alternatives",
+    ": usage and alternatives",
+];
+
+/// What a topic or category title adds to its name.
+const LIST_TITLE_DETAILS: [&str; 1] = [" in Rust: libraries and apps"];
+
 /// What a project description ends with when it fits.
 const PROJECT_TAIL: &str = "See its downloads, dependents, activity and alternatives.";
 
-/// What a topic or category description ends with.
+/// What a topic or category description ends with when it fits.
 const LIST_TAIL: &str = "Compare Rust libraries and apps by downloads, dependents and activity.";
 
 /// The data the `<head>` of `base.html` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct PageMeta {
-    /// The page title, without the site name.
+    /// The title a link preview shows, without the site name.
     pub title: String,
+    /// The `<title>` text, at most [`MAX_TITLE`] characters.
+    pub document_title: String,
     /// The description. Escaped by the template, because it can hold entry text.
     pub description: String,
     /// The address of the page. `None` keeps the page out of search results.
@@ -27,13 +41,20 @@ pub(crate) struct PageMeta {
 }
 
 impl PageMeta {
+    /// The meta of a page named `name`, whose title adds the first of `details` that fits.
+    fn new(name: &str, details: &[&str], description: String, canonical: Option<SafeHref>) -> Self {
+        let (title, document_title) = titles(name, details);
+        Self {
+            title,
+            document_title,
+            description,
+            canonical,
+        }
+    }
+
     /// The meta of a fixed page at `path`.
     fn fixed(title: &str, description: &str, path: &str) -> Self {
-        Self {
-            title: title.to_owned(),
-            description: description.to_owned(),
-            canonical: Some(address(path)),
-        }
+        Self::new(title, &[], description.to_owned(), Some(address(path)))
     }
 
     /// The home page.
@@ -127,50 +148,42 @@ impl PageMeta {
 
     /// The not-found page, which stays out of search results.
     pub(crate) fn not_found() -> Self {
-        Self {
-            title: "Page not found".to_owned(),
-            description: "This page is not in the ML Rust catalogue.".to_owned(),
-            canonical: None,
-        }
+        Self::new(
+            "Page not found",
+            &[],
+            "This page is not in the ML Rust catalogue.".to_owned(),
+            None,
+        )
     }
 
     /// The page of `topic`.
     pub(crate) fn topic(topic: &Topic) -> Self {
-        Self {
-            title: format!("{} in Rust: libraries and apps", topic.name),
-            description: fit(&format!("{}. {LIST_TAIL}", topic.name)),
-            canonical: Some(address(topic_href(&topic.id).as_str())),
-        }
+        Self::new(
+            &topic.name,
+            &LIST_TITLE_DETAILS,
+            with_tail(&topic.blurb, LIST_TAIL),
+            Some(address(topic_href(&topic.id).as_str())),
+        )
     }
 
     /// The page of `category`.
     pub(crate) fn category(category: &Category) -> Self {
-        Self {
-            title: format!("{} in Rust: libraries and apps", category.name),
-            description: fit(&format!("{} {LIST_TAIL}", category.blurb.trim())),
-            canonical: Some(address(category_href(&category.id).as_str())),
-        }
+        Self::new(
+            &category.name,
+            &LIST_TITLE_DETAILS,
+            with_tail(&category.blurb, LIST_TAIL),
+            Some(address(category_href(&category.id).as_str())),
+        )
     }
 
     /// The page of the entry `slug`, named `name` and described by `description`.
     pub(crate) fn project(slug: &Slug, name: &str, description: &str) -> Self {
-        let text = description.split_whitespace().collect::<Vec<_>>().join(" ");
-        // Upstream descriptions often end with no punctuation.
-        let stop = if text.ends_with(['.', '!', '?']) {
-            ""
-        } else {
-            "."
-        };
-        let full = format!("{text}{stop} {PROJECT_TAIL}");
-        Self {
-            title: format!("{name}: usage, activity and alternatives"),
-            description: if full.chars().count() <= MAX_DESCRIPTION {
-                full
-            } else {
-                fit(&text)
-            },
-            canonical: Some(address(project_href(slug).as_str())),
-        }
+        Self::new(
+            name,
+            &PROJECT_TITLE_DETAILS,
+            with_tail(description, PROJECT_TAIL),
+            Some(address(project_href(slug).as_str())),
+        )
     }
 }
 
@@ -179,12 +192,57 @@ fn address(path: &str) -> SafeHref {
     SafeHref::new(&format!("{SITE_URL}{path}"))
 }
 
-/// `text` cut at a word to at most [`MAX_DESCRIPTION`] characters, with an ellipsis when cut.
+/// The preview title and the `<title>` text of the page named `name`.
+///
+/// The name always survives whole when it fits alone. A longer form wins over a shorter one: each
+/// of `details` in order, then the name alone, each with the full and then the short site name.
+fn titles(name: &str, details: &[&str]) -> (String, String) {
+    let bodies = details
+        .iter()
+        .map(|detail| format!("{name}{detail}"))
+        .chain([name.to_owned()]);
+    for body in bodies {
+        for site in [SITE_NAME, SHORT_SITE_NAME] {
+            let document_title = format!("{body} · {site}");
+            if document_title.chars().count() <= MAX_TITLE {
+                return (body, document_title);
+            }
+        }
+    }
+    let alone = cut(name, MAX_TITLE);
+    (alone.clone(), alone)
+}
+
+/// `text` with single spaces, followed by `tail` when both fit in [`MAX_DESCRIPTION`] characters.
+fn with_tail(text: &str, tail: &str) -> String {
+    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    // Upstream descriptions often end with no punctuation.
+    let stop = if text.ends_with(['.', '!', '?']) {
+        ""
+    } else {
+        "."
+    };
+    let full = format!("{text}{stop} {tail}");
+    if full.chars().count() <= MAX_DESCRIPTION {
+        full
+    } else {
+        fit(&text)
+    }
+}
+
+/// `text` cut to at most [`MAX_DESCRIPTION`] characters.
 fn fit(text: &str) -> String {
-    if text.chars().count() <= MAX_DESCRIPTION {
+    cut(text, MAX_DESCRIPTION)
+}
+
+/// `text` cut at a word to at most `limit` characters, with an ellipsis when cut.
+///
+/// A single word longer than `limit` has no word end to cut at, so the cut falls inside it.
+fn cut(text: &str, limit: usize) -> String {
+    if text.chars().count() <= limit {
         return text.to_owned();
     }
-    let kept: String = text.chars().take(MAX_DESCRIPTION - 1).collect();
+    let kept: String = text.chars().take(limit - 1).collect();
     let cut = kept
         .rfind(' ')
         .map_or(kept.as_str(), |space| &kept[..space]);
@@ -242,6 +300,102 @@ mod tests {
     #[test]
     fn the_not_found_page_has_no_address() {
         assert!(PageMeta::not_found().canonical.is_none());
+    }
+
+    #[test]
+    fn every_fixed_title_keeps_its_words_and_the_full_site_name() {
+        for meta in [
+            PageMeta::home(),
+            PageMeta::featured(),
+            PageMeta::ml_rust(),
+            PageMeta::topics(),
+            PageMeta::changes(),
+            PageMeta::rules(),
+            PageMeta::submit(),
+            PageMeta::search(),
+            PageMeta::compare(),
+            PageMeta::not_found(),
+        ] {
+            assert_eq!(meta.document_title, format!("{} · {SITE_NAME}", meta.title));
+            assert!(meta.document_title.chars().count() <= MAX_TITLE);
+        }
+    }
+
+    #[test]
+    fn a_project_title_gives_way_to_the_name_as_the_name_grows() {
+        let title = |len: usize| titles(&"n".repeat(len), &PROJECT_TITLE_DETAILS).1;
+        let name = |len: usize| "n".repeat(len);
+        for (len, want) in [
+            (
+                11,
+                format!(
+                    "{}: usage, activity and alternatives · ML Rust catalogue",
+                    name(11)
+                ),
+            ),
+            (
+                21,
+                format!("{}: usage, activity and alternatives · ML Rust", name(21)),
+            ),
+            (
+                31,
+                format!("{}: usage and alternatives · ML Rust", name(31)),
+            ),
+            (45, format!("{} · ML Rust catalogue", name(45))),
+            (55, format!("{} · ML Rust", name(55))),
+            (65, name(65)),
+        ] {
+            let found = title(len);
+            assert_eq!(found, want);
+            assert_eq!(found.chars().count(), 65, "{found}");
+            assert!(title(len + 1).chars().count() <= MAX_TITLE);
+            assert_ne!(
+                title(len + 1).replace('n', ""),
+                found.replace('n', ""),
+                "{len}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_list_title_keeps_its_detail_with_the_short_site_name() {
+        let (title, document_title) = titles("Text, embeddings and search", &LIST_TITLE_DETAILS);
+        assert_eq!(
+            title,
+            "Text, embeddings and search in Rust: libraries and apps"
+        );
+        assert_eq!(
+            document_title,
+            "Text, embeddings and search in Rust: libraries and apps · ML Rust"
+        );
+        assert_eq!(document_title.chars().count(), MAX_TITLE);
+    }
+
+    #[test]
+    fn a_name_too_long_for_a_title_ends_at_a_word() {
+        let name = "word ".repeat(30);
+        let (title, document_title) = titles(name.trim(), &PROJECT_TITLE_DETAILS);
+        assert_eq!(title, document_title);
+        assert!(document_title.chars().count() <= MAX_TITLE);
+        assert!(document_title.ends_with("word…"), "{document_title}");
+    }
+
+    #[test]
+    fn a_topic_or_category_description_holds_its_definition_whole() {
+        let blurb = "Word ".repeat(40);
+        assert_eq!(
+            with_tail("A line.", LIST_TAIL),
+            format!("A line. {LIST_TAIL}")
+        );
+        let room = MAX_DESCRIPTION - LIST_TAIL.chars().count() - 1;
+        let longest = "w".repeat(room - 1) + ".";
+        assert_eq!(
+            with_tail(&longest, LIST_TAIL),
+            format!("{longest} {LIST_TAIL}")
+        );
+        let over = "w".repeat(room) + ".";
+        assert_eq!(with_tail(&over, LIST_TAIL), over);
+        assert!(with_tail(&blurb, LIST_TAIL).chars().count() <= MAX_DESCRIPTION);
     }
 
     #[test]

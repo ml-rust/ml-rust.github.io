@@ -23,10 +23,12 @@ source = "human"
 const TOPICS: &str = r#"[[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "A job."
 
 [[topic]]
 id = "tensors"
 name = "Tensors"
+blurb = "A job."
 parent = "ml"
 "#;
 

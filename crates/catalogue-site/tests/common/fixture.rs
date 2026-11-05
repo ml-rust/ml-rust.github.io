@@ -20,6 +20,7 @@ use crate::build::{render, source, thresholds};
 const TOPICS: &str = r#"[[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "Teaching programs from data. Find models and tools."
 
 [topic.summary]
 text = "Projects that train or run machine learning models."
@@ -28,6 +29,7 @@ evidence = ["https://en.wikipedia.org/wiki/Machine_learning"]
 [[topic]]
 id = "tensors"
 name = "Tensors"
+blurb = "Arrays and the math on them. Find tensor libraries."
 parent = "ml"
 
 [topic.summary]

@@ -100,7 +100,7 @@ source = "human"
             )),
             topics: Some(file(
                 "topics.toml",
-                "[[topic]]\nid = \"ml\"\nname = \"ML\"\n",
+                "[[topic]]\nid = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n",
             )),
             ..DataSources::default()
         };

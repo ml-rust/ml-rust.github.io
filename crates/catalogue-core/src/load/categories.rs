@@ -99,7 +99,7 @@ mod tests {
         put(
             &mut src,
             "topics.toml",
-            "[[topic]]\nid = \"tensors\"\nname = \"Tensors\"\nterms = [\"vector database\"]\n",
+            "[[topic]]\nid = \"tensors\"\nname = \"Tensors\"\nblurb = \"A job.\"\nterms = [\"vector database\"]\n",
         );
         put(
             &mut src,

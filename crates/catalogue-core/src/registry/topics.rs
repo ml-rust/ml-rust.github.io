@@ -21,6 +21,8 @@ pub struct Topic {
     pub id: Slug,
     /// Display name.
     pub name: String,
+    /// One plain line that says what the job is and what a reader finds under it.
+    pub blurb: String,
     /// The broader topic, if any.
     pub parent: Option<Slug>,
     /// Short sourced overview of the topic.
@@ -57,6 +59,9 @@ impl Topic {
         if self.name.trim().is_empty() {
             out.push("name must not be empty".to_owned());
         }
+        if self.blurb.trim().is_empty() {
+            out.push("blurb must not be empty".to_owned());
+        }
         if let Some(summary) = &self.summary {
             if summary.text.trim().is_empty() {
                 out.push("summary text must not be empty".to_owned());
@@ -92,28 +97,49 @@ mod tests {
     #[test]
     fn valid_topic_passes() {
         let t = topic(
-            "id = \"ml\"\nname = \"Machine learning\"\n[summary]\ntext = \"Overview.\"\nevidence = [\"https://example.com/a\"]\n",
+            "id = \"ml\"\nname = \"Machine learning\"\nblurb = \"A job.\"\n[summary]\ntext = \"Overview.\"\nevidence = [\"https://example.com/a\"]\n",
         );
         assert!(t.problems().is_empty());
-        assert!(topic("id = \"ml\"\nname = \"ML\"\n").problems().is_empty());
+        assert!(
+            topic("id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n")
+                .problems()
+                .is_empty()
+        );
     }
 
     #[test]
     fn empty_name_is_reported() {
-        assert_eq!(topic("id = \"ml\"\nname = \"\"\n").problems().len(), 1);
+        assert_eq!(
+            topic("id = \"ml\"\nname = \"\"\nblurb = \"A job.\"\n")
+                .problems()
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn an_empty_blurb_is_reported() {
+        let found = topic("id = \"ml\"\nname = \"ML\"\nblurb = \" \"\n").problems();
+        assert_eq!(found, ["blurb must not be empty"]);
+    }
+
+    #[test]
+    fn a_missing_blurb_is_a_parse_error() {
+        assert!(toml::from_str::<Topic>("id = \"ml\"\nname = \"ML\"\n").is_err());
     }
 
     #[test]
     fn summary_without_evidence_is_reported() {
-        let t =
-            topic("id = \"ml\"\nname = \"ML\"\n[summary]\ntext = \"Overview.\"\nevidence = []\n");
+        let t = topic(
+            "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n[summary]\ntext = \"Overview.\"\nevidence = []\n",
+        );
         assert!(t.problems().iter().any(|p| p.contains("evidence")));
     }
 
     #[test]
     fn summary_evidence_must_use_https() {
         let t = topic(
-            "id = \"ml\"\nname = \"ML\"\n[summary]\ntext = \"Overview.\"\nevidence = [\"javascript:alert(1)\", \"http://example.com/a\"]\n",
+            "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n[summary]\ntext = \"Overview.\"\nevidence = [\"javascript:alert(1)\", \"http://example.com/a\"]\n",
         );
         let found = t.problems();
         assert_eq!(found.len(), 2, "{found:?}");
@@ -125,10 +151,10 @@ mod tests {
 
     #[test]
     fn keywords_and_categories_default_to_empty() {
-        let t = topic("id = \"ml\"\nname = \"ML\"\n");
+        let t = topic("id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n");
         assert!(t.keywords.is_empty() && t.categories.is_empty());
         let t = topic(
-            "id = \"ml\"\nname = \"ML\"\nkeywords = [\"llm\"]\ncategories = [\"science::ml\"]\n",
+            "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\nkeywords = [\"llm\"]\ncategories = [\"science::ml\"]\n",
         );
         assert_eq!(t.keywords, ["llm"]);
         assert_eq!(t.categories, ["science::ml"]);
@@ -146,7 +172,7 @@ mod tests {
             ("categories", "\"\"", "must match"),
         ] {
             let t = topic(&format!(
-                "id = \"ml\"\nname = \"ML\"\n{field} = [{value}]\n"
+                "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n{field} = [{value}]\n"
             ));
             assert!(
                 t.problems().iter().any(|p| p.contains(needle)),
@@ -158,8 +184,14 @@ mod tests {
 
     #[test]
     fn valid_terms_pass_and_default_to_empty() {
-        assert!(topic("id = \"ml\"\nname = \"ML\"\n").terms.is_empty());
-        let t = topic("id = \"ml\"\nname = \"ML\"\nterms = [\"vector database\", \"t sne\"]\n");
+        assert!(
+            topic("id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\n")
+                .terms
+                .is_empty()
+        );
+        let t = topic(
+            "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\nterms = [\"vector database\", \"t sne\"]\n",
+        );
         assert_eq!(t.terms, ["vector database", "t sne"]);
         assert!(t.problems().is_empty());
     }
@@ -168,7 +200,7 @@ mod tests {
     fn bad_terms_are_reported() {
         for value in ["LLM", " llm", "llm ", "", "two  spaces", "stable-diffusion"] {
             let t = topic(&format!(
-                "id = \"ml\"\nname = \"ML\"\nterms = [\"{value}\"]\n"
+                "id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\nterms = [\"{value}\"]\n"
             ));
             assert!(
                 t.problems()
@@ -182,6 +214,9 @@ mod tests {
 
     #[test]
     fn unknown_field_is_rejected() {
-        assert!(toml::from_str::<Topic>("id = \"ml\"\nname = \"ML\"\nextra = 1\n").is_err());
+        assert!(
+            toml::from_str::<Topic>("id = \"ml\"\nname = \"ML\"\nblurb = \"A job.\"\nextra = 1\n")
+                .is_err()
+        );
     }
 }

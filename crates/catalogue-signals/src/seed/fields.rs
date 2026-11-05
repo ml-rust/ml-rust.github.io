@@ -185,17 +185,20 @@ mod tests {
 [[topic]]
 id = "nlp"
 name = "NLP"
+blurb = "A job."
 keywords = ["nlp", "text"]
 
 [[topic]]
 id = "foundations"
 name = "Foundations"
+blurb = "A job."
 keywords = ["tensor"]
 categories = ["science::math"]
 
 [[topic]]
 id = "other"
 name = "Other"
+blurb = "A job."
 "#;
 
     #[test]
@@ -236,21 +239,25 @@ name = "Other"
 [[topic]]
 id = "search"
 name = "Search"
+blurb = "A job."
 terms = ["embeddings", "vector database"]
 
 [[topic]]
 id = "audio"
 name = "Audio"
+blurb = "A job."
 terms = ["transcribe", "diarization"]
 
 [[topic]]
 id = "tabular"
 name = "Tabular"
+blurb = "A job."
 terms = ["t sne"]
 
 [[topic]]
 id = "keyword-only"
 name = "Keyword only"
+blurb = "A job."
 keywords = ["tensor"]
 "#;
 

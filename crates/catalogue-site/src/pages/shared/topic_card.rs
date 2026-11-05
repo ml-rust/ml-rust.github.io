@@ -131,6 +131,7 @@ mod tests {
         Topic {
             id: Slug::new(id).expect("slug"),
             name: id.to_uppercase(),
+            blurb: "A job.".to_owned(),
             parent: parent.map(|parent| Slug::new(parent).expect("slug")),
             summary: None,
             keywords: Vec::new(),

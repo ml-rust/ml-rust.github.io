@@ -24,13 +24,14 @@ pub fn source(path: &str, contents: &str) -> SourceFile {
 
 /// Every page and asset of a build over `inputs`, keyed by path, as UTF-8 text.
 ///
-/// The binary index files under [`SEARCH_DIR`] are left out.
+/// The binary index files under [`SEARCH_DIR`] and the PNG files are left out.
 pub fn render(inputs: &SiteInputs<'_>) -> BTreeMap<String, String> {
     let files = build_site(inputs).unwrap_or_else(|error| panic!("build fails: {error}"));
     let search = format!("{SEARCH_DIR}/");
     files
         .into_iter()
         .filter(|file| !(file.path.starts_with(&search) && file.path.ends_with(".bin")))
+        .filter(|file| !file.path.ends_with(".png"))
         .map(|file| {
             let text = String::from_utf8(file.bytes)
                 .unwrap_or_else(|error| panic!("{} is not UTF-8: {error}", file.path));

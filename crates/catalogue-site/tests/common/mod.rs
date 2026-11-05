@@ -12,10 +12,12 @@ use crate::build::{render, source};
 pub const TOPICS: &str = r#"[[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "Teaching programs from data. Find models and tools."
 
 [[topic]]
 id = "tensors"
 name = "Tensors"
+blurb = "Arrays and the math on them. Find tensor libraries."
 parent = "ml"
 "#;
 

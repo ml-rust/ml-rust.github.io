@@ -9,7 +9,7 @@ use catalogue_core::{
 use url::Url;
 
 /// One topic that every test entry names.
-const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\n";
+const TOPICS: &str = "[[topic]]\nid = \"one\"\nname = \"One\"\nblurb = \"A job.\"\n";
 
 pub(crate) fn source(path: &str, contents: String) -> SourceFile {
     SourceFile {

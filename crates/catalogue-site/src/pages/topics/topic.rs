@@ -19,6 +19,8 @@ pub(crate) struct TopicPage<'a> {
     pub id: String,
     /// The topic name.
     pub name: &'a str,
+    /// The line that defines the topic. It opens a page with no summary.
+    pub blurb: &'a str,
     /// The broader topic.
     pub parent: Option<NamedLink<'a>>,
     /// The summary text, if the topic has one.
@@ -52,6 +54,7 @@ impl<'a> TopicPage<'a> {
             layout,
             id: topic.id.as_str().to_owned(),
             name: &topic.name,
+            blurb: &topic.blurb,
             parent: topic
                 .parent
                 .as_ref()

@@ -25,12 +25,14 @@ const TOPICS: &str = r#"
 [[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "A job."
 keywords = ["machine-learning"]
 terms = ["neural network"]
 
 [[topic]]
 id = "tensors"
 name = "Tensors"
+blurb = "A job."
 keywords = ["tensor"]
 terms = ["tensor"]
 "#;

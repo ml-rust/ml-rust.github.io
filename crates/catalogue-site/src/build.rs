@@ -47,7 +47,16 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let list_script = HashedAsset::list_script();
     let compare_script = HashedAsset::compare_script();
     let favicon = HashedAsset::favicon();
-    let layout = |current, meta| Layout::new(stylesheet.href(), favicon.href(), current, meta);
+    let share_image = HashedAsset::share_image();
+    let layout = |current, meta| {
+        Layout::new(
+            stylesheet.href(),
+            favicon.href(),
+            &share_image.href(),
+            current,
+            meta,
+        )
+    };
     let explore = Some(NavItem::Explore);
     let catalogue = inputs.catalogue;
     let report = inputs.report;
@@ -74,6 +83,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         robots_file(),
         stylesheet.file(),
         favicon.file(),
+        share_image.file(),
         search_script.file(),
         list_script.file(),
         compare_script.file(),

@@ -250,6 +250,7 @@ source = "human"
     const TOPICS: &str = r#"[[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "A job."
 "#;
 
     const MAINTAINERS: &str = r#"[[maintainer]]

@@ -78,6 +78,48 @@ fn every_page_describes_itself_to_search_engines() {
 }
 
 #[test]
+fn every_page_shows_the_share_image_in_a_link_preview() {
+    let site = tiered();
+    for path in [
+        "index.html",
+        "topics/tensors/index.html",
+        "projects/alpha/index.html",
+        "404.html",
+    ] {
+        let page = &site[path];
+        assert!(
+            page.contains("<meta property=\"og:image\" content=\"https://ml-rust.github.io/assets/share-image."),
+            "{path}"
+        );
+        assert!(
+            page.contains("<meta property=\"og:image:width\" content=\"1200\">"),
+            "{path}"
+        );
+        assert!(
+            page.contains("<meta property=\"og:image:height\" content=\"630\">"),
+            "{path}"
+        );
+        assert!(page.contains("<meta property=\"og:image:alt\" content=\"ML Rust catalogue: "));
+        assert!(
+            page.contains("<meta name=\"twitter:card\" content=\"summary_large_image\">"),
+            "{path}"
+        );
+    }
+}
+
+#[test]
+fn a_topic_description_holds_its_blurb_when_the_page_shows_a_summary() {
+    let site = tiered();
+    let page = &site["topics/ml/index.html"];
+    assert!(page.contains(
+        "<meta name=\"description\" content=\"Teaching programs from data. Find models and tools. Compare"
+    ));
+    assert!(
+        page.contains("<p class=\"lede\">Projects that train or run machine learning models.</p>")
+    );
+}
+
+#[test]
 fn no_showcase_file_leaves_the_section_out() {
     let files: Vec<(String, String)> = fixture::files()
         .into_iter()

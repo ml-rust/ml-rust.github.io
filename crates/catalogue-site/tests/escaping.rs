@@ -97,8 +97,9 @@ fn the_script_check_allows_only_the_hashed_script_tags() {
 
 #[test]
 fn a_topic_name_with_markup_is_escaped() {
-    let topics =
-        format!("{TOPICS}\n[[topic]]\nid = \"hostile\"\nname = '''{HOSTILE}alert(1)</script>'''\n");
+    let topics = format!(
+        "{TOPICS}\n[[topic]]\nid = \"hostile\"\nname = '''{HOSTILE}alert(1)</script>'''\nblurb = \"A job.\"\n"
+    );
     let site = pages(&catalogue(&topics, Some(&thresholds(None))));
     for page in ["submit/index.html", "search/index.html"] {
         let html = &site[page];

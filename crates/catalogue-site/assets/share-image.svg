@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FBFBFD"/>
+  <g transform="translate(96 180) scale(14.21) translate(-2.5 -2.5)" fill="#24283A">
+    <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="9.25" y="2.5" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="16" y="2.5" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="2.5" y="9.25" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="9.25" y="9.25" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="2.5" y="16" width="5.5" height="5.5" rx="1.25"/>
+    <rect x="16" y="9.25" width="5.5" height="5.5" rx="1.25" fill="#CE8166"/>
+    <rect x="9.25" y="16" width="5.5" height="5.5" rx="1.25" fill="#CE8166"/>
+    <rect x="16" y="16" width="5.5" height="5.5" rx="1.25" fill="#CE8166"/>
+  </g>
+  <g font-family="'Source Sans 3'">
+    <text x="436" y="292" font-size="84" font-weight="700" fill="#24283A">ML Rust catalogue</text>
+    <text x="436" y="364" font-size="38" fill="#4E5566">Find the right Rust library or app</text>
+    <text x="436" y="412" font-size="38" fill="#4E5566">for your machine learning job</text>
+  </g>
+</svg>

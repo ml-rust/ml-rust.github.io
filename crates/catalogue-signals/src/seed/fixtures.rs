@@ -37,11 +37,13 @@ pub(super) fn topics() -> Topics {
 [[topic]]
 id = "nlp"
 name = "NLP"
+blurb = "A job."
 keywords = ["nlp"]
 
 [[topic]]
 id = "foundations"
 name = "Foundations"
+blurb = "A job."
 keywords = ["tensor"]
 categories = ["science::math"]
 terms = ["sparse matrix"]

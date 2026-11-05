@@ -1,9 +1,11 @@
 [[topic]]
 id = "ml"
 name = "Machine learning"
+blurb = "A job."
 parent = "tensors"
 
 [[topic]]
 id = "tensors"
 name = "Tensors"
+blurb = "A job."
 parent = "ml"

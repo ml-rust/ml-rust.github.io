@@ -4,6 +4,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 A release tag needs a non-empty section here. The section becomes the GitHub Release body.
 
+## [0.1.1]
+
+### Changed
+
+- `data/topics.toml`: every topic needs a `blurb`. Add one line that defines the topic.
+- `site`: page titles fit search results, topic pages define their job, and shared links show an image.
+
 ## [0.1.0]
 
 ### Added

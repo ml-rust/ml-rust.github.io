@@ -1,6 +1,8 @@
 # Catalogue topics.
 #
 # Each topic is a job a developer wants done, named in their words. `parent` nests a topic under another.
+# A `blurb` is one friendly line that tells a reader what they can do with this topic. It names no project and holds no claim that needs evidence.
+# The site adds a sentence to it in the page description when both fit, so keep it to 89 characters.
 # A topic `summary` is a published claim: it needs evidence links.
 # `categories.toml` holds the second way in: what a project is, not the job it does.
 #
@@ -27,48 +29,56 @@
 [[topic]]
 id = "run-models"
 name = "Run and serve models"
+blurb = "Run AI models in your own app or on your own server."
 keywords = ["inference", "onnx", "onnxruntime", "gguf", "llama", "llama-cpp", "model-serving", "stable-diffusion", "transformer", "transformers"]
 terms = ["onnx", "stable diffusion", "gguf", "llama cpp", "model serving", "model inference", "machine learning inference", "tensorflow lite", "tflite"]
 
 [[topic]]
 id = "llm-apps"
 name = "Build LLM apps and agents"
+blurb = "Build apps on top of LLMs, such as chatbots, agents and document search."
 keywords = ["llm", "agent", "agents", "ai-agent", "mcp", "openai", "anthropic", "gemini", "openrouter", "copilot", "rag", "langchain", "chatbot"]
 terms = ["llm", "llms", "large language model", "large language models", "openai", "anthropic", "gemini", "openrouter", "ollama", "chatgpt", "github copilot", "ai agent", "ai agents", "model context protocol", "langchain"]
 
 [[topic]]
 id = "train-models"
 name = "Train models"
+blurb = "Train your own models, from small neural networks to deep learning."
 keywords = ["deep-learning", "neural-network", "neural-networks", "autograd", "training", "reinforcement-learning"]
 terms = ["deep learning", "neural network", "neural networks", "reinforcement learning", "tensorflow", "machine learning framework", "ml framework", "machine learning library", "machine learning toolkit", "machine learning algorithms", "machine learning crate", "run ai models"]
 
 [[topic]]
 id = "speech-audio"
 name = "Speech and audio"
+blurb = "Turn speech into text, turn text into speech, and work with audio."
 keywords = ["speech", "speech-recognition", "speech-to-text", "text-to-speech", "asr", "tts", "whisper", "audio-ml", "vad"]
 terms = ["speech", "transcribe", "transcription", "diarization", "spectrogram", "spectrograms", "voice activity", "audio denoising", "whisper cpp"]
 
 [[topic]]
 id = "text-search"
 name = "Text, embeddings and search"
+blurb = "Prepare text for AI, create embeddings, and add smart search to your app."
 keywords = ["nlp", "tokenizer", "tokenizers", "embeddings", "embedding", "bm25", "chunking", "language-detection", "semantic-search"]
 terms = ["nlp", "natural language", "tokenizer", "tokenizers", "embeddings", "reranking", "vector database", "vector search", "vector search engine", "semantic search", "full text search", "search engine", "word2vec", "word embeddings", "nearest neighbor", "nearest neighbors", "nearest neighbour"]
 
 [[topic]]
 id = "vision-documents"
 name = "Images, video and documents"
+blurb = "Read images, video and PDFs, and pull useful information out of them."
 keywords = ["computer-vision", "image-processing", "vision", "ocr", "object-detection", "pdf", "video"]
 terms = ["computer vision", "ocr", "object detection", "image segmentation", "image classification", "pdf", "video", "face detection", "image processing"]
 
 [[topic]]
 id = "tabular-ml"
 name = "Tabular data and classic ML"
+blurb = "Find patterns and make predictions from spreadsheet-style data."
 keywords = ["clustering", "classification", "regression", "random-forest", "svm", "decision-tree", "gradient-boosting", "gbdt"]
 terms = ["random forest", "gradient boosting", "decision tree", "decision trees", "dimensionality reduction", "t sne", "clustering", "linear regression", "self organizing map", "genetic algorithm", "genetic algorithms", "evolutionary algorithms", "xgboost", "lightgbm", "catboost"]
 
 [[topic]]
 id = "math-gpu"
 name = "Tensors, math and GPU"
+blurb = "Do fast math on your CPU or GPU, with tensors and linear algebra."
 keywords = ["tensor", "tensors", "ndarray", "linear-algebra", "gpu", "cuda", "fft"]
 categories = ["science::math"]
 terms = ["tensor", "tensors", "ndarray", "numpy", "linear algebra", "sparse matrix", "fft", "numerical optimization", "mathematical optimization", "statistical computation", "statistical distributions", "automatic differentiation", "differential equations", "scientific computing", "notebook environment", "reactive notebook", "reactive notebooks"]
@@ -76,5 +86,6 @@ terms = ["tensor", "tensors", "ndarray", "numpy", "linear algebra", "sparse matr
 [[topic]]
 id = "data-formats"
 name = "Datasets and model formats"
+blurb = "Load and save datasets and model files in the formats you need."
 keywords = ["safetensors", "dataframe", "dataset", "datasets", "arrow", "hdf5", "npy", "data-format", "zarr"]
 terms = ["safetensors", "data format", "columnar", "parquet", "zarr", "hdf5", "netcdf", "dataframe", "dataframes", "dataset", "datasets", "data set", "hugging face", "huggingface"]

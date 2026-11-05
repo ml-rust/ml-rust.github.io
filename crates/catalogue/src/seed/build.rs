@@ -146,7 +146,7 @@ mod tests {
 
     fn topics() -> Topics {
         toml::from_str(
-            "[[topic]]\nid = \"inference\"\nname = \"Inference\"\nkeywords = [\"llm\"]\n",
+            "[[topic]]\nid = \"inference\"\nname = \"Inference\"\nblurb = \"A job.\"\nkeywords = [\"llm\"]\n",
         )
         .expect("topics parse")
     }

@@ -72,7 +72,7 @@ pub(crate) fn check_topics(file: &Parsed<Topics>, diags: &mut Diagnostics) -> BT
 mod tests {
     use crate::testing::{errors, expect_error, put, valid};
 
-    const TOPICS: &str = "[[topic]]\nid = \"tensors\"\nname = \"Tensors\"\n";
+    const TOPICS: &str = "[[topic]]\nid = \"tensors\"\nname = \"Tensors\"\nblurb = \"A job.\"\n";
 
     fn with_topics(extra: &str) -> Vec<String> {
         let mut src = valid();
@@ -83,14 +83,15 @@ mod tests {
     #[test]
     fn nested_topics_pass() {
         assert!(
-            with_topics("[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nparent = \"tensors\"\n")
+            with_topics("[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\nparent = \"tensors\"\n")
                 .is_empty()
         );
     }
 
     #[test]
     fn ids_must_be_unique() {
-        let found = with_topics("[[topic]]\nid = \"tensors\"\nname = \"Again\"\n");
+        let found =
+            with_topics("[[topic]]\nid = \"tensors\"\nname = \"Again\"\nblurb = \"A job.\"\n");
         assert!(
             found.iter().any(|m| m.contains("defined twice")),
             "{found:?}"
@@ -99,7 +100,9 @@ mod tests {
 
     #[test]
     fn parent_must_exist() {
-        let found = with_topics("[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nparent = \"ghost\"\n");
+        let found = with_topics(
+            "[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\nparent = \"ghost\"\n",
+        );
         assert!(
             found
                 .iter()
@@ -111,7 +114,7 @@ mod tests {
     #[test]
     fn parent_chain_must_not_cycle() {
         let found = with_topics(
-            "[[topic]]\nid = \"a\"\nname = \"A\"\nparent = \"b\"\n[[topic]]\nid = \"b\"\nname = \"B\"\nparent = \"a\"\n",
+            "[[topic]]\nid = \"a\"\nname = \"A\"\nblurb = \"A job.\"\nparent = \"b\"\n[[topic]]\nid = \"b\"\nname = \"B\"\nblurb = \"A job.\"\nparent = \"a\"\n",
         );
         assert_eq!(
             found.iter().filter(|m| m.contains("forms a cycle")).count(),
@@ -122,7 +125,9 @@ mod tests {
 
     #[test]
     fn a_topic_cannot_be_its_own_parent() {
-        let found = with_topics("[[topic]]\nid = \"a\"\nname = \"A\"\nparent = \"a\"\n");
+        let found = with_topics(
+            "[[topic]]\nid = \"a\"\nname = \"A\"\nblurb = \"A job.\"\nparent = \"a\"\n",
+        );
         assert!(
             found.iter().any(|m| m.contains("forms a cycle")),
             "{found:?}"
@@ -132,7 +137,7 @@ mod tests {
     #[test]
     fn a_keyword_maps_to_one_topic() {
         let found = with_topics(
-            "keywords = [\"llm\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nkeywords = [\"llm\"]\n",
+            "keywords = [\"llm\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\nkeywords = [\"llm\"]\n",
         );
         assert!(
             found
@@ -145,7 +150,7 @@ mod tests {
     #[test]
     fn a_category_maps_to_one_topic() {
         let found = with_topics(
-            "categories = [\"science::ml\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\ncategories = [\"science::ml\"]\n",
+            "categories = [\"science::ml\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\ncategories = [\"science::ml\"]\n",
         );
         assert!(
             found
@@ -158,7 +163,7 @@ mod tests {
     #[test]
     fn a_term_maps_to_one_topic() {
         let found = with_topics(
-            "terms = [\"vector database\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nterms = [\"vector database\"]\n",
+            "terms = [\"vector database\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\nterms = [\"vector database\"]\n",
         );
         assert!(
             found
@@ -194,7 +199,7 @@ mod tests {
     fn distinct_mappings_pass() {
         assert!(
             with_topics(
-                "keywords = [\"llm\"]\ncategories = [\"science\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nkeywords = [\"cuda\"]\ncategories = [\"science::ml\"]\n"
+                "keywords = [\"llm\"]\ncategories = [\"science\"]\n[[topic]]\nid = \"gpu\"\nname = \"GPU\"\nblurb = \"A job.\"\nkeywords = [\"cuda\"]\ncategories = [\"science::ml\"]\n"
             )
             .is_empty()
         );
@@ -206,7 +211,7 @@ mod tests {
         put(
             &mut src,
             "topics.toml",
-            "[[topic]]\nid = \"tensors\"\nname = \"\"\n",
+            "[[topic]]\nid = \"tensors\"\nname = \"\"\nblurb = \"A job.\"\n",
         );
         expect_error(src, "name must not be empty");
     }
