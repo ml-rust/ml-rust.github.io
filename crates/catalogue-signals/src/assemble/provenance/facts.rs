@@ -421,7 +421,7 @@ fn distribution_rows(signals: &Signals, sources: &FactSources) -> Vec<Row> {
 ///
 /// `last_release` cites the dump for a library and the GitHub releases page for an app, unless the
 /// crate of the app has the later date. `first_release` of an app cites the GitHub releases page
-/// when GitHub has the earlier date. A known [`APP_NEVER_READS`] row of an app counts toward no
+/// when GitHub has the earlier date. A known `APP_NEVER_READS` row of an app counts toward no
 /// tier. The rows of the repository route and the commit total close the table:
 ///
 /// - `docker_pull_baseline`: the pull count growth measures against, dated by

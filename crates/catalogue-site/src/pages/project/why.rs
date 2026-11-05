@@ -1,4 +1,4 @@
-//! The "Why <tier>" block: the verdict's real reasons as plain sentences, with the exact rules.
+//! The `Why <tier>` block: the verdict's real reasons as plain sentences, with the exact rules.
 
 use catalogue_core::{EntryKind, EntryReport, Rule, Thresholds, Tier};
 
