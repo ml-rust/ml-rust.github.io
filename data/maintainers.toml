@@ -2,4 +2,7 @@
 # Add one [[maintainer]] table per person: login, org_member, since.
 # org_member = true marks an ml-rust organization member.
 # An org member cannot approve a judgment on an org_affiliated entry.
-maintainer = []
+[[maintainer]]
+login = "farhan-syah"
+org_member = true
+since = 2026-11-05

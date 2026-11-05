@@ -27,6 +27,7 @@
 /.cargo/config.toml
 
 # Agent and session scratch
+/.agents/prep/
 /.claude/prep/
 /.claude/settings.local.json
 /.pi-subagents/
@@ -40,3 +41,5 @@
 /.vscode/
 *.swp
 .DS_Store
+
+design
