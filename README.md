@@ -1,118 +1,101 @@
-# ml-rust.github.io
+# ML Rust catalogue: machine learning libraries and apps in Rust
 
-A catalogue of machine learning in Rust: libraries on crates.io and apps outside it. Each entry gets a tier from published rules over measured signals. The site is at https://ml-rust.github.io.
+Find a Rust library or app for your machine learning job, with real usage data for each project.
 
-## What makes it different
+**Browse the catalogue: https://ml-rust.github.io**
 
-- A tier comes from fixed, published rules applied to raw signals.
-- No LLM decides a tier, writes a published claim, or merges anything.
-- GitHub stars alone never qualify a project. GitHub hides who starred, so the repository route also needs forks and contributors.
-- Each entry page lists every signal with its raw value, source link, and fetch date.
-- Apps outside crates.io are covered.
-- Search runs in the browser.
-- The ML Rust organization runs this catalogue. The home page says so above a hand-picked list of its own projects in `data/showcase.toml`. No tier reads that list.
+It covers crates on crates.io and apps outside it, including [burn](https://ml-rust.github.io/projects/burn/), [candle](https://ml-rust.github.io/projects/candle/), [ort](https://ml-rust.github.io/projects/ort/), [polars](https://ml-rust.github.io/projects/polars/), [qdrant](https://ml-rust.github.io/projects/qdrant/), [rig](https://ml-rust.github.io/projects/rig/) and [tantivy](https://ml-rust.github.io/projects/tantivy/).
 
-## How tiers work
+## Find a project by job
 
-The tier rules run in a fixed order on every check. Each entry gets one tier per check.
+- [Run and serve models](https://ml-rust.github.io/topics/run-models/)
+- [Build LLM apps and agents](https://ml-rust.github.io/topics/llm-apps/)
+- [Train models](https://ml-rust.github.io/topics/train-models/)
+- [Speech and audio](https://ml-rust.github.io/topics/speech-audio/)
+- [Text, embeddings and search](https://ml-rust.github.io/topics/text-search/)
+- [Images, video and documents](https://ml-rust.github.io/topics/vision-documents/)
+- [Tabular data and classic ML](https://ml-rust.github.io/topics/tabular-ml/)
+- [Tensors, math and GPU](https://ml-rust.github.io/topics/math-gpu/)
+- [Datasets and model formats](https://ml-rust.github.io/topics/data-formats/)
 
-| Tier | What earns it |
-| --- | --- |
-| Archived | The author or RustSec ends the project. Any one of these archives it: an archived repository, an `unmaintained` advisory, a deprecation notice, every version yanked, or a deleted crate. A dead entry also archives after enough consecutive dead checks. |
-| New | The first release is recent. New takes precedence over Featured. |
-| Featured | A library passes its adoption, health, and docs gates. Adoption means enough active dependents, enough new dependents, or the repository route. An app passes enough of its five use signals: binary downloads, Homebrew installs, Repology packaging, Docker pull growth, and the repository route. The entry must be active or finished. A library needs at least one version that is neither a prerelease nor `0.0.x`. A library with only prereleases passes this gate when its active or new dependents reach their limit. The repository route never lifts it. A library whose every version is `0.0.x` never passes, because that only reserves the name. An app with no crate skips this gate. An app that publishes a crate needs a version outside prereleases and `0.0.x`. |
-| Listed | No other tier applies. |
+## Find a project by kind
 
-The repository route needs stars, forks, and contributors to each reach their limit on the same check. It is a gate of separate limits, never a score. The route measures a whole repository, so a library must also list the repository's main crate: the crate with the repository's own name that claims the repository.
-
-Health covers unpatched vulnerabilities, a repository link that the release commit or a manifest in the repository proves, and the share of peak active dependents that stay active.
-
-- A Featured entry keeps Featured until an approved demotion judgment allows the drop.
-- An org-affiliated entry needs approval from a maintainer outside the organization to become Featured.
-- A missing signal never counts as zero or false. It keeps the entry out of Featured.
-
-### Rot and unmaintained detection
-
-Each check measures the following:
-
-1. **Expected interval (E).** The days a project normally goes between releases. It comes from the release count, the release pace, and adoption, within published floor and cap values. Apps use the floor. So does a library with no known latest version.
-2. **Dormancy.** An entry is dormant when the days since its later of last release and last human commit reach E. Unknown dates leave dormancy unknown.
-3. **Rot signals.** The check counts six signals:
-
-| Signal | Meaning |
-| --- | --- |
-| R1 | An outside issue stays unanswered, with no maintainer reply in the window. |
-| R2 | A vulnerability advisory stays unpatched past the grace window. |
-| R3 | A library's share of its peak active dependents falls below the limit. |
-| R4 | The latest release requires a deprecated dependency. |
-| R5 | The repository no longer exists. |
-| R6 | The latest release of a library fails `cargo check` on current stable Rust. |
-
-The sandbox check runs in CI and records its date. A sandbox result older than its age limit reads as unknown.
-
-4. **Dead.** A dormant entry with enough rot signals is dead on that check. A `maintained` statement from the project owner blocks the dead verdict. Unknown dormancy is not dead.
-5. **Finished.** A dormant entry with no rot signal and still adopted is finished. So is an entry with a `finished` statement from its owner and no rot signal. A finished entry counts as active for Featured.
-
-### Fetch errors
-
-A fetch error reads the newest earlier snapshot of that signal. The snapshot must fall within the fallback age limit. Past that limit, the signal is unknown. The Pages workflow records a snapshot each day.
-
-A run fails and writes no snapshot and no report when the share of fetches with no usable earlier value exceeds `fallback.max_failed_share`. A README fetch does not count, because no tier reads it.
-
-### Thresholds
-
-Every threshold lives in `data/thresholds.toml`. The [rules page](https://ml-rust.github.io/rules/) shows each rule beside its thresholds. Each change to the file raises its `version`.
-
-## Submit or correct a project
-
-Open the [issue chooser](https://github.com/ml-rust/ml-rust.github.io/issues/new/choose) and pick a form. Blank issues are off. Read the [rules](https://ml-rust.github.io/rules/) first.
-
-| Form | Use it to | Label |
+| | | |
 | --- | --- | --- |
-| Submit | Propose a library or app. | `submit` |
-| Correctness report | Report a wrong fact on an entry. | `judgment:correctness` |
-| Topic change | Replace the topics of an entry. | `judgment:topic` |
-| Product or demo | Set an entry as a product or a demo. | `judgment:kind` |
-| Featured demotion | Approve a demotion that the rules propose. | `judgment:demotion` |
-| Featured approval | Approve Featured for an org-affiliated entry. | `judgment:featured-approval` |
-| Maintainer statement | State that a project is maintained or finished. | `judgment:maintainer` |
-| Supersedes or fork | Report that one entry replaces another. | `judgment:supersedes` |
+| [ML frameworks](https://ml-rust.github.io/categories/ml-frameworks/) | [Inference runtimes](https://ml-rust.github.io/categories/inference-runtimes/) | [LLM clients](https://ml-rust.github.io/categories/llm-clients/) |
+| [Agents and LLM apps](https://ml-rust.github.io/categories/agent-frameworks/) | [Vector databases](https://ml-rust.github.io/categories/vector-databases/) | [Embeddings](https://ml-rust.github.io/categories/embeddings/) |
+| [Search engines](https://ml-rust.github.io/categories/search-engines/) | [Text and tokenizers](https://ml-rust.github.io/categories/text-tools/) | [Speech and audio](https://ml-rust.github.io/categories/speech-audio/) |
+| [Computer vision](https://ml-rust.github.io/categories/computer-vision/) | [Classical ML](https://ml-rust.github.io/categories/classical-ml/) | [Tensors and math](https://ml-rust.github.io/categories/math-libraries/) |
+| [Model formats](https://ml-rust.github.io/categories/model-formats/) | [Data formats and dataframes](https://ml-rust.github.io/categories/data-tools/) | [Developer tools](https://ml-rust.github.io/categories/developer-tools/) |
 
-### What happens next
+Or [search everything](https://ml-rust.github.io/search/). Search runs in your browser.
 
-A person makes every approval.
+## What you get for each project
 
-1. The form applies its label when the issue opens.
-2. The bot checks the form on its next pass. It posts a check comment and adds `bot-checked` or `needs-fix`.
-3. The advisory link check adds text to that comment only.
-4. A maintainer listed in `data/maintainers.toml` adds `approved`. The bot refuses an approval from a bot account, from the submitter, or from any account the rules exclude. A refused approval loses the label.
-5. If the issue body changes after the check, the bot removes `approved`. A maintainer approves again.
-6. The bot opens a data PR on the branch `bot/issue-<number>` and adds `pr-open`.
-7. A person reviews and merges the data PR. The bot does not merge.
-8. Merging updates the data on `main`. The Pages workflow then rebuilds the site.
+- **What it does:** a short description and the project's README.
+- **Whether people use it:** downloads and dependents, shown first.
+- **Whether it is alive:** release and commit activity, unpatched advisories and deprecation notices.
+- **Whether it fits:** compatibility facts and similar projects. You can compare up to 4 projects.
+- **Where each number comes from:** the raw value, a source link and the fetch date.
 
-Each judgment appears on its entry page with a link to its issue.
+## How projects are ranked
 
-## Repository layout
+Each project gets one tier from [published rules](https://ml-rust.github.io/rules/) over measured data.
 
-| Path | Holds |
+| Tier | Meaning |
 | --- | --- |
-| `crates/catalogue-core` | Data model, validation, and tier rules. No IO. |
-| `crates/catalogue-signals` | Reads the crates.io database dump, fetches the APIs, and keeps signal history. |
-| `crates/catalogue-bot` | Parses issue forms, writes check comments, and plans label and data changes. No IO. |
-| `crates/catalogue-github` | The bot's GitHub App client. |
-| `crates/catalogue-triage` | The bot's advisory link check. |
-| `crates/catalogue-site` | Site templates, page data, and refusal checks. No IO. |
-| `crates/catalogue-search-wasm` | The browser search runtime. |
-| `crates/catalogue` | The `catalogue` CLI. |
-| `data/` | Entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, deprecated requirements, backends, and the home page showcase. |
-| `deploy/` | systemd units and scripts for the bot VM. |
+| [Featured](https://ml-rust.github.io/featured/) | Shown first. It passes every adoption, health and docs gate. |
+| Listed | Shown in the normal listing. |
+| New | Its first release is recent. |
+| Archived | No longer maintained, or ended by its author. |
+
+- No LLM decides a tier, writes a published claim or merges anything.
+- GitHub stars alone never earn a tier. GitHub hides who starred, so stars cannot be screened for fakes.
+- Every tier change appears on the [changes page](https://ml-rust.github.io/changes/) and in its [feed](https://ml-rust.github.io/changes/feed.xml).
+
+## Who runs this
+
+The ML Rust organization runs this catalogue and maintains some of the listed projects.
+
+- [Its own projects](https://ml-rust.github.io/ml-rust/) pass the same rules as every other project.
+- Featured for its own projects also needs approval from a maintainer outside the organization.
+- The home page labels a hand-picked list of its projects. No tier reads that list.
+
+## Add or correct a project
+
+Open the [issue chooser](https://github.com/ml-rust/ml-rust.github.io/issues/new/choose) and pick a form.
+
+| Form | Use it to |
+| --- | --- |
+| Submit | Propose a library or app. |
+| Correctness report | Report a wrong fact on an entry. |
+| Topic change | Replace the topics of an entry. |
+| Product or demo | Set an entry as a product or a demo. |
+| Supersedes or fork | Report that one entry replaces another. |
+| Maintainer statement | State that a project is maintained or finished. |
+| Featured demotion | Approve a demotion that the rules propose. |
+| Featured approval | Approve Featured for an org-affiliated entry. |
+
+A person makes every approval and merges every change:
+
+1. The bot checks the form and posts a comment. An advisory link check adds text to that comment only.
+2. A maintainer listed in `data/maintainers.toml` adds `approved`. The bot refuses an approval from a bot account or the submitter.
+3. If the issue body changes after the check, the bot removes `approved`.
+4. The bot opens a data PR. A person reviews and merges it, and the site rebuilds.
+
+Each judgment appears on its project page with a link to its issue.
+
+## Use the data
+
+| URL | Holds |
+| --- | --- |
+| [`/data/catalogue.json`](https://ml-rust.github.io/data/catalogue.json) | Every project, as JSON. |
+| [`/changes/feed.xml`](https://ml-rust.github.io/changes/feed.xml) | Tier changes and new projects, as an Atom feed. |
+| [`/llms.txt`](https://ml-rust.github.io/llms.txt) | A site summary for LLM tools. |
 
 ## Develop
 
-Install Rust 1.95 or later. The workspace sets this as `rust-version` in `Cargo.toml`.
-
-Run each command on its own line. CI adds `--locked` to the cargo builds.
+Install Rust 1.95 or later. Run each command on its own line. CI adds `--locked` to the cargo builds.
 
 ```bash
 cargo clippy --workspace --all-targets -- -D warnings
@@ -129,7 +112,20 @@ cargo run -p catalogue -- build --no-tiers
 
 - `validate` checks every data file and every rule across files. Run it after any change under `data/`.
 - `build_search_wasm.sh` builds the search wasm files. It needs the wasm-bindgen CLI at the version `Cargo.lock` pins.
-- `build --no-tiers` writes the site to `dist/` without tier data. It replaces `dist/` whole. The build needs either `--report` or `--no-tiers`, and it does not write the search wasm files. It also writes `changes/feed.xml`, `data/catalogue.json`, `data/README.txt`, `llms.txt`, `sitemap.xml` and `robots.txt`.
+- `build --no-tiers` replaces `dist/` with a site without tier data. It does not write the search wasm files. The build needs either `--report` or `--no-tiers`.
+
+| Path | Holds |
+| --- | --- |
+| `crates/catalogue-core` | Data model, validation and tier rules. No IO. |
+| `crates/catalogue-signals` | Reads the crates.io database dump, fetches the APIs and keeps signal history. |
+| `crates/catalogue-bot` | Parses issue forms, writes check comments, and plans label and data changes. No IO. |
+| `crates/catalogue-github` | The bot's GitHub App client. |
+| `crates/catalogue-triage` | The bot's advisory link check. |
+| `crates/catalogue-site` | Site templates, page data and refusal checks. No IO. |
+| `crates/catalogue-search-wasm` | The browser search runtime. |
+| `crates/catalogue` | The `catalogue` CLI. |
+| `data/` | Entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, deprecated requirements, backends and the showcase. |
+| `deploy/` | systemd units and scripts for the bot VM. |
 
 ## Deploy
 
@@ -139,5 +135,5 @@ cargo run -p catalogue -- build --no-tiers
 
 ## License
 
-- **Code:** Apache License 2.0 (`LICENSE`). The workspace `Cargo.toml` sets this license, and every crate inherits it. No crate sets a different license. Every crate sets `publish = false`.
-- **Data:** Creative Commons Attribution 4.0 International (CC-BY-4.0) (`data/LICENSE`) covers `data/`.
+- **Code:** Apache License 2.0 (`LICENSE`). No crate is published to crates.io.
+- **Data:** CC-BY-4.0 (`data/LICENSE`) covers `data/`.
