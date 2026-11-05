@@ -72,9 +72,9 @@ pub const RUNS_ON_SEPARATOR: &str = ", ";
 
 /// The [`RUNS_ON_SIGNAL`] value of a measured project with no backend row.
 ///
-/// The check finds no feature or dependency that names a GPU backend. It does not prove the
-/// project runs on a CPU only.
-pub const NO_GPU_FEATURE: &str = "No GPU feature found";
+/// The check finds no feature or dependency that names a GPU backend. The project can still run
+/// on a GPU, so the value states no answer.
+pub const NO_GPU_FEATURE: &str = "GPU support unknown";
 
 /// The [`LICENSE_SIGNAL`] value of a project that states no license.
 pub const NONE_STATED: &str = "None stated";

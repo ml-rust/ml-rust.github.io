@@ -12,7 +12,7 @@
 # A row names what the crate uses. It holds no claim about how well the backend works.
 # The backend check reads each listed crate and its direct dependencies. A deeper dependency stays unseen.
 # A backend that needs no feature stays unseen too.
-# A project with no match reads as `No GPU feature found` when the dump holds its crates, and as
+# A project with no match reads as `GPU support unknown` when the dump holds its crates, and as
 # not measured otherwise. That value states only that nothing matched.
 #
 # The native code check walks the normal dependencies of each listed crate, then theirs in turn.
@@ -25,8 +25,8 @@
 # The Python check reads the normal dependencies of each listed crate. A project with no match
 # reads as `No Python binding crate found`. Python bindings kept outside crates.io stay unseen.
 #
-# Each dependency and each feature maps to one row. A name holds no comma. `no-gpu-feature`
-# and `not-measured` are reserved ids. `No GPU feature found` and `Not measured` are reserved names.
+# Each dependency and each feature maps to one row. A name holds no comma. `gpu-unknown`
+# and `not-measured` are reserved ids. `GPU support unknown` and `Not measured` are reserved names.
 
 # Normal dependencies that show Python bindings.
 python = ["pyo3"]
@@ -84,7 +84,8 @@ native_build = [
 [[backend]]
 id = "cuda"
 name = "CUDA"
-dependencies = ["cudarc", "cuda-sys", "cuda-driver-sys", "cuda-runtime-sys", "rustacuda", "cust"]
+# `tch` and `torch-sys` link libtorch, which picks CUDA at run time with no feature.
+dependencies = ["cudarc", "cuda-sys", "cuda-driver-sys", "cuda-runtime-sys", "rustacuda", "cust", "tch", "torch-sys"]
 features = ["cuda"]
 
 [[backend]]

@@ -102,8 +102,8 @@ mod tests {
             ["cuda", "webgpu"]
         );
         assert_eq!(
-            runs_on_values(Some("No GPU feature found"), &table),
-            ["no-gpu-feature"]
+            runs_on_values(Some("GPU support unknown"), &table),
+            ["gpu-unknown"]
         );
         assert_eq!(runs_on_values(None, &table), ["not-measured"]);
         assert_eq!(runs_on_values(Some("Gone"), &table), ["not-measured"]);

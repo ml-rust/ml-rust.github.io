@@ -4,6 +4,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 A release tag needs a non-empty section here. The section becomes the GitHub Release body.
 
+## [Unreleased]
+
+### Changed
+
+- `site`: a project with no GPU match reads `Unknown`, because it can still run on a GPU. `tch-rs` shows CUDA.
+
 ## [0.1.1]
 
 ### Changed

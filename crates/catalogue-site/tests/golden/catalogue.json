@@ -388,7 +388,7 @@
         {
           "name": "runs_on",
           "label": "Runs on",
-          "value": "No GPU feature found",
+          "value": "GPU support unknown",
           "source": {
             "label": "crates.io database dump",
             "url": "https://crates.io/data-access"

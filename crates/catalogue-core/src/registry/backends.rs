@@ -4,7 +4,7 @@ use crate::ids::{CrateName, Slug};
 use crate::report::{NO_GPU_FEATURE, NOT_MEASURED, RUNS_ON_SEPARATOR};
 
 /// The tag id of the value [`NO_GPU_FEATURE`]. A table row cannot use it.
-pub const NO_GPU_FEATURE_ID: &str = "no-gpu-feature";
+pub const NO_GPU_FEATURE_ID: &str = "gpu-unknown";
 
 /// The tag id of the value [`NOT_MEASURED`]. A table row cannot use it.
 pub const NOT_MEASURED_ID: &str = "not-measured";
@@ -125,7 +125,7 @@ mod tests {
         for (name, needle) in [
             ("Vulkan, Metal", "must not hold a comma"),
             (" ", "must not be empty"),
-            ("No GPU feature found", "is reserved"),
+            ("GPU support unknown", "is reserved"),
             ("Not measured", "is reserved"),
         ] {
             let row = backend(&format!(

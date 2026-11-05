@@ -179,7 +179,7 @@ fn a_found_nothing_value_and_a_missing_value_stay_two_answers() {
     let site = tiered();
     let page = &site["topics/tensors/index.html"];
     let delta = row_tag(page, "delta");
-    assert!(delta.contains("data-gpu=\"None found\""), "{delta}");
+    assert!(delta.contains("data-gpu=\"Unknown\""), "{delta}");
     assert!(delta.contains("data-native=\"Not measured\""), "{delta}");
     assert!(delta.contains("data-python=\"Not measured\""), "{delta}");
     assert!(!delta.contains("data-downloads="), "{delta}");

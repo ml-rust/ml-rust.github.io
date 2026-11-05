@@ -192,9 +192,9 @@ mod tests {
     }
 
     #[test]
-    fn no_gpu_feature_stays_in_the_words_of_the_check() {
+    fn no_gpu_match_reads_as_unknown_with_what_the_check_found() {
         let record = record(vec![
-            fact(RUNS_ON_SIGNAL, "No GPU feature found"),
+            fact(RUNS_ON_SIGNAL, "GPU support unknown"),
             fact(
                 RUNS_ON_EVIDENCE_SIGNAL,
                 "no dependency or feature matches a backend row",
@@ -202,7 +202,7 @@ mod tests {
         ]);
         let block = Compat::new(&entry(&["ort"]), Some(&record));
         let runs = row(&block, "Runs on");
-        assert_eq!(runs.value, "No GPU feature found");
+        assert_eq!(runs.value, "GPU support unknown");
         assert_eq!(
             runs.lines,
             ["no dependency or feature matches a backend row"]

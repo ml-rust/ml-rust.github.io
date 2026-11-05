@@ -479,7 +479,7 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                         },
                         Item {
                             label: "Runs on",
-                            text: "Each listed crate's default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. No GPU feature found means the dump holds the crates and no row matches. It does not prove the project runs on a CPU only. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.",
+                            text: "Each listed crate's default version is matched against data/backends.toml, by its direct dependency names and its feature names. A feature name means the code offers the backend, and it does not prove the backend works. GPU support unknown means the dump holds the crates and no row matches. The project can still run on a GPU. A backend behind a deeper dependency stays unseen. So does a backend that needs no feature.",
                         },
                         Item {
                             label: "Native code",

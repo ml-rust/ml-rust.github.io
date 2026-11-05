@@ -304,7 +304,7 @@ features = ["metal"]
         dump.add_requirement(1, 11, "^1", DependencyKind::Build);
         let found = measure(&dump, &["tool"], &table()).expect("measured");
         assert_eq!(found, RunsOn::NoGpuFeature);
-        assert_eq!(found.value(), "No GPU feature found");
+        assert_eq!(found.value(), "GPU support unknown");
     }
 
     #[test]

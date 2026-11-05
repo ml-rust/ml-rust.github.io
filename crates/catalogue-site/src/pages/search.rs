@@ -122,7 +122,7 @@ fn license_options(report: &TierReport) -> Vec<(String, String)> {
         .collect()
 }
 
-/// Every backend of the table in file order, then no GPU feature found and not measured.
+/// Every backend of the table in file order, then GPU support unknown and not measured.
 fn runs_on_options(catalogue: &Catalogue) -> Vec<(&str, &str)> {
     catalogue
         .backends()

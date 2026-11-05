@@ -87,10 +87,12 @@ fn the_sources_disclosure_lists_every_source_of_the_compatibility_facts_with_its
 }
 
 #[test]
-fn no_gpu_feature_stays_in_the_words_of_the_check_on_the_page() {
+fn no_gpu_match_reads_as_unknown_on_the_page() {
     let site = tiered();
     let page = &site["projects/delta/index.html"];
-    assert!(page.contains("No GPU feature found"), "{page}");
+    assert!(page.contains("GPU support unknown"), "{page}");
+    assert!(page.contains(">Unknown<"), "{page}");
+    assert!(!page.contains("No GPU"), "{page}");
     assert!(!page.contains("CPU only"), "{page}");
 }
 

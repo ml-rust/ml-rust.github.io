@@ -52,6 +52,9 @@ const VALUE_SEPARATOR: &str = "|";
 /// The short form of a value that states the check found nothing.
 const NONE_FOUND: &str = "None found";
 
+/// The short form of [`NO_GPU_FEATURE`]. A GPU check that finds nothing gives no answer.
+const GPU_UNKNOWN: &str = "Unknown";
+
 /// The value of the fact `name` in `record`, or [`NOT_MEASURED`].
 pub(crate) fn fact_text(record: Option<&EntryReport>, name: &str) -> String {
     record
@@ -304,11 +307,11 @@ impl ChoiceText {
 }
 
 /// The values of the runs-on `value` for a data attribute: each backend, or the one word for no
-/// backend. A value not measured counts as neither.
+/// match. A value not measured counts as neither.
 fn gpu_values(value: Option<&str>) -> String {
     match value {
         None => NOT_MEASURED.to_owned(),
-        Some(NO_GPU_FEATURE) => NONE_FOUND.to_owned(),
+        Some(NO_GPU_FEATURE) => GPU_UNKNOWN.to_owned(),
         Some(names) => names.replace(RUNS_ON_SEPARATOR, VALUE_SEPARATOR),
     }
 }
@@ -338,7 +341,11 @@ fn dormancy(record: Option<&EntryReport>) -> &'static str {
 /// The runs-on `value` for a table cell.
 fn runs_on_fact(value: &str) -> CellFact {
     if value == NO_GPU_FEATURE {
-        CellFact::found_nothing(value)
+        CellFact {
+            short: GPU_UNKNOWN.to_owned(),
+            full: Some(value.to_owned()),
+            quiet: true,
+        }
     } else {
         CellFact::plain(value)
     }
@@ -560,7 +567,7 @@ mod tests {
     #[test]
     fn a_found_nothing_value_shortens_and_keeps_its_wording() {
         let gpu = runs_on_fact(NO_GPU_FEATURE);
-        assert_eq!(gpu.short, NONE_FOUND);
+        assert_eq!(gpu.short, GPU_UNKNOWN);
         assert_eq!(gpu.full.as_deref(), Some(NO_GPU_FEATURE));
         assert!(gpu.quiet);
         let native = native_fact(NO_NATIVE_CODE);
@@ -605,7 +612,7 @@ mod tests {
     fn the_gpu_values_hold_each_backend_and_keep_the_two_other_answers_apart() {
         assert_eq!(gpu_values(Some("CUDA, Metal")), "CUDA|Metal");
         assert_eq!(gpu_values(Some("CUDA")), "CUDA");
-        assert_eq!(gpu_values(Some(NO_GPU_FEATURE)), NONE_FOUND);
+        assert_eq!(gpu_values(Some(NO_GPU_FEATURE)), GPU_UNKNOWN);
         assert_eq!(gpu_values(None), NOT_MEASURED);
     }
 

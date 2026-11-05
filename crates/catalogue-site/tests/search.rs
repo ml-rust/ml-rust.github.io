@@ -350,7 +350,7 @@ fn the_license_and_runs_on_filters_and_their_facets_work_like_the_category_filte
     for expected in [
         ("cuda".to_owned(), 1),
         ("metal".to_owned(), 1),
-        ("no-gpu-feature".to_owned(), 1),
+        ("gpu-unknown".to_owned(), 1),
         ("not-measured".to_owned(), 2),
     ] {
         assert!(runs_on.contains(&expected), "{expected:?}: {runs_on:?}");

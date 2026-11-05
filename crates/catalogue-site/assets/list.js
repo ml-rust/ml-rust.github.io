@@ -8,6 +8,7 @@ const NOT_MEASURED = "Not measured";
 const NOT_CHECKED = "Not checked";
 const NONE_STATED = "None stated";
 const NONE_FOUND = "None found";
+const GPU_UNKNOWN = "Unknown";
 // The most projects the compare page shows.
 const COMPARE_LIMIT = 4;
 const COMPARE_STORE = "catalogue-compare";
@@ -48,7 +49,7 @@ const FILTERS = [
 ];
 const HIDE_DORMANT = "hide_dormant";
 // These answers print after every named value.
-const LAST_OPTIONS = [NONE_FOUND, NONE_STATED, NOT_CHECKED, NOT_MEASURED];
+const LAST_OPTIONS = [NONE_FOUND, GPU_UNKNOWN, NONE_STATED, NOT_CHECKED, NOT_MEASURED];
 
 // Element `tag` with class `name` and text `text`.
 function element(tag, name, text) {
