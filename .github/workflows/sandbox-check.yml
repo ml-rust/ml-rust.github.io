@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
 
       - name: Write the crate list
         run: bash scripts/ci/sandbox_check.sh list signal-history "${RUNNER_TEMP}/sandbox-list.jsonl"
@@ -95,7 +95,7 @@ jobs:
           path: ${{ runner.temp }}
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
 
       - name: Run the checks
         run: bash scripts/ci/sandbox_check.sh check "${RUNNER_TEMP}/sandbox-list.jsonl" "${RUNNER_TEMP}/build-checks.jsonl"
