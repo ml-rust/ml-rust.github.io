@@ -41,6 +41,43 @@ fn the_ml_rust_page_lists_only_org_affiliated_entries() {
 }
 
 #[test]
+fn every_page_describes_itself_to_search_engines() {
+    let site = tiered();
+    for (path, address) in [
+        ("index.html", "https://ml-rust.github.io/"),
+        (
+            "topics/tensors/index.html",
+            "https://ml-rust.github.io/topics/tensors/",
+        ),
+        (
+            "projects/alpha/index.html",
+            "https://ml-rust.github.io/projects/alpha/",
+        ),
+        ("search/index.html", "https://ml-rust.github.io/search/"),
+    ] {
+        let page = &site[path];
+        assert!(
+            page.contains("<meta name=\"description\" content=\""),
+            "{path}"
+        );
+        assert!(
+            page.contains(&format!("<link rel=\"canonical\" href=\"{address}\">")),
+            "{path}"
+        );
+        assert!(!page.contains("noindex"), "{path}");
+    }
+    assert!(
+        site["index.html"].contains(
+            "<title>Rust machine learning libraries and apps · ML Rust catalogue</title>"
+        )
+    );
+    assert!(site["index.html"].contains("application/ld+json"));
+    let missing = &site["404.html"];
+    assert!(missing.contains("<meta name=\"robots\" content=\"noindex\">"));
+    assert!(!missing.contains("rel=\"canonical\""));
+}
+
+#[test]
 fn no_showcase_file_leaves_the_section_out() {
     let files: Vec<(String, String)> = fixture::files()
         .into_iter()

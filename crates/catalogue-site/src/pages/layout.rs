@@ -1,5 +1,6 @@
 //! The header, navigation and footer data that every page shares.
 
+use super::meta::PageMeta;
 use crate::href::SafeHref;
 
 /// The site name in the header and in every page title.
@@ -45,6 +46,8 @@ pub(crate) struct NavLink {
 pub(crate) struct Layout {
     /// [`SITE_NAME`].
     pub site_name: &'static str,
+    /// The title, description and address of the page.
+    pub meta: PageMeta,
     /// The link to the stylesheet.
     pub css: SafeHref,
     /// The link to the favicon.
@@ -58,7 +61,12 @@ pub(crate) struct Layout {
 impl Layout {
     /// The layout of a page in section `current`, linking the stylesheet at `css` and the favicon
     /// at `favicon`.
-    pub(crate) fn new(css: SafeHref, favicon: SafeHref, current: Option<NavItem>) -> Self {
+    pub(crate) fn new(
+        css: SafeHref,
+        favicon: SafeHref,
+        current: Option<NavItem>,
+        meta: PageMeta,
+    ) -> Self {
         let nav = NAV
             .iter()
             .map(|&(item, label, href)| NavLink {
@@ -69,6 +77,7 @@ impl Layout {
             .collect();
         Self {
             site_name: SITE_NAME,
+            meta,
             css,
             favicon,
             nav,
@@ -97,7 +106,7 @@ mod tests {
 
     #[test]
     fn only_the_current_section_is_marked() {
-        let layout = Layout::new(css(), favicon(), Some(NavItem::Rules));
+        let layout = Layout::new(css(), favicon(), Some(NavItem::Rules), PageMeta::rules());
         let current: Vec<&str> = layout
             .nav
             .iter()
@@ -105,13 +114,13 @@ mod tests {
             .map(|link| link.label)
             .collect();
         assert_eq!(current, ["Rules"]);
-        let none = Layout::new(css(), favicon(), None);
+        let none = Layout::new(css(), favicon(), None, PageMeta::home());
         assert!(none.nav.iter().all(|link| !link.current));
     }
 
     #[test]
     fn every_link_is_a_site_path_with_a_trailing_slash() {
-        let layout = Layout::new(css(), favicon(), None);
+        let layout = Layout::new(css(), favicon(), None, PageMeta::home());
         let labels: Vec<&str> = layout.nav.iter().map(|link| link.label).collect();
         assert_eq!(labels, ["Explore", "Rules", "Changes", "Add project"]);
         for link in &layout.nav {

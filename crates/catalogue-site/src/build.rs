@@ -11,7 +11,7 @@ use crate::machine::{
 };
 use crate::pages::{
     CategoryPage, ChangesPage, ComparePage, FeaturedPage, HomePage, Layout, MlRustPage, NavItem,
-    NotFoundPage, ProjectPage, RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage,
+    NotFoundPage, PageMeta, ProjectPage, RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage,
     category_file, project_file, topic_file,
 };
 use crate::refusal;
@@ -47,26 +47,23 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let list_script = HashedAsset::list_script();
     let compare_script = HashedAsset::compare_script();
     let favicon = HashedAsset::favicon();
-    let layout = |current| Layout::new(stylesheet.href(), favicon.href(), current);
-    // A list page holds the list script only when it holds something for the script to work on.
-    let list_layout = |current, uses_list| {
-        let plain = layout(current);
-        if uses_list {
-            plain.with_script(list_script.href())
-        } else {
-            plain
-        }
-    };
+    let layout = |current, meta| Layout::new(stylesheet.href(), favicon.href(), current, meta);
+    let explore = Some(NavItem::Explore);
     let catalogue = inputs.catalogue;
     let report = inputs.report;
+    // A list page holds the list script only when it holds something for the script to work on.
     let featured_page = {
-        let mut page = FeaturedPage::new(layout(Some(NavItem::Explore)), inputs);
-        page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
+        let mut page = FeaturedPage::new(layout(explore, PageMeta::featured()), inputs);
+        if page.uses_list_script() {
+            page.layout.scripts.push(list_script.href());
+        }
         page
     };
     let ml_rust_page = {
-        let mut page = MlRustPage::new(layout(Some(NavItem::Explore)), inputs);
-        page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
+        let mut page = MlRustPage::new(layout(explore, PageMeta::ml_rust()), inputs);
+        if page.uses_list_script() {
+            page.layout.scripts.push(list_script.href());
+        }
         page
     };
     let mut files = vec![
@@ -82,26 +79,29 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         compare_script.file(),
         render(
             "index.html".to_owned(),
-            &HomePage::new(layout(Some(NavItem::Explore)), inputs),
+            &HomePage::new(layout(explore, PageMeta::home()), inputs),
         )?,
         render("featured/index.html".to_owned(), &featured_page)?,
         render("ml-rust/index.html".to_owned(), &ml_rust_page)?,
         render(
             "topics/index.html".to_owned(),
-            &TopicsPage::new(layout(Some(NavItem::Explore)), catalogue, report),
+            &TopicsPage::new(layout(explore, PageMeta::topics()), catalogue, report),
         )?,
         render(
             "changes/index.html".to_owned(),
-            &ChangesPage::new(layout(Some(NavItem::Changes)), inputs),
+            &ChangesPage::new(layout(Some(NavItem::Changes), PageMeta::changes()), inputs),
         )?,
         render(
             "rules/index.html".to_owned(),
-            &RulesPage::new(layout(Some(NavItem::Rules)), catalogue.thresholds()),
+            &RulesPage::new(
+                layout(Some(NavItem::Rules), PageMeta::rules()),
+                catalogue.thresholds(),
+            ),
         )?,
         render(
             "submit/index.html".to_owned(),
             &SubmitPage::new(
-                layout(Some(NavItem::Submit)),
+                layout(Some(NavItem::Submit), PageMeta::submit()),
                 catalogue.topics(),
                 catalogue.categories(),
             ),
@@ -110,7 +110,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             "search/index.html".to_owned(),
             &SearchPage::new(
                 // The list script comes first, so it hears every row the search script adds.
-                layout(None)
+                layout(None, PageMeta::search())
                     .with_script(list_script.href())
                     .with_script(search_script.href()),
                 catalogue,
@@ -121,30 +121,39 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             "compare/index.html".to_owned(),
             &ComparePage::new(
                 // The list script comes first, so it hears when the table is ready.
-                layout(None)
+                layout(None, PageMeta::compare())
                     .with_script(list_script.href())
                     .with_script(compare_script.href()),
             ),
         )?,
         render(
             "404.html".to_owned(),
-            &NotFoundPage::new(layout(None), catalogue, report),
+            &NotFoundPage::new(layout(None, PageMeta::not_found()), catalogue, report),
         )?,
     ];
     for topic in catalogue.topics() {
-        let mut page = TopicPage::new(layout(Some(NavItem::Explore)), inputs, topic);
-        page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
+        let mut page = TopicPage::new(layout(explore, PageMeta::topic(topic)), inputs, topic);
+        if page.uses_list_script() {
+            page.layout.scripts.push(list_script.href());
+        }
         files.push(render(topic_file(&topic.id), &page)?);
     }
     for category in catalogue.categories() {
-        let mut page = CategoryPage::new(layout(Some(NavItem::Explore)), inputs, category);
-        page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
+        let meta = PageMeta::category(category);
+        let mut page = CategoryPage::new(layout(explore, meta), inputs, category);
+        if page.uses_list_script() {
+            page.layout.scripts.push(list_script.href());
+        }
         files.push(render(category_file(&category.id), &page)?);
     }
     for slug in catalogue.entries().keys() {
         if let Some(effective) = catalogue.effective(slug) {
-            let mut page = ProjectPage::new(layout(None), inputs, &effective);
-            page.layout = list_layout(None, page.uses_list_script());
+            let entry = effective.entry;
+            let meta = PageMeta::project(slug, &entry.name, &entry.description.text);
+            let mut page = ProjectPage::new(layout(None, meta), inputs, &effective);
+            if page.uses_list_script() {
+                page.layout.scripts.push(list_script.href());
+            }
             files.push(render(project_file(slug), &page)?);
         }
     }

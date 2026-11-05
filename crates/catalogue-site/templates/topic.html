@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}{{ name }}{% endblock %}
 {% block main_class %}page-wide{% endblock %}
 {% block content %}
 <p class="back-link">{% if let Some(link) = parent %}Part of <a href="{{ link.href }}">{{ link.name }}</a>.{% else %}<a href="/topics/"><span class="icon" aria-hidden="true">{% include "icons/ui-arrow-left.svg" %}</span>All jobs</a>{% endif %}</p>

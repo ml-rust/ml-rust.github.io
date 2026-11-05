@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}{% endblock %} · {{ layout.site_name }}</title>
+<title>{{ layout.meta.title }} · {{ layout.site_name }}</title>
+<meta name="description" content="{{ layout.meta.description }}">
+{%- if let Some(url) = layout.meta.canonical %}
+<link rel="canonical" href="{{ url }}">
+<meta property="og:url" content="{{ url }}">
+{%- else %}
+<meta name="robots" content="noindex">
+{%- endif %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ layout.site_name }}">
+<meta property="og:title" content="{{ layout.meta.title }}">
+<meta property="og:description" content="{{ layout.meta.description }}">
+<meta name="twitter:card" content="summary">
+{%- block head_extra %}{% endblock %}
 <link rel="stylesheet" href="{{ layout.css }}">
 <link rel="icon" type="image/svg+xml" href="{{ layout.favicon }}">
 <link rel="alternate" type="application/atom+xml" title="Tier changes and new entries" href="/changes/feed.xml">

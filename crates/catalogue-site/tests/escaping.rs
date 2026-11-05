@@ -32,8 +32,14 @@ const SCRIPT_STEMS: [&str; 3] = ["search/search.", "assets/list.", "assets/compa
 /// The length of the content hash in a script path.
 const HASH_LEN: usize = 8;
 
+/// The fixed structured data of the home page. It holds no data file text.
+const SITE_DATA_TAG: &str = r#"<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"ML Rust catalogue","url":"https://ml-rust.github.io/"}</script>"#;
+
 /// The length of the allowed script tag at the start of `text`, when one starts there.
 fn allowed_tag_len(text: &str) -> Option<usize> {
+    if text.starts_with(SITE_DATA_TAG) {
+        return Some(SITE_DATA_TAG.len());
+    }
     let path = text.strip_prefix(SCRIPT_TAG_START)?;
     let stem = SCRIPT_STEMS.iter().find(|stem| path.starts_with(**stem))?;
     let hashed = &path[stem.len()..];
@@ -66,11 +72,13 @@ fn the_script_check_allows_only_the_hashed_script_tags() {
         "<script type=\"module\" src=\"/assets/compare.0a1b2c3d.js\"></script>",
         "a <script type=\"module\" src=\"/assets/list.0a1b2c3d.js\"></script> b \
          <script type=\"module\" src=\"/search/search.0a1b2c3d.js\"></script> c",
+        SITE_DATA_TAG,
     ] {
         assert!(!holds_raw_script(allowed), "{allowed}");
     }
     for refused in [
         "<script>alert(1)</script>",
+        "<script type=\"application/ld+json\">{\"name\":\"x\"}</script>",
         "<script type=\"module\" src=\"/x.js\"></script>",
         "<script src=\"/assets/list.0a1b2c3d.js\"></script>",
         "<script type=\"module\" src=\"/assets/other.0a1b2c3d.js\"></script>",
