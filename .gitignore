@@ -23,7 +23,7 @@
 # Per-machine bot config (bot.example.toml is committed)
 /bot.toml
 
-# Per-machine cargo patches (.cargo/config.toml.example is committed)
+# Per-machine cargo config
 /.cargo/config.toml
 
 # Agent and session scratch

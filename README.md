@@ -112,14 +112,6 @@ Each judgment appears on its entry page with a link to its issue.
 
 Install Rust 1.95 or later. The workspace sets this as `rust-version` in `Cargo.toml`.
 
-Copy the local patch first:
-
-```bash
-cp .cargo/config.toml.example .cargo/config.toml
-```
-
-Set the `path` in `.cargo/config.toml` to your oxidoc checkout. `oxidoc-search` is not on crates.io yet. Until it is, `--locked` fails. The patch changes `Cargo.lock`, so do not commit that change. `.cargo/config.toml` is gitignored.
-
 Run each command on its own line. CI adds `--locked` to the cargo builds.
 
 ```bash

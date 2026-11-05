@@ -51,7 +51,6 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `bash deploy/test_update.sh`
 - `cargo run -p catalogue -- validate --data data`
 - `cargo run -p catalogue -- build --no-tiers`: writes the site to `dist/`. The deploy adds the search wasm files.
-- Until `oxidoc-search` is on crates.io, `--locked` fails. Copy `.cargo/config.toml.example` to `.cargo/config.toml` for the local patch. NEVER commit the `Cargo.lock` change that patch causes.
 
 ## CI
 
