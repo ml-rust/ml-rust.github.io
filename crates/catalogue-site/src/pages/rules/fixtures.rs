@@ -57,7 +57,10 @@ pub(crate) fn thresholds(calibrated: Option<Date>) -> Thresholds {
             min_new_adopters: 1.0,
             min_binary_downloads_per_release: 200,
         },
-        fallback: FallbackThresholds { max_age_days: 14 },
+        fallback: FallbackThresholds {
+            max_age_days: 14,
+            max_failed_share: 0.05,
+        },
         movement: MovementThresholds {
             window_days: 30,
             min_share: 0.25,

@@ -34,6 +34,7 @@ fn every_file_is_emitted_with_and_without_a_report() {
             "sitemap.xml",
             "robots.txt",
             "featured/index.html",
+            "ml-rust/index.html",
             "compare/index.html",
             "data/compare/index.json",
         ] {

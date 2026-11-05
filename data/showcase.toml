@@ -1,0 +1,6 @@
+# The projects the home page lists under "Maintained by the ML Rust organization", in this order.
+#
+# People pick this list by hand. No tier reads it. Each slug must name an entry with
+# `org_affiliated = true`. A new slug also needs an icon in `icon_showcase.html`.
+
+project = ["numr", "boostr", "oxidizr", "blazr", "voxr", "splintr", "compressr", "treeboost"]

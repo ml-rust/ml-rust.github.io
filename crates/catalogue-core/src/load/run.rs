@@ -7,6 +7,7 @@ use super::entries::check_entries;
 use super::judgments::{Refs, check_judgments};
 use super::maintainers::check_maintainers;
 use super::parse::{parse_all, parse_optional};
+use super::showcase::check_showcase;
 use super::sources::DataSources;
 use super::synonyms::check_synonyms;
 use super::thresholds::check_thresholds;
@@ -14,7 +15,7 @@ use super::topics::check_topics;
 use crate::catalogue::Catalogue;
 use crate::entry::Entry;
 use crate::judgment::Judgment;
-use crate::registry::{Backends, Categories, Discovery, Maintainers, Synonyms, Topics};
+use crate::registry::{Backends, Categories, Discovery, Maintainers, Showcase, Synonyms, Topics};
 
 /// Parses and checks every file, collecting every error.
 pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
@@ -29,6 +30,8 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
         parse_optional::<Synonyms>(sources.synonyms.as_ref(), "synonyms.toml", &mut diags);
     let backends =
         parse_optional::<Backends>(sources.backends.as_ref(), "backends.toml", &mut diags);
+    let showcase =
+        parse_optional::<Showcase>(sources.showcase.as_ref(), "showcase.toml", &mut diags);
 
     let discovery = sources.discovery.as_ref().map(|file| {
         let mut found = Diagnostics::new();
@@ -57,6 +60,7 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
 
     let entry_files = parse_all::<Entry>(&sources.entries, &mut diags);
     let entries = check_entries(entry_files, &topic_ids, &category_ids, &mut diags);
+    check_showcase(&showcase, &entries, &mut diags);
 
     let judgment_files = parse_all::<Judgment>(&sources.judgments, &mut diags);
     let refs = Refs {
@@ -78,6 +82,7 @@ pub(crate) fn load(sources: DataSources) -> Result<Catalogue, Diagnostics> {
             thresholds,
             deprecated,
             backends: backends.value,
+            showcase: showcase.value.project,
         })
     } else {
         Err(diags)

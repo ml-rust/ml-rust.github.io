@@ -10,6 +10,7 @@ A catalogue of machine learning in Rust: libraries on crates.io and apps outside
 - Each entry page lists every signal with its raw value, source link, and fetch date.
 - Apps outside crates.io are covered.
 - Search runs in the browser.
+- The ML Rust organization runs this catalogue. The home page says so above a hand-picked list of its own projects in `data/showcase.toml`. No tier reads that list.
 
 ## How tiers work
 
@@ -55,6 +56,8 @@ The sandbox check runs in CI and records its date. A sandbox result older than i
 ### Fetch errors
 
 A fetch error reads the newest earlier snapshot of that signal. The snapshot must fall within the fallback age limit. Past that limit, the signal is unknown. The Pages workflow records a snapshot each day.
+
+A run fails and writes no snapshot and no report when the share of fetches with no usable earlier value exceeds `fallback.max_failed_share`. A README fetch does not count, because no tier reads it.
 
 ### Thresholds
 
@@ -102,7 +105,7 @@ Each judgment appears on its entry page with a link to its issue.
 | `crates/catalogue-site` | Site templates, page data, and refusal checks. No IO. |
 | `crates/catalogue-search-wasm` | The browser search runtime. |
 | `crates/catalogue` | The `catalogue` CLI. |
-| `data/` | Entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, deprecated requirements, and backends. |
+| `data/` | Entries, judgments, maintainers, topics, categories, synonyms, discovery rules, tier thresholds, deprecated requirements, backends, and the home page showcase. |
 | `deploy/` | systemd units and scripts for the bot VM. |
 
 ## Develop
@@ -139,6 +142,7 @@ cargo run -p catalogue -- build --no-tiers
 ## Deploy
 
 - The site deploys from `main` through `.github/workflows/pages.yml`.
+- The Pages workflow needs the `SIGNALS_TOKEN` secret: a fine-grained token with public repositories read-only.
 - The bot runs on a VM. Run `sudo bash deploy/install.sh` on it. The script prints each input still missing, with the command that adds it.
 
 ## License

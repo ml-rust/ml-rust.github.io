@@ -1,9 +1,6 @@
 //! Paced requests with rate-limit retries.
 
-use std::io::Read;
-
-use thiserror::Error;
-
+use super::answer::{Answer, PacedError, read_body};
 use super::error::HttpError;
 use super::headers::Headers;
 use super::pace::Pacer;
@@ -14,47 +11,31 @@ const MAX_RETRIES: u32 = 3;
 /// The longest response body read, in bytes.
 pub const MAX_BODY: u64 = 32 << 20;
 
-/// A paced request that ends without a usable body.
-#[derive(Debug, Error)]
-pub enum PacedError {
-    /// The HTTP layer fails before the server answers.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-    /// The server answers with an unexpected status.
-    #[error("{url} answered with status {status}")]
-    Status {
-        /// The requested URL.
-        url: String,
-        /// The HTTP status code.
-        status: u16,
-    },
-    /// The response body breaks off.
-    #[error("reading the body from {url} failed: {source}")]
-    Body {
-        /// The requested URL.
-        url: String,
-        /// The read error.
-        source: std::io::Error,
-    },
-    /// The server keeps asking the caller to wait.
-    #[error("{url} still answered with a rate limit after {retries} retries")]
-    RetriesExhausted {
-        /// The requested URL.
-        url: String,
-        /// The retries made after the first request.
-        retries: u32,
-    },
+/// What one exchange expects from the server.
+struct Expected<'a> {
+    /// The statuses that give the answer.
+    accepted: &'a [u16],
+    /// The statuses that give `None`.
+    absent: &'a [u16],
+    /// The statuses that give the answer unless they carry a wait hint.
+    refused: &'a [u16],
+    /// The most body bytes read.
+    limit: u64,
+    /// Whether the body of an answer reports a rate limit.
+    body_limited: fn(&[u8]) -> bool,
 }
 
-/// A response whose status the caller accepts, with its body read.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Answer {
-    /// The HTTP status code.
-    pub status: u16,
-    /// The response headers.
-    pub headers: Headers,
-    /// The body, up to the size cap.
-    pub body: Vec<u8>,
+impl<'a> Expected<'a> {
+    /// `accepted` gives the answer, with a body up to [`MAX_BODY`].
+    fn accepting(accepted: &'a [u16]) -> Self {
+        Self {
+            accepted,
+            absent: &[],
+            refused: &[],
+            limit: MAX_BODY,
+            body_limited: |_| false,
+        }
+    }
 }
 
 /// Sends requests one at a time and holds each back until the [`Pacer`]
@@ -95,13 +76,7 @@ impl<'a> Paced<'a> {
         url: &str,
         send: impl FnMut() -> Result<Response, HttpError>,
     ) -> Result<Vec<u8>, PacedError> {
-        match self.run(url, send, &[])? {
-            Some(bytes) => Ok(bytes),
-            None => Err(PacedError::Status {
-                url: url.to_owned(),
-                status: 404,
-            }),
-        }
+        self.run(url, send, &[])?.ok_or_else(|| not_found(url))
     }
 
     /// Like [`fetch`](Self::fetch), but a 404 answer gives `None`.
@@ -131,6 +106,28 @@ impl<'a> Paced<'a> {
         self.run(url, send, absent)
     }
 
+    /// Like [`fetch`](Self::fetch), but a 200 answer whose body `body_limited` reads as a rate
+    /// limit is retried like a 403 or 429 answer with a wait hint. The wait uses the headers of
+    /// the answer, read as if `x-ratelimit-remaining` were `0`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`PacedError`] as [`fetch`](Self::fetch) does.
+    pub fn fetch_checked(
+        &mut self,
+        url: &str,
+        send: impl FnMut() -> Result<Response, HttpError>,
+        body_limited: fn(&[u8]) -> bool,
+    ) -> Result<Vec<u8>, PacedError> {
+        let expected = Expected {
+            body_limited,
+            ..Expected::accepting(&[200])
+        };
+        self.exchange(url, send, &expected)?
+            .map(|answer| answer.body)
+            .ok_or_else(|| not_found(url))
+    }
+
     /// Sends the request that `send` builds and returns an answer whose status is in `accepted`.
     ///
     /// The answer keeps its status and headers, so a caller can read a
@@ -147,13 +144,8 @@ impl<'a> Paced<'a> {
         send: impl FnMut() -> Result<Response, HttpError>,
         accepted: &[u16],
     ) -> Result<Answer, PacedError> {
-        match self.exchange(url, send, accepted, &[], &[], MAX_BODY)? {
-            Some(answer) => Ok(answer),
-            None => Err(PacedError::Status {
-                url: url.to_owned(),
-                status: 404,
-            }),
-        }
+        self.exchange(url, send, &Expected::accepting(accepted))?
+            .ok_or_else(|| not_found(url))
     }
 
     /// Like [`send`](Self::send), but also gives an answer with a status in `refused`, so a
@@ -171,13 +163,12 @@ impl<'a> Paced<'a> {
         accepted: &[u16],
         refused: &[u16],
     ) -> Result<Answer, PacedError> {
-        match self.exchange(url, send, accepted, &[], refused, MAX_BODY)? {
-            Some(answer) => Ok(answer),
-            None => Err(PacedError::Status {
-                url: url.to_owned(),
-                status: 404,
-            }),
-        }
+        let expected = Expected {
+            refused,
+            ..Expected::accepting(accepted)
+        };
+        self.exchange(url, send, &expected)?
+            .ok_or_else(|| not_found(url))
     }
 
     /// Sends the request that `send` builds and reads at most `limit` bytes of a 200 answer.
@@ -195,7 +186,12 @@ impl<'a> Paced<'a> {
         absent: &[u16],
         limit: u64,
     ) -> Result<Option<Answer>, PacedError> {
-        self.exchange(url, send, &[200], absent, &[], limit)
+        let expected = Expected {
+            absent,
+            limit,
+            ..Expected::accepting(&[200])
+        };
+        self.exchange(url, send, &expected)
     }
 
     fn run(
@@ -204,53 +200,60 @@ impl<'a> Paced<'a> {
         send: impl FnMut() -> Result<Response, HttpError>,
         absent: &[u16],
     ) -> Result<Option<Vec<u8>>, PacedError> {
+        let expected = Expected {
+            absent,
+            ..Expected::accepting(&[200])
+        };
         Ok(self
-            .exchange(url, send, &[200], absent, &[], MAX_BODY)?
+            .exchange(url, send, &expected)?
             .map(|answer| answer.body))
     }
 
-    /// Sends until an answer arrives. A status in `accepted` gives the answer, a status in
-    /// `absent` gives `None`, a status in `refused` without a wait hint gives the answer. The
-    /// answer holds at most `limit` bytes of the body.
+    /// Sends until an answer arrives, as `expected` says. A rate limit in the status or in the
+    /// body takes a retry, up to [`MAX_RETRIES`]. The pacer reads the headers of every response.
     fn exchange(
         &mut self,
         url: &str,
         mut send: impl FnMut() -> Result<Response, HttpError>,
-        accepted: &[u16],
-        absent: &[u16],
-        refused: &[u16],
-        limit: u64,
+        expected: &Expected<'_>,
     ) -> Result<Option<Answer>, PacedError> {
         let mut retries = 0;
         loop {
             if let Some(headers) = self.previous.take() {
                 self.pacer.wait(&headers);
             }
+            self.pacer.hold();
             self.requests += 1;
             let response = send()?;
             let headers = response.headers;
+            self.pacer.observe(&headers);
             let limited = is_rate_limited(response.status, &headers);
-            if accepted.contains(&response.status)
-                || (refused.contains(&response.status) && !limited)
+            let wait_on = if expected.accepted.contains(&response.status)
+                || (expected.refused.contains(&response.status) && !limited)
             {
                 self.previous = Some(headers.clone());
-                let body = read_body(url, response.body, limit)?;
-                return Ok(Some(Answer {
-                    status: response.status,
-                    headers,
-                    body,
-                }));
-            }
-            if absent.contains(&response.status) {
+                let body = read_body(url, response.body, expected.limit)?;
+                if !(expected.body_limited)(&body) {
+                    return Ok(Some(Answer {
+                        status: response.status,
+                        headers,
+                        body,
+                    }));
+                }
+                let spent = headers.spent();
+                self.pacer.observe(&spent);
+                spent
+            } else if expected.absent.contains(&response.status) {
                 self.previous = Some(headers);
                 return Ok(None);
-            }
-            if !limited {
+            } else if limited {
+                headers
+            } else {
                 return Err(PacedError::Status {
                     url: url.to_owned(),
                     status: response.status,
                 });
-            }
+            };
             if retries == MAX_RETRIES {
                 return Err(PacedError::RetriesExhausted {
                     url: url.to_owned(),
@@ -258,8 +261,16 @@ impl<'a> Paced<'a> {
                 });
             }
             retries += 1;
-            self.previous = Some(headers);
+            self.previous = Some(wait_on);
         }
+    }
+}
+
+/// The error for an absent answer where the caller requires one.
+fn not_found(url: &str) -> PacedError {
+    PacedError::Status {
+        url: url.to_owned(),
+        status: 404,
     }
 }
 
@@ -270,18 +281,6 @@ fn is_rate_limited(status: u16, headers: &Headers) -> bool {
             || headers
                 .get("x-ratelimit-remaining")
                 .is_some_and(|value| value.trim() == "0"))
-}
-
-/// Reads a response body up to `limit` bytes.
-fn read_body(url: &str, body: Box<dyn Read>, limit: u64) -> Result<Vec<u8>, PacedError> {
-    let mut bytes = Vec::new();
-    body.take(limit)
-        .read_to_end(&mut bytes)
-        .map_err(|source| PacedError::Body {
-            url: url.to_owned(),
-            source,
-        })?;
-    Ok(bytes)
 }
 
 #[cfg(test)]

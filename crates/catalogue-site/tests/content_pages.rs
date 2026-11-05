@@ -17,6 +17,39 @@ const TIER_MARKUP: [&str; 6] = [
     "class=\"disclosure disclosure-card\" id=\"tier\"",
 ];
 
+#[test]
+fn the_home_page_lists_the_showcase_with_and_without_tiers() {
+    for site in [tiered(), untiered()] {
+        let home = &site["index.html"];
+        assert!(home.contains("Maintained by the ML Rust organization"));
+        assert!(home.contains("We pick this list by hand"));
+        assert!(home.contains("<a class=\"tile-name\" href=\"/projects/beta/\">Beta</a>"));
+        assert!(home.contains("A command line tool that runs models."));
+        assert!(home.contains("<a href=\"/ml-rust/\">All 1 project from ML Rust"));
+        assert!(!home.contains("<a class=\"tile-name\" href=\"/projects/alpha/\">"));
+    }
+}
+
+#[test]
+fn the_ml_rust_page_lists_only_org_affiliated_entries() {
+    for site in [tiered(), untiered()] {
+        let page = &site["ml-rust/index.html"];
+        assert!(page.contains("<h1>ML Rust projects</h1>"));
+        assert!(page.contains("href=\"/projects/beta/\""));
+        assert!(!page.contains("href=\"/projects/alpha/\""));
+    }
+}
+
+#[test]
+fn no_showcase_file_leaves_the_section_out() {
+    let files: Vec<(String, String)> = fixture::files()
+        .into_iter()
+        .filter(|(path, _)| path != "showcase.toml")
+        .collect();
+    let site = fixture::site(&files, true);
+    assert!(!site["index.html"].contains("ml-rust-projects"));
+}
+
 fn tiered() -> BTreeMap<String, String> {
     fixture::site(&fixture::files(), true)
 }
@@ -193,6 +226,7 @@ fn no_list_page_holds_an_install_command() {
         let lists = site.iter().filter(|(path, _)| {
             path.as_str() == "index.html"
                 || path.starts_with("featured/")
+                || path.starts_with("ml-rust/")
                 || path.starts_with("topics/")
                 || path.starts_with("categories/")
         });

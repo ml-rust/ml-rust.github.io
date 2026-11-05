@@ -5,19 +5,16 @@ use std::path::Path;
 
 use catalogue_core::{Catalogue, Date, Entry, EntryKind, Slug, normalize_repo_url};
 use catalogue_signals::distribution::{
-    HOMEBREW_INTERVAL, RELEASES_INTERVAL, REPOLOGY_INTERVAL, homebrew_installs, release_downloads,
-    repology_packaging,
+    HOMEBREW_INTERVAL, REPOLOGY_INTERVAL, homebrew_installs, release_downloads, repology_packaging,
 };
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{
     Failed, FetchFailure, FetchSummary, Source, attempt, distribution_failure, github_failure,
     link_failure, recover,
 };
-use catalogue_signals::github::{
-    Contributors, GITHUB_INTERVAL, RepoRef, repo_contributors, repo_facts,
-};
+use catalogue_signals::github::{Contributors, RepoRef, repo_contributors, repo_facts};
 use catalogue_signals::history::{Dated, History, NetworkValues, ReleaseValues, RepoValues};
-use catalogue_signals::http::{IntervalPacer, Transport};
+use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
 
 use super::docker::fetch_docker;
 use super::error::TiersError;
@@ -118,6 +115,7 @@ impl Collector<'_> {
             slug: fetch.slug.clone(),
             source: fetch.source,
             from: found.value.as_ref().map(|value| value.date),
+            error: error.to_owned(),
         });
         let fetched = self.slot(fetch.slug);
         *(fetch.slot)(&mut fetched.values) = found.value;
@@ -147,9 +145,10 @@ impl Collector<'_> {
 /// facts find the repo gone. Every app with a GitHub
 /// repo gets its release downloads, then the Homebrew and Repology counts its
 /// `distribution` names, then the Docker Hub pulls of its listed images. Every
-/// library gets its repo link check, which `snapshot` supplies the release for.
+/// entry with crates gets its repo link check, which `snapshot` supplies the release for.
 /// Every entry on GitHub, Codeberg or GitLab gets its README, unless the facts find the repo gone.
-/// Each source has its own pacer.
+/// The `github` pacer spaces every GitHub phase, so a spent budget carries from one phase to the
+/// next. Every other source has its own pacer.
 ///
 /// [`catalogue_signals::fallback`] sorts every error. A fatal error ends the run.
 /// A definite "no such name" becomes a note. Any other error reuses that source's
@@ -163,6 +162,7 @@ pub(crate) fn fetch_all(
     history: &History,
     max_age_days: u32,
     today: Date,
+    github: &mut dyn Pacer,
 ) -> Result<Collected, TiersError> {
     let mut run = Collector {
         history,
@@ -192,15 +192,17 @@ pub(crate) fn fetch_all(
             Err(note) => run.note(slug, note),
         }
     }
-    collect_facts(&mut run, &repos, transport, token)?;
-    collect_links(&mut run, catalogue, snapshot, transport, token, cache_dir)?;
-    collect_contributors(&mut run, &repos, transport, token)?;
-    collect_readmes(&mut run, catalogue, transport, token)?;
+    collect_facts(&mut run, &repos, transport, token, github)?;
+    collect_links(
+        &mut run, catalogue, snapshot, transport, token, cache_dir, github,
+    )?;
+    collect_contributors(&mut run, &repos, transport, token, github)?;
+    collect_readmes(&mut run, catalogue, transport, token, github)?;
     let apps: Vec<(Slug, RepoRef)> = repos
         .into_iter()
         .filter(|(slug, _)| kind(catalogue, slug) == Some(EntryKind::App))
         .collect();
-    collect_releases(&mut run, &apps, transport, token)?;
+    collect_releases(&mut run, &apps, transport, token, github)?;
     collect_homebrew(&mut run, catalogue, transport)?;
     collect_repology(&mut run, catalogue, transport)?;
     collect_docker(&mut run, catalogue, transport)?;
@@ -213,10 +215,10 @@ fn collect_facts(
     repos: &[(Slug, RepoRef)],
     transport: &dyn Transport,
     token: &str,
+    github: &mut dyn Pacer,
 ) -> Result<(), TiersError> {
     let today = run.today.civil();
-    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
-    let found = batch::each(repos, &mut pacer, |(_, repo), pacer| {
+    let found = batch::each(repos, github, |(_, repo), pacer| {
         attempt(
             repo_facts(transport, token, repo, today, pacer),
             github_failure,
@@ -244,8 +246,11 @@ fn collect_links(
     transport: &dyn Transport,
     token: &str,
     cache_dir: &Path,
+    github: &mut dyn Pacer,
 ) -> Result<(), TiersError> {
-    let links = fetch_links(catalogue, snapshot, transport, token, cache_dir, run.today)?;
+    let links = fetch_links(
+        catalogue, snapshot, transport, token, cache_dir, run.today, github,
+    )?;
     run.out.summary.fetches += links.fetches;
     for (slug, check) in links.checks {
         run.slot(&slug).values.link = Some(check);
@@ -273,14 +278,14 @@ fn collect_contributors(
     repos: &[(Slug, RepoRef)],
     transport: &dyn Transport,
     token: &str,
+    github: &mut dyn Pacer,
 ) -> Result<(), TiersError> {
     let live: Vec<(Slug, RepoRef)> = repos
         .iter()
         .filter(|(slug, _)| !is_gone(run, slug))
         .cloned()
         .collect();
-    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
-    let found = batch::each(&live, &mut pacer, |(_, repo), pacer| {
+    let found = batch::each(&live, github, |(_, repo), pacer| {
         attempt(
             repo_contributors(transport, token, repo, pacer),
             github_failure,
@@ -317,6 +322,7 @@ fn collect_readmes(
     catalogue: &Catalogue,
     transport: &dyn Transport,
     token: &str,
+    github: &mut dyn Pacer,
 ) -> Result<(), TiersError> {
     let repos: Vec<(Slug, TargetRepo)> = catalogue
         .entries()
@@ -324,8 +330,7 @@ fn collect_readmes(
         .filter(|(slug, _)| !is_gone(run, slug))
         .filter_map(|(slug, entry)| Some((slug.clone(), TargetRepo::of(entry)?)))
         .collect();
-    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
-    let found = batch::each(&repos, &mut pacer, |(_, repo), pacer| {
+    let found = batch::each(&repos, github, |(_, repo), pacer| {
         attempt(repo.readme(transport, token, pacer), link_failure)
     })?;
     run.out.summary.fetches += repos.len();
@@ -359,9 +364,9 @@ fn collect_releases(
     apps: &[(Slug, RepoRef)],
     transport: &dyn Transport,
     token: &str,
+    github: &mut dyn Pacer,
 ) -> Result<(), TiersError> {
-    let mut pacer = IntervalPacer::new(RELEASES_INTERVAL);
-    let found = batch::each(apps, &mut pacer, |(_, repo), pacer| {
+    let found = batch::each(apps, github, |(_, repo), pacer| {
         attempt(release_downloads(transport, token, repo, pacer), |error| {
             distribution_failure(error, Source::Releases)
         })

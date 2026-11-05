@@ -26,6 +26,14 @@ impl Headers {
             .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
             .map(|(_, value)| value.as_str())
     }
+
+    /// These headers with `x-ratelimit-remaining` read as `0`, for an answer whose body reports
+    /// a rate limit.
+    pub(super) fn spent(&self) -> Self {
+        let mut pairs = vec![("x-ratelimit-remaining".to_owned(), "0".to_owned())];
+        pairs.extend(self.0.iter().cloned());
+        Self(pairs)
+    }
 }
 
 #[cfg(test)]
@@ -37,5 +45,12 @@ mod tests {
         let headers = Headers::new([("ETag", "\"a\"")]);
         assert_eq!(headers.get("etag"), Some("\"a\""));
         assert_eq!(headers.get("content-length"), None);
+    }
+
+    #[test]
+    fn spent_headers_read_as_exhausted_and_keep_the_rest() {
+        let headers = Headers::new([("X-RateLimit-Remaining", "9"), ("ETag", "a")]).spent();
+        assert_eq!(headers.get("x-ratelimit-remaining"), Some("0"));
+        assert_eq!(headers.get("etag"), Some("a"));
     }
 }

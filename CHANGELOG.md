@@ -4,74 +4,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 A release tag needs a non-empty section here. The section becomes the GitHub Release body.
 
-## [Unreleased]
+## [0.1.0]
 
 ### Added
 
-- `catalogue tiers`: fetches each repository README into the report.
-- Project pages lead with an About section from the README, sanitized.
-- Search reads README prose at low weight.
-- Project pages: one stat row, one Links card, a collapsed Why section.
-- Search reads crate keywords, crate categories and repository topics.
-- Apps that publish a crate show its release facts and `cargo install`.
-- Sort and filter on list pages, copy buttons on install lines.
-- `/compare/`: up to 4 projects side by side.
 - `catalogue validate`: checks every data file and the rules across files.
-- `catalogue build`: builds the static site from the data files.
-- Tier engine and `data/thresholds.toml`: published rules that place each entry in a tier.
-- `catalogue dump fetch` and `dump stats`: download and read the crates.io database dump.
-- `catalogue dump usage`: adoption signals of named crates.
-- `catalogue discover crates` and `discover github`: candidate crates and app repos for review.
-- `catalogue discover below-floor`: Rust repos of crates with few active users, for review. Add a reviewed repo through `data/leads.txt`.
-- `catalogue github facts`: repo state, human commits and maintainer response.
-- `catalogue github link`: checks that a crate was published from a commit on a branch or tag of its repo. A commit that only a fork holds does not verify.
-- `catalogue rustsec fetch` and `rustsec show`: RustSec advisories per crate.
-- `catalogue ecosystems crates`: ecosyste.ms dependents per crate.
-- `catalogue distribution`: release, Homebrew, Docker Hub and Repology counts for apps.
-- `catalogue tiers`: assigns each entry its tier with the reasons.
-- `catalogue calibrate`: percentiles of the tier signals, for setting thresholds.
-- `catalogue seed`: drafts entries from discovery for human review.
-- `catalogue seed`: lists a repository's main crate first, leaves out crates of other owners, and matches topic `terms` in names and descriptions.
-- `catalogue seed --leads`: drafts library and app entries from a list of GitHub repos.
-- `catalogue tiers --history`: keeps daily snapshots for the two-check dead rule and Docker growth.
-- `catalogue tiers`: a failed network fetch falls back to the previous snapshot and the run summary names it.
-- `catalogue tiers --json`: writes each entry's tier, reasons and signals with source links and dates.
+- `catalogue tiers`: places each entry in a tier from `data/thresholds.toml` and writes a report with every source and date.
+- `catalogue build`: builds the static site from the data files and a tier report.
+- `catalogue seed`: drafts entries from discovery and `data/leads.txt` for human review.
+- `catalogue discover`: lists candidate crates, app repos and repos below the active-user floor for review.
+- `catalogue dump`, `github`, `rustsec`, `ecosystems`, `distribution`, `calibrate`: read and inspect each signal source.
 - `catalogue sandbox`: weekly CI check that dormant crates still build.
-- `catalogue bot check`: checks an issue form and prints the would-be data file and a report.
-- `deploy/`: systemd units and scripts that install the bot on a VM and update it from the latest release.
-- `catalogue bot labels`: syncs the repo labels to `.github/labels.toml` as the GitHub App. It never deletes a label.
-- `catalogue bot run`: checks every open issue with a form label and keeps one bot comment and its label current.
-- `catalogue bot run`: opens a data PR for each approved issue.
-- `catalogue bot run`: adds an advisory LLM check of evidence links.
-- `data/synonyms.toml`: search synonyms. A human reviews every group.
-- `data/categories.toml`: browse by what a project is, on the site, in search, in seed drafts and in the submit form.
-- `data/backends.toml` and entry pages: license, backends, native code, dependents, contributors and install line, none of which counts toward a tier.
-- Entry lists: one shared order, strongest tier first, with no score.
-- Entry `part_of`: lists show one row per project family, and `/featured/` holds the full Featured list.
-- `catalogue seed`: sets `part_of` from a crate name match and a shared crate owner.
-- `[movement]` in `data/thresholds.toml`: New, Rising and Falling from daily snapshots, on the changes page and list rows. It never affects a tier.
-- `/changes/feed.xml`: Atom feed of tier changes and new entries.
-- `/data/catalogue.json`, `/llms.txt`, `sitemap.xml` and `robots.txt` for scripts and AI agents.
-- CI and tag-gated release workflows. Releases ship `catalogue` for x86_64 and aarch64 Linux (musl), with build attestation.
-
-### Changed
-
-- List pages and the compare page no longer show install commands.
-- An app that publishes a crate needs a release outside prereleases and `0.0.x` for Featured.
-- Discovery matches description terms. `sort_only` lists words that admit no crate.
-- `named_crates` in `data/discovery.toml`: admits a crate and not its dependents.
-- The repo link check accepts a `Cargo.toml` that declares the crate when the release records no commit, or the repo is on Codeberg or GitLab.
-- `data/leads.txt`: repositories that `catalogue seed` always drafts.
-- Featured gains a repository route: stars, forks and contributors together.
-- Lists lead with downloads and dependents, show versions, and order by downloads.
-- "Active users" now reads "active dependents".
-- Data file schema 2: adds install lines, docs links and plain tier reasons.
-- New site theme on every page. Project pages explain each tier and compare neighbours.
-- The New tier now means a recent first release only.
-- Row facts state only what the check found, and native code reads deeper dependencies.
-- Categories cover more projects and match description terms first.
-- Project pages gather every source and fetch date under "Measurements and sources". List rows and the compare page drop source and channel links.
-- A library with only prereleases can reach Featured on its dependents. `0.0.x`-only crates stay out.
-- The repository route needs the repo's main crate in the entry.
-- `catalogue seed` keeps crates named for the repo owner, and crates that still link a renamed repo.
-- `excluded_repos` in `data/discovery.toml`: repositories that never get a draft.
+- `catalogue bot`: checks issue forms, syncs labels and opens a data PR for each approved issue. A person merges every PR.
+- Site: browse by job or category, search in the browser, sort, filter and compare up to 4 projects.
+- Home page: a labeled, hand-picked list of ML Rust projects from `data/showcase.toml`. `/ml-rust/` lists them all.
+- Project pages: the README, compatibility facts, similar projects, and every signal with its source.
+- `/changes/`, `/changes/feed.xml`, `/data/catalogue.json`, `/llms.txt`: tier changes and machine-readable data.
+- `deploy/`: systemd units and scripts that run the bot on a VM.
+- Releases ship `catalogue` for x86_64 and aarch64 Linux (musl).

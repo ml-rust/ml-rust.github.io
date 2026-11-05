@@ -71,6 +71,7 @@ fn every_threshold_appears_with_its_value() {
         ("finished.min_new_adopters", "1"),
         ("finished.min_binary_downloads_per_release", "200"),
         ("fallback.max_age_days", "14"),
+        ("fallback.max_failed_share", "0.05"),
         ("movement.window_days", "30"),
         ("movement.min_share", "0.25"),
         ("movement.min_users", "5"),

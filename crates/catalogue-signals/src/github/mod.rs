@@ -15,6 +15,7 @@
 mod contributors;
 mod error;
 mod facts;
+mod graphql;
 mod headers;
 mod json;
 mod pacer;
@@ -31,9 +32,10 @@ pub use facts::{
     CiState, Facts, LATEST_SAMPLE, RepoFacts, RepoLicense, RepoProfile, RepoRef, RepoRefError,
     repo_facts, repo_profile,
 };
+pub(crate) use graphql::post_graphql;
 pub use headers::rest_headers;
 pub(crate) use json::parse_json;
-pub use pacer::GITHUB_INTERVAL;
+pub use pacer::{GITHUB_INTERVAL, SEARCH_INTERVAL};
 pub use repo::{FoundRepo, GithubFound, GithubRules, Repo};
 pub use repo_stats::{BATCH_SIZE, FailedBatch, RepoStats, StatsFetch, fetch_repo_stats};
 pub use search::{search_repos, search_repos_on};

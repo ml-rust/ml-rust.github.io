@@ -229,6 +229,7 @@ pub fn files() -> Vec<(String, String)> {
         ("backends.toml", BACKENDS),
         ("maintainers.toml", MAINTAINERS),
         ("synonyms.toml", SYNONYMS),
+        ("showcase.toml", "project = [\"beta\"]\n"),
         ("entries/alpha.toml", ALPHA),
         ("entries/beta.toml", BETA),
         ("entries/gamma.toml", GAMMA),
@@ -296,6 +297,8 @@ fn load(files: &[(String, String)]) -> Catalogue {
             sources.maintainers = Some(file);
         } else if path == "synonyms.toml" {
             sources.synonyms = Some(file);
+        } else if path == "showcase.toml" {
+            sources.showcase = Some(file);
         } else {
             panic!("the fixture has no place for {path}");
         }

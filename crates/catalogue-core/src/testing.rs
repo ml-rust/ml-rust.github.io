@@ -129,6 +129,7 @@ min_binary_downloads_per_release = 200
 
 [fallback]
 max_age_days = 14
+max_failed_share = 0.05
 
 [movement]
 window_days = 30
@@ -203,6 +204,7 @@ pub(crate) fn valid() -> DataSources {
         thresholds: None,
         deprecated: None,
         backends: None,
+        showcase: None,
     }
 }
 
@@ -210,7 +212,7 @@ pub(crate) fn valid() -> DataSources {
 ///
 /// A path that contains `entries/` or `judgments/` goes to that list.
 /// `maintainers.toml`, `topics.toml`, `categories.toml`, `discovery.toml`, `thresholds.toml`,
-/// `deprecated.toml` and `backends.toml` replace the optional file of that name.
+/// `deprecated.toml`, `backends.toml` and `showcase.toml` replace the optional file of that name.
 /// Any other path replaces the synonyms file.
 pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
     let list = if path.contains("entries/") {
@@ -226,6 +228,7 @@ pub(crate) fn put(sources: &mut DataSources, path: &str, contents: &str) {
             "thresholds.toml" => &mut sources.thresholds,
             "deprecated.toml" => &mut sources.deprecated,
             "backends.toml" => &mut sources.backends,
+            "showcase.toml" => &mut sources.showcase,
             _ => &mut sources.synonyms,
         };
         *slot = Some(file(path, contents));

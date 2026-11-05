@@ -16,7 +16,8 @@
 # artifact leaves rot signal R6 unknown. A missing dump or RustSec archive ends
 # the job. A network signal that fails to fetch falls back to the previous
 # snapshot instead, and `catalogue tiers` lists each fallback in its output and in
-# the job summary. A rejected token still ends the job.
+# the job summary. A rejected token still ends the job. So does a share of fetches
+# with no usable earlier value above `fallback.max_failed_share`.
 #
 # `commit` stages the snapshot and pushes it. A run repeated on one day replaces
 # that day's file. Unchanged rows give identical bytes, so that run pushes
@@ -25,6 +26,8 @@
 #
 # Every command reads GITHUB_TOKEN from the environment. The token never reaches
 # the disk: git asks for it through the helper in `git_remote`, on each request.
+# In `tiers`, GITHUB_TOKEN holds the SIGNALS_TOKEN secret, which `catalogue tiers`
+# sends. The `gh` calls prefer GH_TOKEN, which reads this repo's runs and artifacts.
 #
 # Called by pages.yml.
 
@@ -169,6 +172,10 @@ ACTION="${1:-}"
 DIR="${2:-}"
 if [[ -z "$DIR" ]]; then
     usage
+fi
+if [[ "$ACTION" == "tiers" && -z "${GITHUB_TOKEN:-}" ]]; then
+    echo "::error::the SIGNALS_TOKEN secret is empty. Set it to a fine-grained personal access token with public repositories read-only, then rerun the job."
+    exit 1
 fi
 : "${GITHUB_TOKEN:?GITHUB_TOKEN is unset: pass it to this step through env}"
 

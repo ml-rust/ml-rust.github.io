@@ -18,6 +18,23 @@ fn the_committed_data_directory_is_valid() {
 }
 
 #[test]
+fn every_committed_showcase_project_has_an_icon() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let catalogue = load_catalogue(&root.join("data"))
+        .expect("the data directory reads")
+        .expect("the data directory is valid");
+    assert!(!catalogue.showcase().is_empty());
+    let templates = root.join("crates/catalogue-site/templates");
+    let chooser = std::fs::read_to_string(templates.join("icon_showcase.html"))
+        .expect("the icon chooser reads");
+    for slug in catalogue.showcase() {
+        let file = format!("icons/org-{slug}.svg");
+        assert!(chooser.contains(&file), "{file} is not in the chooser");
+        assert!(templates.join(&file).is_file(), "{file} is missing");
+    }
+}
+
+#[test]
 fn the_committed_lead_list_parses_and_holds_what_belongs() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/leads.txt");
     let text = std::fs::read_to_string(&path).expect("the lead list reads");

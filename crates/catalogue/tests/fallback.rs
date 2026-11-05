@@ -582,7 +582,7 @@ fn a_missing_package_never_falls_back() {
 }
 
 #[test]
-fn a_run_where_most_fetches_fail_warns_and_still_succeeds() {
+fn a_run_where_every_fetch_fails_stays_at_a_limit_of_one_and_succeeds() {
     let dirs = Dirs::new();
     seed(
         &dirs.history(),
@@ -595,12 +595,10 @@ fn a_run_where_most_fetches_fail_warns_and_still_succeeds() {
             ),
         )],
     );
-    let found = run(&dirs, &Rules::everything(500)).expect("the run still succeeds");
+    let found = run(&dirs, &Rules::everything(500)).expect("the fixture limit is 1");
     assert_eq!(found.summary.fallback_count(), 1);
     assert_eq!(found.summary.failures.len(), found.summary.fetches);
-    let last = found.text.lines().last().expect("a last line");
-    assert!(last.starts_with("WARNING: "), "{last}");
-    assert!(last.contains("1 fell back"), "{last}");
+    assert!(!found.text.contains("WARNING"), "{}", found.text);
     assert!(dirs.history().join("2026-11-03.jsonl.gz").is_file());
 }
 

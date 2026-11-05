@@ -13,6 +13,8 @@ pub struct FetchFailure {
     pub source: Source,
     /// The date of the value in use. `None` when the signal reads as unknown.
     pub from: Option<Date>,
+    /// The error text of the fetch.
+    pub error: String,
 }
 
 /// Every network fetch of a run and the ones that failed.
@@ -42,6 +44,33 @@ impl FetchSummary {
         self.fell_back().count()
     }
 
+    /// The lost fetches that a tier reads. No tier reads a README.
+    fn lost_signals(&self) -> impl Iterator<Item = &FetchFailure> {
+        self.lost()
+            .filter(|failure| failure.source != Source::Readme)
+    }
+
+    /// The number of fetches a tier reads that failed with no usable earlier value.
+    pub fn lost_count(&self) -> usize {
+        self.lost_signals().count()
+    }
+
+    /// Whether the fetches a tier reads and no earlier value covers exceed `limit`, as a share of
+    /// all fetches.
+    ///
+    /// A fetch that recovered from a snapshot does not count.
+    pub fn exceeds_lost_limit(&self, limit: f64) -> bool {
+        self.lost_count() as f64 / self.fetches.max(1) as f64 > limit
+    }
+
+    /// One `slug: source: error` line per fetch that [`lost_count`](Self::lost_count) counts.
+    pub fn lost_lines(&self) -> String {
+        self.lost_signals()
+            .map(|f| format!("  {}: {}: {}", f.slug, f.source, f.error))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
     fn count_line(&self) -> String {
         format!(
             "{} of {} network fetches",
@@ -50,24 +79,10 @@ impl FetchSummary {
         )
     }
 
-    /// The warning for a run where more than half the fetches failed.
-    fn warning(&self) -> Option<String> {
-        (self.failures.len().saturating_mul(2) > self.fetches).then(|| {
-            format!(
-                "WARNING: {} of {} network fetches failed: {} fell back, {} read as unknown. Each value keeps the date of its data",
-                self.failures.len(),
-                self.fetches,
-                self.fallback_count(),
-                self.lost().count()
-            )
-        })
-    }
-
     /// The `fallbacks:` block of the text report.
     ///
     /// One `slug: source (from DATE)` line per fallback, then the count. A block
-    /// of fetches that left their signal unknown follows when any did, then the
-    /// warning when more than half the fetches failed.
+    /// of fetches that left their signal unknown follows when any did.
     pub fn text(&self) -> String {
         let mut lines = Vec::new();
         if self.fallback_count() == 0 {
@@ -84,7 +99,6 @@ impl FetchSummary {
             lines.push("failed with no usable earlier value:".to_owned());
             lines.extend(self.lost().map(|f| format!("  {}: {}", f.slug, f.source)));
         }
-        lines.extend(self.warning());
         lines.join("\n")
     }
 
@@ -106,9 +120,6 @@ impl FetchSummary {
             ]);
             lines.extend(self.lost().map(|f| format!("- `{}`: {}", f.slug, f.source)));
         }
-        if let Some(warning) = self.warning() {
-            lines.extend([String::new(), format!("**{warning}**")]);
-        }
         lines.push(String::new());
         lines.join("\n")
     }
@@ -123,6 +134,7 @@ mod tests {
             slug: Slug::new(slug).expect("slug"),
             source,
             from: from.map(|on| Date::new(2026, 11, on).expect("date")),
+            error: "down".to_owned(),
         }
     }
 
@@ -175,17 +187,56 @@ mod tests {
         );
     }
 
+    /// `lost` fetches of `fetches` lost, and `recovered` more that fell back.
+    fn share(fetches: usize, lost: usize, recovered: usize) -> FetchSummary {
+        let lost = (0..lost).map(|_| failure("a", Source::RepoFacts, None));
+        let recovered = (0..recovered).map(|_| failure("b", Source::RepoFacts, Some(1)));
+        FetchSummary {
+            fetches,
+            failures: lost.chain(recovered).collect(),
+        }
+    }
+
     #[test]
-    fn more_than_half_failed_warns_and_exactly_half_does_not() {
-        assert!(!mixed(6).text().contains("WARNING"));
-        let text = mixed(5).text();
-        assert!(
-            text.ends_with(
-                "WARNING: 3 of 5 network fetches failed: 2 fell back, 1 read as unknown. Each value keeps the date of its data"
-            ),
-            "{text}"
-        );
-        assert!(mixed(5).markdown().contains("**WARNING: 3 of 5"));
+    fn exactly_at_the_limit_passes_and_over_it_fails() {
+        assert!(!share(20, 1, 0).exceeds_lost_limit(0.05));
+        assert!(share(20, 2, 0).exceeds_lost_limit(0.05));
+        assert!(!share(100, 7, 0).exceeds_lost_limit(0.07));
+        assert!(!share(3, 3, 0).exceeds_lost_limit(1.0));
+    }
+
+    #[test]
+    fn a_recovered_fetch_does_not_count() {
+        assert!(!share(20, 0, 20).exceeds_lost_limit(0.05));
+        assert!(!share(20, 1, 19).exceeds_lost_limit(0.05));
+    }
+
+    #[test]
+    fn a_lost_readme_does_not_count() {
+        let summary = FetchSummary {
+            fetches: 2,
+            failures: vec![failure("a", Source::Readme, None)],
+        };
+        assert_eq!(summary.lost_count(), 0);
+        assert!(!summary.exceeds_lost_limit(0.05));
+        assert_eq!(summary.lost_lines(), "");
+        assert!(summary.text().contains("a: "), "{}", summary.text());
+    }
+
+    #[test]
+    fn a_run_with_no_fetch_passes() {
+        assert!(!FetchSummary::default().exceeds_lost_limit(0.05));
+    }
+
+    #[test]
+    fn the_lost_lines_name_the_entry_the_source_and_the_error() {
+        assert_eq!(mixed(9).lost_lines(), "  gamma: Homebrew: down");
+    }
+
+    #[test]
+    fn many_failed_fetches_add_no_warning() {
+        assert!(!mixed(3).text().contains("WARNING"));
+        assert!(!mixed(3).markdown().contains("WARNING"));
     }
 
     #[test]

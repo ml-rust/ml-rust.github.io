@@ -29,7 +29,7 @@ pub struct Thresholds {
     pub rot: RotThresholds,
     /// Adoption that keeps a dormant entry `stable`.
     pub finished: FinishedThresholds,
-    /// How long a value stands in for a failed fetch.
+    /// How long a value stands in for a failed fetch, and how many fetches can lose their value.
     pub fallback: FallbackThresholds,
     /// What counts as movement. No tier rule reads these values.
     pub movement: MovementThresholds,
@@ -149,13 +149,16 @@ pub struct FinishedThresholds {
     pub min_binary_downloads_per_release: u64,
 }
 
-/// How long a value stands in for a failed fetch.
+/// How long a value stands in for a failed fetch, and how many fetches can lose their value.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FallbackThresholds {
     /// Most days between a value's fetch and the check that reuses it. An older
     /// value reads as unknown.
     pub max_age_days: u32,
+    /// Largest share of a run's fetches that can fail with no usable earlier value. Above it the
+    /// run fails and writes nothing. A fetch that recovered from a snapshot does not count.
+    pub max_failed_share: f64,
 }
 
 /// What counts as movement in active dependents. No tier rule reads these values.
@@ -219,6 +222,12 @@ impl Thresholds {
         }
         if self.fallback.max_age_days == 0 {
             out.push("fallback.max_age_days = 0 must be at least 1".to_owned());
+        }
+        let failed = self.fallback.max_failed_share;
+        if !(failed > 0.0 && failed <= 1.0) {
+            out.push(format!(
+                "fallback.max_failed_share = {failed} must be a share above 0 and at most 1"
+            ));
         }
         if self.movement.window_days == 0 {
             out.push("movement.window_days = 0 must be at least 1".to_owned());
@@ -299,9 +308,10 @@ mod tests {
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 7);
+        assert_eq!(t.version, 8);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
+        assert_eq!(t.fallback.max_failed_share, 0.05);
         assert_eq!(t.movement.window_days, 30);
         assert!(t.repo_route.min_stars > 0);
     }
@@ -371,6 +381,21 @@ mod tests {
         );
         assert!(toml::from_str::<Thresholds>(&text).is_err());
         let absent = THRESHOLDS.replace("[fallback]\nmax_age_days = 14\n", "");
+        assert!(toml::from_str::<Thresholds>(&absent).is_err());
+    }
+
+    #[test]
+    fn the_failed_share_must_be_above_zero_and_at_most_one() {
+        let line = "max_failed_share = 0.05";
+        for bad in ["0.0", "-0.1", "1.5", "nan"] {
+            let found = problems_with(line, &format!("max_failed_share = {bad}"));
+            assert!(
+                has(&found, "fallback.max_failed_share = "),
+                "{bad}: {found:?}"
+            );
+        }
+        assert!(problems_with(line, "max_failed_share = 1.0").is_empty());
+        let absent = THRESHOLDS.replace("max_failed_share = 0.05\n", "");
         assert!(toml::from_str::<Thresholds>(&absent).is_err());
     }
 

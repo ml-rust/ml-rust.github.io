@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use catalogue_core::Diagnostics;
 use catalogue_signals::distribution::DistributionError;
+use catalogue_signals::fallback::FetchSummary;
 use catalogue_signals::github::GithubError;
 use catalogue_signals::history::HistoryError;
 use catalogue_signals::http::HttpError;
@@ -84,14 +85,27 @@ pub enum TiersError {
         /// One line per problem, naming the entry and the signal.
         problems: Vec<String>,
     },
+    /// Too many fetches failed with no usable earlier value.
+    #[error(
+        "{} of {} network fetches failed with no usable earlier value, above the limit of {limit} in fallback.max_failed_share. The run wrote no snapshot and no report:\n{}\nFix these fetch errors, then rerun",
+        .summary.lost_count(),
+        .summary.fetches,
+        .summary.lost_lines()
+    )]
+    TooManyFailed {
+        /// The limit from `data/thresholds.toml`.
+        limit: f64,
+        /// The fetches of the run.
+        summary: FetchSummary,
+    },
 }
 
 impl TiersError {
     /// The process exit code.
     ///
     /// 1 for data, a missing data file, a missing token, a rejected token and a
-    /// corrupt build check file. 2 for IO, network and report write errors. The
-    /// dump and archive codes for their errors.
+    /// corrupt build check file. 2 for IO, network and report write errors, and for
+    /// too many failed fetches. The dump and archive codes for their errors.
     pub fn exit_code(&self) -> u8 {
         match self {
             Self::Invalid(_)
@@ -112,7 +126,8 @@ impl TiersError {
             | Self::History(_)
             | Self::BuildChecks(_)
             | Self::Distribution(_)
-            | Self::Report { .. } => IO,
+            | Self::Report { .. }
+            | Self::TooManyFailed { .. } => IO,
         }
     }
 }

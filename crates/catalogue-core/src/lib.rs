@@ -49,7 +49,7 @@ pub use registry::{
     DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, MovementThresholds,
     NO_GPU_FEATURE_ID, NOT_MEASURED_ID, NewThresholds, RepoRouteThresholds, RequirementCheck,
-    RotThresholds, SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
+    RotThresholds, Showcase, SynonymGroup, Synonyms, Thresholds, Topic, TopicSummary, Topics,
 };
 pub use report::{
     ACTIVE_DEPENDENTS_LABEL, ACTIVE_USERS_SIGNAL, BINARY_PER_RELEASE_SIGNAL, COMMITS_SIGNAL,

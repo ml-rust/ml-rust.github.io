@@ -31,6 +31,7 @@ fn no_tiers_writes_every_page_and_the_search_files() {
         "changes/index.html",
         "search/index.html",
         "featured/index.html",
+        "ml-rust/index.html",
         "changes/feed.xml",
         "data/catalogue.json",
         "data/README.txt",

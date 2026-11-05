@@ -9,6 +9,7 @@ use super::query::{
 use super::types::CrateRelease;
 use crate::github::{
     ApiError, GRAPHQL_ENDPOINT, GithubError, NOT_FOUND, RepoRef, is_missing_repository, parse_json,
+    post_graphql,
 };
 use crate::http::{Paced, Pacer, Transport};
 
@@ -52,8 +53,9 @@ pub enum CommitStanding {
 /// A repo with more than 5000 branches or tags is scanned up to that count.
 /// A commit past it stands as [`CommitStanding::NotHeld`].
 ///
-/// `token` is sent as a bearer token. A 403 or 429 answer with a wait hint is
-/// retried after the `pacer` waits.
+/// `token` is sent as a bearer token. A rate limit is retried after the `pacer`
+/// waits: a 403 or 429 answer with a wait hint, or a 200 answer with a
+/// `RATE_LIMITED` error.
 ///
 /// # Errors
 ///
@@ -115,9 +117,7 @@ impl Lookup<'_, '_> {
     /// Sends one query and returns its `repository` object.
     fn ask<T: DeserializeOwned>(&mut self, body: &[u8]) -> Result<Option<T>, GithubError> {
         let (transport, headers) = (self.transport, &self.headers);
-        let bytes = self.paced.fetch(GRAPHQL_ENDPOINT, || {
-            transport.post(GRAPHQL_ENDPOINT, headers, body)
-        })?;
+        let bytes = post_graphql(&mut self.paced, transport, headers, body)?;
         let answer: Answer<T> = parse_json(GRAPHQL_ENDPOINT, &bytes)?;
         interpret(answer, self.repo)
     }
@@ -427,6 +427,14 @@ mod tests {
         assert!(text.contains("tracel-ai/burn"), "{text}");
         assert!(text.contains("Something went wrong"), "{text}");
         assert!(!text.contains("t0k"), "{text}");
+    }
+
+    #[test]
+    fn a_rate_limited_answer_is_retried_on_the_same_lookup() {
+        let limited = r#"{"errors":[{"type":"RATE_LIMITED","message":"slow down"}]}"#;
+        let script = Script::new(&[limited, COMMIT, &named("BEHIND", None)]);
+        assert_eq!(lookup(&script).expect("looks up"), held("refs/heads/main"));
+        assert_eq!(script.queries().len(), 3);
     }
 
     #[test]

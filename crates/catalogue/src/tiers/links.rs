@@ -8,9 +8,9 @@ use catalogue_core::{Catalogue, Date, Entry, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{Failed, attempt, link_failure};
-use catalogue_signals::github::{GITHUB_INTERVAL, RepoRef};
+use catalogue_signals::github::RepoRef;
 use catalogue_signals::history::Dated;
-use catalogue_signals::http::{IntervalPacer, Pacer, Transport};
+use catalogue_signals::http::{Pacer, SpacingOnly, Transport};
 use catalogue_signals::link::{
     CrateRelease, ForgeRepo, LinkCheck, LinkError, LinkOutcome, RepoReadme, cached_forge_link,
     cached_link, check_forge_link, check_link, forge_readme, github_readme,
@@ -37,7 +37,8 @@ impl TargetRepo {
             .or_else(|| ForgeRepo::parse(entry.repo.as_str()).map(Self::Forge))
     }
 
-    /// Fetches the README. Only a GitHub repo gets `token`.
+    /// Fetches the README. Only a GitHub repo gets `token`. Only a GitHub answer reaches the
+    /// budget that `pacer` tracks.
     pub(super) fn readme(
         &self,
         transport: &dyn Transport,
@@ -46,7 +47,7 @@ impl TargetRepo {
     ) -> Result<Option<RepoReadme>, LinkError> {
         match self {
             Self::Github(repo) => github_readme(transport, token, repo, pacer),
-            Self::Forge(repo) => forge_readme(transport, repo, pacer),
+            Self::Forge(repo) => forge_readme(transport, repo, &mut SpacingOnly(pacer)),
         }
     }
 
@@ -62,7 +63,8 @@ impl TargetRepo {
         }
     }
 
-    /// Runs the link check of `release`. Only a GitHub repo gets `token`.
+    /// Runs the link check of `release`. Only a GitHub repo gets `token`. Only a GitHub answer
+    /// reaches the budget that `pacer` tracks.
     fn check(
         &self,
         transport: &dyn Transport,
@@ -76,9 +78,14 @@ impl TargetRepo {
             Self::Github(repo) => {
                 check_link(transport, token, repo, release, cache_dir, today, pacer)
             }
-            Self::Forge(repo) => {
-                check_forge_link(transport, repo, release, cache_dir, today, pacer)
-            }
+            Self::Forge(repo) => check_forge_link(
+                transport,
+                repo,
+                release,
+                cache_dir,
+                today,
+                &mut SpacingOnly(pacer),
+            ),
         }
     }
 }
@@ -92,15 +99,15 @@ impl fmt::Display for TargetRepo {
     }
 }
 
-/// A library with a readable repo and the release to check.
+/// An entry with crates, a readable repo and the release to check.
 type Target = (Slug, TargetRepo, CrateRelease);
 
 /// The repo link results, keyed by slug.
 #[derive(Debug, Default)]
 pub(super) struct Links {
-    /// The result of each library that has one, with its check date.
+    /// The result of each entry that has one, with its check date.
     pub(super) checks: BTreeMap<Slug, Dated<LinkCheck>>,
-    /// Why a library has no result, when the answer is final.
+    /// Why an entry has no result, when the answer is final.
     pub(super) notes: BTreeMap<Slug, String>,
     /// The checks that failed and fall back to the previous snapshot.
     pub(super) failures: BTreeMap<Slug, LinkFailure>,
@@ -149,6 +156,7 @@ pub(super) fn fetch_links(
     token: &str,
     cache_dir: &Path,
     today: Date,
+    pacer: &mut dyn Pacer,
 ) -> Result<Links, LinkError> {
     let index = CrateIndex::new(snapshot);
     let mut links = Links::default();
@@ -170,9 +178,8 @@ pub(super) fn fetch_links(
             targets.push((slug.clone(), repo, release));
         }
     }
-    let mut pacer = IntervalPacer::new(GITHUB_INTERVAL);
     check_targets(
-        &targets, transport, token, cache_dir, today, &mut pacer, &mut links,
+        &targets, transport, token, cache_dir, today, pacer, &mut links,
     )?;
     Ok(links)
 }

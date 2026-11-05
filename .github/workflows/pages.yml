@@ -17,6 +17,11 @@
 # a cache also passes its ETag check without its bytes being read, so a forged
 # dump would forge the tiers.
 #
+# `catalogue tiers` scores with the `SIGNALS_TOKEN` secret: a fine-grained personal
+# access token with public repositories read-only and no other permission. An
+# installation token expires after 1 hour, and a run lasts longer. `github.token`
+# reads this repo's Actions runs and pushes the snapshot.
+#
 # Logic lives in scripts/ci/pages_signals.sh and scripts/ci/install_wasm_bindgen.sh.
 
 name: Pages
@@ -53,7 +58,7 @@ jobs:
     name: Record signals
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     permissions:
       contents: write
       actions: read
@@ -73,7 +78,8 @@ jobs:
       - name: Score the catalogue
         run: bash scripts/ci/pages_signals.sh tiers signal-history "${RUNNER_TEMP}/tiers.json"
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.SIGNALS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Upload the tier report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

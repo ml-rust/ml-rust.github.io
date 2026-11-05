@@ -240,8 +240,13 @@ main:focus {
   height: 26px;
 }
 
-.logo .logo-accent {
+.logo .logo-accent,
+.page-icon-logo .logo-accent {
   fill: var(--coral);
+}
+
+.page-icon-logo {
+  color: var(--ink);
 }
 
 .site-name-main {
@@ -717,6 +722,44 @@ section > h2 {
 .tile-item .sources,
 .tile-item .tile-summary {
   margin: var(--space-1) 0 0;
+}
+
+/* The ML Rust projects: the name is the link, and its hit area covers the tile. */
+.tiles-showcase {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tile-showcase {
+  position: relative;
+  padding: var(--space-3);
+}
+
+.tile-showcase .tile-name {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.tile-showcase .tile-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-m);
+}
+
+.tile-showcase:hover .tile-name {
+  text-decoration: underline;
+}
+
+.showcase-text {
+  display: -webkit-box;
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 /* The top of a list page. */
@@ -3254,7 +3297,8 @@ td.not-measured {
     padding-top: var(--space-5);
   }
 
-  .tiles-jobs {
+  .tiles-jobs,
+  .tiles-showcase {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -3519,6 +3563,10 @@ td.not-measured {
 
   .tiles-categories {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tiles-showcase {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .start-list {

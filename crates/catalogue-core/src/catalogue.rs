@@ -23,6 +23,7 @@ pub struct Catalogue {
     pub(crate) thresholds: Option<Thresholds>,
     pub(crate) deprecated: Option<Deprecated>,
     pub(crate) backends: Backends,
+    pub(crate) showcase: Vec<Slug>,
 }
 
 impl Catalogue {
@@ -61,6 +62,11 @@ impl Catalogue {
     /// The backend table. Empty when `backends.toml` is absent.
     pub fn backends(&self) -> &Backends {
         &self.backends
+    }
+
+    /// The slugs of the home page showcase, in file order. Empty when `showcase.toml` is absent.
+    pub fn showcase(&self) -> &[Slug] {
+        &self.showcase
     }
 
     /// The slugs of the entries that name `slug` in `part_of`, sorted by slug.

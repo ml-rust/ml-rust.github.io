@@ -15,6 +15,7 @@ mod listing;
 mod movement;
 mod order;
 mod paths;
+mod showcase_card;
 mod tier_help;
 mod topic_card;
 
@@ -44,5 +45,6 @@ pub(crate) use paths::{
     EvidenceLink, NamedLink, category_file, category_href, category_link, compare_href, entry_link,
     project_file, project_href, topic_file, topic_href, topic_link,
 };
+pub(crate) use showcase_card::{ShowcaseSection, showcase_section};
 pub(crate) use tier_help::{FEATURED_MEANING, TierLine, tier_lines};
 pub(crate) use topic_card::{TopicCard, topic_cards};

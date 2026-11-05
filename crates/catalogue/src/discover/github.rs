@@ -8,7 +8,7 @@ use catalogue_core::normalize_repo_url;
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fetch;
 use catalogue_signals::github::{
-    FoundRepo, GITHUB_INTERVAL, GithubError, GithubFound, GithubRules, Repo, search_repos,
+    FoundRepo, GithubError, GithubFound, GithubRules, Repo, SEARCH_INTERVAL, search_repos,
 };
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 
@@ -87,7 +87,7 @@ pub(crate) fn search(
         &transport,
         token,
         &rules,
-        &mut IntervalPacer::new(GITHUB_INTERVAL),
+        &mut IntervalPacer::new(SEARCH_INTERVAL),
     )?;
     Ok(Searched {
         found,

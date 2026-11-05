@@ -48,6 +48,7 @@ min_binary_downloads_per_release = 200
 
 [fallback]
 max_age_days = 14
+max_failed_share = 0.05
 
 [movement]
 window_days = 30

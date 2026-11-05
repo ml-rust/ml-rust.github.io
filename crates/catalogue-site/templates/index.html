@@ -26,6 +26,17 @@
 <h2 id="categories">Or pick the kind of project</h2>
 {% include "category_grid.html" %}
 </section>
+{%- if let Some(section) = showcase %}
+
+<section aria-labelledby="ml-rust-projects">
+<div class="section-head">
+<h2 id="ml-rust-projects">Maintained by the ML Rust organization</h2>
+<p class="order-note">We run this catalogue and maintain these projects. We pick this list by hand. Their tiers follow the same <a href="/rules/">published rules</a>.</p>
+</div>
+{% include "showcase_grid.html" %}
+<p class="more-link"><a href="/ml-rust/">All {{ section.total }} from ML Rust<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
+</section>
+{%- endif %}
 {%- if checked.is_some() %}
 
 <section aria-labelledby="featured">

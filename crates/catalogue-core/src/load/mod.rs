@@ -12,6 +12,7 @@ mod maintainers;
 mod mappings;
 mod parse;
 mod run;
+mod showcase;
 mod sources;
 mod synonyms;
 mod thresholds;

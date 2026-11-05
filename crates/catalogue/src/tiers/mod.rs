@@ -6,13 +6,17 @@ mod collect;
 mod command;
 mod docker;
 mod error;
+mod inputs;
 mod links;
 mod render;
 mod report;
+mod run;
 mod step_summary;
 
 pub use collect::Network;
-pub use command::{TiersArgs, TiersRun, run_tiers, tiers_report};
+pub use command::{TiersArgs, run_tiers};
 pub use error::TiersError;
+pub use inputs::TiersRun;
+pub use run::tiers_report;
 
 pub(crate) use collect::github_repo;

@@ -1,12 +1,13 @@
-//! `/`: the search, the jobs, the categories, the top Featured projects and one line on changes.
+//! `/`: the search, the jobs, the categories, the ML Rust projects, the top Featured projects and
+//! one line on changes.
 
 use askama::Template;
 
 use super::layout::Layout;
 use super::shared::{
-    CategoryCard, ChangeRow, EntryGroup, ExampleSearch, FirstCheckLine, TopicCard, category_cards,
-    change_rows, checked_dates, date_text, example_searches, featured_order_text, featured_rows,
-    featured_slugs, first_check_line, project_count, topic_cards,
+    CategoryCard, ChangeRow, EntryGroup, ExampleSearch, FirstCheckLine, ShowcaseSection, TopicCard,
+    category_cards, change_rows, checked_dates, date_text, example_searches, featured_order_text,
+    featured_rows, featured_slugs, first_check_line, project_count, showcase_section, topic_cards,
 };
 use crate::inputs::SiteInputs;
 
@@ -31,6 +32,8 @@ pub(crate) struct HomePage<'a> {
     pub topics: Vec<TopicCard<'a>>,
     /// One tile per category, in file order.
     pub categories: Vec<CategoryCard<'a>>,
+    /// The hand-picked ML Rust projects. `None` when `showcase.toml` lists none.
+    pub showcase: Option<ShowcaseSection<'a>>,
     /// The first Featured project families. Empty without a report.
     pub groups: Vec<EntryGroup<'a>>,
     /// How many entries are Featured.
@@ -81,6 +84,7 @@ impl<'a> HomePage<'a> {
             examples: example_searches(),
             topics: topic_cards(catalogue, report),
             categories: category_cards(catalogue),
+            showcase: showcase_section(catalogue),
             groups,
             featured_total,
             order: featured_order_text(),

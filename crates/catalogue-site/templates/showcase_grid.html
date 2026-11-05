@@ -1,0 +1,14 @@
+<ul class="tiles tiles-showcase">
+{%- for card in section.cards %}
+<li class="tile-item">
+<div class="tile tile-showcase">
+{%- let icon_id = card.id.as_str() %}
+<span class="tile-icon" aria-hidden="true">{% include "icon_showcase.html" %}</span>
+<div class="tile-body">
+<a class="tile-name" href="{{ card.href }}">{{ card.name }}</a>
+<p class="showcase-text">{{ card.description }}</p>
+</div>
+</div>
+</li>
+{%- endfor %}
+</ul>

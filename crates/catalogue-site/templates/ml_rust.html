@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}ML Rust projects{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+{% block content %}
+<p class="back-link"><a href="/"><span class="icon" aria-hidden="true">{% include "icons/ui-arrow-left.svg" %}</span>Home</a></p>
+<div class="page-title">
+<span class="page-icon page-icon-logo" aria-hidden="true">{% include "icons/logo-mark.svg" %}</span>
+<h1>ML Rust projects</h1>
+</div>
+<p class="lede">The ML Rust organization runs this catalogue and maintains these projects. Their tiers follow the same <a href="/rules/">published rules</a>, and Featured also needs approval from a maintainer outside the organization.</p>
+{% include "list_head.html" %}
+{%- let name = "ML Rust projects" %}
+{%- let empty = "The organization has no project in the catalogue yet." %}
+{% include "list_section.html" %}
+{% endblock %}

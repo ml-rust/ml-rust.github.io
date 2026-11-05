@@ -10,9 +10,9 @@ use crate::machine::{
     sitemap_file,
 };
 use crate::pages::{
-    CategoryPage, ChangesPage, ComparePage, FeaturedPage, HomePage, Layout, NavItem, NotFoundPage,
-    ProjectPage, RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage, category_file,
-    project_file, topic_file,
+    CategoryPage, ChangesPage, ComparePage, FeaturedPage, HomePage, Layout, MlRustPage, NavItem,
+    NotFoundPage, ProjectPage, RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage,
+    category_file, project_file, topic_file,
 };
 use crate::refusal;
 use crate::search::{search_files, search_records};
@@ -64,6 +64,11 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
         page
     };
+    let ml_rust_page = {
+        let mut page = MlRustPage::new(layout(Some(NavItem::Explore)), inputs);
+        page.layout = list_layout(Some(NavItem::Explore), page.uses_list_script());
+        page
+    };
     let mut files = vec![
         catalogue_file(inputs)?,
         data_readme_file(),
@@ -80,6 +85,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             &HomePage::new(layout(Some(NavItem::Explore)), inputs),
         )?,
         render("featured/index.html".to_owned(), &featured_page)?,
+        render("ml-rust/index.html".to_owned(), &ml_rust_page)?,
         render(
             "topics/index.html".to_owned(),
             &TopicsPage::new(layout(Some(NavItem::Explore)), catalogue, report),

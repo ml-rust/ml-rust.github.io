@@ -3,21 +3,18 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Catalogue, Date, Deprecated, Thresholds, TierReport};
-use catalogue_signals::dump::DumpSnapshot;
+use catalogue_core::{Catalogue, Date, Deprecated, Thresholds};
 use catalogue_signals::fallback::FetchSummary;
 use catalogue_signals::fetch;
-use catalogue_signals::history::{History, Snapshot, read_all, write};
-use catalogue_signals::http::ReqwestTransport;
-use catalogue_signals::rustsec::Advisories;
+use catalogue_signals::github::GITHUB_INTERVAL;
+use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use catalogue_signals::sandbox::BuildChecks;
 use clap::Args;
 
-use super::assess::assess_entries;
-use super::collect::{Network, fetch_all};
+use super::collect::Network;
 use super::error::TiersError;
-use super::render::render_tiers;
-use super::report::{tier_report, write_report};
+use super::inputs::{Inputs, Outputs, TiersRun};
+use super::run::run_with;
 use super::step_summary::{STEP_SUMMARY_VAR, append_step_summary};
 use crate::cache_dir::resolve_cache_dir;
 use crate::clock::today_utc;
@@ -61,17 +58,6 @@ pub struct TiersArgs {
     pub json: Option<PathBuf>,
 }
 
-/// The outcome of one `catalogue tiers` check.
-#[derive(Debug, Clone, PartialEq)]
-pub struct TiersRun {
-    /// The text report.
-    pub text: String,
-    /// The tier report, with the source and data date of each signal.
-    pub report: TierReport,
-    /// The network fetches of the run and the ones that failed. Empty offline.
-    pub summary: FetchSummary,
-}
-
 /// Runs `catalogue tiers` and returns the process exit code.
 pub fn run_tiers(args: TiersArgs) -> ExitCode {
     let today = Date::from(today_utc());
@@ -89,6 +75,9 @@ pub fn run_tiers(args: TiersArgs) -> ExitCode {
         }
         Err(error) => {
             eprintln!("error: {error}");
+            if let TiersError::TooManyFailed { summary, .. } = &error {
+                write_step_summary(summary);
+            }
             ExitCode::from(error.exit_code())
         }
     }
@@ -139,16 +128,20 @@ fn tiers(
         Some(path) => read_build_checks(path)?,
         None => BuildChecks::default(),
     };
-    let run = match token {
-        None => tiers_report(
-            &catalogue,
-            &snapshot,
-            &advisories,
-            &build_checks,
-            Network::Offline,
-            args.history.as_deref(),
-            today,
-        )?,
+    let inputs = Inputs {
+        catalogue: &catalogue,
+        snapshot: &snapshot,
+        advisories: &advisories,
+        build_checks: &build_checks,
+        today,
+    };
+    let outputs = Outputs {
+        history_dir: args.history.as_deref(),
+        json: args.json.as_deref(),
+    };
+    let mut github = IntervalPacer::new(GITHUB_INTERVAL);
+    match token {
+        None => run_with(&inputs, Network::Offline, &outputs, &mut github),
         Some(token) => {
             let transport = ReqwestTransport::new()?;
             let network = Network::Online {
@@ -156,93 +149,9 @@ fn tiers(
                 token: &token,
                 cache_dir: &cache_dir,
             };
-            tiers_report(
-                &catalogue,
-                &snapshot,
-                &advisories,
-                &build_checks,
-                network,
-                args.history.as_deref(),
-                today,
-            )?
+            run_with(&inputs, network, &outputs, &mut github)
         }
-    };
-    if let Some(path) = &args.json {
-        write_report(path, &run.report)?;
     }
-    Ok(run)
-}
-
-/// The `catalogue tiers` report for a checked catalogue on `today`.
-///
-/// Fetches the network signals through `network`, assembles each entry's
-/// signals, applies the tier rules and renders one block per entry, in slug order.
-/// The same pass builds the [`TierReport`], with the source and data date of each signal.
-/// `build_checks` holds the sandbox results that rot signal R6 reads.
-///
-/// With `history_dir`, the run reads the snapshots in that directory before it
-/// applies the rules, then writes the snapshot of `today` to it. Without it,
-/// the run reads and writes no history.
-///
-/// A network fetch that fails falls back to the previous snapshot, and an online
-/// run ends its text with the `fallbacks:` block. The exit stays successful when
-/// most fetches fail: the block warns, and every value keeps the date of its data.
-///
-/// # Errors
-///
-/// Returns [`TiersError::MissingFile`] when the catalogue lacks
-/// `thresholds.toml` or `deprecated.toml`, the fatal request error that ends an
-/// online run, such as a rejected token, and [`TiersError::History`] when the
-/// history directory cannot be read or written.
-pub fn tiers_report(
-    catalogue: &Catalogue,
-    snapshot: &DumpSnapshot,
-    advisories: &Advisories,
-    build_checks: &BuildChecks,
-    network: Network<'_>,
-    history_dir: Option<&Path>,
-    today: Date,
-) -> Result<TiersRun, TiersError> {
-    let (thresholds, _) = required(catalogue)?;
-    let history = match history_dir {
-        Some(dir) => read_all(dir)?,
-        None => History::default(),
-    };
-    let online = matches!(network, Network::Online { .. });
-    let fetched = fetch_all(
-        catalogue,
-        snapshot,
-        network,
-        &history,
-        thresholds.fallback.max_age_days,
-        today,
-    )?;
-    let assessments = assess_entries(
-        catalogue,
-        snapshot,
-        advisories,
-        build_checks,
-        &fetched.entries,
-        &history,
-        today,
-    )?;
-    if let Some(dir) = history_dir {
-        let rows = assessments
-            .iter()
-            .map(|assessment| (assessment.slug.to_string(), assessment.row.clone()))
-            .collect();
-        write(dir, &Snapshot { date: today, rows })?;
-    }
-    let mut text = render_tiers(&assessments);
-    if online {
-        text.push_str("\n\n");
-        text.push_str(&fetched.summary.text());
-    }
-    Ok(TiersRun {
-        text,
-        report: tier_report(&assessments, thresholds, today),
-        summary: fetched.summary,
-    })
 }
 
 /// The thresholds and the deprecated list, which the tier rules need.

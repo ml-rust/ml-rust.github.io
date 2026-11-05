@@ -9,6 +9,7 @@ use super::repo_ref::RepoRef;
 use super::response::{ApiError, Envelope};
 use super::types::RepoFacts;
 use crate::github::error::GithubError;
+use crate::github::graphql::post_graphql;
 use crate::github::json::parse_json;
 use crate::http::{Paced, Pacer, Transport};
 
@@ -21,7 +22,8 @@ const REPOSITORY_PATH: &str = "repository";
 /// Reads the facts of `repo` as of `today` with one GraphQL request.
 ///
 /// `token` is sent as a bearer token. `pacer` holds the request back until the
-/// API allows it. A 403 or 429 answer with a wait hint is retried.
+/// API allows it. A rate limit is retried: a 403 or 429 answer with a wait hint,
+/// or a 200 answer with a `RATE_LIMITED` error.
 ///
 /// # Errors
 ///
@@ -43,7 +45,7 @@ pub fn repo_facts(
 
 /// Posts the query `body` and parses the answer.
 ///
-/// `token` is sent as a bearer token. A 403 or 429 answer with a wait hint is retried.
+/// `token` is sent as a bearer token. [`post_graphql`] retries a rate limit.
 pub(super) fn post_query<R: DeserializeOwned>(
     transport: &dyn Transport,
     token: &str,
@@ -55,7 +57,7 @@ pub(super) fn post_query<R: DeserializeOwned>(
         ("Content-Type", "application/json".to_owned()),
     ];
     let mut paced = Paced::new(pacer);
-    let bytes = paced.fetch(ENDPOINT, || transport.post(ENDPOINT, &headers, body))?;
+    let bytes = post_graphql(&mut paced, transport, &headers, body)?;
     parse_json(ENDPOINT, &bytes)
 }
 

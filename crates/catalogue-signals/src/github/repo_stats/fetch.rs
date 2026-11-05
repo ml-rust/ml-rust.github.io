@@ -1,7 +1,7 @@
 //! The batched stats requests.
 
 use super::query::{Answer, RepoStats, request_body};
-use crate::github::{GRAPHQL_ENDPOINT, GithubError, RepoRef, parse_json};
+use crate::github::{GRAPHQL_ENDPOINT, GithubError, RepoRef, parse_json, post_graphql};
 use crate::http::{Paced, Pacer, Transport};
 
 /// The most repos in one request.
@@ -37,8 +37,9 @@ impl StatsFetch {
 /// Reads the stats of `repos`, [`BATCH_SIZE`] repos per GraphQL request.
 ///
 /// `token` is sent as a bearer token. `pacer` holds each request back until the API allows it. A
-/// 403 or 429 answer with a wait hint is retried. A request that fails for any other reason
-/// lands in [`StatsFetch::failed`] and the next batch still runs.
+/// rate limit is retried: a 403 or 429 answer with a wait hint, or a 200 answer with a
+/// `RATE_LIMITED` error. A request that fails for any other reason, or stays limited, lands in
+/// [`StatsFetch::failed`] and the next batch still runs.
 pub fn fetch_repo_stats(
     transport: &dyn Transport,
     token: &str,
@@ -78,9 +79,7 @@ fn fetch_batch(
     batch: &[RepoRef],
 ) -> Result<Vec<Option<RepoStats>>, GithubError> {
     let body = request_body(batch);
-    let bytes = paced.fetch(GRAPHQL_ENDPOINT, || {
-        transport.post(GRAPHQL_ENDPOINT, headers, &body)
-    })?;
+    let bytes = post_graphql(paced, transport, headers, &body)?;
     let answer: Answer = parse_json(GRAPHQL_ENDPOINT, &bytes)?;
     answer
         .into_parsed(batch.len())
@@ -303,6 +302,28 @@ mod tests {
         let text = fetched.failed[0].error.to_string();
         assert!(text.contains("2 repos from o/r0 to o/r1"), "{text}");
         assert!(text.contains("Bad credentials"), "{text}");
+    }
+
+    #[test]
+    fn a_rate_limited_answer_is_retried_and_the_batch_succeeds() {
+        let limited = r#"{"errors":[{"type":"RATE_LIMITED","message":"slow down"}]}"#;
+        let script = Script::new(vec![Reply::Body(limited.to_owned()), resolving(0, 2)]);
+        let fetched = fetch_repo_stats(&script, "t", &repos(2), &mut NoWait);
+        assert_eq!(fetched.found.len(), 2);
+        assert!(fetched.failed.is_empty());
+        assert_eq!(script.posted.borrow().len(), 2);
+    }
+
+    #[test]
+    fn a_limit_that_stays_fails_the_batch_with_the_rate_limit_error() {
+        let limited = r#"{"errors":[{"type":"RATE_LIMITED","message":"slow down"}]}"#;
+        let replies = (0..4).map(|_| Reply::Body(limited.to_owned())).collect();
+        let script = Script::new(replies);
+        let fetched = fetch_repo_stats(&script, "t", &repos(2), &mut NoWait);
+        assert_eq!(fetched.unfetched(), 2);
+        let text = fetched.failed[0].error.to_string();
+        assert!(text.contains("rate limit"), "{text}");
+        assert!(!text.contains("Check the token"), "{text}");
     }
 
     #[test]

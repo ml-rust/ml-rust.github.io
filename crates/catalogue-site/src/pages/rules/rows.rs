@@ -152,13 +152,20 @@ pub(super) fn finished_rows(t: &Thresholds) -> Vec<ThresholdRow> {
     ]
 }
 
-/// The age limit of a value that stands in for a failed fetch.
+/// The age limit of a value that stands in for a failed fetch, and the limit on lost values.
 pub(super) fn fallback_rows(t: &Thresholds) -> Vec<ThresholdRow> {
-    vec![row(
-        "fallback.max_age_days",
-        t.fallback.max_age_days,
-        "Most days a value stands in for a failed fetch.",
-    )]
+    vec![
+        row(
+            "fallback.max_age_days",
+            t.fallback.max_age_days,
+            "Most days a value stands in for a failed fetch.",
+        ),
+        row(
+            "fallback.max_failed_share",
+            t.fallback.max_failed_share,
+            "Largest share of a run's fetches that can fail with no usable earlier value. Above it the run stops and publishes nothing.",
+        ),
+    ]
 }
 
 /// What counts as movement.

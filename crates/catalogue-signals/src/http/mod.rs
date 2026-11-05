@@ -7,6 +7,7 @@
 //! [`Paced`] sends through a pacer and retries rate-limit answers.
 //! [`next_link`] and [`last_link`] read a page from a `Link` header.
 
+mod answer;
 mod client;
 mod encode;
 mod error;
@@ -16,11 +17,14 @@ mod pace;
 mod paced;
 mod transport;
 
+pub use answer::{Answer, PacedError};
 pub use client::ReqwestTransport;
 pub use encode::percent_encode;
 pub use error::HttpError;
 pub use headers::Headers;
 pub use link::{last_link, next_link};
-pub use pace::{IntervalPacer, Pacer};
-pub use paced::{Answer, MAX_BODY, Paced, PacedError};
+#[cfg(test)]
+pub(crate) use pace::FakeClock;
+pub use pace::{Clock, IntervalPacer, Pacer, SpacingOnly, SystemClock};
+pub use paced::{MAX_BODY, Paced};
 pub use transport::{Response, Transport};
