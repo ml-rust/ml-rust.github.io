@@ -52,6 +52,11 @@ impl Element {
         }
     }
 
+    /// Whether the element stands as a block, so it never sits inside a paragraph.
+    pub(super) fn is_block(self) -> bool {
+        !matches!(self, Self::Code | Self::Em | Self::Strong | Self::Del)
+    }
+
     /// Whether an element with no content stays, because a table needs its shape.
     fn stays_empty(self) -> bool {
         matches!(
@@ -86,12 +91,28 @@ pub(super) enum Node {
         src: SafeHref,
         alt: String,
         title: String,
+        /// The `width` attribute: a positive integer of at most 4 digits.
+        width: Option<u16>,
+        /// The `height` attribute: a positive integer of at most 4 digits.
+        height: Option<u16>,
     },
 }
 
 impl Node {
+    /// Whether the node is a block or holds one, so it never sits inside a paragraph.
+    pub(super) fn holds_block(&self) -> bool {
+        match self {
+            Self::Rule => true,
+            Self::Element { element, children } => {
+                element.is_block() || children.iter().any(Self::holds_block)
+            }
+            Self::Link { children, .. } => children.iter().any(Self::holds_block),
+            Self::Text(_) | Self::Break | Self::Image { .. } => false,
+        }
+    }
+
     /// Whether the node shows anything: text beyond whitespace, an image or a rule.
-    fn holds_content(&self) -> bool {
+    pub(super) fn holds_content(&self) -> bool {
         match self {
             Self::Text(text) => !text.trim().is_empty(),
             Self::Break => false,
@@ -146,7 +167,11 @@ pub(super) fn prune(nodes: Vec<Node>) -> Vec<Node> {
                     return None;
                 }
                 if element == Element::P {
+                    if only_separators(&children) {
+                        return None;
+                    }
                     trim_start(&mut children);
+                    trim_end(&mut children);
                 }
                 Some(Node::Element { element, children })
             }
@@ -178,8 +203,31 @@ fn trim_start(children: &mut Vec<Node>) {
         .count();
     children.drain(..blank);
     if let Some(Node::Text(text)) = children.first_mut() {
-        *text = text.trim_start().to_owned();
+        text.drain(..text.len() - text.trim_start().len());
     }
+}
+
+/// Removes the blank text and the breaks at the end of a paragraph.
+fn trim_end(children: &mut Vec<Node>) {
+    while children
+        .last()
+        .is_some_and(|node| !node.holds_content() && matches!(node, Node::Text(_) | Node::Break))
+    {
+        children.pop();
+    }
+    if let Some(Node::Text(text)) = children.last_mut() {
+        text.truncate(text.trim_end().len());
+    }
+}
+
+/// Whether `children` are only breaks and text with no letter or digit: the separators that stood
+/// between removed badges.
+fn only_separators(children: &[Node]) -> bool {
+    children.iter().all(|node| match node {
+        Node::Text(text) => !text.chars().any(char::is_alphanumeric),
+        Node::Break => true,
+        _ => false,
+    })
 }
 
 #[cfg(test)]
@@ -248,6 +296,8 @@ mod tests {
             src: SafeHref::new("https://example.org/a.png"),
             alt: String::new(),
             title: String::new(),
+            width: None,
+            height: None,
         };
         let nodes = vec![Node::Rule, element(Element::P, vec![image])];
         assert_eq!(prune(nodes.clone()), nodes);
@@ -263,6 +313,8 @@ mod tests {
                     src: SafeHref::new("https://example.org/a.png"),
                     alt: "hidden".to_owned(),
                     title: String::new(),
+                    width: None,
+                    height: None,
                 },
                 link(vec![text("b")]),
             ],

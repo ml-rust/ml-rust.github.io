@@ -51,8 +51,12 @@ jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_r
 aws-lc-rs = { version = "1", default-features = false, features = ["aws-lc-sys"] }
 # HTML templates for the static site. Escapes every value by default.
 askama = { version = "0.16", default-features = false, features = ["derive", "std"] }
-# Reads README Markdown as events. The site writes its own tags from them.
-pulldown-cmark = { version = "0.13", default-features = false }
+# Writes README Markdown as HTML for the parser below. The site writes its own tags from the result.
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+# Parses that HTML the way a browser does, so README raw HTML reads as a document.
+scraper = { version = "0.29", default-features = false }
+# Names the edges of the walk over the document `scraper` parses. The version `scraper` uses.
+ego-tree = "0.11"
 # The lexical search index of the static site: records to BM25 index files.
 # Not on crates.io yet: `.cargo/config.toml.example` patches it to a local checkout.
 oxidoc-search = { version = "0.1", default-features = false, features = ["builder"] }

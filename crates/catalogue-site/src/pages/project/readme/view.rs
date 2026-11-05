@@ -5,7 +5,7 @@ use catalogue_core::ReadmeFact;
 use super::html::{ReadmeHtml, render};
 use super::parse::parse;
 use super::resolve::ReadmeBase;
-use super::tree::Node;
+use super::tree::{Node, prune};
 use crate::href::SafeHref;
 use crate::pages::shared::date_text;
 
@@ -37,6 +37,7 @@ impl ReadmeView {
     pub(crate) fn of(readme: &ReadmeFact, name: &str) -> Option<Self> {
         let base = ReadmeBase::of(&readme.source, &readme.path, &readme.branch)?;
         let mut blocks = parse(&readme.text, &base);
+        drop_leading_badges(&mut blocks);
         drop_title(&mut blocks, name);
         if blocks.is_empty() {
             return None;
@@ -54,17 +55,55 @@ impl ReadmeView {
     }
 }
 
-/// Removes the first heading when it only repeats the project name.
+/// Removes the linked images from the blocks above the first text. A linked image up there is a
+/// badge: a build status, a sponsor or a chat invite. It says nothing about the project.
+fn drop_leading_badges(blocks: &mut Vec<Node>) {
+    let lead = blocks
+        .iter()
+        .position(|block| !block.text().trim().is_empty())
+        .unwrap_or(blocks.len());
+    let rest = blocks.split_off(lead);
+    let kept = std::mem::take(blocks);
+    *blocks = prune(kept.into_iter().map(without_links).collect());
+    blocks.extend(rest);
+}
+
+/// `node` without its links. A block above the first text has links that hold only images.
+fn without_links(node: Node) -> Node {
+    match node {
+        Node::Element { element, children } => Node::Element {
+            element,
+            children: children
+                .into_iter()
+                .filter(|child| !matches!(child, Node::Link { .. }))
+                .map(without_links)
+                .collect(),
+        },
+        other => other,
+    }
+}
+
+/// Removes the first heading when it only repeats the project name, with or without a language
+/// suffix on the name, as in `whatlang-rs`.
 fn drop_title(blocks: &mut Vec<Node>, name: &str) {
     let Some(at) = blocks.iter().position(Node::is_heading) else {
         return;
     };
-    let wanted = letters_and_digits(name);
-    if !wanted.is_empty()
-        && blocks
-            .get(at)
-            .is_some_and(|heading| letters_and_digits(&heading.text()) == wanted)
-    {
+    let Some(heading) = blocks
+        .get(at)
+        .map(|heading| letters_and_digits(&heading.text()))
+    else {
+        return;
+    };
+    let bare = name
+        .strip_suffix("-rs")
+        .or_else(|| name.strip_suffix("-rust"))
+        .unwrap_or(name);
+    let repeats = |wanted: &str| {
+        let wanted = letters_and_digits(wanted);
+        !wanted.is_empty() && heading == wanted
+    };
+    if repeats(name) || repeats(bare) {
         blocks.remove(at);
     }
 }
@@ -148,6 +187,61 @@ mod tests {
     }
 
     #[test]
+    fn a_raw_first_heading_that_repeats_the_name_goes() {
+        let found = ReadmeView::of(
+            &fact("<h1 align=\"center\">Whatlang</h1>\n\nBody.", false),
+            "whatlang",
+        )
+        .expect("view");
+        assert_eq!(found.head.to_string(), "<p>Body.</p>");
+    }
+
+    #[test]
+    fn a_raw_element_left_open_keeps_the_readme_in_the_view() {
+        let found = view("<div align=\"left\">\n\nBody text.\n\n# Next\n\nMore.").expect("view");
+        assert_eq!(
+            found.head.to_string(),
+            "<p>Body text.</p><h3>Next</h3><p>More.</p>"
+        );
+        let found = view(
+            "<p align=\"center\">\n<br>\n<img src=\"logo.png\"/>\n<br>\n<p>\n\n# Title\n\nBody.",
+        )
+        .expect("view");
+        let head = found.head.to_string();
+        assert!(head.ends_with("<h3>Title</h3><p>Body.</p>"), "{head}");
+    }
+
+    #[test]
+    fn a_raw_paragraph_holds_the_description() {
+        let found = view("<p align=\"center\"><b>Linear algebra library</b> <i>for Rust.</i></p>")
+            .expect("view");
+        assert_eq!(
+            found.head.to_string(),
+            "<p><strong>Linear algebra library</strong> <em>for Rust.</em></p>"
+        );
+    }
+
+    #[test]
+    fn a_title_without_the_language_suffix_of_the_name_goes() {
+        let found = ReadmeView::of(&fact("<h1>Whatlang</h1>\n\nBody.", false), "whatlang-rs");
+        assert_eq!(found.expect("view").head.to_string(), "<p>Body.</p>");
+    }
+
+    #[test]
+    fn linked_images_above_the_first_text_go_and_later_ones_stay() {
+        let badge = "[![ci](assets/ci.svg)](https://ci.example.org)";
+        let found = view(&format!(
+            "![logo](assets/logo.svg) {badge}\n\nBody.\n\n{badge}"
+        ))
+        .expect("view")
+        .head
+        .to_string();
+        assert!(found.contains("logo.svg"), "{found}");
+        assert_eq!(found.matches("ci.svg").count(), 1, "{found}");
+        assert!(found.find("Body.") < found.find("ci.svg"), "{found}");
+    }
+
+    #[test]
     fn another_first_heading_stays_and_only_the_first_heading_counts() {
         let found = view("# Install\n\n# My Project\n\nBody.").expect("view");
         assert_eq!(
@@ -159,7 +253,14 @@ mod tests {
     #[test]
     fn a_readme_with_nothing_left_has_no_view() {
         assert_eq!(view("# My Project"), None);
-        assert_eq!(view("<div align=\"center\"><img src=\"x\"></div>"), None);
+        assert_eq!(
+            view("<div align=\"center\"><img src=\"https://img.shields.io/x.svg\"></div>"),
+            None
+        );
+        assert_eq!(
+            view("<p align=\"center\">\n<br>\n<br>\n</p>\n\n<script>x</script>"),
+            None
+        );
         assert_eq!(
             view("[![a](https://x.example/a.svg)](https://x.example)"),
             None

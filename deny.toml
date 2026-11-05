@@ -43,6 +43,14 @@ allow = [
 ]
 confidence-threshold = 0.93
 unused-allowed-license = "allow"
+# The HTML parser behind the README renderer needs these, unmodified. MPL-2.0 covers changes to
+# their own files only, so it is allowed per crate and nowhere else.
+exceptions = [
+    { allow = ["MPL-2.0"], crate = "cssparser" },
+    { allow = ["MPL-2.0"], crate = "cssparser-macros" },
+    { allow = ["MPL-2.0"], crate = "dtoa-short" },
+    { allow = ["MPL-2.0"], crate = "selectors" },
+]
 
 # ────────────────────────────────────────────────────────────────────────
 [bans]

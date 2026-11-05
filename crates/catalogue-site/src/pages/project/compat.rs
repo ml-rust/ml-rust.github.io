@@ -1,11 +1,11 @@
 //! The compatibility block: what the project needs and runs on.
 
 use catalogue_core::{
-    CONTRIBUTORS_SIGNAL, DEPENDENTS_SIGNAL, Entry, EntryKind, EntryReport, LICENSE_SIGNAL,
-    NOT_APPLICABLE, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL, RUNS_ON_SIGNAL,
+    Entry, EntryReport, LICENSE_SIGNAL, NOT_MEASURED, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL,
+    RUNS_ON_SIGNAL,
 };
 
-use crate::pages::shared::{fact_text, native_code_fact, whole_text};
+use crate::pages::shared::{fact_text, native_code_fact};
 
 /// The separator between the backends of a runs-on evidence value.
 const EVIDENCE_SEPARATOR: &str = "; ";
@@ -46,41 +46,14 @@ impl Compat {
             rows.push(native_code(record));
             rows.push(python(record));
         }
-        rows.push(fact_row("License", LICENSE_SIGNAL, record, false));
-        if !no_crate {
-            rows.push(dependents(entry.kind, record));
-        }
-        rows.push(fact_row("Contributors", CONTRIBUTORS_SIGNAL, record, true));
+        rows.push(fact_row("License", LICENSE_SIGNAL, record));
         Self { rows, no_crate }
     }
 }
 
-/// The dependents row. An app has no dependents to show, whatever crates it lists.
-fn dependents(kind: EntryKind, record: Option<&EntryReport>) -> CompatRow {
-    match kind {
-        EntryKind::Library => fact_row("Dependents", DEPENDENTS_SIGNAL, record, true),
-        EntryKind::App => CompatRow {
-            label: "Dependents",
-            value: NOT_APPLICABLE.to_owned(),
-            quiet: true,
-            lines_label: None,
-            lines: Vec::new(),
-        },
-    }
-}
-
-/// The row of the plain fact `name`. `whole` prints an amount as a whole number.
-fn fact_row(
-    label: &'static str,
-    name: &str,
-    record: Option<&EntryReport>,
-    whole: bool,
-) -> CompatRow {
-    let value = if whole {
-        whole_text(record, name)
-    } else {
-        fact_text(record, name)
-    };
+/// The row of the plain fact `name`.
+fn fact_row(label: &'static str, name: &str, record: Option<&EntryReport>) -> CompatRow {
+    let value = fact_text(record, name);
     CompatRow {
         label,
         quiet: value == NOT_MEASURED,
@@ -92,7 +65,7 @@ fn fact_row(
 
 /// The runs-on row, with what shows each backend.
 fn runs_on(record: Option<&EntryReport>) -> CompatRow {
-    let mut row = fact_row("Runs on", RUNS_ON_SIGNAL, record, false);
+    let mut row = fact_row("Runs on", RUNS_ON_SIGNAL, record);
     if let Some(evidence) = record.and_then(|record| record.value_of(RUNS_ON_EVIDENCE_SIGNAL)) {
         row.lines_label = Some("What shows it");
         row.lines = evidence
@@ -105,10 +78,11 @@ fn runs_on(record: Option<&EntryReport>) -> CompatRow {
 
 /// The Python row: the statement of the check, then one line per crate it names.
 fn python(record: Option<&EntryReport>) -> CompatRow {
-    let mut row = fact_row("Python bindings", PYTHON_SIGNAL, record, false);
-    if let Some((word, crates)) = row.value.clone().split_once(": ") {
-        row.value = word.to_owned();
+    let mut row = fact_row("Python bindings", PYTHON_SIGNAL, record);
+    if let Some((word, crates)) = row.value.split_once(": ") {
+        let word = word.to_owned();
         row.lines = crates.split(", ").map(str::to_owned).collect();
+        row.value = word;
     }
     row
 }
@@ -252,16 +226,23 @@ mod tests {
     }
 
     #[test]
-    fn an_app_with_crates_reads_its_crate_facts_and_has_no_dependents() {
+    fn an_app_with_crates_reads_its_crate_facts() {
         let mut app = entry(&["a"]);
         app.kind = EntryKind::App;
         let found = record(vec![fact(NATIVE_CODE_SIGNAL, "No native code found")]);
         let block = Compat::new(&app, Some(&found));
         assert!(!block.no_crate);
         assert_eq!(row(&block, "Native code").value, "None found");
-        let dependents = row(&block, "Dependents");
-        assert_eq!(dependents.value, NOT_APPLICABLE);
-        assert!(dependents.quiet);
+    }
+
+    #[test]
+    fn the_block_leaves_the_stat_row_facts_out() {
+        let block = Compat::new(&entry(&["a"]), None);
+        let labels: Vec<&str> = block.rows.iter().map(|row| row.label).collect();
+        assert_eq!(
+            labels,
+            ["Runs on", "Native code", "Python bindings", "License"]
+        );
     }
 
     #[test]
@@ -282,7 +263,7 @@ mod tests {
         let block = Compat::new(&entry(&[]), None);
         assert!(block.no_crate);
         let labels: Vec<&str> = block.rows.iter().map(|row| row.label).collect();
-        assert_eq!(labels, ["License", "Contributors"]);
+        assert_eq!(labels, ["License"]);
     }
 
     #[test]

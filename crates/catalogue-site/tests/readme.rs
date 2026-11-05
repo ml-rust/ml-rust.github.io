@@ -63,14 +63,13 @@ fn kept(markdown: &str) -> String {
 }
 
 #[test]
-fn raw_html_drops_with_its_content() {
+fn hostile_raw_html_leaves_no_tag_attribute_or_hidden_text() {
     for markdown in [
         "<script>alert(1)</script>",
         "<img src=x onerror=alert(1)>",
         "<iframe src=\"https://evil.example\"></iframe>",
-        "<a href=\"https://evil.example\">click</a>",
-        "<div align=\"center\">\n  <img src=\"logo.png\">\n  <h1>Banner</h1>\n</div>",
-        "<p align=\"center\">\n\n![logo](logo.png)\n\n# Banner\n\n</p>",
+        "<svg onload=\"alert(1)\"><text>evil</text></svg>",
+        "<a href=\"javascript:alert(1)\" onclick=\"alert(1)\" style=\"evil\">click</a>",
         "<!-- a comment -->",
         "inline <b onclick=\"alert(1)\">bold</b> html",
         "- item\n\n  <div onclick=\"x\">\n\n  <img src=x onerror=y>\n\n  </div>",
@@ -78,11 +77,36 @@ fn raw_html_drops_with_its_content() {
         let html = kept(markdown);
         assert!(html.contains("<p>Kept.</p>"), "{markdown}: {html}");
         for raw in [
-            "<script", "<iframe", "onerror", "onclick", "alert", "evil", "<div", "Banner", "logo",
-            "click", "comment", "bold",
+            "<script", "<iframe", "<svg", "onerror", "onclick", "onload", "style=", "alert",
+            "evil", "<div", "comment",
         ] {
             assert!(!html.contains(raw), "{markdown} leaves {raw}: {html}");
         }
+    }
+}
+
+#[test]
+fn the_content_of_raw_html_stays_under_the_allowed_tags() {
+    for (markdown, want) in [
+        (
+            "<a href=\"https://example.org\">click</a>",
+            "<a href=\"https://example.org/\" rel=\"nofollow noopener\">click</a>",
+        ),
+        (
+            "<div align=\"center\">\n  <h1>Banner</h1>\n</div>",
+            "<h3>Banner</h3>",
+        ),
+        (
+            "<p align=\"center\">\n\n![logo](logo.png)\n\n# Banner\n\n</p>",
+            "<h3>Banner</h3>",
+        ),
+        (
+            "inline <b onclick=\"x\">bold</b> html",
+            "<p>inline <strong>bold</strong> html</p>",
+        ),
+    ] {
+        let html = kept(markdown);
+        assert!(html.contains(want), "{markdown}: {html}");
     }
 }
 
@@ -253,7 +277,7 @@ fn a_page_with_no_readme_leaves_the_section_out() {
 #[test]
 fn a_readme_with_nothing_left_leaves_the_section_out() {
     let page = page_with(fact(
-        "<div align=\"center\"><img src=\"x\"></div>\n\n[![ci](https://ci.example/b.svg)](https://ci.example)",
+        "<div align=\"center\"><img src=\"https://ci.example/a.svg\"></div>\n\n[![ci](https://ci.example/b.svg)](https://ci.example)",
         "README.md",
         SOURCE,
         false,

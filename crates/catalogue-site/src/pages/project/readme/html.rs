@@ -66,11 +66,19 @@ fn write_node(node: &Node, out: &mut String) {
             write_nodes(children, out);
             out.push_str("</a>");
         }
-        Node::Image { src, alt, title } => {
+        Node::Image {
+            src,
+            alt,
+            title,
+            width,
+            height,
+        } => {
             out.push_str("<img");
             write_attribute("src", src.as_str(), out);
             write_attribute("alt", alt, out);
             write_title(title, out);
+            write_size("width", *width, out);
+            write_size("height", *height, out);
             out.push_str(" loading=\"lazy\">");
         }
     }
@@ -79,6 +87,13 @@ fn write_node(node: &Node, out: &mut String) {
 fn write_title(title: &str, out: &mut String) {
     if !title.is_empty() {
         write_attribute("title", title, out);
+    }
+}
+
+/// Writes a size attribute when the image has one.
+fn write_size(name: &str, size: Option<u16>, out: &mut String) {
+    if let Some(size) = size {
+        write_attribute(name, &size.to_string(), out);
     }
 }
 
@@ -139,6 +154,8 @@ mod tests {
                 src: SafeHref::new("https://example.org/a.png?x=1&y=2"),
                 alt: "a\" onerror=\"x".to_owned(),
                 title: "t'<".to_owned(),
+                width: None,
+                height: None,
             },
         ]);
         assert_eq!(
@@ -146,6 +163,22 @@ mod tests {
             "&lt;script&gt;&amp;&quot;&#39;\
              <img src=\"https://example.org/a.png?x=1&amp;y=2\" alt=\"a&quot; onerror=&quot;x\" \
              title=\"t&#39;&lt;\" loading=\"lazy\">"
+        );
+    }
+
+    #[test]
+    fn an_image_writes_its_sizes_after_its_title() {
+        let html = render(&[Node::Image {
+            src: SafeHref::new("https://example.org/a.png"),
+            alt: String::new(),
+            title: String::new(),
+            width: Some(200),
+            height: Some(40),
+        }]);
+        assert_eq!(
+            html.to_string(),
+            "<img src=\"https://example.org/a.png\" alt=\"\" width=\"200\" height=\"40\" \
+             loading=\"lazy\">"
         );
     }
 

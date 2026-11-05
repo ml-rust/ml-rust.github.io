@@ -50,7 +50,7 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
             "<h2 id=\"compatibility\">",
             "<dt>Runs on</dt>",
             "CUDA, Metal",
-            "<p class=\"compat-lines-label\">What shows it</p>",
+            "<summary>What shows it</summary>",
             "<li>CUDA: alpha-crate feature cuda (dependency cudarc)</li>",
             "<li>Metal: alpha-extra feature metal</li>",
             "<dt>Native code</dt>",
@@ -61,15 +61,13 @@ fn the_stat_strip_and_the_compatibility_block_state_the_facts_in_the_stated_orde
             "<li>alpha-extra needs Python</li>",
             "<dt>License</dt>",
             "Apache-2.0 OR MIT",
-            "<dt>Dependents</dt>",
-            ">12<",
-            "<dt>Contributors</dt>",
-            ">38<",
         ],
     );
     let page = &site[ALPHA];
     let compat = &page[page.find("id=\"compatibility\"").expect("the block")..];
     let compat = &compat[..compat.find("</section>").expect("its end")];
+    assert!(!compat.contains("<dt>Dependents</dt>"), "{compat}");
+    assert!(!compat.contains("<dt>Contributors</dt>"), "{compat}");
     assert!(!compat.contains("compat-source"), "{compat}");
     assert!(!compat.contains("fetched"), "{compat}");
 }
@@ -104,15 +102,11 @@ fn an_unknown_value_reads_not_measured_and_an_app_installs_from_its_channel() {
         format!("<dt>{label}</dt>\n<dd class=\"compat-value\"><span class=\"compat-word{value}")
     };
     assert!(page.contains(&row("License", "\">None stated")), "{page}");
-    assert!(
-        page.contains(&row("Contributors", " fact-quiet\">Not measured")),
-        "{page}"
-    );
     in_order(
         page,
         &[
             &row("Crate facts", " fact-quiet\">Not measured"),
-            "Runs on, Native code, Python bindings and Dependents read crates on crates.io. This entry lists no crate.",
+            "Runs on, Native code and Python bindings read crates on crates.io. This entry lists no crate.",
         ],
     );
     assert!(!page.contains("<dt>Runs on</dt>"), "{page}");

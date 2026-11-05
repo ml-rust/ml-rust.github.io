@@ -1,248 +1,34 @@
-//! Turns the Markdown events of a README into the tree of allowed elements.
+//! Turns the parsed document of a README into the tree of allowed elements.
 
-use pulldown_cmark::{CowStr, Event, HeadingLevel, Tag, TagEnd};
-
-use super::events::visible_events;
-use super::resolve::{ReadmeBase, resolve};
-use super::tree::{Element, Node, prune};
-use crate::href::SafeHref;
-
-/// The deepest nesting kept. Deeper tags drop and keep their content, so hostile nesting cannot
-/// overflow the stack of the code that walks the tree.
-const MAX_DEPTH: usize = 32;
-
-/// What an open tag becomes when it closes.
-#[derive(Debug)]
-enum Kind {
-    /// Its children join the parent: a tag the renderer does not write, or a refused link.
-    Plain,
-    /// An allowed element.
-    Element(Element),
-    /// A link.
-    Link { href: SafeHref, title: String },
-    /// An image. The children are its alt text. A refused source drops it whole.
-    Image {
-        src: Option<SafeHref>,
-        title: String,
-    },
-}
-
-/// One open tag.
-#[derive(Debug)]
-struct Frame {
-    kind: Kind,
-    /// Whether the tag sits past [`MAX_DEPTH`], so only its children stay.
-    flat: bool,
-    children: Vec<Node>,
-}
-
-/// The tree under construction.
-struct Builder<'a> {
-    base: &'a ReadmeBase,
-    stack: Vec<Frame>,
-    root: Vec<Node>,
-}
-
-impl Builder<'_> {
-    fn open(&mut self, kind: Kind) {
-        let flat = self.stack.len() >= MAX_DEPTH && !matches!(kind, Kind::Image { .. });
-        self.stack.push(Frame {
-            kind,
-            flat,
-            children: Vec::new(),
-        });
-    }
-
-    fn open_element(&mut self, element: Element) {
-        self.open(Kind::Element(element));
-    }
-
-    fn push(&mut self, node: Node) {
-        match self.stack.last_mut() {
-            Some(frame) => frame.children.push(node),
-            None => self.root.push(node),
-        }
-    }
-
-    fn close(&mut self) {
-        let Some(frame) = self.stack.pop() else {
-            return;
-        };
-        let Frame {
-            kind,
-            flat,
-            children,
-        } = frame;
-        let node = match kind {
-            Kind::Image { src, title } => {
-                let Some(src) = src else {
-                    return;
-                };
-                Node::Image {
-                    src,
-                    alt: text_of(&children),
-                    title,
-                }
-            }
-            Kind::Element(element) if !flat => Node::Element { element, children },
-            Kind::Link { href, title } if !flat => Node::Link {
-                href,
-                title,
-                children,
-            },
-            Kind::Plain | Kind::Element(_) | Kind::Link { .. } => {
-                for child in children {
-                    self.push(child);
-                }
-                return;
-            }
-        };
-        self.push(node);
-    }
-
-    fn top_is(&self, element: Element) -> bool {
-        matches!(
-            self.stack.last(),
-            Some(Frame { kind: Kind::Element(open), .. }) if *open == element
-        )
-    }
-
-    /// Whether a table head stands open, so a cell is `th`.
-    fn in_head(&self) -> bool {
-        self.stack
-            .iter()
-            .any(|frame| matches!(frame.kind, Kind::Element(Element::Thead)))
-    }
-
-    fn start(&mut self, tag: Tag<'_>) {
-        match tag {
-            Tag::Paragraph => self.open_element(Element::P),
-            Tag::Heading { level, .. } => self.open_element(heading(level)),
-            Tag::BlockQuote(_) => self.open_element(Element::Blockquote),
-            Tag::CodeBlock(_) => {
-                self.open_element(Element::Pre);
-                self.open_element(Element::Code);
-            }
-            Tag::List(Some(_)) => self.open_element(Element::Ol),
-            Tag::List(None) => self.open_element(Element::Ul),
-            Tag::Item => self.open_element(Element::Li),
-            Tag::Table(_) => self.open_element(Element::Table),
-            Tag::TableHead => {
-                self.open_element(Element::Thead);
-                self.open_element(Element::Tr);
-            }
-            Tag::TableRow => {
-                if !self.top_is(Element::Tbody) {
-                    self.open_element(Element::Tbody);
-                }
-                self.open_element(Element::Tr);
-            }
-            Tag::TableCell => {
-                let cell = if self.in_head() {
-                    Element::Th
-                } else {
-                    Element::Td
-                };
-                self.open_element(cell);
-            }
-            Tag::Emphasis => self.open_element(Element::Em),
-            Tag::Strong => self.open_element(Element::Strong),
-            Tag::Strikethrough => self.open_element(Element::Del),
-            Tag::Link {
-                dest_url, title, ..
-            } => match resolve(&dest_url, self.base) {
-                Some(found) => self.open(Kind::Link {
-                    href: found.link,
-                    title: title.into_string(),
-                }),
-                None => self.open(Kind::Plain),
-            },
-            Tag::Image {
-                dest_url, title, ..
-            } => self.open(Kind::Image {
-                src: resolve(&dest_url, self.base).and_then(|found| found.image),
-                title: title.into_string(),
-            }),
-            _ => self.open(Kind::Plain),
-        }
-    }
-
-    fn end(&mut self, end: TagEnd) {
-        match end {
-            TagEnd::CodeBlock | TagEnd::TableHead => {
-                self.close();
-                self.close();
-            }
-            TagEnd::Table => {
-                if self.top_is(Element::Tbody) {
-                    self.close();
-                }
-                self.close();
-            }
-            _ => self.close(),
-        }
-    }
-
-    fn text(&mut self, text: CowStr<'_>) {
-        self.push(Node::Text(text.into_string()));
-    }
-}
-
-/// The element of a heading: one level under the page's own About heading, and never deeper than
-/// `h5`.
-fn heading(level: HeadingLevel) -> Element {
-    match level {
-        HeadingLevel::H1 => Element::H3,
-        HeadingLevel::H2 => Element::H4,
-        _ => Element::H5,
-    }
-}
-
-/// The text of `nodes`, for an alt attribute.
-fn text_of(nodes: &[Node]) -> String {
-    let mut out = String::new();
-    for node in nodes {
-        node.push_text(&mut out);
-    }
-    out
-}
+use super::builder::Builder;
+use super::dom::{Step, is_dropped, read_dom, visible};
+use super::map::open;
+use super::resolve::ReadmeBase;
+use super::tree::Node;
 
 /// The top-level blocks of `markdown`, with every URL resolved against `base`.
 ///
-/// Raw HTML, refused URLs and the empty blocks they leave are gone. Nothing from the input reaches
-/// the tree except text and the URLs [`resolve`] passes.
+/// Dropped elements, refused URLs and the empty blocks they leave are gone. Nothing from the input
+/// reaches the tree except text, resolved URLs and validated image sizes.
 pub(super) fn parse(markdown: &str, base: &ReadmeBase) -> Vec<Node> {
-    let mut builder = Builder {
-        base,
-        stack: Vec::new(),
-        root: Vec::new(),
-    };
-    for event in visible_events(markdown) {
-        match event {
-            Event::Start(tag) => builder.start(tag),
-            Event::End(end) => builder.end(end),
-            Event::Text(text) => builder.text(text),
-            Event::Code(text) => {
-                builder.open_element(Element::Code);
-                builder.text(text);
-                builder.close();
-            }
-            Event::SoftBreak => builder.push(Node::Text("\n".to_owned())),
-            Event::HardBreak => builder.push(Node::Break),
-            Event::Rule => builder.push(Node::Rule),
-            _ => {}
+    let dom = read_dom(markdown);
+    let mut builder = Builder::default();
+    for step in visible(&dom, is_dropped) {
+        match step {
+            Step::Open(element) => open(&mut builder, element, base),
+            Step::Close => builder.close(),
+            Step::Text(text) => builder.text(text),
         }
     }
-    while !builder.stack.is_empty() {
-        builder.close();
-    }
-    prune(builder.root)
+    builder.finish()
 }
 
 #[cfg(test)]
 mod tests {
     use url::Url;
 
+    use super::super::builder::MAX_DEPTH;
+    use super::super::html::render;
     use super::*;
 
     fn base() -> ReadmeBase {
@@ -269,6 +55,22 @@ mod tests {
         out
     }
 
+    /// The HTML the renderer writes for `markdown`.
+    fn html(markdown: &str) -> String {
+        render(&parse(markdown, &base())).to_string()
+    }
+
+    fn depth(nodes: &[Node]) -> usize {
+        nodes
+            .iter()
+            .map(|node| match node {
+                Node::Element { children, .. } | Node::Link { children, .. } => 1 + depth(children),
+                _ => 1,
+            })
+            .max()
+            .unwrap_or(0)
+    }
+
     #[test]
     fn headings_shift_under_the_about_heading() {
         assert_eq!(
@@ -290,6 +92,10 @@ mod tests {
     #[test]
     fn a_code_block_is_code_in_pre_and_keeps_no_language() {
         assert_eq!(names("```rust\nfn a() {}\n```"), ["pre", "code"]);
+        assert_eq!(
+            html("```rust\nfn a() {}\n```"),
+            "<pre><code>fn a() {}\n</code></pre>"
+        );
     }
 
     #[test]
@@ -312,6 +118,19 @@ mod tests {
     }
 
     #[test]
+    fn the_whitespace_between_blocks_stays_out() {
+        assert_eq!(
+            html("- a\n  - b\n\n> c"),
+            "<ul><li>a<ul><li>b</li></ul></li></ul><blockquote><p>c</p></blockquote>"
+        );
+    }
+
+    #[test]
+    fn a_hard_break_is_one_break() {
+        assert_eq!(html("a  \nb"), "<p>a<br>b</p>");
+    }
+
+    #[test]
     fn a_refused_link_keeps_its_text_and_a_refused_image_drops_its_alt() {
         let nodes = parse("[kept](javascript:x) ![hidden](data:x) end", &base());
         let [block] = nodes.as_slice() else {
@@ -331,21 +150,185 @@ mod tests {
     }
 
     #[test]
-    fn hostile_nesting_stays_under_the_depth_limit() {
-        let markdown = format!("{}a", "> ".repeat(5_000));
-        let nodes = parse(&markdown, &base());
-        fn depth(nodes: &[Node]) -> usize {
-            nodes
-                .iter()
-                .map(|node| match node {
-                    Node::Element { children, .. } | Node::Link { children, .. } => {
-                        1 + depth(children)
-                    }
-                    _ => 1,
-                })
-                .max()
-                .unwrap_or(0)
+    fn a_raw_badge_in_a_link_leaves_nothing() {
+        assert_eq!(
+            parse(
+                "<a href=\"https://x.example\"><img src=\"https://img.shields.io/x.svg\"></a>",
+                &base()
+            ),
+            Vec::new()
+        );
+    }
+
+    #[test]
+    fn the_separators_between_removed_badges_go_with_them() {
+        let badge = "<a href=\"https://x.example\"><img src=\"https://img.shields.io/x.svg\"></a>";
+        assert_eq!(
+            parse(&format!("<p>{badge} | {badge}</p>"), &base()),
+            Vec::new()
+        );
+    }
+
+    #[test]
+    fn whole_link_navigation_keeps_its_links_and_separators() {
+        assert_eq!(
+            html(
+                "<p><a href=\"https://a.example\">Web</a> | <a href=\"https://b.example\">Docs</a></p>"
+            ),
+            "<p><a href=\"https://a.example/\" rel=\"nofollow noopener\">Web</a> | \
+             <a href=\"https://b.example/\" rel=\"nofollow noopener\">Docs</a></p>"
+        );
+    }
+
+    #[test]
+    fn an_element_left_open_keeps_every_block_after_it() {
+        assert_eq!(
+            html("<div align=\"left\">\n\nBody text.\n\n# Next\n\nMore."),
+            "<p>Body text.</p><h3>Next</h3><p>More.</p>"
+        );
+    }
+
+    #[test]
+    fn an_unclosed_paragraph_keeps_the_blocks_after_it_and_its_breaks_go() {
+        assert_eq!(
+            html(
+                "<p align=\"center\">\n<br>\n<img src=\"logo.png\"/>\n<br>\n<p>\n\n# Title\n\nBody."
+            ),
+            "<p><img src=\"https://raw.githubusercontent.com/o/r/main/logo.png\" alt=\"\" \
+             loading=\"lazy\"></p><h3>Title</h3><p>Body.</p>"
+        );
+    }
+
+    #[test]
+    fn a_paragraph_with_only_breaks_goes() {
+        assert_eq!(parse("<p>\n<br>\n<br>\n</p>", &base()), Vec::new());
+    }
+
+    #[test]
+    fn raw_marks_map_to_their_elements() {
+        assert_eq!(
+            html("<p align=\"center\"><b>Linear algebra library</b> <i>for Rust.</i></p>"),
+            "<p><strong>Linear algebra library</strong> <em>for Rust.</em></p>"
+        );
+        assert_eq!(
+            html("<p><s>a</s> <strike>b</strike> <tt>c</tt></p>"),
+            "<p><del>a</del> <del>b</del> <code>c</code></p>"
+        );
+    }
+
+    #[test]
+    fn a_raw_heading_shifts_like_a_markdown_one() {
+        assert_eq!(
+            html("<h1 align=\"center\">Whatlang</h1>"),
+            "<h3>Whatlang</h3>"
+        );
+        assert_eq!(html("<h2>a</h2>\n<h6>b</h6>"), "<h4>a</h4><h5>b</h5>");
+    }
+
+    #[test]
+    fn a_dropped_element_takes_its_text_with_it() {
+        for markdown in [
+            "<script>alert(1)</script>",
+            "<style>x</style>",
+            "<svg><text>x</text></svg>",
+            "<iframe src=x>y</iframe>",
+            "<!-- hidden -->",
+            "<template><p>x</p></template>",
+            "<noscript>x</noscript>",
+            "<form><p>x</p></form>",
+            "<video src=\"a.mp4\">x</video>",
+            "<title>x</title>",
+        ] {
+            assert_eq!(parse(markdown, &base()), Vec::new(), "{markdown}");
         }
-        assert!(depth(&nodes) <= MAX_DEPTH + 1, "{}", depth(&nodes));
+    }
+
+    #[test]
+    fn a_refused_href_keeps_the_text_and_no_attribute_outside_the_allowlist_survives() {
+        assert_eq!(
+            html("<a href=\"javascript:alert(1)\" onclick=\"x\">kept</a>"),
+            "<p>kept</p>"
+        );
+        assert_eq!(
+            html("<a id=\"i\" class=\"c\" style=\"s\" target=\"_top\" href=\"a.md\">t</a>"),
+            "<p><a href=\"https://github.com/o/r/blob/main/a.md\" rel=\"nofollow noopener\">t</a></p>"
+        );
+        assert_eq!(html("<a>kept</a>"), "<p>kept</p>");
+    }
+
+    #[test]
+    fn an_image_keeps_plain_integer_sizes_only() {
+        assert_eq!(
+            html("<img src=\"x\" onerror=\"y\" width=\"100%\" height=\"40\">"),
+            "<p><img src=\"https://raw.githubusercontent.com/o/r/main/x\" alt=\"\" height=\"40\" \
+             loading=\"lazy\"></p>"
+        );
+        for size in ["0", "-1", "+1", "12345", "1e3", "\" onload=\"x"] {
+            let found = html(&format!("<img src=\"x\" width='{size}'>"));
+            assert!(!found.contains("width"), "{size}: {found}");
+        }
+    }
+
+    #[test]
+    fn a_picture_keeps_its_image_and_its_source_gives_nothing() {
+        assert_eq!(
+            html(
+                "<picture><source srcset=\"a.png\"><img src=\"b.png\" alt=\"x\" title=\"y\"></picture>"
+            ),
+            "<p><img src=\"https://raw.githubusercontent.com/o/r/main/b.png\" alt=\"x\" title=\"y\" \
+             loading=\"lazy\"></p>"
+        );
+    }
+
+    #[test]
+    fn plain_blocks_keep_their_boundaries() {
+        assert_eq!(html("<div>one</div><div>two</div>"), "<p>one</p><p>two</p>");
+        assert_eq!(
+            html("<div>one<ul><li>two</li></ul>three</div>"),
+            "<p>one</p><ul><li>two</li></ul><p>three</p>"
+        );
+        assert_eq!(html("<div>\n   \n</div>"), "");
+    }
+
+    #[test]
+    fn a_plain_block_in_an_inline_element_never_lands_in_a_paragraph() {
+        assert_eq!(
+            html("<div><b><div>one</div></b></div>"),
+            "<strong><p>one</p></strong>"
+        );
+    }
+
+    #[test]
+    fn a_pre_keeps_its_whitespace_exactly() {
+        assert_eq!(
+            html("<pre>\n  a\n   b\n\n</pre>"),
+            "<pre>  a\n   b\n\n</pre>"
+        );
+    }
+
+    #[test]
+    fn hostile_nesting_stays_under_the_depth_limit() {
+        for markdown in [
+            format!("{}a", "> ".repeat(5_000)),
+            format!("{}a", "<div>".repeat(5_000)),
+            format!("{}a", "<b>".repeat(5_000)),
+        ] {
+            let nodes = parse(&markdown, &base());
+            assert!(depth(&nodes) <= MAX_DEPTH + 1, "{}", depth(&nodes));
+            assert_eq!(nodes.iter().map(Node::text).collect::<String>().trim(), "a");
+        }
+    }
+
+    #[test]
+    fn relative_raw_urls_resolve_to_the_forge() {
+        assert_eq!(
+            html("<img src=\"assets/x.png\">"),
+            "<p><img src=\"https://raw.githubusercontent.com/o/r/main/assets/x.png\" alt=\"\" \
+             loading=\"lazy\"></p>"
+        );
+        assert_eq!(
+            html("<a href=\"docs/a.md\">t</a>"),
+            "<p><a href=\"https://github.com/o/r/blob/main/docs/a.md\" rel=\"nofollow noopener\">t</a></p>"
+        );
     }
 }

@@ -1719,6 +1719,11 @@ h1 + .lede {
   height: auto;
 }
 
+.readme-panel > .readme > :first-child img {
+  max-height: 6rem;
+  width: auto;
+}
+
 .readme hr {
   margin: var(--space-4) 0;
   border: 0;
@@ -1985,12 +1990,17 @@ h1 + .lede {
   margin-top: var(--space-1);
 }
 
-.compat-lines-label {
-  margin: var(--space-1) 0 0;
+.compat-more {
+  margin-top: var(--space-1);
+}
+
+.compat-more summary {
+  width: fit-content;
   color: var(--secondary);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.25rem;
+  cursor: pointer;
 }
 
 .project-compare {
