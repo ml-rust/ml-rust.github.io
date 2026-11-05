@@ -23,9 +23,7 @@
 # The workspace has no features, so no job uses a feature matrix.
 #
 # Every job that builds runs with `--locked`, so a build that needs to change
-# Cargo.lock is an error. Until `oxidoc-search` is on crates.io the committed
-# lock cannot resolve it, so these jobs fail. The first passing run follows the
-# oxidoc release.
+# Cargo.lock is an error.
 
 name: Test
 
@@ -245,3 +243,5 @@ jobs:
         uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           advanced-security: false
+          # A new zizmor audit must not fail CI on an unrelated change.
+          version: 1.32.0

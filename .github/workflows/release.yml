@@ -48,7 +48,7 @@ jobs:
   # Always runs. Cheap, and it guarantees the dispatched tag still means what
   # the prepare run assumed it meant.
   validate-version:
-    uses: ./.github/workflows/release-validate.yml
+    uses: $/.github/workflows/release-validate.yml
     with:
       ref: ${{ inputs.tag }}
 
@@ -205,11 +205,12 @@ jobs:
       # re-running this stage is safe. With the build stage off, no files match
       # and the existing assets stay.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
-        with:
-          tag_name: ${{ inputs.tag }}
-          name: catalogue ${{ needs.validate-version.outputs.version }}
-          body_path: ${{ runner.temp }}/release-notes.md
-          files: ${{ runner.temp }}/dist/*
-          draft: false
-          prerelease: ${{ needs.validate-version.outputs.is_full_release != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          TITLE: catalogue ${{ needs.validate-version.outputs.version }}
+          PRERELEASE: ${{ needs.validate-version.outputs.is_full_release != 'true' }}
+        run: |
+          bash scripts/ci/publish_release.sh \
+            "$TAG" "$TITLE" "$PRERELEASE" \
+            "${RUNNER_TEMP}/release-notes.md" "${RUNNER_TEMP}/dist"
