@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
+use super::below_floor::BelowFloor;
 use crate::ids::{CrateName, normalize_repo_url};
 
 /// The longest keyword crates.io stores.
@@ -40,6 +41,9 @@ pub struct Discovery {
     /// Normalised repositories that never get a draft, such as `github.com/owner/name`.
     #[serde(default)]
     pub excluded_repos: Vec<String>,
+    /// The limits of `catalogue discover below-floor`. `None` when the table is absent.
+    #[serde(default)]
+    pub below_floor: Option<BelowFloor>,
 }
 
 impl Discovery {
@@ -126,6 +130,9 @@ impl Discovery {
                     named.as_str()
                 ));
             }
+        }
+        if let Some(below_floor) = &self.below_floor {
+            out.extend(below_floor.problems());
         }
         out
     }
@@ -382,6 +389,20 @@ mod tests {
         assert!(found(
             "excluded_repos = [\"github.com/o/r\", \"github.com/o/r\"]",
             "excluded repo `github.com/o/r` is listed twice"
+        ));
+    }
+
+    #[test]
+    fn the_below_floor_table_is_optional_and_checked() {
+        assert_eq!(parse("keywords = [\"llm\"]").below_floor, None);
+        let file =
+            parse("keywords = [\"llm\"]\n[below_floor]\nmin_stars = 100\nactive_days = 730\n");
+        assert!(file.problems().is_empty());
+        let table = file.below_floor.expect("present");
+        assert_eq!((table.min_stars, table.active_days), (100, 730));
+        assert!(found(
+            "keywords = [\"llm\"]\n[below_floor]\nmin_stars = 0\nactive_days = 730\n",
+            "below_floor.min_stars"
         ));
     }
 

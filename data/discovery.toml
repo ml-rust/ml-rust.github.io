@@ -118,3 +118,9 @@ excluded_repos = [
     "github.com/weggli-rs/weggli",
     "tulpa.dev/cadey/maj",
 ]
+
+# The limits of `catalogue discover below-floor`, a review list for a person. No tier reads them.
+# `min_stars` is the fewest stars a repo has. `active_days` is the most days since its last push.
+[below_floor]
+min_stars = 100
+active_days = 730

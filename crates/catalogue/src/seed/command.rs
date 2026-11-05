@@ -27,10 +27,10 @@ use crate::token::token_from_env;
 const WINDOW_DAYS: u16 = 1;
 
 /// Fewest active dependents a crate has to draft when `--min-users` is unset.
-const DEFAULT_MIN_USERS: f64 = 2.0;
+pub(crate) const DEFAULT_MIN_USERS: f64 = 2.0;
 
 /// The committed lead list, under the data directory.
-const LEAD_FILE: &str = "leads.txt";
+pub(crate) const LEAD_FILE: &str = "leads.txt";
 
 /// The arguments of `catalogue seed`.
 ///
@@ -65,7 +65,7 @@ pub struct SeedArgs {
     pub no_leads: bool,
 }
 
-fn parse_min_users(text: &str) -> Result<f64, String> {
+pub(crate) fn parse_min_users(text: &str) -> Result<f64, String> {
     match text.parse::<f64>() {
         Ok(value) if value.is_finite() && value >= 0.0 => Ok(value),
         _ => Err(format!("`{text}` is not a number of 0 or more")),

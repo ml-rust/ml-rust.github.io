@@ -22,6 +22,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 - `catalogue dump fetch` and `dump stats`: download and read the crates.io database dump.
 - `catalogue dump usage`: adoption signals of named crates.
 - `catalogue discover crates` and `discover github`: candidate crates and app repos for review.
+- `catalogue discover below-floor`: Rust repos of crates with few active users, for review. Add a reviewed repo through `data/leads.txt`.
 - `catalogue github facts`: repo state, human commits and maintainer response.
 - `catalogue github link`: checks that a crate was published from a commit on a branch or tag of its repo. A commit that only a fork holds does not verify.
 - `catalogue rustsec fetch` and `rustsec show`: RustSec advisories per crate.

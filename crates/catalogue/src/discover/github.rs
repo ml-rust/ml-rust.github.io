@@ -12,7 +12,8 @@ use catalogue_signals::github::{
 };
 use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 
-use super::command::{DiscoverError, load_catalogue, report_error};
+use super::command::{load_catalogue, report_error};
+use super::error::DiscoverError;
 use crate::cache_dir::resolve_cache_dir;
 use crate::dump::{DumpCommandError, read_cached};
 use crate::token::{NoToken, token_from_env};

@@ -57,6 +57,36 @@ mod tests {
     }
 
     #[test]
+    fn a_bad_below_floor_limit_names_the_file() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "discovery.toml",
+            "keywords = [\"llm\"]\n[below_floor]\nmin_stars = 0\nactive_days = 730\n",
+        );
+        expect_error(
+            src,
+            "discovery.toml: below_floor.min_stars must be at least 1",
+        );
+    }
+
+    #[test]
+    fn the_below_floor_limits_load_and_are_exposed() {
+        let mut src = valid();
+        put(
+            &mut src,
+            "discovery.toml",
+            "keywords = [\"llm\"]\n[below_floor]\nmin_stars = 100\nactive_days = 730\n",
+        );
+        let catalogue = Catalogue::load(src).expect("valid data");
+        let limits = catalogue
+            .discovery()
+            .and_then(|rules| rules.below_floor)
+            .expect("present");
+        assert_eq!((limits.min_stars, limits.active_days), (100, 730));
+    }
+
+    #[test]
     fn empty_file_is_reported() {
         let mut src = valid();
         put(&mut src, "discovery.toml", "");

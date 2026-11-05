@@ -45,7 +45,7 @@ pub use load::{DataPlace, DataSources, Diagnostic, Diagnostics, SourceFile};
 pub use movement::{FirstSeen, MeasuredMovement, Movement, MovementKind, UsersChange};
 pub use project_pages::{crate_page, docker_page, homebrew_page, page_url, repology_page};
 pub use registry::{
-    AppFeaturedThresholds, Backend, Backends, Categories, Category, Deprecated,
+    AppFeaturedThresholds, Backend, Backends, BelowFloor, Categories, Category, Deprecated,
     DeprecatedRequirement, Discovery, DormancyThresholds, FallbackThresholds, FinishedThresholds,
     IntervalThresholds, LibraryFeaturedThresholds, Maintainer, Maintainers, MovementThresholds,
     NO_GPU_FEATURE_ID, NOT_MEASURED_ID, NewThresholds, RepoRouteThresholds, RequirementCheck,

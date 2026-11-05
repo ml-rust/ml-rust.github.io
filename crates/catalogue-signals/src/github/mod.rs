@@ -20,6 +20,7 @@ mod json;
 mod pacer;
 mod query;
 mod repo;
+mod repo_stats;
 mod search;
 
 pub use crate::http::Pacer;
@@ -34,4 +35,5 @@ pub use headers::rest_headers;
 pub(crate) use json::parse_json;
 pub use pacer::GITHUB_INTERVAL;
 pub use repo::{FoundRepo, GithubFound, GithubRules, Repo};
+pub use repo_stats::{BATCH_SIZE, FailedBatch, RepoStats, StatsFetch, fetch_repo_stats};
 pub use search::{search_repos, search_repos_on};
