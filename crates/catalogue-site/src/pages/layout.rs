@@ -3,7 +3,7 @@
 use crate::href::SafeHref;
 
 /// The site name in the header and in every page title.
-pub const SITE_NAME: &str = "Rust ML catalogue";
+pub const SITE_NAME: &str = "ML Rust catalogue";
 
 /// The address of the site, with no trailing slash, for files read away from the site.
 pub const SITE_URL: &str = "https://ml-rust.github.io";

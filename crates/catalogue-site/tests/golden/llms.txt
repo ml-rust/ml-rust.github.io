@@ -1,4 +1,4 @@
-# Rust ML catalogue
+# ML Rust catalogue
 
 Rust projects for machine learning: libraries on crates.io, and apps.
 Tiers come from published rules over raw signals. Each published claim links its source.

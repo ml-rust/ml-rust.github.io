@@ -1,6 +1,6 @@
 # ml-rust.github.io
 
-A catalogue of Rust ML libraries on crates.io and Rust ML apps outside it. Each entry gets a tier from published rules over measured signals. The site is at https://ml-rust.github.io.
+A catalogue of machine learning in Rust: libraries on crates.io and apps outside it. Each entry gets a tier from published rules over measured signals. The site is at https://ml-rust.github.io.
 
 ## What makes it different
 

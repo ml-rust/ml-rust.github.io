@@ -219,7 +219,7 @@ mod tests {
             "<id>https://ml-rust.github.io/changes/feed.xml</id>",
             "<link rel=\"self\" type=\"application/atom+xml\" href=\"https://ml-rust.github.io/changes/feed.xml\"/>",
             "<updated>2026-10-05T00:00:00Z</updated>",
-            "<author><name>Rust ML catalogue</name></author>",
+            "<author><name>ML Rust catalogue</name></author>",
             "<title>alpha: New to Listed</title>",
             "<id>tag:ml-rust.github.io,2026-10-05:tier-change/alpha</id>",
             "href=\"https://ml-rust.github.io/projects/alpha/\"/>",

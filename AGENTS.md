@@ -1,6 +1,6 @@
 # ml-rust.github.io — Agent Guidelines
 
-A catalogue of the Rust ML ecosystem: libraries on crates.io, and apps that are not.
+A catalogue of machine learning in Rust: libraries on crates.io, and apps that are not.
 GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, published rules.
 
 ## Placement

@@ -2,7 +2,7 @@
 #
 # A lead bypasses the discovery rules and the active-user floor. It still needs a topic, and a
 # human reviews every draft. An entry that holds the repository reports the lead as listed.
-# A repository here belongs to the Rust ML ecosystem. A tool with no ML use stays out.
+# A repository here belongs to machine learning in Rust. A tool with no ML use stays out.
 
 ml-rust/axp
 ml-rust/blazr
