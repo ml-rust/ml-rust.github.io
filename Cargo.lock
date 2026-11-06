@@ -196,7 +196,7 @@ checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
 name = "catalogue"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "catalogue-bot",
  "catalogue-core",
@@ -220,7 +220,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-bot"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "aws-lc-rs",
  "catalogue-core",
@@ -234,7 +234,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "jiff",
  "serde",
@@ -245,7 +245,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-github"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "catalogue-core",
  "catalogue-github",
@@ -261,14 +261,14 @@ dependencies = [
 
 [[package]]
 name = "catalogue-search-wasm"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "oxidoc-search",
 ]
 
 [[package]]
 name = "catalogue-signals"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "catalogue-core",
  "csv",
@@ -287,7 +287,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-site"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "askama",
  "aws-lc-rs",
@@ -305,7 +305,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-state"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "catalogue-bot",
  "catalogue-core",
@@ -321,7 +321,7 @@ dependencies = [
 
 [[package]]
 name = "catalogue-triage"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "catalogue-bot",
  "catalogue-github",

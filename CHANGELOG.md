@@ -6,6 +6,8 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ## [Unreleased]
 
+## [0.1.2]
+
 ### Added
 
 - `catalogue state`: writes a one-page report on ML in Rust with AI models, then audits it. Set `state.toml` and the model keys to run it.
