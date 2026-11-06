@@ -1331,9 +1331,9 @@ dependencies = [
 
 [[package]]
 name = "oxidoc-search"
-version = "0.1.11"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3087b78043e6cf9c20f23c8cd611c8ca6138097b0c8202723f60dd1407abe374"
+checksum = "54f9d6b0000b32be584ff8d98f6479e3ff6e37b236cfe95267b090afe484ab0d"
 dependencies = [
  "js-sys",
  "oxidoc-island",
@@ -1348,9 +1348,9 @@ dependencies = [
 
 [[package]]
 name = "oxidoc-text"
-version = "0.1.11"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b97c7a72db7db843dcb833fe9ba85d965d29dbbee109baf6ef0a1480b10db2fb"
+checksum = "200b605e5a6114299a057e86b5a7b9b2e80717e9132ca118bc51b4bec4c2971c"
 dependencies = [
  "rust-stemmers",
  "unicode-normalization",
