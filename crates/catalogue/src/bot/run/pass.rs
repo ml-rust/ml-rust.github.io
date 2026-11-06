@@ -22,7 +22,7 @@ use crate::bot::labels::{
 /// The branch that holds the data files the checks read.
 pub const MAIN_BRANCH: &str = "main";
 
-/// The branch whose root holds the daily tier snapshots.
+/// The branch whose root holds the tier snapshots.
 pub const SIGNALS_BRANCH: &str = "signals";
 
 /// What one pass did.

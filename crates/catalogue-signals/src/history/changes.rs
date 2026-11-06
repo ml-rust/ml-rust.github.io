@@ -67,6 +67,8 @@ mod tests {
             active_users: None,
             docker_pulls: None,
             network: None,
+            reused: false,
+            fetch_notes: Vec::new(),
         };
         Snapshot {
             date: date(day),

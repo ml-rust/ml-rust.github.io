@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::Path;
 
-use catalogue_core::{Catalogue, Date, Entry, Slug};
+use catalogue_core::{Date, Entry, Slug};
 use catalogue_signals::assemble::{CrateIndex, primary_release};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::fallback::{Failed, attempt, link_failure};
@@ -125,7 +125,7 @@ pub(super) struct LinkFailure {
 }
 
 /// What a link result describes: the crate release and the repo.
-fn subject(repo: &TargetRepo, release: &CrateRelease) -> String {
+pub(super) fn subject(repo: &TargetRepo, release: &CrateRelease) -> String {
     let CrateRelease { name, version } = release;
     format!("{name} {version} in {repo}")
 }
@@ -138,7 +138,7 @@ fn dated(of: String, outcome: LinkOutcome) -> Dated<LinkCheck> {
     }
 }
 
-/// Checks the repo link of every entry that lists a crate.
+/// Checks the repo link of each of `entries` that lists a crate.
 ///
 /// An entry whose repo is on a host no check can read gets
 /// [`LinkCheck::UnsupportedHost`]. An entry with a release in `snapshot` gets
@@ -150,7 +150,7 @@ fn dated(of: String, outcome: LinkOutcome) -> Dated<LinkCheck> {
 /// result. A failed fetch lands in [`Links::failures`]. A rejected token and a
 /// cache error end the run.
 pub(super) fn fetch_links(
-    catalogue: &Catalogue,
+    entries: &[(&Slug, &Entry)],
     snapshot: &DumpSnapshot,
     transport: &dyn Transport,
     token: &str,
@@ -161,7 +161,7 @@ pub(super) fn fetch_links(
     let index = CrateIndex::new(snapshot);
     let mut links = Links::default();
     let mut targets: Vec<Target> = Vec::new();
-    for (slug, entry) in catalogue.entries() {
+    for &(slug, entry) in entries {
         if entry.crates.is_empty() {
             continue;
         }

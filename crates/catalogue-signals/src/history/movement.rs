@@ -147,6 +147,8 @@ mod tests {
             active_users: users,
             docker_pulls: None,
             network: None,
+            reused: false,
+            fetch_notes: Vec::new(),
         }
     }
 

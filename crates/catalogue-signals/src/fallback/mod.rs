@@ -15,4 +15,4 @@ mod summary;
 pub use classify::{Failed, Failure, attempt, distribution_failure, github_failure, link_failure};
 pub use recover::{Recovered, recover};
 pub use source::Source;
-pub use summary::{FetchFailure, FetchSummary};
+pub use summary::{FetchFailure, FetchSummary, MIN_FETCHES_FOR_FAILED_SHARE};

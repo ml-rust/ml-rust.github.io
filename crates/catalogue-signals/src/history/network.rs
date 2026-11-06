@@ -1,11 +1,12 @@
 //! The network-fetched values one check records, each with its data date.
 //!
-//! A later check reads them when the same fetch fails. A value keeps its first
-//! date through every snapshot it passes through, so the age limit counts from
-//! the real fetch.
+//! A later check reads them when the same fetch fails, or when it reuses them and sends no
+//! request. A value keeps its first date through every snapshot it passes through, so the age
+//! limit counts from the real fetch.
 
 use catalogue_core::Date;
 use catalogue_core::date_text::{plain, plain_option};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::distribution::ReleaseDownloads;
@@ -61,7 +62,35 @@ pub enum RepoValues {
         /// written before the field existed.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         topics: Vec<String>,
+        /// The time of the last push. A weekly scan compares it to decide what to fetch again.
+        /// Unknown in snapshots written before the field existed, and for a repo with no push.
+        #[serde(default, skip_serializing_if = "Option::is_none", with = "push_time")]
+        pushed_at: Option<Timestamp>,
     },
+}
+
+/// The last push of a repo as RFC 3339 text in a snapshot.
+mod push_time {
+    use jiff::Timestamp;
+    use serde::{Deserialize, Deserializer, Serializer, de};
+
+    pub(super) fn serialize<S: Serializer>(
+        value: &Option<Timestamp>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        match value {
+            Some(time) => serializer.collect_str(time),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Option<Timestamp>, D::Error> {
+        let text = Option::<String>::deserialize(deserializer)?;
+        text.map(|text| text.parse().map_err(de::Error::custom))
+            .transpose()
+    }
 }
 
 impl RepoValues {
@@ -89,6 +118,14 @@ impl RepoValues {
         }
     }
 
+    /// The time of the last push of an existing repo, when known.
+    pub fn pushed_at(&self) -> Option<Timestamp> {
+        match self {
+            Self::Found { pushed_at, .. } => *pushed_at,
+            Self::Gone => None,
+        }
+    }
+
     /// The topics of an existing repo.
     pub fn topics(&self) -> &[String] {
         match self {
@@ -110,6 +147,7 @@ impl From<&Facts> for RepoValues {
             maintainer_replies_365: facts.maintainer_replies_365,
             license: facts.license.clone(),
             topics: facts.topics.clone(),
+            pushed_at: facts.pushed_at,
         }
     }
 }
@@ -180,8 +218,8 @@ pub struct NetworkValues {
     /// The GitHub contributor count. Absent in snapshots written before the field existed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub contributors: Option<Dated<Contributors>>,
-    /// The README. Display only: no tier rule reads it. Snapshots leave it out, so a fetch error
-    /// hides the About section for that run and the history stays small.
+    /// The README. Display only: no tier rule reads it. Snapshots leave it out, so the history
+    /// stays small. [`ReadmeStore`](super::ReadmeStore) keeps the newest one of each entry.
     #[serde(skip)]
     pub readme: Option<Dated<RepoReadme>>,
 }
@@ -222,6 +260,7 @@ mod tests {
                 maintainer_replies_365: 7,
                 license: RepoLicense::Stated("MIT".to_owned()),
                 topics: vec!["linear-algebra".to_owned()],
+                pushed_at: Some("2026-10-02T03:04:05Z".parse().expect("time")),
             }),
             link: dated(LinkCheck::NoVcsInfo),
             releases: dated(ReleaseValues {
@@ -248,6 +287,7 @@ mod tests {
         assert_eq!(facts.value.license(), Some(&RepoLicense::NotMeasured));
         assert_eq!(facts.value.commits(), None);
         assert!(facts.value.topics().is_empty());
+        assert_eq!(facts.value.pushed_at(), None);
         let RepoValues::Found { forks, .. } = facts.value else {
             panic!("a found repo");
         };
@@ -305,6 +345,7 @@ mod tests {
         assert_eq!(back, values);
         assert_eq!(RepoValues::Gone.stars(), None);
         assert_eq!(RepoValues::Gone.commits(), None);
+        assert_eq!(RepoValues::Gone.pushed_at(), None);
     }
 
     #[test]

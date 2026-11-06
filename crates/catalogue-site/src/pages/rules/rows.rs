@@ -163,7 +163,7 @@ pub(super) fn fallback_rows(t: &Thresholds) -> Vec<ThresholdRow> {
         row(
             "fallback.max_failed_share",
             t.fallback.max_failed_share,
-            "Largest share of a run's fetches that can fail with no usable earlier value. Above it the run stops and publishes nothing.",
+            "Largest share of a run's fetches that can fail with no usable earlier value. Above it the run stops and publishes nothing. A run under 20 fetches never stops on this.",
         ),
     ]
 }

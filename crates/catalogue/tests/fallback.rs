@@ -70,6 +70,7 @@ fn archived_facts(date: Date, of: &str) -> NetworkValues {
                 maintainer_replies_365: 7,
                 license: RepoLicense::Stated("MIT".to_owned()),
                 topics: Vec::new(),
+                pushed_at: None,
             },
         ),
         ..NetworkValues::default()
@@ -85,6 +86,8 @@ fn row(kind: EntryKind, network: Option<NetworkValues>) -> Row {
         active_users: None,
         docker_pulls: None,
         network,
+        reused: false,
+        fetch_notes: Vec::new(),
     }
 }
 

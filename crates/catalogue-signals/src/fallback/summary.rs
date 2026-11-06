@@ -4,6 +4,13 @@ use catalogue_core::{Date, Slug};
 
 use super::source::Source;
 
+/// The fewest fetches a run needs before `fallback.max_failed_share` applies.
+///
+/// The limit guards against an outage, and a share over a few fetches says nothing about one. A
+/// run that adds one project sends about six, so one lost fetch reads as a large share. Below this
+/// count a failed fetch leaves its value unknown or on its fallback, and the next scan fills it.
+pub const MIN_FETCHES_FOR_FAILED_SHARE: usize = 20;
+
 /// One fetch that failed and fell back, or left its signal unknown.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FetchFailure {
@@ -58,9 +65,11 @@ impl FetchSummary {
     /// Whether the fetches a tier reads and no earlier value covers exceed `limit`, as a share of
     /// all fetches.
     ///
-    /// A fetch that recovered from a snapshot does not count.
+    /// A fetch that recovered from a snapshot does not count. A run with fewer than
+    /// [`MIN_FETCHES_FOR_FAILED_SHARE`] fetches never exceeds the limit.
     pub fn exceeds_lost_limit(&self, limit: f64) -> bool {
-        self.lost_count() as f64 / self.fetches.max(1) as f64 > limit
+        self.fetches >= MIN_FETCHES_FOR_FAILED_SHARE
+            && self.lost_count() as f64 / self.fetches as f64 > limit
     }
 
     /// One `slug: source: error` line per fetch that [`lost_count`](Self::lost_count) counts.
@@ -203,6 +212,14 @@ mod tests {
         assert!(share(20, 2, 0).exceeds_lost_limit(0.05));
         assert!(!share(100, 7, 0).exceeds_lost_limit(0.07));
         assert!(!share(3, 3, 0).exceeds_lost_limit(1.0));
+    }
+
+    #[test]
+    fn a_run_under_the_minimum_never_exceeds_the_limit() {
+        let below = MIN_FETCHES_FOR_FAILED_SHARE - 1;
+        assert!(!share(below, below, 0).exceeds_lost_limit(0.05));
+        let at = MIN_FETCHES_FOR_FAILED_SHARE;
+        assert!(share(at, at, 0).exceeds_lost_limit(0.05));
     }
 
     #[test]

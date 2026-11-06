@@ -6,7 +6,7 @@
 # recalibration. Any change to the file raises `version`.
 # Rule text: crates/catalogue-core/src/tier/.
 
-version = 8
+version = 9
 calibrated = 2026-11-04
 
 [new]
@@ -64,9 +64,11 @@ min_new_adopters = 1.0
 min_binary_downloads_per_release = 200
 
 [fallback]
-# Not calibrated: two weeks of daily runs. A source down longer reads as unknown.
+# Not calibrated: two missed weekly scans. A source down longer reads as unknown.
+# A value that refreshes only on an update gets 30 to 57 days more, because it is that old with no error.
 max_age_days = 14
 # Not calibrated: one fetch in twenty can fail with no earlier value. Above that a run fails.
+# A run under 20 fetches never fails on this: a share of a few fetches says nothing.
 max_failed_share = 0.05
 
 # Not calibrated. Movement labels a list row and never affects a tier.

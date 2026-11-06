@@ -11,6 +11,9 @@ pub struct Context {
     pub previous_tier: Option<Tier>,
     /// Consecutive previous checks that found the entry dead.
     pub prior_dead_checks: u32,
+    /// Whether this run fetched anything for the entry. A run that reuses stored values is no
+    /// check, so it adds nothing to the dead count.
+    pub checked: bool,
     /// The latest maintainer statement judgment.
     pub maintainer_statement: Option<MaintainerStatus>,
     /// Whether an approved demotion judgment exists.
@@ -28,6 +31,7 @@ impl Context {
             today,
             previous_tier: None,
             prior_dead_checks: 0,
+            checked: true,
             maintainer_statement: None,
             demotion_approved: false,
             featured_approved: false,

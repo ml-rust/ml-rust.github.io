@@ -34,6 +34,15 @@ pub struct Row {
     /// before the field existed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub network: Option<NetworkValues>,
+    /// Whether the run reused stored values for this entry and sent it no request. Such a row is
+    /// no check: it never advances the run of dead months. False in snapshots written before the
+    /// field existed, because every one of those runs fetched.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub reused: bool,
+    /// The notes of the entry's fetches, for a later run that reuses its values and asks nothing.
+    /// Empty in snapshots written before the field existed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fetch_notes: Vec<String>,
 }
 
 /// Every entry's row for one run date.

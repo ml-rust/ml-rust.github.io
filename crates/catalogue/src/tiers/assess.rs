@@ -49,9 +49,12 @@ pub(crate) struct Assessment {
 /// reads its release facts from `snapshot`.
 ///
 /// Each network value carries its own data date: `today` for a fresh fetch, the
-/// stored date for a cached link check or a fallback. RustSec values carry the
+/// stored date for a cached link check, a fallback or a reused value. RustSec values carry the
 /// archive date, dump values the dump date. The row keeps every network value
 /// with that date, so a later fallback counts its age from the real fetch.
+///
+/// An entry whose values this run only reused is no check. Its dead count stays where its newest
+/// actual check left it, and the demotion guard reads the previous tier as on any other run.
 pub(crate) fn assess_entries(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
@@ -145,7 +148,11 @@ pub(crate) fn assess_entries(
                 cited.cite_app_releases(&signals, releases);
             }
             let commits = facts.and_then(RepoValues::commits);
-            let ctx = context(slug, catalogue, history, today);
+            let mut ctx = context(slug, catalogue, history, today);
+            if network.reused {
+                ctx.checked = false;
+                ctx.prior_dead_checks = history.dead_checks_at_last_check(slug.as_str(), today);
+            }
             let verdict = assess(&signals, &ctx, thresholds);
             let row = Row {
                 kind: entry.kind,
@@ -157,6 +164,8 @@ pub(crate) fn assess_entries(
                     .filter(|found| found.date == today)
                     .map(|found| found.value),
                 network: (!values.is_empty()).then(|| values.clone()),
+                reused: network.reused,
+                fetch_notes: network.notes.clone(),
             };
             let mut all = network.notes.clone();
             all.extend(notes);

@@ -5,18 +5,20 @@ use std::path::Path;
 use catalogue_core::{Catalogue, Date};
 use catalogue_signals::dump::DumpSnapshot;
 use catalogue_signals::github::GITHUB_INTERVAL;
-use catalogue_signals::history::{History, Snapshot, read_all, write};
+use catalogue_signals::history::{History, ReadmeStore, Snapshot, read_all, write};
 use catalogue_signals::http::{IntervalPacer, Pacer};
 use catalogue_signals::rustsec::Advisories;
 use catalogue_signals::sandbox::BuildChecks;
 
 use super::assess::assess_entries;
+use super::cadence::FetchMode;
 use super::collect::{Network, fetch_all};
 use super::command::required;
 use super::error::TiersError;
 use super::inputs::{Inputs, Outputs, TiersRun};
 use super::render::render_tiers;
 use super::report::{tier_report, write_report};
+use super::stored::{Memory, readme_store};
 
 /// The `catalogue tiers` report for a checked catalogue on `today`.
 ///
@@ -27,7 +29,7 @@ use super::report::{tier_report, write_report};
 /// `build_checks` holds the sandbox results that rot signal R6 reads.
 ///
 /// With `history_dir`, the run reads the snapshots in that directory before it
-/// applies the rules, then writes the snapshot of `today` to it. Without it,
+/// applies the rules, then writes the snapshot of `today` and the README store to it. Without it,
 /// the run reads and writes no history.
 ///
 /// A network fetch that fails falls back to the previous snapshot, and an online
@@ -40,7 +42,9 @@ use super::report::{tier_report, write_report};
 /// online run, such as a rejected token, [`TiersError::History`] when the
 /// history directory cannot be read or written, and [`TiersError::TooManyFailed`]
 /// when the share of fetches with no usable earlier value exceeds
-/// `fallback.max_failed_share`.
+/// `fallback.max_failed_share`, in a run of at least
+/// [`MIN_FETCHES_FOR_FAILED_SHARE`](catalogue_signals::fallback::MIN_FETCHES_FOR_FAILED_SHARE)
+/// fetches.
 pub fn tiers_report(
     catalogue: &Catalogue,
     snapshot: &DumpSnapshot,
@@ -55,14 +59,29 @@ pub fn tiers_report(
         snapshot,
         advisories,
         build_checks,
+        fetch: FetchMode::All,
         today,
     };
+    tiers_report_with(&inputs, network, history_dir)
+}
+
+/// The same report as [`tiers_report`], with the fetch mode of `inputs`.
+///
+/// # Errors
+///
+/// The errors of [`tiers_report`], and [`TiersError::NoStoredValues`] when `FetchMode::None` finds
+/// no snapshot.
+pub fn tiers_report_with(
+    inputs: &Inputs<'_>,
+    network: Network<'_>,
+    history_dir: Option<&Path>,
+) -> Result<TiersRun, TiersError> {
     let outputs = Outputs {
         history_dir,
         json: None,
     };
     run_with(
-        &inputs,
+        inputs,
         network,
         &outputs,
         &mut IntervalPacer::new(GITHUB_INTERVAL),
@@ -84,23 +103,28 @@ pub(super) fn run_with(
         snapshot,
         advisories,
         build_checks,
+        fetch,
         today,
     } = *inputs;
     let (thresholds, _) = required(catalogue)?;
-    let history = match outputs.history_dir {
-        Some(dir) => read_all(dir)?,
-        None => History::default(),
+    let (history, readmes) = match outputs.history_dir {
+        Some(dir) => (read_all(dir)?, ReadmeStore::read(dir)?),
+        None => (History::default(), ReadmeStore::default()),
     };
+    if let (FetchMode::None, true, Some(dir)) = (fetch, history.is_empty(), outputs.history_dir) {
+        return Err(TiersError::NoStoredValues {
+            path: dir.to_path_buf(),
+        });
+    }
     let online = matches!(network, Network::Online { .. });
-    let fetched = fetch_all(
-        catalogue,
-        snapshot,
-        network,
-        &history,
-        thresholds.fallback.max_age_days,
+    let memory = Memory {
+        history: &history,
+        readmes: &readmes,
+        max_age_days: thresholds.fallback.max_age_days,
+        fetch,
         today,
-        github,
-    )?;
+    };
+    let fetched = fetch_all(catalogue, snapshot, network, memory, github)?;
     let limit = thresholds.fallback.max_failed_share;
     if fetched.summary.exceeds_lost_limit(limit) {
         return Err(TiersError::TooManyFailed {
@@ -122,12 +146,20 @@ pub(super) fn run_with(
             .iter()
             .map(|assessment| (assessment.slug.to_string(), assessment.row.clone()))
             .collect();
+        readme_store(&fetched.entries).write(dir)?;
         write(dir, &Snapshot { date: today, rows })?;
     }
     let mut text = render_tiers(&assessments);
     if online {
         text.push_str("\n\n");
         text.push_str(&fetched.summary.text());
+    }
+    if fetch != FetchMode::All {
+        let asked = fetched.entries.values().filter(|f| f.asked).count();
+        text.push_str(&format!(
+            "\n\nfetch mode {fetch}: asked about {asked} of {} entries",
+            fetched.entries.len()
+        ));
     }
     let run = TiersRun {
         text,
@@ -257,6 +289,28 @@ mod tests {
         Catalogue::load(sources).expect("fixture is valid")
     }
 
+    /// The fixture catalogue with three more libraries, so a run reaches the failed share minimum.
+    fn large_catalogue(limit: &str) -> Catalogue {
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/valid");
+        let mut sources = read_data_dir(&dir).expect("fixture reads").sources;
+        let thresholds = sources.thresholds.as_mut().expect("thresholds");
+        thresholds.contents = thresholds.contents.replace(
+            "max_failed_share = 1.0",
+            &format!("max_failed_share = {limit}"),
+        );
+        for slug in ["delta", "epsilon", "zeta"] {
+            sources.entries.push(catalogue_core::SourceFile {
+                path: format!("entries/{slug}.toml"),
+                contents: format!(
+                    "name = \"{slug}\"\nkind = \"library\"\nrepo = \"https://github.com/ml-rust/{slug}\"\n\
+                     crates = [\"{slug}-crate\"]\ntopics = [\"ml\"]\nadded = 2026-11-03\n\n\
+                     [description]\ntext = \"The {slug} project.\"\nsource = \"human\"\n"
+                ),
+            });
+        }
+        Catalogue::load(sources).expect("the catalogue is valid")
+    }
+
     /// A dump that holds no crate, so no entry asks for a link check.
     fn empty_dump() -> DumpSnapshot {
         DumpSnapshot {
@@ -321,6 +375,7 @@ mod tests {
                 snapshot: &snapshot,
                 advisories: &advisories,
                 build_checks: &build_checks,
+                fetch: FetchMode::All,
                 today: Date::new(2026, 11, 3).expect("date"),
             };
             let history = self.dir.path().join("history");
@@ -346,7 +401,7 @@ mod tests {
         let clock = fake_clock();
         let script = Script::new(true, clock.clone());
         let error = run
-            .run(&catalogue("0.5"), &script, clock)
+            .run(&large_catalogue("0.5"), &script, clock)
             .expect_err("over the limit");
         let TiersError::TooManyFailed { limit, summary } = &error else {
             panic!("unexpected error: {error}");
@@ -368,6 +423,20 @@ mod tests {
         assert_eq!(error.exit_code(), IO);
         assert!(!run.snapshot_file().exists());
         assert!(!run.report_file().exists());
+    }
+
+    #[test]
+    fn a_run_under_the_minimum_passes_and_leaves_lost_values_unknown() {
+        let run = Run::new();
+        let clock = fake_clock();
+        let script = Script::new(true, clock.clone());
+        let found = run
+            .run(&catalogue("0.05"), &script, clock)
+            .expect("too few fetches for the share to apply");
+        assert!(found.summary.fetches < 20, "{}", found.summary.fetches);
+        assert_eq!(found.summary.failures.len(), found.summary.fetches);
+        assert!(run.snapshot_file().is_file());
+        assert!(run.report_file().is_file());
     }
 
     #[test]

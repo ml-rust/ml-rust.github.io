@@ -40,6 +40,8 @@ fn row(kind: EntryKind, tier: Tier, docker_pulls: Option<u64>) -> Row {
         active_users: None,
         docker_pulls,
         network: None,
+        reused: false,
+        fetch_notes: Vec::new(),
     }
 }
 

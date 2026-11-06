@@ -11,6 +11,7 @@ use catalogue_signals::http::{IntervalPacer, ReqwestTransport};
 use catalogue_signals::sandbox::BuildChecks;
 use clap::Args;
 
+use super::cadence::FetchMode;
 use super::collect::Network;
 use super::error::TiersError;
 use super::inputs::{Inputs, Outputs, TiersRun};
@@ -40,13 +41,25 @@ pub struct TiersArgs {
     /// Send no request. Every repo and distribution signal reads as unknown.
     #[arg(long)]
     pub offline: bool,
-    /// Directory of daily snapshots. The run reads it for the previous tier, the
+    /// Directory of snapshots. The run reads it for the previous tier, the
     /// dead run, the Docker baseline and the values a failed fetch falls back to,
-    /// then adds today's snapshot. Without it the run reads and writes no history,
+    /// then adds today's snapshot and the README store. Without it the run reads and writes no history,
     /// so a failed fetch leaves its signal unknown. An offline run holds only
     /// unknown network signals, so `--offline` conflicts with it.
     #[arg(long, value_name = "DIR", conflicts_with = "offline")]
     pub history: Option<PathBuf>,
+    /// What the run fetches: `all` fetches everything, `changed` is the weekly scan, `new`
+    /// fetches only entries with no stored values, `none` sends no request. Every mode reads the
+    /// dump and RustSec and applies the rules to every entry. A reused value keeps its true
+    /// date. Every mode except `all` needs `--history`.
+    #[arg(
+        long,
+        value_enum,
+        value_name = "MODE",
+        default_value_t = FetchMode::All,
+        conflicts_with = "offline"
+    )]
+    pub fetch: FetchMode,
     /// Result file of `catalogue sandbox check`, for rot signal R6. A result
     /// counts only for a crate's latest release. Without it R6 reads as unknown.
     #[arg(long, value_name = "FILE")]
@@ -104,7 +117,8 @@ fn write_step_summary(summary: &FetchSummary) {
 
 /// Checks the data, reads the caches, fetches the network signals and renders the report.
 ///
-/// The token is read only for an online run, after the data checks and before the dump read.
+/// The token is read only for a run that can send a request, after the data checks and before the
+/// dump read.
 /// With `--json`, the tier report goes to that file after the history write.
 fn tiers(
     args: &TiersArgs,
@@ -113,7 +127,14 @@ fn tiers(
 ) -> Result<TiersRun, TiersError> {
     let catalogue = load(&args.data)?;
     required(&catalogue)?;
-    let token = if args.offline { None } else { Some(token()?) };
+    if args.fetch != FetchMode::All && args.history.is_none() {
+        return Err(TiersError::FetchNeedsHistory { mode: args.fetch });
+    }
+    let token = if args.offline || args.fetch == FetchMode::None {
+        None
+    } else {
+        Some(token()?)
+    };
     let cache_dir = resolve_cache_dir(args.cache_dir.clone())?;
     let listed: Vec<&str> = catalogue
         .entries()
@@ -133,6 +154,7 @@ fn tiers(
         snapshot: &snapshot,
         advisories: &advisories,
         build_checks: &build_checks,
+        fetch: args.fetch,
         today,
     };
     let outputs = Outputs {
@@ -204,6 +226,7 @@ mod tests {
             cache_dir: Some(PathBuf::from("/nonexistent/cache")),
             offline,
             history: None,
+            fetch: FetchMode::All,
             build_checks: None,
             json: None,
         }
@@ -218,6 +241,9 @@ mod tests {
         assert_eq!(args.history, None);
         assert_eq!(args.build_checks, None);
         assert_eq!(args.json, None);
+        assert_eq!(args.fetch, FetchMode::All);
+        let args = parse(&["--history", "h", "--fetch", "changed"]);
+        assert_eq!(args.fetch, FetchMode::Changed);
         let args = parse(&["--data", "d", "--cache-dir", "c", "--offline"]);
         assert_eq!(args.data, PathBuf::from("d"));
         assert_eq!(args.cache_dir, Some(PathBuf::from("c")));
@@ -234,6 +260,40 @@ mod tests {
     fn history_conflicts_with_offline() {
         let parsed = Cli::try_parse_from(["catalogue", "tiers", "--offline", "--history", "h"]);
         assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn fetch_conflicts_with_offline() {
+        let parsed = Cli::try_parse_from(["catalogue", "tiers", "--offline", "--fetch", "new"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn a_mode_that_reuses_values_needs_a_history() {
+        for fetch in [FetchMode::Changed, FetchMode::New, FetchMode::None] {
+            let run = TiersArgs {
+                fetch,
+                ..args(fixture("valid"), false)
+            };
+            let error = tiers(&run, || Err(NoToken), today()).expect_err("no history");
+            assert!(matches!(error, TiersError::FetchNeedsHistory { .. }));
+            assert!(error.to_string().contains("--history"), "{error}");
+            assert_eq!(error.exit_code(), INVALID);
+        }
+    }
+
+    #[test]
+    fn fetch_none_needs_no_token() {
+        let run = TiersArgs {
+            fetch: FetchMode::None,
+            history: Some(PathBuf::from("/nonexistent/history")),
+            ..args(fixture("valid"), false)
+        };
+        let error = tiers(&run, || Err(NoToken), today()).expect_err("no dump");
+        assert!(
+            error.to_string().contains("catalogue dump fetch"),
+            "{error}"
+        );
     }
 
     #[test]

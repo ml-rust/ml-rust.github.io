@@ -395,6 +395,24 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     rows: Vec::new(),
                 },
                 RuleSection {
+                    id: "refresh",
+                    title: "How values refresh",
+                    tier: None,
+                    lead: &[
+                        "A weekly scan fetches repo facts, app distribution counts, the crates.io dump and the RustSec archive.",
+                        "The contributor count and the README refresh only after a newer push, after a new version, or once the value passes its refresh age.",
+                        "The repo link check refreshes only after a new version, or once the value passes its refresh age.",
+                        "The refresh age of an entry is between 30 and 57 days. The entry slug sets it, so refreshes spread over several scans.",
+                        "A run between scans fetches new entries at most, and reuses every other value. When the last scan is over 8 days old, the next run scans instead.",
+                    ],
+                    items: &[],
+                    notes: &[
+                        "A reused value keeps its original fetch date.",
+                        "A run that reuses the values of an entry is no check of that entry for the dead rule.",
+                    ],
+                    rows: Vec::new(),
+                },
+                RuleSection {
                     id: "fallback",
                     title: "Failed fetches",
                     tier: None,
@@ -515,7 +533,9 @@ pub(super) fn groups(thresholds: Option<&Thresholds>) -> Vec<RuleGroup> {
                     id: "movement",
                     title: "Movement",
                     tier: None,
-                    lead: &["Movement comes from the daily snapshots. It never affects a tier."],
+                    lead: &[
+                        "Movement comes from the stored snapshots. A weekly scan adds one each week. It never affects a tier.",
+                    ],
                     items: &[
                         Item {
                             label: "New",

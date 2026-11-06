@@ -1,8 +1,42 @@
-# ML Rust catalogue: machine learning libraries and apps in Rust
+<div align="center">
 
+# ML Rust catalogue
+
+<h3>Machine learning libraries and apps in Rust.</h3>
+
+<p>
 Find a Rust library or app for your machine learning job, with real usage data for each project.
+</p>
 
-**Browse the catalogue: https://ml-rust.github.io**
+<p>
+  <a href="https://ml-rust.github.io"><strong>Browse the catalogue</strong></a>
+  ·
+  <a href="https://ml-rust.github.io/state/"><strong>State of ML in Rust</strong></a>
+  ·
+  <a href="https://ml-rust.github.io/rules/"><strong>Tier rules</strong></a>
+  ·
+  <a href="https://ml-rust.github.io/submit/"><strong>Add a project</strong></a>
+</p>
+
+<p>
+  <a href="https://discord.gg/jBhFk9kHPg">
+    <img src="https://img.shields.io/discord/1453357769720594543?label=Discord&logo=discord&logoColor=white&color=5865F2" alt="Join the Discord">
+  </a>
+</p>
+
+<p>
+  <a href="https://github.com/ml-rust/ml-rust.github.io/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/ml-rust/ml-rust.github.io/ci.yml?branch=main&label=ci" alt="CI status">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/ml-rust/ml-rust.github.io" alt="License">
+  </a>
+  <a href="https://github.com/ml-rust/ml-rust.github.io/stargazers">
+    <img src="https://img.shields.io/github/stars/ml-rust/ml-rust.github.io?style=social" alt="GitHub stars">
+  </a>
+</p>
+
+</div>
 
 It covers crates on crates.io and apps outside it, including [burn](https://ml-rust.github.io/projects/burn/), [candle](https://ml-rust.github.io/projects/candle/), [ort](https://ml-rust.github.io/projects/ort/), [polars](https://ml-rust.github.io/projects/polars/), [qdrant](https://ml-rust.github.io/projects/qdrant/), [rig](https://ml-rust.github.io/projects/rig/) and [tantivy](https://ml-rust.github.io/projects/tantivy/).
 
@@ -135,6 +169,12 @@ cargo run -p catalogue -- build --no-tiers
 ## Deploy
 
 - The site deploys from `main` through `.github/workflows/pages.yml`.
+- A push deploys in minutes with the newest scores.
+- A push that changes `data/` fetches new entries only, then applies the rules to every entry.
+- A push that changes only the scoring crates fetches nothing, then applies the rules to every entry.
+- The weekly scan runs on Sunday at 22:23 UTC. It fetches what changed.
+- When the last scan is over 8 days old, the next push or manual run scans instead, unless the manual run asks for `all` or `changed`.
+- To deploy by hand, run `gh workflow run pages.yml`. Add `-f mode=new`, `none`, `changed` or `all` to score first. `all` takes over an hour.
 - The Pages workflow needs the `SIGNALS_TOKEN` secret: a fine-grained token with public repositories read-only.
 - The bot runs on a VM. Run `sudo bash deploy/install.sh` on it. The script prints each input still missing, with the command that adds it.
 

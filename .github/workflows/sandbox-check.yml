@@ -50,7 +50,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # The orphan `signals` branch holds one snapshot per day. Until the first
+      # The orphan `signals` branch holds one snapshot per run date. Until the first
       # snapshot exists the branch is absent, and the list holds only crates
       # that a `finished` statement names.
       - name: Check out signal history

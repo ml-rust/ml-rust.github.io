@@ -12,7 +12,7 @@ const ATTEMPTS: u32 = 5;
 
 /// Replaces the report on the `signals` branch with `text`. Returns whether the branch moved.
 ///
-/// The branch holds the daily snapshots, so each try builds on its current head and the branch
+/// The branch holds the tier snapshots, so each try builds on its current head and the branch
 /// only ever moves forward. A head that moved meanwhile starts the next try.
 ///
 /// # Errors

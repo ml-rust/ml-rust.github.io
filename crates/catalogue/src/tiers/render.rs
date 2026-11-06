@@ -72,6 +72,8 @@ mod tests {
             active_users: None,
             docker_pulls: None,
             network: None,
+            reused: false,
+            fetch_notes: Vec::new(),
         };
         let sources = FactSources {
             dump: Date::new(2026, 11, 2).expect("date"),

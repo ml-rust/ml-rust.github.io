@@ -43,6 +43,7 @@ pub(super) fn instant(signals: &Signals) -> Vec<Reason> {
 /// Rule 5: an entry is dead on this check when it is dormant, has at least
 /// `dead_rot_signals` rot signals, and no `maintained` statement exists. It archives
 /// when this check and the previous checks make `dead_consecutive_checks` in a row.
+/// A run that reuses stored values is no check: it adds nothing to the count.
 /// Unknown dormancy is not dead.
 pub(super) fn dead(
     dormant: Option<bool>,
@@ -70,12 +71,19 @@ pub(super) fn dead(
             )),
         };
     }
-    let checks = context.prior_dead_checks.saturating_add(1);
+    let checks = context
+        .prior_dead_checks
+        .saturating_add(u32::from(context.checked));
     let archived = checks >= t.dead_consecutive_checks;
     let outcome = if archived {
         "archived"
     } else {
         "not yet archived"
+    };
+    let position = if context.checked {
+        format!("dead on check {checks}")
+    } else {
+        format!("no new check on this run, dead on {checks} checks")
     };
     Dead {
         now: true,
@@ -83,7 +91,7 @@ pub(super) fn dead(
         reason: Some(Reason::new(
             Rule::Dead,
             format!(
-                "dormant with {rot_count} rot signals (limit {}): dead on check {checks} of {}, {outcome}",
+                "dormant with {rot_count} rot signals (limit {}): {position} of {}, {outcome}",
                 t.dead_rot_signals, t.dead_consecutive_checks
             ),
         )),
@@ -94,6 +102,23 @@ pub(super) fn dead(
 mod tests {
     use super::*;
     use crate::tier::fixtures::{context, featured_library, thresholds};
+
+    #[test]
+    fn a_run_that_checks_nothing_adds_no_dead_check() {
+        let limits = &thresholds().dormancy;
+        let unchecked = |prior| Context {
+            checked: false,
+            prior_dead_checks: prior,
+            ..context()
+        };
+        let once = dead(Some(true), limits.dead_rot_signals, &unchecked(1), limits);
+        assert!(once.now);
+        assert!(!once.archived, "one dead check stays one");
+        let detail = once.reason.map(|reason| reason.detail).unwrap_or_default();
+        assert!(detail.contains("no new check on this run"), "{detail}");
+        let twice = dead(Some(true), limits.dead_rot_signals, &unchecked(2), limits);
+        assert!(twice.archived, "a run that reuses values keeps the archive");
+    }
 
     #[test]
     fn healthy_entry_has_no_instant_archive() {

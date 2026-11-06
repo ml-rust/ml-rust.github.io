@@ -6,6 +6,15 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- `catalogue tiers --fetch`: picks what a run fetches: `all`, `changed`, `new` or `none`. Use `none` to apply new rules with no requests.
+- `Pages`: the scheduled scan runs weekly on Sunday and fetches what changed. Run the workflow with `mode` to score by hand. A lost scan repairs itself on the next run.
+
+### Fixed
+
+- `search`: a project that says it does the job now ranks above one that only mentions the word.
+
 ## [0.1.2]
 
 ### Added

@@ -200,6 +200,8 @@ fn a_history_shorter_than_the_window_says_movement_needs_more_history() {
         active_users: Some(3.0),
         docker_pulls: None,
         network: None,
+        reused: false,
+        fetch_notes: Vec::new(),
     };
     write(
         &history,

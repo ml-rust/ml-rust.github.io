@@ -44,7 +44,7 @@ pub struct ListArgs {
     /// Directory that holds the cache. Default: the user cache directory.
     #[arg(long, value_name = "DIR")]
     pub cache_dir: Option<PathBuf>,
-    /// Directory of daily snapshots from `catalogue tiers --history`. The newest
+    /// Directory of snapshots from `catalogue tiers --history`. The newest
     /// snapshot decides which entries are dormant. A missing directory lists no crate.
     #[arg(long, value_name = "DIR")]
     pub history: PathBuf,

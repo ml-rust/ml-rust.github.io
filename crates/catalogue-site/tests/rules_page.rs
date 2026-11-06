@@ -21,7 +21,7 @@ fn the_page_states_the_tier_principles_and_the_rot_signals() {
         "An app counts it as one use signal.",
         "Thresholds version 3.",
         "Calibrated on <time datetime=\"2026-11-03\">3 Nov 2026</time>.",
-        "Movement comes from the daily snapshots. It never affects a tier.",
+        "Movement comes from the stored snapshots. A weekly scan adds one each week. It never affects a tier.",
         "This is an order and never a score.",
     ] {
         assert!(page.contains(text), "missing {text:?}");
@@ -125,6 +125,7 @@ fn the_contents_list_links_every_rule_and_each_tier_comes_before_its_inputs() {
         "finished",
         "outside-approval",
         "demotion-guard",
+        "refresh",
         "fallback",
         "choice-facts",
         "list-order",

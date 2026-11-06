@@ -1,10 +1,23 @@
-# Pages: score the catalogue, record the day's snapshot, deploy the site.
+# Pages: deploy the site, and score the catalogue only when something needs it.
+#
+# The `plan` job picks a mode. `skip` scores nothing and deploys the newest tier report.
+# Any other mode is the `--fetch` value of `catalogue tiers`.
+#
+# - The weekly schedule gives `changed`: it fetches what changed.
+# - A push under `data/` gives `new`: it fetches new entries only.
+# - A push under the scoring crates alone gives `none`: it fetches nothing.
+# - Any other push gives `skip`.
+# - A manual run takes its `mode` input, which defaults to `skip`.
+# - `skip`, `new` or `none` gives `changed` when the last scan is over 8 days old, so a lost
+#   scan repairs itself on the next run.
+# - `skip` with no earlier report gives `all`. So does a scoring mode with no history.
 #
 # Until `oxidoc-search` is on crates.io the committed Cargo.lock cannot resolve
 # it, so every job here that uses `--locked` fails. The first working run follows
 # the oxidoc release. This workflow never checks out oxidoc to work around that.
 #
 # Jobs:
+#   plan    — picks the mode, and for `skip` the run that holds the report
 #   signals — runs `catalogue tiers`, uploads the report, and pushes the snapshot
 #             to the orphan `signals` branch
 #   build   — builds the site from the report and the history, adds the search
@@ -29,14 +42,16 @@ name: Pages
 on:
   push:
     branches: [main]
-  # After crates.io writes the day's database dump.
+  # Sunday, so the snapshot exists before the state report at Monday 01:00 UTC.
   schedule:
-    - cron: "23 3 * * *"
+    - cron: "23 22 * * 0"
   workflow_dispatch:
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+    inputs:
+      mode:
+        description: What to score first. `skip` scores nothing, and `all` takes over an hour
+        type: choice
+        options: [skip, new, none, changed, all]
+        default: skip
 
 permissions:
   contents: read
@@ -46,19 +61,50 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────
+  # The guard keeps a dispatch from another branch off the history and the live
+  # site: every other job skips when this one skips.
+  plan:
+    name: Plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      report_run: ${{ steps.plan.outputs.report_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Pick the mode
+        id: plan
+        run: bash scripts/ci/pages_signals.sh plan "${GITHUB_OUTPUT}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          MODE_INPUT: ${{ inputs.mode }}
+          PUSH_BEFORE: ${{ github.event.before }}
+
+  # ─────────────────────────────────────────────────────────────────────────
   # The only job that can write to the repository. `actions: read` lists the
-  # sandbox runs and downloads their artifact. The guard keeps a dispatch from
-  # another branch off the history and the live site: `build` and `deploy` skip
-  # when this job skips.
+  # sandbox runs and downloads their artifact.
   #
   # The `signals` branch has no checkout step. The script tells a missing branch
   # from a network error, which a `continue-on-error` checkout cannot, and pushes
   # with no credential on disk.
   signals:
     name: Record signals
-    if: github.ref == 'refs/heads/main'
+    needs: plan
+    if: needs.plan.outputs.mode != 'skip'
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    # Scoring has its own queue, so a quick deploy never waits behind it.
+    concurrency:
+      group: pages-signals
+      cancel-in-progress: false
     permissions:
       contents: write
       actions: read
@@ -80,13 +126,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SIGNALS_TOKEN }}
           GH_TOKEN: ${{ github.token }}
+          FETCH_MODE: ${{ needs.plan.outputs.mode }}
 
       - name: Upload the tier report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tier-report
           path: ${{ runner.temp }}/tiers.json
-          retention-days: 7
+          # Longer than the gap between weekly scans, so a missed scan leaves a report to deploy.
+          retention-days: 30
           if-no-files-found: error
 
       - name: Push the snapshot
@@ -95,15 +143,26 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
   # ─────────────────────────────────────────────────────────────────────────
-  # The `signals` job created the branch, so a missing branch here is an error.
+  # The branch already exists, so a missing branch here is an error.
+  #
+  # The checkout reads the newest `main`, so a long scoring run that started on an
+  # older commit never puts older pages back over a quick deploy.
   build:
     name: Build site
-    needs: signals
+    needs: [plan, signals]
+    if: always() && needs.plan.result == 'success' && (needs.signals.result == 'success' || needs.signals.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    concurrency:
+      group: pages-build
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: main
           persist-credentials: false
 
       - name: Check out signal history
@@ -113,11 +172,20 @@ jobs:
           path: signal-history
           persist-credentials: false
 
-      - name: Download the tier report
+      - name: Download the tier report of this run
+        if: needs.plan.outputs.mode != 'skip'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tier-report
           path: ${{ runner.temp }}
+
+      - name: Download the newest tier report
+        if: needs.plan.outputs.mode == 'skip'
+        run: bash scripts/ci/pages_signals.sh report "${RUNNER_TEMP}" "${REPORT_RUN}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          REPORT_RUN: ${{ needs.plan.outputs.report_run }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
@@ -142,8 +210,12 @@ jobs:
   deploy:
     name: Deploy to Pages
     needs: build
+    if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write

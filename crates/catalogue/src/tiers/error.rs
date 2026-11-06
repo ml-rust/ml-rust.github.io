@@ -13,6 +13,7 @@ use catalogue_signals::link::LinkError;
 use catalogue_signals::sandbox::SandboxError;
 use thiserror::Error;
 
+use super::cadence::FetchMode;
 use crate::cache_dir::CacheDirError;
 use crate::data_dir::DataDirError;
 use crate::dump::DumpCommandError;
@@ -85,6 +86,23 @@ pub enum TiersError {
         /// One line per problem, naming the entry and the signal.
         problems: Vec<String>,
     },
+    /// A mode that reuses stored values has no history to read.
+    #[error(
+        "--fetch {mode} reuses stored values, and the run has no --history. Pass --history DIR, or use --fetch all"
+    )]
+    FetchNeedsHistory {
+        /// The fetch mode.
+        mode: FetchMode,
+    },
+    /// `--fetch none` has no stored value to apply the rules to.
+    #[error(
+        "--fetch none found no snapshot in {}. Run with --fetch all to fetch every value, then rerun",
+        .path.display()
+    )]
+    NoStoredValues {
+        /// The history directory.
+        path: PathBuf,
+    },
     /// Too many fetches failed with no usable earlier value.
     #[error(
         "{} of {} network fetches failed with no usable earlier value, above the limit of {limit} in fallback.max_failed_share. The run wrote no snapshot and no report:\n{}\nFix these fetch errors, then rerun",
@@ -115,7 +133,8 @@ impl TiersError {
             | Self::Link(LinkError::Github(GithubError::Status { status: 401, .. }))
             | Self::Distribution(DistributionError::Status { status: 401, .. })
             | Self::BuildChecks(SandboxError::Corrupt { .. })
-            | Self::Uncited { .. } => INVALID,
+            | Self::Uncited { .. }
+            | Self::FetchNeedsHistory { .. } => INVALID,
             Self::Dump(error) => error.exit_code(),
             Self::Rustsec(error) => error.exit_code(),
             Self::Data(_)
@@ -127,6 +146,7 @@ impl TiersError {
             | Self::BuildChecks(_)
             | Self::Distribution(_)
             | Self::Report { .. }
+            | Self::NoStoredValues { .. }
             | Self::TooManyFailed { .. } => IO,
         }
     }

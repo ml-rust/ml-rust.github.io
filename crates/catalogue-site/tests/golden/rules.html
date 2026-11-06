@@ -98,6 +98,7 @@
 <ul>
 <li><a href="#outside-approval">Outside approval</a></li>
 <li><a href="#demotion-guard">Demotion guard</a></li>
+<li><a href="#refresh">How values refresh</a></li>
 <li><a href="#fallback">Failed fetches</a></li>
 </ul>
 </li>
@@ -396,6 +397,18 @@
 <p>An instant archive skips this guard.</p>
 </div>
 </article>
+<article class="rule" aria-labelledby="refresh">
+<div class="rule-text">
+<h3 id="refresh">How values refresh</h3>
+<p>A weekly scan fetches repo facts, app distribution counts, the crates.io dump and the RustSec archive.</p>
+<p>The contributor count and the README refresh only after a newer push, after a new version, or once the value passes its refresh age.</p>
+<p>The repo link check refreshes only after a new version, or once the value passes its refresh age.</p>
+<p>The refresh age of an entry is between 30 and 57 days. The entry slug sets it, so refreshes spread over several scans.</p>
+<p>A run between scans fetches new entries at most, and reuses every other value. When the last scan is over 8 days old, the next run scans instead.</p>
+<p class="why-note">A reused value keeps its original fetch date.</p>
+<p class="why-note">A run that reuses the values of an entry is no check of that entry for the dead rule.</p>
+</div>
+</article>
 <article class="rule rule-with-rows" aria-labelledby="fallback">
 <div class="rule-text">
 <h3 id="fallback">Failed fetches</h3>
@@ -413,7 +426,7 @@
 </thead>
 <tbody>
 <tr><th scope="row"><code>fallback.max_age_days</code></th><td class="number">14</td><td>Most days a value stands in for a failed fetch.</td></tr>
-<tr><th scope="row"><code>fallback.max_failed_share</code></th><td class="number">0.05</td><td>Largest share of a run&#39;s fetches that can fail with no usable earlier value. Above it the run stops and publishes nothing.</td></tr>
+<tr><th scope="row"><code>fallback.max_failed_share</code></th><td class="number">0.05</td><td>Largest share of a run&#39;s fetches that can fail with no usable earlier value. Above it the run stops and publishes nothing. A run under 20 fetches never stops on this.</td></tr>
 </tbody>
 </table>
 </div>
@@ -473,7 +486,7 @@
 <article class="rule rule-with-rows" aria-labelledby="movement">
 <div class="rule-text">
 <h3 id="movement">Movement</h3>
-<p>Movement comes from the daily snapshots. It never affects a tier.</p>
+<p>Movement comes from the stored snapshots. A weekly scan adds one each week. It never affects a tier.</p>
 <ul>
 <li><strong>New</strong> The entry first appears in the history inside the window. The first day of history does not count, because every entry appears then.</li>
 <li><strong>Rising</strong> Active dependents rose by at least the set share and the set number, between the snapshot nearest the window start and the newest snapshot.</li>
@@ -510,6 +523,7 @@
 <li><a href="/changes/feed.xml">Atom feed</a></li>
 <li><a href="/data/catalogue.json">Data file</a></li>
 <li><a href="https://github.com/ml-rust/ml-rust.github.io">GitHub</a></li>
+<li><a href="https://discord.gg/jBhFk9kHPg">Discord</a></li>
 </ul>
 <p class="site-footer-licenses">Data: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/data/LICENSE">CC-BY-4.0</a>. Code: <a href="https://github.com/ml-rust/ml-rust.github.io/blob/main/LICENSE">Apache-2.0</a>.</p>
 </div>

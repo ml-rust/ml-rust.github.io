@@ -308,7 +308,7 @@ mod tests {
     fn the_committed_file_parses_and_passes() {
         let t = parse(include_str!("../../../../data/thresholds.toml"));
         assert!(t.problems().is_empty(), "{:?}", t.problems());
-        assert_eq!(t.version, 8);
+        assert_eq!(t.version, 9);
         assert_eq!(t.rot.build_check_max_age_days, 45);
         assert_eq!(t.fallback.max_age_days, 14);
         assert_eq!(t.fallback.max_failed_share, 0.05);

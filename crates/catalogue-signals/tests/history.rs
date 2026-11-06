@@ -28,6 +28,8 @@ fn row(tier: Tier, docker_pulls: Option<u64>) -> Row {
         active_users: Some(2.5),
         docker_pulls,
         network: None,
+        reused: false,
+        fetch_notes: Vec::new(),
     }
 }
 
@@ -220,6 +222,7 @@ fn with_network() -> Row {
                     maintainer_replies_365: 7,
                     license: RepoLicense::Stated("MIT".to_owned()),
                     topics: Vec::new(),
+                    pushed_at: Some("2026-10-30T01:02:03Z".parse().expect("time")),
                 },
             }),
             link: Some(Dated {

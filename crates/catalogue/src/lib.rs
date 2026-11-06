@@ -56,7 +56,10 @@ pub use seed::{
     LeadSeed, Seed, SeedArgs, SeedError, build_lead_seed, build_merged_seed, build_seed,
     parse_leads, run_seed, write_drafts,
 };
-pub use tiers::{Network, TiersArgs, TiersError, TiersRun, run_tiers, tiers_report};
+pub use tiers::{
+    FetchMode, Network, TiersArgs, TiersError, TiersInputs, TiersRun, run_tiers, tiers_report,
+    tiers_report_with,
+};
 pub use token::NoToken;
 pub use usage::{render_usage, resolve_names};
 pub use validate::{Outcome, Summary, validate};

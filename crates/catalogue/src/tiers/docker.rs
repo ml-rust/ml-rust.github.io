@@ -1,6 +1,6 @@
 //! The Docker Hub pull counts of app entries.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use catalogue_core::{Catalogue, Entry, EntryKind, Slug};
 use catalogue_signals::distribution::{DOCKER_INTERVAL, docker_pulls};
@@ -28,14 +28,14 @@ pub(super) struct DockerCount {
 }
 
 /// The Docker Hub images an app entry lists. Empty for a library.
-fn images(entry: &Entry) -> &[String] {
+pub(super) fn images(entry: &Entry) -> &[String] {
     match (&entry.kind, &entry.distribution) {
         (EntryKind::App, Some(distribution)) => &distribution.docker,
         _ => &[],
     }
 }
 
-/// Fetches the pull count of every app that lists Docker images, keyed by slug.
+/// Fetches the pull count of every app in `wanted` that lists Docker images, keyed by slug.
 ///
 /// - The count sums the pulls of the listed images that Docker Hub knows.
 /// - An image Docker Hub does not know, or whose name is not `namespace/repo`,
@@ -45,11 +45,15 @@ fn images(entry: &Entry) -> &[String] {
 /// - One pacer spaces all requests.
 pub(super) fn fetch_docker(
     catalogue: &Catalogue,
+    wanted: &BTreeSet<Slug>,
     transport: &dyn Transport,
 ) -> Result<BTreeMap<Slug, DockerCount>, TiersError> {
     let mut out: BTreeMap<Slug, DockerCount> = BTreeMap::new();
     let mut requests: Vec<(&Slug, &str, &str, &str)> = Vec::new();
     for (slug, entry) in catalogue.entries() {
+        if !wanted.contains(slug) {
+            continue;
+        }
         for image in images(entry) {
             let count = out.entry(slug.clone()).or_default();
             count.of = images(entry).join(", ");

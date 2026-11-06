@@ -34,7 +34,7 @@ pub struct BuildArgs {
     /// Build every page without a tier.
     #[arg(long)]
     pub no_tiers: bool,
-    /// Directory of daily snapshots from `catalogue tiers --history`. Feeds the
+    /// Directory of snapshots from `catalogue tiers --history`. Feeds the
     /// changes page, the feed and the movement words.
     #[arg(
         long,
