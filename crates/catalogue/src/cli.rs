@@ -15,6 +15,7 @@ use crate::github::{GithubCommand, run_github};
 use crate::rustsec::{RustsecCommand, run_rustsec};
 use crate::sandbox::{SandboxCommand, run_sandbox};
 use crate::seed::{SeedArgs, run_seed};
+use crate::state::{StateArgs, run_state};
 use crate::tiers::{TiersArgs, run_tiers};
 use crate::validate::{Outcome, validate};
 
@@ -111,6 +112,11 @@ pub enum Command {
     /// With `--leads FILE` the command drafts from a list of GitHub repos instead,
     /// and prints the libraries, the apps, the listed leads and the skips.
     Seed(SeedArgs),
+    /// Write the weekly state report with AI models and check every answer.
+    ///
+    /// Reads the catalogue file and asks the models one topic at a time. Nothing is
+    /// written unless every part passes its checks, so a failed run keeps the last report.
+    State(StateArgs),
     /// Check issue forms, sync repo labels and run the issue checks of the catalogue bot.
     Bot {
         /// The bot action to run.
@@ -136,6 +142,7 @@ pub fn run(cli: Cli) -> ExitCode {
         Command::Tiers(args) => run_tiers(args),
         Command::Sandbox { command } => run_sandbox(command),
         Command::Seed(args) => run_seed(args),
+        Command::State(args) => run_state(&args),
         Command::Bot { command } => run_bot(command),
     }
 }

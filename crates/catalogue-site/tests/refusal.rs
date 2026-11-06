@@ -21,6 +21,7 @@ fn build(catalogue: &Catalogue, report: &TierReport) -> Result<Vec<OutputFile>, 
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     })
 }
 

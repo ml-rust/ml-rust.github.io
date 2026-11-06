@@ -1,0 +1,36 @@
+[Unit]
+Description=Write the catalogue state report
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=catalogue-bot
+Environment=CATALOGUE_BOT_CONFIG=/etc/catalogue-bot/bot.toml
+EnvironmentFile=-/etc/catalogue-bot/env
+StateDirectory=catalogue-state
+ExecStart=/opt/catalogue/current/catalogue state --config /etc/catalogue-bot/state.toml --summaries /var/lib/catalogue-state/summaries.db --publish
+TimeoutStartSec=2h
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+UMask=0077

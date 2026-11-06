@@ -11,8 +11,8 @@ use crate::machine::{
 };
 use crate::pages::{
     CategoryPage, ChangesPage, ComparePage, FeaturedPage, HomePage, Layout, MlRustPage, NavItem,
-    NotFoundPage, PageMeta, ProjectPage, RulesPage, SearchPage, SubmitPage, TopicPage, TopicsPage,
-    category_file, project_file, topic_file,
+    NotFoundPage, PageMeta, ProjectPage, RulesPage, SearchPage, StatePage, SubmitPage, TopicPage,
+    TopicsPage, category_file, project_file, topic_file,
 };
 use crate::refusal;
 use crate::search::{search_files, search_records};
@@ -48,14 +48,20 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let compare_script = HashedAsset::compare_script();
     let favicon = HashedAsset::favicon();
     let share_image = HashedAsset::share_image();
+    let state = inputs.report.zip(inputs.state);
     let layout = |current, meta| {
-        Layout::new(
+        let layout = Layout::new(
             stylesheet.href(),
             favicon.href(),
             &share_image.href(),
             current,
             meta,
-        )
+        );
+        if state.is_some() {
+            layout.with_state_link(current)
+        } else {
+            layout
+        }
     };
     let explore = Some(NavItem::Explore);
     let catalogue = inputs.catalogue;
@@ -141,6 +147,17 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
             &NotFoundPage::new(layout(None, PageMeta::not_found()), catalogue, report),
         )?,
     ];
+    if let Some((tiers, written)) = state {
+        files.push(render(
+            "state/index.html".to_owned(),
+            &StatePage::new(
+                layout(Some(NavItem::State), PageMeta::state()),
+                catalogue,
+                tiers,
+                written,
+            ),
+        )?);
+    }
     for topic in catalogue.topics() {
         let mut page = TopicPage::new(layout(explore, PageMeta::topic(topic)), inputs, topic);
         if page.uses_list_script() {
@@ -170,9 +187,61 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     files.extend(compare_files(inputs)?);
     let sitemap = sitemap_file(&files)?;
     files.push(sitemap);
+    files.extend(split_topic_files(catalogue));
     files.extend(search_files(&search_records(catalogue, report))?);
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
+}
+
+/// Each old topic id that split, with the id and name of the topics that replace it.
+const SPLIT_TOPICS: [(&str, &[(&str, &str)]); 2] = [
+    (
+        "vision-documents",
+        &[
+            ("images-vision", "Images and vision"),
+            ("video", "Video"),
+            ("documents", "Documents and OCR"),
+        ],
+    ),
+    (
+        "math-gpu",
+        &[
+            ("math-science", "Math and science"),
+            ("tensors-gpu", "Tensors and GPU compute"),
+        ],
+    ),
+];
+
+/// One page at each old topic address whose new topics all exist, so a saved link still leads
+/// somewhere. The caller adds them after the sitemap, because search engines do not need them.
+fn split_topic_files(catalogue: &catalogue_core::Catalogue) -> Vec<OutputFile> {
+    SPLIT_TOPICS
+        .iter()
+        .filter(|(_, topics)| {
+            topics.iter().all(|(id, _)| {
+                catalogue
+                    .topics()
+                    .iter()
+                    .any(|topic| topic.id.as_str() == *id)
+            })
+        })
+        .map(|(old, topics)| {
+            let links: String = topics
+                .iter()
+                .map(|(id, name)| format!(r#"<li><a href="/topics/{id}/">{name}</a></li>"#))
+                .collect();
+            let html = format!(
+                "<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">\
+                 <title>This job has split | ML Rust catalogue</title>\
+                 <meta name=\"robots\" content=\"noindex\"></head>\
+                 <body><h1>This job has split</h1><ul>{links}</ul></body></html>\n"
+            );
+            OutputFile {
+                path: format!("topics/{old}/index.html"),
+                bytes: html.into_bytes(),
+            }
+        })
+        .collect()
 }
 
 /// `page` rendered to the file at `path`.

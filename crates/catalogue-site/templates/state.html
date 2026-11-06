@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block main_class %}page-wide{% endblock %}
+{% block content %}
+<article class="state">
+<header class="state-head">
+<h1>The state of ML in Rust, as of <time datetime="{{ written }}">{{ written_text }}</time></h1>
+<p class="state-quote">{% let pieces = &headline %}{% include "state_text.html" %}</p>
+<p class="lede">{% let pieces = &summary %}{% include "state_text.html" %}</p>
+<p class="state-source"><strong>Written by AI, not checked by a person.</strong> AI models read every project in the catalogue, wrote this report, and audited it against catalogue data. They never saw stars, downloads or tiers. AI can still get things wrong. Our code draws every chart. <a href="/submit/">Report a wrong call</a>.</p>
+{%- if stale %}
+<p class="state-stale">This report is more than three weeks old.</p>
+{%- endif %}
+</header>
+
+<section aria-labelledby="jobs">
+<h2 id="jobs">How each job stands</h2>
+<div class="table-scroll">
+<table class="state-jobs">
+<caption class="visually-hidden">How ready each job is in Rust, and whether it still needs Python</caption>
+<thead><tr><th scope="col">Job</th><th scope="col">Rust today</th><th scope="col">Python</th><th scope="col">Where it stands</th><th scope="col">Key tools</th></tr></thead>
+<tbody>
+{%- for job in &jobs %}
+<tr>
+<th scope="row"><a href="{{ job.href }}">{{ job.name }}</a></th>
+<td><span class="status-word {{ job.readiness_class }}">{{ job.readiness }}</span></td>
+<td>{{ job.python }}</td>
+<td>{% let pieces = &job.verdict %}{% include "state_text.html" %}</td>
+<td>{% if !job.run_now.is_empty() %}<div class="state-tools"><strong>Ready to run:</strong> {% let links = &job.run_now %}{% include "state_links.html" %}</div>{% endif %}{% if !job.build_with.is_empty() %}<div class="state-tools"><strong>Build with:</strong> {% let links = &job.build_with %}{% include "state_links.html" %}</div>{% endif %}{% if !job.from_org.is_empty() %}<div class="state-seen state-org"><span class="state-org-mark" aria-hidden="true" title="From ML Rust, who run this catalogue">{% include "icons/logo-mark.svg" %}</span><span class="visually-hidden">From ML Rust, who run this catalogue:</span> {% let links = &job.from_org %}{% include "state_links.html" %}</div>{% endif %}</td>
+</tr>
+{%- endfor %}
+</tbody>
+</table>
+</div>
+</section>
+
+<div class="state-columns">
+<section aria-labelledby="use-now">
+<h2 id="use-now">Crates to use now</h2>
+{%- let picks = &use_now %}
+{% include "state_picks.html" %}
+</section>
+<section aria-labelledby="watch">
+<h2 id="watch">Crates to watch</h2>
+{%- let picks = &watch %}
+{% include "state_picks.html" %}
+</section>
+</div>
+
+<section aria-labelledby="build-today">
+<h2 id="build-today">What you can build today</h2>
+<ul class="state-cards">
+{%- for path in &build_today %}
+<li class="state-card">
+<h3>{% let pieces = &path.goal %}{% include "state_text.html" %}</h3>
+<p class="state-stack"><strong>Use:</strong> {% let links = &path.stack %}{% include "state_links.html" %}</p>
+<p>{% let pieces = &path.why %}{% include "state_text.html" %}</p>
+<p class="state-watch"><strong>Watch out:</strong> {% let pieces = &path.watch_out %}{% include "state_text.html" %}</p>
+</li>
+{%- endfor %}
+</ul>
+</section>
+
+<div class="state-columns">
+<section aria-labelledby="holes-filled">
+<h2 id="holes-filled">Gaps Rust has filled</h2>
+<ul class="state-list">
+{%- for item in &holes_filled %}
+<li>
+<h3>{% let pieces = &item.hole %}{% include "state_text.html" %}</h3>
+<p>{% let pieces = &item.note %}{% include "state_text.html" %}</p>
+<p class="state-seen">Use {% let links = &item.filled_by %}{% include "state_links.html" %}.</p>
+</li>
+{%- endfor %}
+</ul>
+</section>
+<section aria-labelledby="holes-open">
+<h2 id="holes-open">Gaps still open</h2>
+<ul class="state-list">
+{%- for item in &holes_open %}
+<li>
+<h3>{% let pieces = &item.hole %}{% include "state_text.html" %}</h3>
+<p>{% let pieces = &item.impact %}{% include "state_text.html" %}</p>
+<p class="state-seen"><strong>What teams do today:</strong> {% let pieces = &item.workaround %}{% include "state_text.html" %}</p>
+</li>
+{%- endfor %}
+</ul>
+</section>
+</div>
+
+<section aria-labelledby="measured">
+<h2 id="measured">What the catalogue measures</h2>
+<div class="state-charts">
+{%- for chart in &charts %}
+{% include "state_chart.html" %}
+{%- endfor %}
+</div>
+</section>
+
+</article>
+{% endblock %}

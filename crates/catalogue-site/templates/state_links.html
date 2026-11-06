@@ -1,0 +1,1 @@
+{% for link in links %}{% if loop.index0 > 0 %}, {% endif %}<a href="{{ link.href }}">{{ link.name }}</a>{% if link.wrapper %} <span class="state-wrapper">(wrapper)</span>{% endif %}{% endfor %}

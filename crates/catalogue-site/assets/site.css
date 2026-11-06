@@ -3703,3 +3703,282 @@ td.not-measured {
     border-left-color: CanvasText;
   }
 }
+
+/* The state page. Status colours always sit beside their word. */
+:root {
+  --status-ready: #0ca30c;
+  --status-partial: #fab219;
+  --status-gap: #d03b3b;
+  --step-1: #86b6ef;
+  --step-2: #3987e5;
+  --step-3: #256abf;
+  --step-4: #104281;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --step-1: #184f95;
+    --step-2: #256abf;
+    --step-3: #3987e5;
+    --step-4: #86b6ef;
+  }
+}
+
+.state {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+}
+
+.state-head {
+  max-width: var(--measure);
+}
+
+.state-quote {
+  max-width: var(--measure);
+  margin: var(--space-3) 0;
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--accent);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.state-tools + .state-tools,
+.state-org {
+  margin-top: var(--space-2);
+}
+
+.state-wrapper {
+  color: var(--secondary);
+  font-size: 0.875em;
+}
+
+.state-org-mark {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+}
+
+.state-org-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.state-source,
+.state-stale,
+.state-org {
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.state-stale {
+  padding: var(--space-2) var(--space-3);
+  background: var(--wash);
+  border-radius: var(--radius-s);
+}
+
+.state-chart {
+  margin: 0 0 var(--space-6);
+}
+
+.state-chart figcaption strong {
+  display: block;
+  font-size: 1.125rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0;
+  padding: 0;
+  list-style: none;
+  color: var(--secondary);
+  font-size: 0.875rem;
+}
+
+.chart-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: var(--space-1);
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.chart-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.chart-table th {
+  width: 30%;
+}
+
+.chart-bar {
+  width: 45%;
+}
+
+.chart-bar svg {
+  display: block;
+  width: 100%;
+  height: 14px;
+  background: var(--wash);
+  border-radius: 4px;
+}
+
+.chart-bar rect {
+  stroke: var(--surface);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-text {
+  color: var(--secondary);
+}
+
+.status-ready { fill: var(--status-ready); background: var(--status-ready); }
+.status-partial { fill: var(--status-partial); background: var(--status-partial); }
+.status-gap { fill: var(--status-gap); background: var(--status-gap); }
+.step-1 { fill: var(--step-1); background: var(--step-1); }
+.step-2 { fill: var(--step-2); background: var(--step-2); }
+.step-3 { fill: var(--step-3); background: var(--step-3); }
+.step-4 { fill: var(--step-4); background: var(--step-4); }
+
+.status-word {
+  display: inline-block;
+  background: none;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-word::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--space-1);
+  border-radius: 50%;
+  background: var(--status-partial);
+}
+
+.status-word.status-ready::before { background: var(--status-ready); }
+.status-word.status-gap::before { background: var(--status-gap); }
+
+.state-cards,
+.state-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.state-cards {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+}
+
+.state-card {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+}
+
+.state h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+}
+
+.state-card p,
+.state-list p {
+  margin: var(--space-1) 0 0;
+}
+
+.state-watch,
+.state-seen {
+  color: var(--secondary);
+  font-size: 0.875rem;
+}
+
+.state-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.state-columns {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.state-charts {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+}
+
+.chart-takeaway {
+  display: block;
+}
+
+.chart-note {
+  display: block;
+  color: var(--secondary);
+  font-size: 0.8125rem;
+}
+
+.state-jobs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.state-jobs th,
+.state-jobs td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.state-jobs tbody th {
+  font-weight: 600;
+  min-width: 150px;
+}
+
+.state-jobs td:nth-child(4) {
+  min-width: 300px;
+}
+
+@media (max-width: 760px) {
+  .chart-table th { width: 40%; }
+  .chart-table .chart-text { display: block; }
+  .chart-bar { width: 60%; }
+  .chart-table tr { display: block; padding: var(--space-2) 0; }
+  .chart-table th,
+  .chart-table td { display: block; width: 100%; padding: 2px 0; }
+  .state-jobs thead { display: none; }
+  .state-jobs tr { display: block; padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+  .state-jobs tbody th,
+  .state-jobs td,
+  .state-jobs td:nth-child(4) { display: block; min-width: 0; padding: 2px 0; border: 0; }
+  .state-jobs td:nth-child(3)::before { content: "Python: "; color: var(--secondary); }
+  .state-jobs td:nth-child(5)::before { content: "Key tools: "; color: var(--secondary); }
+}

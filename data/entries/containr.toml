@@ -1,0 +1,12 @@
+name = "containr"
+kind = "library"
+repo = "https://github.com/ml-rust/containr"
+crates = ["containr"]
+topics = ["video"]
+category = "computer-vision"
+org_affiliated = true
+added = 2026-11-06
+
+[description]
+text = "Media containers for vidr and voxr: reads and writes MP4, MOV, Matroska and WebM, with integer timestamps and raw edit lists."
+source = "human"

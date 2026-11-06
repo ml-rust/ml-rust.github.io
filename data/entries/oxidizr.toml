@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "A Rust-based LLM training framework"
-source = "crate"
-source_url = "https://crates.io/crates/oxidizr"
+text = "Trains GPT-style language models from a YAML config and a tokenized dataset: dense GQA transformers, Mamba 1, 2 and 3, MLA and MoE layers on CPU or CUDA. Runs the training loop, optimizer, checkpoints, evaluation and metrics on boostr, and builds speech corpora through voxr."
+source = "human"

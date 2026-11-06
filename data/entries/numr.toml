@@ -3,12 +3,11 @@ kind = "library"
 repo = "https://github.com/ml-rust/numr"
 homepage = "https://crates.io/crates/numr"
 crates = ["numr"]
-topics = ["math-gpu"]
+topics = ["math-science", "tensors-gpu"]
 category = "math-libraries"
 org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "High-performance numerical computing with multi-backend GPU acceleration (CPU/CUDA/WebGPU)"
-source = "crate"
-source_url = "https://crates.io/crates/numr"
+text = "The base for numerical code in Rust, in the role NumPy has in Python: n-dimensional tensors, linear algebra, FFT, statistics and autograd on CPU, CUDA and WebGPU. The backends use native kernels, with no cuBLAS, MKL or other vendor math library."
+source = "human"

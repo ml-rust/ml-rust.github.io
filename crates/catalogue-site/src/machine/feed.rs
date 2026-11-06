@@ -193,6 +193,7 @@ mod tests {
             changes,
             first_check,
             movement: &NO_MOVEMENT,
+            state: None,
         })
         .expect("renders");
         assert_eq!(file.path, "changes/feed.xml");

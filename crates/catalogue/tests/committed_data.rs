@@ -26,6 +26,7 @@ fn built_files(catalogue: &Catalogue) -> BTreeMap<String, OutputFile> {
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     };
     build_site(&inputs)
         .expect("the site builds")

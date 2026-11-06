@@ -275,6 +275,7 @@ fn app_with_a_crate(channels: bool) -> BTreeMap<String, String> {
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     })
 }
 

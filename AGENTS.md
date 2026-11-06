@@ -10,6 +10,7 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 - `crates/catalogue-bot`: issue form parsing, data file drafts, check reports, the labels file and its sync plan, the pure parts of the link check. Pure: no IO, network, clock or env.
 - `crates/catalogue-github`: the bot's GitHub App client: private key, App JWT, installation tokens, REST calls. Keys and tokens never reach logs, errors or disk.
 - `crates/catalogue-triage`: the bot's advisory LLM link check: provider fallback, Ollama `web_fetch` reads, GitHub page reads. The bot host NEVER fetches an evidence link itself.
+- `crates/catalogue-state`: the AI-written state report: what models read, the prompts, the checks on each answer. Models NEVER read stars, downloads or tiers, and NEVER get a project named in a prompt: picks come from the facts they read. READMEs reach them as untrusted data, from the site's project pages. A failed run publishes nothing.
 - `crates/catalogue-site`: the static site: askama templates, page data, the tier refusal checks, the feed, `data/catalogue.json`, `data/compare/`, `llms.txt`, sitemap, robots and the page scripts. Pure: no IO, network, clock or env. Every data-built link goes through `SafeHref`. NEVER turn escaping off, except `ReadmeHtml`: only the README renderer builds it, and it parses raw HTML with an HTML parser, writes only allowlisted tags and attributes, drops script-like elements whole and loads images only from the repo's own forge. A page stays complete without scripts: a script adds its own controls and NEVER sets `innerHTML`.
 - `crates/catalogue`: the `catalogue` CLI. Disk IO and command wiring over the crates above. `main.rs` only parses and dispatches.
 - `deploy/`: systemd units and scripts for the bot VM. Secrets live only on the VM, under `/etc/catalogue-bot/`.
@@ -21,8 +22,8 @@ GitHub Pages serves it. Git holds every piece of data. Tiers come from fixed, pu
 
 ## Invariants
 
-- No LLM decides a tier, writes a published claim, or merges anything. LLM output becomes comment text only.
-- Every published claim links its source.
+- No LLM decides a tier, writes a published claim, or merges anything. LLM output becomes comment text only. The one exception is `/state/`, which says it is AI-written. No tier reads it, and code draws its charts.
+- Every published claim links its source. `/state/` links the projects it names.
 - A tier comes from published thresholds over raw signals. NEVER add a composite score.
 - Stars alone NEVER qualify a project. GitHub hides stargazer lists, so stars cannot be screened for fakes. The repository route needs stars, forks and contributors together.
 - Each entry page shows every signal: raw value, source link, fetch date.

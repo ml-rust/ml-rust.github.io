@@ -2,12 +2,11 @@ name = "boostr"
 kind = "library"
 repo = "https://github.com/ml-rust/boostr"
 crates = ["boostr"]
-topics = ["run-models", "train-models"]
+topics = ["run-models", "llm-apps", "train-models", "tensors-gpu"]
 category = "ml-frameworks"
 org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "ML framework built on numr - attention, quantization, model architectures"
-source = "crate"
-source_url = "https://crates.io/crates/boostr"
+text = "ML framework on numr for training and inference on CPU, CUDA and WebGPU: attention, quantization, inference scheduling and distributed execution. Models include LLaMA, Mamba2, Qwen3.5, Whisper, Kokoro, VITS, VoxCPM2, Silero VAD, CLAP and super-resolution. Loads SafeTensors and GGUF."
+source = "human"

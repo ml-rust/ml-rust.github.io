@@ -1,0 +1,10 @@
+[Unit]
+Description=Write the catalogue state report every week
+
+[Timer]
+OnCalendar=Mon 01:00 UTC
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

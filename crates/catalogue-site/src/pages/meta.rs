@@ -87,6 +87,16 @@ impl PageMeta {
         )
     }
 
+    /// The state of ML in Rust.
+    pub(crate) fn state() -> Self {
+        Self::fixed(
+            "The state of ML in Rust",
+            "Can you build real machine learning products in Rust today? What works, what to \
+             build with, and the real gaps, updated every week.",
+            "/state/",
+        )
+    }
+
     /// The jobs and categories.
     pub(crate) fn topics() -> Self {
         Self::fixed(

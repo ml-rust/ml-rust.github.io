@@ -268,6 +268,7 @@ pub fn site_with(
         changes: &changes,
         first_check: Some(first_check()),
         movement,
+        state: None,
     })
 }
 

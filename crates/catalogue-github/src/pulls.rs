@@ -224,6 +224,20 @@ impl RepoClient<'_> {
         Ok(BranchWrite::Moved)
     }
 
+    /// Moves existing `branch` forward to commit `sha`, and never force-moves it.
+    /// Use it for a branch another writer shares. Returns `false` when `sha` no longer
+    /// descends from the head, so the caller builds on the new head and tries again.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`ApiError`] when the call fails.
+    pub fn advance_branch(&mut self, branch: &str, sha: &CommitSha) -> Result<bool, ApiError> {
+        let url = self.repo_url(&format!("/git/refs/heads/{}", ref_path(branch)));
+        let payload = json!({"sha": sha.as_str(), "force": false}).to_string();
+        let answer = self.call(Verb::Patch, &url, Some(&payload), &[200, 422])?;
+        Ok(answer.status == 200)
+    }
+
     /// Opens `pull` and returns its number. Maintainers of the base repo cannot
     /// push to the head branch.
     ///

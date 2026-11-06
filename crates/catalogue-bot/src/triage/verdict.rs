@@ -37,6 +37,9 @@ pub enum AnswerError {
     /// The quote is longer than [`MAX_QUOTE_CHARS`].
     #[error("the answer quote is longer than {MAX_QUOTE_CHARS} characters")]
     QuoteTooLong,
+    /// The content breaks the checks of the code that asked. That code logs why.
+    #[error("the answer fails the checks of its reader")]
+    Rejected,
 }
 
 /// The reply format, with no other field allowed.

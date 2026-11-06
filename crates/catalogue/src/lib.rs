@@ -18,6 +18,7 @@ mod render;
 pub mod rustsec;
 pub mod sandbox;
 pub mod seed;
+pub mod state;
 pub mod tiers;
 mod token;
 pub mod usage;

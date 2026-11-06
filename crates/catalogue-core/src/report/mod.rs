@@ -13,6 +13,7 @@ pub use fact::{
     NEW_DEPENDENTS_LABEL, NO_GPU_FEATURE, NONE_STATED, NOT_APPLICABLE, NOT_MEASURED,
     PEAK_DEPENDENTS_LABEL, PEAK_USERS_SIGNAL, PYTHON_SIGNAL, RUNS_ON_EVIDENCE_SIGNAL,
     RUNS_ON_SEPARATOR, RUNS_ON_SIGNAL, STARS_SIGNAL, SignalFact, SourceRef, never_counts,
+    wraps_native_engine,
 };
 pub use readme::ReadmeFact;
 pub use tier_report::{REPORT_SCHEMA, ReportMismatch, TierReport};

@@ -605,25 +605,25 @@ terms = ["other term"]
                 "solvr",
                 "Advanced computing library for real-world problem solving - optimization, \
                  differential equations, interpolation, statistics, and more",
-                "math-gpu",
+                "math-science",
                 Some("math-libraries"),
             ),
             (
                 "sci",
                 "A scientific computing library.",
-                "math-gpu",
+                "math-science",
                 Some("math-libraries"),
             ),
             (
                 "venus",
                 "Reactive notebook environment for Rust",
-                "math-gpu",
+                "math-science",
                 Some("developer-tools"),
             ),
             (
                 "venus-repo",
                 "Reactive notebooks for Rust.",
-                "math-gpu",
+                "math-science",
                 Some("developer-tools"),
             ),
         ] {

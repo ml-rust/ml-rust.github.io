@@ -13,6 +13,7 @@ mod project;
 mod rules;
 mod search;
 mod shared;
+mod state;
 mod submit;
 mod topics;
 
@@ -34,5 +35,6 @@ pub(crate) use shared::{
     install_line, is_first_check, native_code_fact, project_file, project_href, row_statuses,
     tier_name, topic_file, topic_href, topic_link,
 };
+pub(crate) use state::StatePage;
 pub(crate) use submit::SubmitPage;
 pub(crate) use topics::{TopicPage, TopicsPage};

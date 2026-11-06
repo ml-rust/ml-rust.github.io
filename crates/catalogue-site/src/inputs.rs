@@ -1,6 +1,6 @@
 //! What one site build reads.
 
-use catalogue_core::{Catalogue, Date, Movement, Slug, Tier, TierReport};
+use catalogue_core::{Catalogue, Date, Movement, Slug, StateReport, Tier, TierReport};
 
 /// Everything one site build reads.
 ///
@@ -20,6 +20,8 @@ pub struct SiteInputs<'a> {
     /// The movement the history measures. Pages show it only when `report` is given.
     /// No tier reads it.
     pub movement: &'a Movement,
+    /// The weekly state report. The state page needs it and `report`. Without both it is left out.
+    pub state: Option<&'a StateReport>,
 }
 
 /// One tier change of one entry.

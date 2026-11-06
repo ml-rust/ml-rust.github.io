@@ -16,6 +16,8 @@
 {% include "example_links.html" %}
 <p class="hero-meta">
 {%- if let Some(date) = checked %}{% if let Some(text) = checked_text %}<span>Checked <time datetime="{{ date }}">{{ text }}</time></span>{% endif %}{% endif %}
+{%- if has_state %}
+<a href="/state/">Is Rust ready for ML? Read the state of ML in Rust<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a>{% endif %}
 <a href="/rules/">How tiers work<span class="icon" aria-hidden="true">{% include "icons/ui-arrow-right.svg" %}</span></a></p>
 </section>
 

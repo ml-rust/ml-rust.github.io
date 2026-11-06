@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "High-performance Gradient Boosted Decision Tree engine for large-scale tabular data"
-source = "crate"
-source_url = "https://crates.io/crates/treeboost"
+text = "Gradient-boosted decision trees for tabular data: trains a baseline model in one call, with full control over boosting modes and configs, and Scalar, AVX-512, SVE2, WGPU and CUDA backends."
+source = "human"

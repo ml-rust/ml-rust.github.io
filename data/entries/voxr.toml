@@ -8,6 +8,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "Audio and speech: codecs, DSP, G2P, voices, and TTS/ASR pipelines over boostr models"
-source = "crate"
-source_url = "https://crates.io/crates/voxr"
+text = "Audio and speech on boostr: compressed-audio decode, resampling, DSP and grapheme to phoneme, with speech synthesis (Kokoro, VITS), voice cloning (VoxCPM2), transcription with word timings (Whisper), voice activity (Silero) and audio-text scoring (CLAP), on CPU or CUDA."
+source = "human"

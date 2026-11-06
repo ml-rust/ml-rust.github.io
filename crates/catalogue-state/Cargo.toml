@@ -1,0 +1,23 @@
+[package]
+name = "catalogue-state"
+version.workspace = true
+description = "Writes and checks the weekly state report of the ml-rust catalogue"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+catalogue-bot.workspace = true
+catalogue-core.workspace = true
+catalogue-triage.workspace = true
+jiff.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+catalogue-github = { workspace = true, features = ["testing"] }
+catalogue-signals.workspace = true

@@ -1,0 +1,32 @@
+# Config of `catalogue state`. Copy it to state.toml, which git ignores.
+# The file holds no secret. `api_key_env` names a variable, and the run reads it.
+# A provider whose variable is unset or empty is skipped with a warning.
+
+# The seconds one model request waits. A model past this moves on to its next attempt.
+request_timeout_secs = 600
+# The attempts per model before the next model.
+max_attempts_per_model = 2
+
+# The providers, tried in order. Each model is tried in order within its provider.
+[[providers]]
+name = "ollama"
+base_url = "https://ollama.com/v1"
+api_key_env = "OLLAMA_API_KEY"
+models = ["deepseek-v4.1-flash:cloud", "glm-5.3-flash:cloud"]
+# Thinking counts toward `max_tokens`. A low cap ends a thinking model with no answer at all.
+[providers.request]
+temperature = 0.2
+max_tokens = 48000
+reasoning_effort = "medium"
+
+[[providers]]
+name = "openrouter"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+models = ["deepseek/deepseek-v4.1-flash", "z-ai/glm-5.3-flash"]
+[providers.request]
+temperature = 0.2
+max_tokens = 48000
+reasoning = { effort = "medium" }
+[providers.headers]
+X-Title = "ml-rust catalogue"

@@ -22,6 +22,7 @@
 
 # Per-machine bot config (bot.example.toml is committed)
 /bot.toml
+/state.toml
 
 # Per-machine cargo config
 /.cargo/config.toml

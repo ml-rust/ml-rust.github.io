@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "LLM inference server with an OpenAI-compatible API, plus speech synthesis (TTS) and transcription (ASR). Serves Llama, Mistral, Qwen, Mamba2, MLA+MoE and hybrid models from SafeTensors, AWQ, GPTQ and GGUF."
-source = "crate"
-source_url = "https://crates.io/crates/blazr"
+text = "Inference server for LLMs, speech and embeddings: OpenAI-compatible routes with streaming, plus speech synthesis (TTS) and transcription (ASR). Serves Llama, Mistral, Qwen, Mamba2, MLA+MoE and hybrid models from SafeTensors, AWQ, GPTQ and GGUF."
+source = "human"

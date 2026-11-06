@@ -1,7 +1,7 @@
 //! The entry page struct and its template binding.
 
 use askama::Template;
-use catalogue_core::{EffectiveEntry, Tier};
+use catalogue_core::{EffectiveEntry, Slug, Tier};
 
 use super::action::ActionPanel;
 use super::also_in::compare_rows;
@@ -58,6 +58,9 @@ pub(crate) struct ProjectPage<'a> {
     pub compare_link: Option<SafeHref>,
     /// The topics of the entry that the comparison links in full.
     pub compare_topics: Vec<NamedLink<'a>>,
+    /// Whether the comparison of a project outside the organization holds a project of the
+    /// organization. The page then says that it always shows the closest one.
+    pub compare_shows_org: bool,
     /// The entries that name this one in `part_of`, strongest first.
     pub related: Vec<NamedLink<'a>>,
     /// The sentence that states the order of the lists of this page.
@@ -111,6 +114,13 @@ impl<'a> ProjectPage<'a> {
             correction_href: CORRECTNESS_FORM.new_issue_href(),
             compare_link: (!compare.is_empty())
                 .then(|| compare_href(compare.iter().map(|row| row.slug.as_str()))),
+            compare_shows_org: !entry.org_affiliated
+                && compare.iter().any(|row| {
+                    Slug::new(row.slug.clone())
+                        .ok()
+                        .and_then(|slug| catalogue.entry(&slug))
+                        .is_some_and(|other| other.org_affiliated)
+                }),
             compare,
             compare_topics: effective
                 .topics

@@ -60,6 +60,7 @@ mod tests {
             changes: &[],
             first_check: None,
             movement: &movement,
+            state: None,
         };
         assert_eq!(
             movement_word(&inputs(Some(&tiers)), &slug("alpha")),
@@ -80,6 +81,7 @@ mod tests {
             changes: &[],
             first_check: None,
             movement: &movement,
+            state: None,
         };
         assert_eq!(movement_note(&inputs(Some(&tiers))), Some(NEEDS_HISTORY));
         assert_eq!(movement_note(&inputs(None)), None);

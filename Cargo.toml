@@ -5,6 +5,7 @@ members = [
     "crates/catalogue-bot",
     "crates/catalogue-github",
     "crates/catalogue-triage",
+    "crates/catalogue-state",
     "crates/catalogue-site",
     "crates/catalogue",
     "crates/catalogue-search-wasm",
@@ -60,6 +61,9 @@ ego-tree = "0.11"
 # The lexical search index of the static site: records to BM25 index files.
 # Not on crates.io yet: `.cargo/config.toml.example` patches it to a local checkout.
 oxidoc-search = { version = "0.1", default-features = false, features = ["builder"] }
+# The file that keeps the AI summaries, one row per project and release. Bundled, so the static
+# release binary needs no system library.
+rusqlite = { version = "0.41", features = ["bundled"] }
 # Zeroes the App key bytes and the access tokens when they drop.
 zeroize = "1"
 # Temporary directories for the download tests, created under the build directory.
@@ -74,5 +78,7 @@ catalogue-bot = { path = "crates/catalogue-bot" }
 catalogue-github = { path = "crates/catalogue-github" }
 # The advisory LLM link check of the bot: provider fallback, Ollama web_fetch and GitHub page reads.
 catalogue-triage = { path = "crates/catalogue-triage" }
+# The weekly state report: what models read, the prompts and the checks on every answer.
+catalogue-state = { path = "crates/catalogue-state" }
 # The static site renderer: templates, page data and refusal rules.
 catalogue-site = { path = "crates/catalogue-site" }

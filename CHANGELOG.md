@@ -6,9 +6,16 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- `catalogue state`: writes a one-page report on ML in Rust with AI models, then audits it. Set `state.toml` and the model keys to run it.
+- `site`: `/state/` shows that report, labeled as AI-written, with charts from catalogue data.
+
 ### Changed
 
+- `topics`: `vision-documents` splits into `images-vision`, `video` and `documents`, and `math-gpu` splits into `math-science` and `tensors-gpu`. Old topic links open a page that links the new ones.
 - `site`: a project with no GPU match reads `Unknown`, because it can still run on a GPU. `tch-rs` shows CUDA.
+- `site`: similar projects are picked by category, shared jobs and description, not by downloads. A project outside ML Rust also shows the closest ML Rust project, and says so.
 
 ## [0.1.1]
 

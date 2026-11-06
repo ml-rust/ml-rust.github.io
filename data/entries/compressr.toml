@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "High-performance model conversion and compression suite for LLMs"
-source = "crate"
-source_url = "https://crates.io/crates/compressr"
+text = "Model conversion and quantization with no Python: reads SafeTensors, GGUF, TCF and PyTorch state dicts, writes SafeTensors, GGUF and TCF, and quantizes to Q2_K through Q8_0 and IQ4 formats, including Q4_K_M mixes. GPTQ, AWQ, NF4, FP8, EXL2 and ONNX input are not implemented."
+source = "human"

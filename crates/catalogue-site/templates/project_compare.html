@@ -2,7 +2,7 @@
 <section class="project-compare" aria-labelledby="also-in">
 <div class="section-head">
 <h2 id="also-in">Compare with similar projects</h2>
-<p class="order-note">{{ order }}</p>
+<p class="order-note">{{ order }}{% if compare_shows_org %} ML Rust runs this catalogue, so its closest project always gets a row.{% endif %}</p>
 </div>
 <table class="rows rows-mixed rows-compact" data-sortable>
 <caption class="visually-hidden">{{ header.name }} beside the projects that share a topic with it</caption>

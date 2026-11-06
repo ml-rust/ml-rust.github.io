@@ -129,6 +129,8 @@ pub struct Asked<T> {
     pub model: String,
     /// The answer the validator returned.
     pub answer: T,
+    /// The attempts that failed before this answer, in order.
+    pub failed: Vec<AttemptFailure>,
 }
 
 /// Sends `chat/completions` requests to the providers in order.
@@ -196,6 +198,7 @@ impl<'a> Llm<'a> {
                                     provider: provider.name().to_owned(),
                                     model: model.clone(),
                                     answer,
+                                    failed: failures,
                                 });
                             }
                             Err(error) => Failure::BadAnswer(error),

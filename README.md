@@ -13,9 +13,12 @@ It covers crates on crates.io and apps outside it, including [burn](https://ml-r
 - [Train models](https://ml-rust.github.io/topics/train-models/)
 - [Speech and audio](https://ml-rust.github.io/topics/speech-audio/)
 - [Text, embeddings and search](https://ml-rust.github.io/topics/text-search/)
-- [Images, video and documents](https://ml-rust.github.io/topics/vision-documents/)
+- [Images and vision](https://ml-rust.github.io/topics/images-vision/)
+- [Video](https://ml-rust.github.io/topics/video/)
+- [Documents and OCR](https://ml-rust.github.io/topics/documents/)
 - [Tabular data and classic ML](https://ml-rust.github.io/topics/tabular-ml/)
-- [Tensors, math and GPU](https://ml-rust.github.io/topics/math-gpu/)
+- [Math and science](https://ml-rust.github.io/topics/math-science/)
+- [Tensors and GPU compute](https://ml-rust.github.io/topics/tensors-gpu/)
 - [Datasets and model formats](https://ml-rust.github.io/topics/data-formats/)
 
 ## Find a project by kind
@@ -49,7 +52,8 @@ Each project gets one tier from [published rules](https://ml-rust.github.io/rule
 | New | Its first release is recent. |
 | Archived | No longer maintained, or ended by its author. |
 
-- No LLM decides a tier, writes a published claim or merges anything.
+- No LLM decides a tier, writes a claim on a project or topic page, or merges anything.
+- The [state of ML in Rust](https://ml-rust.github.io/state/) is the one page AI models write. It says so, and no tier reads it.
 - GitHub stars alone never earn a tier. GitHub hides who starred, so stars cannot be screened for fakes.
 - Every tier change appears on the [changes page](https://ml-rust.github.io/changes/) and in its [feed](https://ml-rust.github.io/changes/feed.xml).
 
@@ -121,6 +125,7 @@ cargo run -p catalogue -- build --no-tiers
 | `crates/catalogue-bot` | Parses issue forms, writes check comments, and plans label and data changes. No IO. |
 | `crates/catalogue-github` | The bot's GitHub App client. |
 | `crates/catalogue-triage` | The bot's advisory link check. |
+| `crates/catalogue-state` | Writes and checks the state report: what models read, the prompts and the checks on each answer. |
 | `crates/catalogue-site` | Site templates, page data and refusal checks. No IO. |
 | `crates/catalogue-search-wasm` | The browser search runtime. |
 | `crates/catalogue` | The `catalogue` CLI. |

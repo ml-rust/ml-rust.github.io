@@ -614,6 +614,7 @@ fn with_only_the_first_check_the_change_page_says_nothing_changed() {
         changes: &changes,
         first_check: Some(fixture::first_check()),
         movement: &catalogue_core::Movement::NeedsHistory,
+        state: None,
     });
     let page = &site["changes/index.html"];
     assert!(

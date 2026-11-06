@@ -1,0 +1,142 @@
+# What a team needs from each topic. The state report checks every project against this list.
+#
+# A need names one ability a real project asks for. It names no project and no language.
+# The list stays fixed from week to week, so a change in the report means the projects changed.
+# Every topic of data/topics.toml has one table here.
+
+[[topic]]
+id = "run-models"
+job = "Run a trained model inside an app or behind a server"
+needs = [
+  { id = "local-llm", ask = "Run a quantized open-weights LLM on one machine" },
+  { id = "serve-api", ask = "Serve a model behind an OpenAI-compatible HTTP API" },
+  { id = "onnx", ask = "Load and run an ONNX model exported from another framework" },
+  { id = "no-cpp", ask = "Run models on a GPU with no C or C++ library in the build" },
+  { id = "edge", ask = "Run models in a browser, on a phone or on an embedded device" },
+]
+
+[[topic]]
+id = "llm-apps"
+job = "Build applications on top of language models"
+needs = [
+  { id = "own-models", ask = "Build an app on your own models: loading, sampling, constrained output and batching, with no separate server" },
+  { id = "clients", ask = "Call the main hosted model APIs through a maintained client" },
+  { id = "tools", ask = "Give a model tools, including over the Model Context Protocol" },
+  { id = "agents", ask = "Run an agent loop with state, retries and limits" },
+  { id = "rag", ask = "Answer questions over private documents with retrieval" },
+  { id = "structured", ask = "Force model output into a schema" },
+  { id = "evals", ask = "Trace, evaluate and regression-test model behaviour" },
+]
+
+[[topic]]
+id = "train-models"
+job = "Train a model from scratch or from a checkpoint"
+needs = [
+  { id = "single-gpu", ask = "Define and train a neural network on one GPU" },
+  { id = "multi-gpu", ask = "Train one model across many GPUs or machines" },
+  { id = "fine-tune", ask = "Fine-tune a pretrained transformer from its published weights" },
+  { id = "custom-ops", ask = "Write custom layers and losses with automatic differentiation" },
+  { id = "rl", ask = "Train a reinforcement learning agent" },
+  { id = "experiments", ask = "Track experiments and resume from checkpoints" },
+]
+
+[[topic]]
+id = "speech-audio"
+job = "Work with speech and audio in a product"
+needs = [
+  { id = "stt", ask = "Transcribe speech to text on your own hardware" },
+  { id = "tts", ask = "Generate natural speech on your own hardware" },
+  { id = "vad", ask = "Detect voice activity in a live stream" },
+  { id = "diarization", ask = "Tell speakers apart in a recording" },
+  { id = "audio-input", ask = "Decode and resample common audio formats for a model" },
+]
+
+[[topic]]
+id = "text-search"
+job = "Prepare text for models and search it"
+needs = [
+  { id = "tokenizers", ask = "Tokenize text exactly as the main model families expect" },
+  { id = "embeddings", ask = "Create embeddings locally from open models" },
+  { id = "vector-db", ask = "Store and search vectors at production scale" },
+  { id = "full-text", ask = "Run full-text and hybrid search" },
+  { id = "rerank", ask = "Rerank search results with a local model" },
+  { id = "nlp", ask = "Run classic language analysis such as tagging and entity recognition" },
+]
+
+[[topic]]
+id = "images-vision"
+job = "Process images and run vision models"
+needs = [
+  { id = "image-ops", ask = "Decode and transform images for a model" },
+  { id = "detection", ask = "Run object detection and segmentation" },
+  { id = "generation", ask = "Generate images from a model" },
+  { id = "tracking", ask = "Track objects and estimate motion across frames" },
+]
+
+[[topic]]
+id = "video"
+job = "Process video and run models on its frames"
+needs = [
+  { id = "decode", ask = "Decode video frames for a model, on the GPU or the CPU" },
+  { id = "encode", ask = "Encode video in the common codecs" },
+  { id = "containers", ask = "Read and write MP4 and MKV files" },
+  { id = "frame-models", ask = "Run a model on video frames, such as upscaling or restoration" },
+]
+
+[[topic]]
+id = "documents"
+job = "Read documents and scans"
+needs = [
+  { id = "ocr", ask = "Read text from images and scans" },
+  { id = "pdf", ask = "Extract text from PDF files" },
+  { id = "layout", ask = "Detect page layout, tables and reading order" },
+  { id = "structured", ask = "Turn mixed office files into structured text for retrieval" },
+]
+
+[[topic]]
+id = "tabular-ml"
+job = "Find patterns and make predictions from tables of data"
+needs = [
+  { id = "boosting", ask = "Train and serve gradient boosted trees" },
+  { id = "classic", ask = "Use classic algorithms such as regression, clustering and SVM" },
+  { id = "time-series", ask = "Forecast time series and detect anomalies" },
+  { id = "tuning", ask = "Tune hyperparameters and compare models automatically" },
+  { id = "explain", ask = "Explain a model's predictions" },
+]
+
+[[topic]]
+id = "math-science"
+job = "Do the numerical and scientific work that NumPy and SciPy do in Python"
+needs = [
+  { id = "arrays", ask = "Work with n-dimensional arrays" },
+  { id = "linalg", ask = "Solve linear algebra problems, including matrix decompositions" },
+  { id = "fft", ask = "Run fast Fourier transforms" },
+  { id = "sparse", ask = "Work with sparse matrices" },
+  { id = "stats", ask = "Fit statistical distributions and run statistical tests" },
+  { id = "optimize", ask = "Run numerical optimization and root finding" },
+  { id = "solvers", ask = "Solve differential equations, integrate and interpolate" },
+  { id = "signal-spatial", ask = "Filter signals and run spatial algorithms" },
+]
+
+[[topic]]
+id = "tensors-gpu"
+job = "Run tensor math on the CPU and the GPU"
+needs = [
+  { id = "gpu-tensors", ask = "Run tensor operations on a GPU" },
+  { id = "multi-vendor", ask = "Run the same tensor code on GPUs from more than one vendor" },
+  { id = "autodiff", ask = "Differentiate tensor code automatically" },
+  { id = "ml-ops", ask = "Use ready ML operations such as attention and quantization" },
+  { id = "kernels", ask = "Write custom GPU kernels in Rust" },
+]
+
+[[topic]]
+id = "data-formats"
+job = "Load and save datasets and model files"
+needs = [
+  { id = "model-files", ask = "Read and write Safetensors and GGUF model files" },
+  { id = "columnar", ask = "Read and write Arrow and Parquet" },
+  { id = "dataframes", ask = "Clean and join tables with a dataframe library" },
+  { id = "scientific", ask = "Read HDF5, Zarr and NumPy files" },
+  { id = "hub", ask = "Download models and datasets from a model hub" },
+  { id = "streaming", ask = "Stream a dataset larger than memory into a training loop" },
+]

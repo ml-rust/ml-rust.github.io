@@ -3,12 +3,11 @@ kind = "library"
 repo = "https://github.com/ml-rust/solvr"
 homepage = "https://github.com/ml-rust/solvr"
 crates = ["solvr"]
-topics = ["math-gpu"]
+topics = ["math-science"]
 category = "math-libraries"
 org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "Advanced computing library for real-world problem solving - optimization, differential equations, interpolation, statistics, and more"
-source = "crate"
-source_url = "https://crates.io/crates/solvr"
+text = "Scientific computing on numr, in the role SciPy has in Python, with a module map for SciPy users: optimization, ODE, DAE and PDE solvers, interpolation, statistics, signal processing, spatial algorithms and clustering."
+source = "human"

@@ -128,7 +128,7 @@ jobs:
         run: bash scripts/ci/install_wasm_bindgen.sh
 
       - name: Build the site
-        run: cargo run --locked -p catalogue -- build --report "${RUNNER_TEMP}/tiers.json" --history signal-history --out dist
+        run: cargo run --locked -p catalogue -- build --report "${RUNNER_TEMP}/tiers.json" --history signal-history --state signal-history/state/state.json --out dist
 
       - name: Build the search module
         run: bash scripts/ci/build_search_wasm.sh dist/search

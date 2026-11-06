@@ -123,7 +123,7 @@ pub(super) struct RawTriage {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RawProvider {
+pub(crate) struct RawProvider {
     name: String,
     base_url: Url,
     api_key_env: String,
@@ -195,7 +195,7 @@ impl RawTriage {
         let providers = self
             .providers
             .into_iter()
-            .map(RawProvider::check)
+            .map(|provider| provider.check("triage.providers"))
             .collect::<Result<Vec<_>, _>>()?;
         let fetch = self.fetch.map(RawFetch::check).transpose()?;
         Ok(TriageConfig {
@@ -213,11 +213,12 @@ impl RawTriage {
 }
 
 impl RawProvider {
-    fn check(self) -> Result<ProviderConfig, TriageConfigError> {
-        check_env_name("triage.providers.api_key_env", &self.api_key_env)?;
+    /// Checks one provider table. `section` names it in errors, such as `triage.providers`.
+    pub(crate) fn check(self, section: &str) -> Result<ProviderConfig, TriageConfigError> {
+        check_env_name(&format!("{section}.api_key_env"), &self.api_key_env)?;
         let request = json_table(self.request).ok_or_else(|| {
             TriageConfigError::new(
-                "triage.providers.request",
+                &format!("{section}.request"),
                 format!(
                     "provider `{}` sets a date, NaN or infinity, which JSON cannot carry. Use a string or a finite number",
                     self.name
@@ -227,7 +228,7 @@ impl RawProvider {
         let headers: Vec<(String, String)> = self.headers.into_iter().collect();
         Provider::check(&self.name, &self.base_url, &self.models, &headers, &request).map_err(
             |error| {
-                let field = format!("triage.providers.{}", provider_field(&error));
+                let field = format!("{section}.{}", provider_field(&error));
                 TriageConfigError::new(&field, error.to_string())
             },
         )?;

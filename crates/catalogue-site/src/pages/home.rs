@@ -48,6 +48,8 @@ pub(crate) struct HomePage<'a> {
     pub first_check: Option<FirstCheckLine>,
     /// The first check date as a person reads it.
     pub first_check_date: Option<String>,
+    /// Whether the site holds the state page.
+    pub has_state: bool,
 }
 
 impl<'a> HomePage<'a> {
@@ -96,6 +98,7 @@ impl<'a> HomePage<'a> {
                 .as_ref()
                 .map(|line| date_text(&line.date).unwrap_or_else(|| line.date.clone())),
             first_check,
+            has_state: report.is_some() && inputs.state.is_some(),
         }
     }
 }

@@ -1,0 +1,25 @@
+<figure class="state-chart">
+<figcaption><strong>{{ chart.title }}</strong> <span class="chart-takeaway">{% let pieces = &chart.takeaway %}{% include "state_text.html" %}</span> <span class="chart-note">{{ chart.note }}</span></figcaption>
+{%- if !chart.legend.is_empty() %}
+<ul class="chart-legend">
+{%- for item in &chart.legend %}
+<li><span class="chart-swatch {{ item.class }}" aria-hidden="true"></span>{{ item.label }}</li>
+{%- endfor %}
+</ul>
+{%- endif %}
+<table class="chart-table">
+<caption class="visually-hidden">{{ chart.title }}</caption>
+<thead class="visually-hidden"><tr><th scope="col">Name</th><th scope="col">Bar</th><th scope="col">Counts</th></tr></thead>
+<tbody>
+{%- for row in &chart.rows %}
+<tr>
+<th scope="row">{% if let Some(href) = &row.href %}<a href="{{ href }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}</th>
+<td class="chart-bar"><svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+{%- for part in &row.parts %}<rect class="{{ part.class }}" x="{{ part.x }}" y="0" width="{{ part.width }}" height="10"><title>{{ part.label }}: {{ part.count }}</title></rect>{% endfor -%}
+</svg></td>
+<td class="chart-text">{{ row.text }}</td>
+</tr>
+{%- endfor %}
+</tbody>
+</table>
+</figure>

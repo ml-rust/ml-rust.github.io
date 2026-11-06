@@ -62,6 +62,7 @@ fn build_with(extra: &[(&str, &str, Tier)]) -> BTreeMap<String, String> {
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     })
 }
 

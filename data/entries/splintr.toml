@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "Fast Rust tokenizer (BPE + SentencePiece + WordPiece) with Python bindings"
-source = "crate"
-source_url = "https://crates.io/crates/splintr"
+text = "Tokenizer for Rust and Python: pure Rust by default, with 18 bundled vocabularies and four backends covering BPE, SentencePiece and WordPiece. Its output matches Hugging Face tokenizers id for id on 14 model families, including GPT-2, Qwen, Whisper, T5 and BERT."
+source = "human"

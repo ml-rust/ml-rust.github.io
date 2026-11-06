@@ -1,0 +1,8 @@
+<ul class="state-list">
+{%- for pick in picks %}
+<li>
+<h3>{% if let Some(link) = &pick.link %}<a href="{{ link.href }}">{{ link.name }}</a>: {% endif %}{% let pieces = &pick.use_for %}{% include "state_text.html" %}</h3>
+<p>{% let pieces = &pick.why %}{% include "state_text.html" %}</p>
+</li>
+{%- endfor %}
+</ul>

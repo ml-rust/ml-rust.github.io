@@ -58,6 +58,46 @@ pub const RUNS_ON_EVIDENCE_SIGNAL: &str = "runs_on_evidence";
 /// The id of the native code fact.
 pub const NATIVE_CODE_SIGNAL: &str = "native_code";
 
+/// The words in a crate name that mark a native ML engine, as opposed to a support library such as
+/// `ring` or `zstd-sys`.
+const NATIVE_ENGINE_WORDS: [&str; 18] = [
+    "ctranslate2",
+    "diffusion",
+    "ggml",
+    "leptonica",
+    "libtorch",
+    "llama",
+    "mlx",
+    "mnn",
+    "onnxruntime",
+    "opencv",
+    "ort",
+    "paddle",
+    "pdfium",
+    "sherpa",
+    "tensorflow",
+    "tesseract",
+    "torch",
+    "whisper",
+];
+
+/// Whether the native code fact `fact` shows a project whose work runs in a native ML engine: a
+/// binding that no feature gates, to one of the engines above.
+pub fn wraps_native_engine(fact: &str) -> bool {
+    let Some(list) = fact.strip_prefix("Binds native code: ") else {
+        return false;
+    };
+    list.split(". ")
+        .next()
+        .unwrap_or(list)
+        .split(", ")
+        .filter(|name| !name.contains("(feature"))
+        .any(|name| {
+            name.split(|c: char| !c.is_ascii_alphanumeric())
+                .any(|word| NATIVE_ENGINE_WORDS.contains(&word))
+        })
+}
+
 /// The id of the Python bindings fact.
 pub const PYTHON_SIGNAL: &str = "python_bindings";
 
@@ -186,6 +226,28 @@ impl SignalFact {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_a_required_binding_to_an_ml_engine_counts_as_a_wrapper() {
+        for wrapper in [
+            "Binds native code: ort-sys, libz-sys (feature x)",
+            "Binds native code: llama-cpp-sys-2. Build uses a native toolchain: cc",
+            "Binds native code: diffusion-rs-sys, stable-diffusion",
+            "Binds native code: whisper-rs-sys",
+        ] {
+            assert!(wraps_native_engine(wrapper), "{wrapper}");
+        }
+        for other in [
+            "Binds native code: ring. Build uses a native toolchain: pkg-config",
+            "Binds native code: blas-sys, lapack-sys",
+            "Binds native code: transport-sys, zstd-sys",
+            "Binds native code: torch-sys (feature tch)",
+            "Build uses a native toolchain: cc",
+            "None found",
+        ] {
+            assert!(!wraps_native_engine(other), "{other}");
+        }
+    }
 
     fn fact(value: Option<&str>, url: Option<&str>, fetched: bool) -> SignalFact {
         SignalFact {

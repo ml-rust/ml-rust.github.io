@@ -40,7 +40,50 @@ pub(crate) fn also_in<'a>(
     }
     let slugs: Vec<&'a Slug> = shared.keys().copied().collect();
     let heads = family_heads(catalogue, inputs.report, &slugs);
-    let picked = fair_share(&heads, &shared, effective.topics);
+    let page = effective.entry;
+    let page_words = words(&page.description.text);
+    let closeness = |slug: &Slug| {
+        let Some(other) = catalogue.entry(slug) else {
+            return (false, 0, 0);
+        };
+        (
+            page.category.is_some() && other.category == page.category,
+            effective
+                .topics
+                .iter()
+                .filter(|topic| other.topics.contains(topic))
+                .count(),
+            words(&other.description.text)
+                .intersection(&page_words)
+                .count(),
+        )
+    };
+    // Enough projects of the same kind leave no reason to show one that only shares a job.
+    let same_kind: Vec<FamilyHead<'a>> = heads
+        .iter()
+        .filter(|head| closeness(head.slug).0)
+        .cloned()
+        .collect();
+    let candidates = if same_kind.len() >= LIMIT {
+        &same_kind
+    } else {
+        &heads
+    };
+    let mut picked = fair_share(candidates, &shared, effective.topics, &closeness);
+    // The organization runs the catalogue, and the page says it always shows its closest project.
+    if !page.org_affiliated {
+        let org_project = heads
+            .iter()
+            .filter(|head| {
+                catalogue
+                    .entry(head.slug)
+                    .is_some_and(|entry| entry.org_affiliated)
+            })
+            .max_by_key(|head| closeness(head.slug));
+        if let Some(head) = org_project {
+            picked.insert(head.slug);
+        }
+    }
     let jobs: BTreeSet<&Slug> = picked
         .iter()
         .filter_map(|slug| shared.get(slug).copied())
@@ -63,23 +106,36 @@ pub(crate) fn also_in<'a>(
         .collect()
 }
 
-/// Up to [`LIMIT`] of `heads`, taken from each topic of `topics` in turn.
+/// The lowercase words of `text` with at least three letters or digits.
+fn words(text: &str) -> BTreeSet<String> {
+    text.split(|c: char| !c.is_alphanumeric())
+        .filter(|word| word.chars().count() >= 3)
+        .map(str::to_lowercase)
+        .collect()
+}
+
+/// Up to [`LIMIT`] of `heads`, taken from each topic of `topics` in turn, closest first.
 ///
-/// A big second topic never pushes out the rows of the page entry's first topic.
+/// A big second topic never pushes out the rows of the page entry's first topic. Within a topic,
+/// `closeness` picks the rows, so a similar project with few users beats a big unrelated one.
+/// `heads` come in list order, and that order breaks a tie.
 fn fair_share<'s>(
     heads: &[FamilyHead<'s>],
     shared: &BTreeMap<&'s Slug, &Slug>,
     topics: &[Slug],
+    closeness: &dyn Fn(&Slug) -> (bool, usize, usize),
 ) -> BTreeSet<&'s Slug> {
     let mut queues: Vec<Vec<&'s Slug>> = topics
         .iter()
         .map(|topic| {
-            heads
+            let mut queue: Vec<&'s Slug> = heads
                 .iter()
                 .map(|head| head.slug)
                 .filter(|slug| shared.get(slug).is_some_and(|first| *first == topic))
-                .rev()
-                .collect()
+                .collect();
+            queue.sort_by_key(|slug| std::cmp::Reverse(closeness(slug)));
+            queue.reverse();
+            queue
         })
         .collect();
     let mut picked = BTreeSet::new();
@@ -134,6 +190,7 @@ mod tests {
             changes: &[],
             first_check: None,
             movement: &NO_MOVEMENT,
+            state: None,
         }
     }
 
@@ -300,6 +357,90 @@ mod tests {
             names(&data, Some(&tiers), "page"),
             ["big-a", "big-b", "big-c", "big-d", "small"],
             "the one order of every list holds inside the five rows"
+        );
+    }
+
+    #[test]
+    fn a_close_project_with_few_users_beats_a_big_unrelated_one() {
+        let close = |slug: &str, topics: &str| {
+            let mut file = entry(slug, topics);
+            file.contents = file
+                .contents
+                .replace("added =", "category = \"runtimes\"\nadded =");
+            file
+        };
+        let categories = source(
+            "categories.toml",
+            "[[category]]\nid = \"runtimes\"\nname = \"Runtimes\"\nblurb = \"Runs.\"\n".to_owned(),
+        );
+        let mut entries = vec![
+            close("page", "\"one\", \"two\""),
+            close("small", "\"one\", \"two\""),
+        ];
+        for name in ["big-a", "big-b", "big-c", "big-d", "big-e"] {
+            entries.push(entry(name, "\"one\""));
+        }
+        let data = Catalogue::load(DataSources {
+            entries,
+            topics: Some(source("topics.toml", TOPICS.to_owned())),
+            categories: Some(categories),
+            ..DataSources::default()
+        })
+        .unwrap_or_else(|diagnostics| panic!("invalid data: {diagnostics}"));
+        let tiers = report(vec![
+            ("small", record(Tier::Listed, Some("1"))),
+            ("big-a", record(Tier::Featured, Some("90"))),
+            ("big-b", record(Tier::Featured, Some("80"))),
+            ("big-c", record(Tier::Featured, Some("70"))),
+            ("big-d", record(Tier::Featured, Some("60"))),
+            ("big-e", record(Tier::Featured, Some("50"))),
+        ]);
+        assert_eq!(
+            names(&data, Some(&tiers), "page"),
+            ["big-a", "big-b", "big-c", "big-d", "small"],
+            "the close project gets a row, and the rows keep the list order"
+        );
+    }
+
+    #[test]
+    fn a_page_outside_the_organization_also_shows_its_closest_project() {
+        let org = |slug: &str, topics: &str| {
+            let mut file = entry(slug, topics);
+            file.contents = file
+                .contents
+                .replace("added =", "org_affiliated = true\nadded =");
+            file
+        };
+        let mut entries = vec![
+            entry("page", "\"one\""),
+            org("ours-far", "\"one\", \"two\""),
+            org("ours-near", "\"one\""),
+        ];
+        for name in ["big-a", "big-b", "big-c", "big-d", "big-e"] {
+            entries.push(entry(name, "\"one\""));
+        }
+        let data = catalogue(entries);
+        let tiers = report(vec![
+            ("ours-far", record(Tier::Listed, Some("1"))),
+            ("ours-near", record(Tier::Listed, Some("2"))),
+            ("big-a", record(Tier::Featured, Some("90"))),
+            ("big-b", record(Tier::Featured, Some("80"))),
+            ("big-c", record(Tier::Featured, Some("70"))),
+            ("big-d", record(Tier::Featured, Some("60"))),
+            ("big-e", record(Tier::Featured, Some("50"))),
+        ]);
+        let shown = names(&data, Some(&tiers), "page");
+        assert_eq!(shown.len(), 6, "{shown:?}");
+        assert_eq!(
+            shown.iter().filter(|name| name.starts_with("ours")).count(),
+            1,
+            "{shown:?}"
+        );
+        let own = names(&data, Some(&tiers), "ours-near");
+        assert_eq!(
+            own.len(),
+            5,
+            "an organization page gets no extra row: {own:?}"
         );
     }
 

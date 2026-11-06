@@ -13,6 +13,7 @@ askama.workspace = true
 aws-lc-rs.workspace = true
 catalogue-core.workspace = true
 ego-tree.workspace = true
+jiff.workspace = true
 oxidoc-search.workspace = true
 pulldown-cmark.workspace = true
 scraper.workspace = true

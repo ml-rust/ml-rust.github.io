@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use catalogue_core::{Catalogue, Date, Movement, Slug, TierReport};
+use catalogue_core::{Catalogue, Date, Movement, STATE_SCHEMA, Slug, StateReport, TierReport};
 use catalogue_signals::history::{History, read_all};
 use catalogue_site::{SiteInputs, TierChangeRow, build_site};
 use clap::{ArgGroup, Args};
@@ -43,6 +43,10 @@ pub struct BuildArgs {
         conflicts_with = "no_tiers"
     )]
     pub history: Option<PathBuf>,
+    /// The weekly state report from `catalogue state`. Builds the state page.
+    /// A file that does not exist builds the site without that page.
+    #[arg(long, value_name = "FILE", requires = "report")]
+    pub state: Option<PathBuf>,
     /// Output directory. The build replaces it whole and removes files that a
     /// previous build wrote. It must not hold the data, report or history.
     #[arg(long, value_name = "DIR", default_value = "dist")]
@@ -100,16 +104,22 @@ pub fn build(args: &BuildArgs) -> Result<BuildSummary, BuildError> {
         Some(dir) => read_history(dir, &catalogue)?,
         None => HistoryFacts::default(),
     };
+    let state = match &args.state {
+        Some(path) => read_state(path)?,
+        None => None,
+    };
     let files = build_site(&SiteInputs {
         catalogue: &catalogue,
         report: report.as_ref(),
         changes: &history.changes,
         first_check: history.first_check,
         movement: &history.movement,
+        state: state.as_ref(),
     })?;
     let mut protected: Vec<&Path> = vec![&args.data];
     protected.extend(args.report.as_deref());
     protected.extend(args.history.as_deref());
+    protected.extend(args.state.as_deref());
     let current = std::env::current_dir().ok();
     protected.extend(current.as_deref());
     replace_dir(&args.out, &files, &protected)?;
@@ -128,6 +138,32 @@ fn read_report(path: &Path) -> Result<TierReport, BuildError> {
         path: path.to_path_buf(),
         message: error.to_string(),
     })
+}
+
+/// The state report at `path`. `None` when the file does not exist.
+fn read_state(path: &Path) -> Result<Option<StateReport>, BuildError> {
+    let text = match fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(source) if source.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(source) => {
+            return Err(BuildError::StateRead {
+                path: path.to_path_buf(),
+                source,
+            });
+        }
+    };
+    let state: StateReport =
+        serde_json::from_str(&text).map_err(|error| BuildError::StateParse {
+            path: path.to_path_buf(),
+            message: error.to_string(),
+        })?;
+    if state.schema != STATE_SCHEMA {
+        return Err(BuildError::StateParse {
+            path: path.to_path_buf(),
+            message: format!("schema {}, expected {STATE_SCHEMA}", state.schema),
+        });
+    }
+    Ok(Some(state))
 }
 
 /// What the pages read from a history.

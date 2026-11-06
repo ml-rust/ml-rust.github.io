@@ -28,6 +28,7 @@ fn build(catalogue: &Catalogue, report: Option<&TierReport>) -> BTreeMap<String,
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     })
     .unwrap_or_else(|error| panic!("build fails: {error}"));
     files

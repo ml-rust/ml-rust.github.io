@@ -259,6 +259,7 @@ mod tests {
             changes: &[],
             first_check: None,
             movement: &NO_MOVEMENT,
+            state: None,
         })
         .expect("encodes")
     }

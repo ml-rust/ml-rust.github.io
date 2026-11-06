@@ -1,0 +1,1 @@
+{% for piece in pieces %}{% if let Some(href) = &piece.href %}<a href="{{ href }}">{{ piece.text }}</a>{% else %}{{ piece.text }}{% endif %}{% endfor %}

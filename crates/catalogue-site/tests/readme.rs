@@ -36,6 +36,7 @@ fn page_with(readme: ReadmeFact) -> String {
         changes: &changes,
         first_check: Some(fixture::first_check()),
         movement: &movement,
+        state: None,
     });
     site["projects/alpha/index.html"].clone()
 }

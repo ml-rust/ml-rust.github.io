@@ -1,0 +1,12 @@
+name = "rav1r"
+kind = "library"
+repo = "https://github.com/ml-rust/rav1r"
+crates = ["rav1r"]
+topics = ["video"]
+category = "computer-vision"
+org_affiliated = true
+added = 2026-11-06
+
+[description]
+text = "AV1 encoder derived from rav1e, used by vidr. Its output stays bit-exact with upstream."
+source = "human"

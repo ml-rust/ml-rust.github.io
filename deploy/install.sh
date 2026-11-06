@@ -4,7 +4,7 @@
 #   sudo bash deploy/install.sh        # run as root from a checkout
 #
 # Creates the two system users and the directories, installs the update script
-# and the four units, and enables each timer once its inputs exist. The script
+# and the six units, and enables each timer once its inputs exist. The script
 # is idempotent. It never overwrites a config or a secret.
 
 set -euo pipefail
@@ -15,7 +15,7 @@ UPDATE_USER="catalogue-update"
 OPT="/opt/catalogue"
 ETC="/etc/catalogue-bot"
 UNIT_DIR="/etc/systemd/system"
-UNITS=(catalogue-bot.service catalogue-bot.timer catalogue-update.service catalogue-update.timer)
+UNITS=(catalogue-bot.service catalogue-bot.timer catalogue-update.service catalogue-update.timer catalogue-state.service catalogue-state.timer)
 
 if [[ "$(id -u)" -ne 0 ]]; then
     echo "install.sh: must run as root, but the user id is $(id -u). Rerun with: sudo bash $0" >&2
@@ -78,7 +78,13 @@ if [[ ! -L "$OPT/current" ]]; then
 fi
 
 if [[ ! -f "$ETC/env" ]]; then
-    echo "Optional: $ETC/env holds model keys for triage, for example OLLAMA_API_KEY=<key>. Create it with mode 0600, owner root."
+    echo "Optional: $ETC/env holds model keys for triage and the state report, for example OLLAMA_API_KEY=<key>. Create it with mode 0600, owner root."
+fi
+
+if [[ "$BOT_READY" -eq 1 && -f "$ETC/state.toml" && -f "$ETC/env" ]]; then
+    systemctl enable --now catalogue-state.timer
+else
+    echo "Optional: the weekly state report needs $ETC/state.toml, $ETC/env and the bot config. Run: install -m 0644 -o root -g root state.example.toml $ETC/state.toml, then rerun this script."
 fi
 
 if [[ "${#MISSING[@]}" -eq 0 ]]; then

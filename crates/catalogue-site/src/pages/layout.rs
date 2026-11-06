@@ -22,6 +22,8 @@ pub const SITE_URL: &str = "https://ml-rust.github.io";
 pub(crate) enum NavItem {
     /// The jobs and categories, and every page under them.
     Explore,
+    /// The state of ML in Rust.
+    State,
     /// The tier rules.
     Rules,
     /// The tier change log.
@@ -113,6 +115,21 @@ impl Layout {
             nav,
             scripts: Vec::new(),
         }
+    }
+
+    /// The layout with the link to the state page after the first link. A build with no state
+    /// report has no state page, so it never calls this.
+    pub(crate) fn with_state_link(mut self, current: Option<NavItem>) -> Self {
+        let at = self.nav.len().min(1);
+        self.nav.insert(
+            at,
+            NavLink {
+                label: "State of ML",
+                href: SafeHref::new("/state/"),
+                current: current == Some(NavItem::State),
+            },
+        );
+        self
     }
 
     /// The layout with the module script at `src` added after the ones it holds.

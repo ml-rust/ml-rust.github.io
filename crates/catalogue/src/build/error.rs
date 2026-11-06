@@ -42,6 +42,25 @@ pub enum BuildError {
         /// What the JSON parser reports.
         message: String,
     },
+    /// The state report cannot be read.
+    #[error("cannot read the state report {}: {source}. Check the --state path", .path.display())]
+    StateRead {
+        /// The state report file.
+        path: PathBuf,
+        /// The error from the operating system.
+        source: io::Error,
+    },
+    /// The state report file is not a state report.
+    #[error(
+        "the state report {} is not valid: {message}. Run `catalogue state` again, or remove the file",
+        .path.display()
+    )]
+    StateParse {
+        /// The state report file.
+        path: PathBuf,
+        /// What the parser reports.
+        message: String,
+    },
     /// The history directory cannot be read.
     #[error(transparent)]
     History(#[from] HistoryError),
@@ -110,6 +129,7 @@ impl BuildError {
         match self {
             Self::Invalid(_)
             | Self::ReportParse { .. }
+            | Self::StateParse { .. }
             | Self::HistorySlug { .. }
             | Self::Site(_)
             | Self::UnsafePath { .. }
@@ -117,6 +137,7 @@ impl BuildError {
             | Self::Out { .. } => INVALID,
             Self::Data(_)
             | Self::ReportRead { .. }
+            | Self::StateRead { .. }
             | Self::History(_)
             | Self::Write { .. }
             | Self::Rollback { .. } => IO,

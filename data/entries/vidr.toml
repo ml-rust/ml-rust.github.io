@@ -1,13 +1,12 @@
 name = "vidr"
 kind = "app"
 repo = "https://github.com/ml-rust/vidr"
-crates = []
-topics = ["vision-documents"]
+crates = ["vidr", "vidr-remaster"]
+topics = ["video"]
 category = "computer-vision"
 org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "Video: codecs, hardware decode and encode, filters, and models on the GPU, as a library."
-source = "repo"
-source_url = "https://github.com/ml-rust/vidr"
+text = "GPU video library on numr and boostr: NVDEC, NVENC and Vulkan Video for H.264, HEVC, AV1 and VP9, CPU decoders, MP4 and MKV through containr, frames as GPU tensors, and vidr-remaster for restoration and upscaling, run on real clips."
+source = "human"

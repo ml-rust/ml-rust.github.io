@@ -62,5 +62,6 @@ pub fn pages(catalogue: &Catalogue) -> BTreeMap<String, String> {
         changes: &[],
         first_check: None,
         movement: &Movement::NeedsHistory,
+        state: None,
     })
 }

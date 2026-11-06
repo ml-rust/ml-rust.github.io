@@ -182,6 +182,7 @@ fn a_hostile_readme_holds_no_raw_script_on_the_built_page() {
         changes: &changes,
         first_check: Some(fixture::first_check()),
         movement: &movement,
+        state: None,
     });
     let page = &site["projects/alpha/index.html"];
     assert!(page.contains("id=\"about\""), "{page}");

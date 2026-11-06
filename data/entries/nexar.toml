@@ -9,6 +9,5 @@ org_affiliated = true
 added = 2026-11-03
 
 [description]
-text = "Distributed runtime with QUIC transport, stream-multiplexed messaging, and built-in collectives"
-source = "crate"
-source_url = "https://crates.io/crates/nexar"
+text = "Distributed runtime that replaces MPI between nodes: point-to-point messages, 11 collectives and RPC over QUIC, with no mpirun or MPI library."
+source = "human"
