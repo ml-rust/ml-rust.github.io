@@ -32,7 +32,20 @@ const CATEGORY_WEIGHT: f32 = 2.0;
 /// The weight of the description.
 const DESCRIPTION_WEIGHT: f32 = 1.5;
 /// The weight of the crate keywords, crate categories and repository topics.
-const KEYWORDS_WEIGHT: f32 = 1.2;
+///
+/// A project picks its keywords to say what it is, so a keyword outranks a description that only
+/// mentions the word. A word counts once per project, so without this a mention ties with a real
+/// match, and the tie goes by slug.
+const KEYWORDS_WEIGHT: f32 = 2.5;
+/// The weight of the opening phrase of the description, which says what a project is.
+///
+/// Many projects list a keyword they only touch on, so this sits above the keywords and below
+/// the name.
+const LEAD_WEIGHT: f32 = 2.8;
+/// The field of the opening phrase of the description.
+const LEAD_FIELD: &str = "lead";
+/// The most words of the opening phrase.
+const MAX_LEAD_WORDS: usize = 10;
 /// The weight of the synonym terms.
 const ALIASES_WEIGHT: f32 = 1.0;
 /// The weight of the README prose.
@@ -65,12 +78,13 @@ pub(crate) const ORG_COMMUNITY: &str = "community";
 /// - `topics`, weight 2: the names of the effective topics.
 /// - `category`, weight 2: the name of the category. Left out without a category.
 /// - `description`, weight 1.5: the description text.
-/// - `keywords`, weight 1.2: the measured search terms of `report`, each with its words. Left out
+/// - `keywords`, weight 2.5: the measured search terms of `report`, each with its words. Left out
 ///   when there are none, as in a build without `report`.
 /// - `aliases`, weight 1: the synonym terms the fields above gain from
 ///   [`Catalogue::synonyms`]. Left out when there are none.
 /// - `readme`, weight 0.5: the first prose of the README of `report`, with no code and no URLs.
 ///   Left out when there is none.
+/// - `lead`, weight 2.8: the opening phrase of the description.
 ///
 /// Tags: `kind`, `org` (`ml-rust` or `community`), one `topic` per effective
 /// topic id, `category` when the entry has one, and `license`, one `runs_on` per
@@ -85,6 +99,20 @@ pub fn search_records(catalogue: &Catalogue, report: Option<&TierReport>) -> Vec
         .filter_map(|slug| catalogue.effective(slug))
         .map(|effective| record(catalogue, report, &effective))
         .collect()
+}
+
+/// The opening phrase of `description`: up to the first colon or sentence end, at most
+/// [`MAX_LEAD_WORDS`] words.
+fn lead_phrase(description: &str) -> String {
+    let end = description
+        .find(": ")
+        .into_iter()
+        .chain(description.find(". "))
+        .min()
+        .unwrap_or(description.len());
+    let phrase = description.get(..end).unwrap_or(description);
+    let words: Vec<&str> = phrase.split_whitespace().take(MAX_LEAD_WORDS).collect();
+    words.join(" ")
 }
 
 /// The search record of `effective`.
@@ -166,6 +194,9 @@ fn record(
             .fields
             .push(weighted(README_FIELD, readme, README_WEIGHT));
     }
+    record
+        .fields
+        .push(weighted(LEAD_FIELD, lead_phrase(description), LEAD_WEIGHT));
 
     let org = if entry.org_affiliated {
         ORG_AFFILIATED
@@ -231,6 +262,23 @@ fn tag(name: &str, value: &str) -> (String, String) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_lead_is_the_opening_phrase_of_the_description() {
+        assert_eq!(
+            lead_phrase("Tokenizer for Rust and Python: pure Rust by default."),
+            "Tokenizer for Rust and Python"
+        );
+        assert_eq!(
+            lead_phrase("Fast inference. Runs GGUF: yes."),
+            "Fast inference"
+        );
+        assert_eq!(lead_phrase("A tensor library."), "A tensor library.");
+        assert_eq!(
+            lead_phrase("one two three four five six seven eight nine ten eleven"),
+            "one two three four five six seven eight nine ten"
+        );
+    }
 
     fn text_of(terms: &[&str]) -> String {
         let owned: Vec<String> = terms.iter().map(|term| (*term).to_owned()).collect();

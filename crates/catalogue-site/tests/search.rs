@@ -125,6 +125,7 @@ fn a_record_links_names_and_weights_the_entry() {
             ("topics", "Tensors", 2.0),
             ("category", "Tensor libraries", 2.0),
             ("description", "A tensor library.", 1.5),
+            ("lead", "A tensor library.", 2.8),
         ]
     );
     assert_eq!(
@@ -173,6 +174,7 @@ fn synonyms_of_the_entry_text_become_aliases() {
             ("category", "Inference runtimes", 2.0),
             ("description", "A command line tool that runs models.", 1.5),
             ("aliases", "ml, cli, command-line interface", 1.0),
+            ("lead", "A command line tool that runs models.", 2.8),
         ]
     );
     assert_eq!(
@@ -204,7 +206,11 @@ fn synonyms_of_the_entry_text_become_aliases() {
     assert_eq!(beta.boost, 1.1);
     let delta = record(&records, "delta");
     assert_eq!(
-        delta.fields.last().map(|field| field.text.as_str()),
+        delta
+            .fields
+            .iter()
+            .find(|field| field.name == "aliases")
+            .map(|field| field.text.as_str()),
         Some("autodiff")
     );
 }
@@ -217,7 +223,7 @@ fn with_terms(report: &mut TierReport, name: &str, terms: &[&str]) {
 }
 
 #[test]
-fn the_keywords_field_holds_each_term_and_its_words_below_the_description() {
+fn the_keywords_field_holds_each_term_and_its_words_above_the_description() {
     let (catalogue, mut report) = data();
     with_terms(&mut report, "beta", &["linear-algebra", "science::math"]);
     let records = search_records(&catalogue, Some(&report));
@@ -231,7 +237,8 @@ fn the_keywords_field_holds_each_term_and_its_words_below_the_description() {
             "category",
             "description",
             "keywords",
-            "aliases"
+            "aliases",
+            "lead"
         ]
     );
     assert_eq!(
@@ -239,10 +246,11 @@ fn the_keywords_field_holds_each_term_and_its_words_below_the_description() {
         (
             "keywords",
             "linear-algebra, linear, algebra, science::math, science, math",
-            1.2
+            2.5
         )
     );
-    assert!(beta[3].2 > beta[4].2 && beta[4].2 >= beta[5].2, "{beta:?}");
+    assert!(beta[4].2 > beta[3].2 && beta[3].2 >= beta[5].2, "{beta:?}");
+    assert!(beta[0].2 > beta[4].2, "{beta:?}");
 }
 
 #[test]
