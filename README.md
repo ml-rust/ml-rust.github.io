@@ -127,9 +127,12 @@ Each judgment appears on its project page with a link to its issue.
 
 | URL | Holds |
 | --- | --- |
-| [`/data/catalogue.json`](https://ml-rust.github.io/data/catalogue.json) | Every project, as JSON. |
+| [`/llms.txt`](https://ml-rust.github.io/llms.txt) | Where an AI agent starts. It links the small files below. |
+| `/state/llms.txt` | The state report as plain text. |
+| `/topics/<job>/llms.txt` | One line per project in a job. |
+| `/projects/<slug>/llms.txt` | The facts of one project. |
+| [`/data/catalogue.json`](https://ml-rust.github.io/data/catalogue.json) | Every project and signal, as JSON. It is over 8 MB, so it is for scripts, not models. |
 | [`/changes/feed.xml`](https://ml-rust.github.io/changes/feed.xml) | Tier changes and new projects, as an Atom feed. |
-| [`/llms.txt`](https://ml-rust.github.io/llms.txt) | A site summary for LLM tools. |
 
 ## Develop
 

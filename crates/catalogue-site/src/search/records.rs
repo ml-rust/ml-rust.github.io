@@ -103,7 +103,7 @@ pub fn search_records(catalogue: &Catalogue, report: Option<&TierReport>) -> Vec
 
 /// The opening phrase of `description`: up to the first colon or sentence end, at most
 /// [`MAX_LEAD_WORDS`] words.
-fn lead_phrase(description: &str) -> String {
+pub(crate) fn lead_phrase(description: &str) -> String {
     let end = description
         .find(": ")
         .into_iter()

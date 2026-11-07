@@ -329,18 +329,47 @@ fn the_data_file_of_a_build_without_tiers_holds_no_tier() {
 }
 
 #[test]
-fn llms_lists_the_topics_and_categories_of_the_data() {
+fn llms_links_the_small_files_of_the_data() {
     let site = tiered();
     let llms = &site["llms.txt"];
     for part in [
         "https://ml-rust.github.io/data/catalogue.json",
         "https://ml-rust.github.io/rules/",
-        "- Machine learning: https://ml-rust.github.io/topics/ml/",
-        "- Tensors: https://ml-rust.github.io/topics/tensors/",
-        "- Vector databases: https://ml-rust.github.io/categories/vector-databases/",
+        "- Machine learning: https://ml-rust.github.io/topics/ml/llms.txt",
+        "- Tensors: https://ml-rust.github.io/topics/tensors/llms.txt",
     ] {
         assert!(llms.contains(part), "missing {part} in {llms}");
     }
+}
+
+#[test]
+fn the_agent_files_hold_what_a_reader_decides_on_and_no_popularity() {
+    let site = tiered();
+    let list = &site["topics/tensors/llms.txt"];
+    assert!(list.contains("- Alpha (library"), "{list}");
+    assert!(
+        list.contains("https://ml-rust.github.io/projects/alpha/llms.txt"),
+        "{list}"
+    );
+    let card = &site["projects/alpha/llms.txt"];
+    for part in [
+        "# Alpha",
+        "A tensor library.",
+        "- Kind: library",
+        "- Jobs: tensors",
+    ] {
+        assert!(card.contains(part), "missing {part} in {card}");
+    }
+    for text in [list, card] {
+        let lower = text.to_lowercase();
+        for word in ["stars", "downloads", "featured", "tier"] {
+            assert!(!lower.contains(word), "{word} in {text}");
+        }
+    }
+    assert!(
+        !site.contains_key("state/llms.txt"),
+        "no report in this build"
+    );
 }
 
 #[test]

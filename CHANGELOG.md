@@ -10,6 +10,7 @@ A release tag needs a non-empty section here. The section becomes the GitHub Rel
 
 - `catalogue tiers --fetch`: picks what a run fetches: `all`, `changed`, `new` or `none`. Use `none` to apply new rules with no requests.
 - `Pages`: the scheduled scan runs weekly on Sunday and fetches what changed. Run the workflow with `mode` to score by hand. A lost scan repairs itself on the next run.
+- `llms.txt`: AI agents get small plain text files: `/state/llms.txt`, one list per job and one card per project. Read those, not `data/catalogue.json`.
 
 ### Fixed
 

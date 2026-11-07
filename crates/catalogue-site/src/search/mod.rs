@@ -14,4 +14,5 @@ pub(crate) use files::search_files;
 pub use records::search_records;
 pub(crate) use records::{
     CATEGORY_TAG, KIND_TAG, ORG_AFFILIATED, ORG_COMMUNITY, ORG_TAG, TIER_TAG, TOPIC_TAG,
+    lead_phrase,
 };

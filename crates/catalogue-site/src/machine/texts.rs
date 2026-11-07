@@ -2,55 +2,68 @@
 
 use catalogue_core::Catalogue;
 
+use super::agent_files::{STATE_AGENT_FILE, job_file_url};
 use super::catalogue_file::{CATALOGUE_FILE, CATALOGUE_SCHEMA, DATA_LICENSE};
 use crate::build::OutputFile;
-use crate::pages::{SITE_NAME, SITE_URL, category_href, topic_href};
+use crate::pages::{SITE_NAME, SITE_URL};
 
 /// `name` on one line, with no markup. These files are plain text with no escaping.
-fn plain_name(name: &str) -> String {
+pub(super) fn plain_name(name: &str) -> String {
     name.split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
         .replace(['<', '>'], "")
 }
 
-fn text_file(path: &str, text: String) -> OutputFile {
+pub(super) fn text_file(path: &str, text: String) -> OutputFile {
     OutputFile {
         path: path.to_owned(),
         bytes: text.into_bytes(),
     }
 }
 
-/// `llms.txt`: where a script or an agent finds the data, the rules, the topics and the
-/// categories. The lists come from the data files.
-pub(crate) fn llms_file(catalogue: &Catalogue) -> OutputFile {
+/// `llms.txt`: the shortest path for an agent, from the overview to one project.
+///
+/// The jobs come from the data files. `has_state` adds the state report.
+pub(crate) fn llms_file(catalogue: &Catalogue, has_state: bool) -> OutputFile {
     let mut lines = vec![
         format!("# {SITE_NAME}"),
         String::new(),
         "Rust projects for machine learning: libraries on crates.io, and apps.".to_owned(),
-        "Tiers come from published rules over raw signals. Each published claim links its source."
-            .to_owned(),
         String::new(),
-        "## Data".to_owned(),
-        format!("- Every entry as JSON: {SITE_URL}/{CATALOGUE_FILE}"),
-        format!("- What the JSON fields mean: {SITE_URL}/data/README.txt"),
+        "## How to read this site".to_owned(),
+        "Read the smallest file that answers the question.".to_owned(),
+    ];
+    if has_state {
+        lines.push(format!(
+            "- What is ready in Rust, and which tools to use: {SITE_URL}/{STATE_AGENT_FILE}"
+        ));
+    }
+    lines.extend([
+        "- Choose a project for a job: open the job list below. Each line links one project."
+            .to_owned(),
+        format!("- One project: {SITE_URL}/projects/<slug>/llms.txt"),
+        String::new(),
+        "## Jobs".to_owned(),
+    ]);
+    lines.extend(
+        catalogue
+            .topics()
+            .iter()
+            .map(|topic| format!("- {}: {}", plain_name(&topic.name), job_file_url(&topic.id))),
+    );
+    lines.extend([
+        String::new(),
+        "## For scripts".to_owned(),
+        format!(
+            "- Every project and signal, over 8 MB. Do not load it into a model: {SITE_URL}/{CATALOGUE_FILE}"
+        ),
+        format!("- What its fields mean: {SITE_URL}/data/README.txt"),
         format!("- Tier rules: {SITE_URL}/rules/"),
         format!("- Atom feed of changes: {SITE_URL}/changes/feed.xml"),
         format!("- License of the data: {DATA_LICENSE}"),
         String::new(),
-        "## Topics".to_owned(),
-    ];
-    lines.extend(catalogue.topics().iter().map(|topic| {
-        let href = topic_href(&topic.id);
-        format!("- {}: {SITE_URL}{href}", plain_name(&topic.name))
-    }));
-    lines.push(String::new());
-    lines.push("## Categories".to_owned());
-    lines.extend(catalogue.categories().iter().map(|category| {
-        let href = category_href(&category.id);
-        format!("- {}: {SITE_URL}{href}", plain_name(&category.name))
-    }));
-    lines.push(String::new());
+    ]);
     text_file("llms.txt", lines.join("\n"))
 }
 
@@ -147,19 +160,29 @@ mod tests {
     }
 
     #[test]
-    fn llms_points_at_the_data_and_lists_topics_and_categories_from_the_data() {
-        let file = llms_file(&data());
+    fn llms_leads_with_the_small_files_and_warns_about_the_large_one() {
+        let file = llms_file(&data(), true);
         assert_eq!(file.path, "llms.txt");
         let text = String::from_utf8(file.bytes).expect("UTF-8");
         for part in [
-            "https://ml-rust.github.io/data/catalogue.json",
+            "https://ml-rust.github.io/state/llms.txt",
+            "- Zeta b: https://ml-rust.github.io/topics/zeta/llms.txt\n- Alpha: https://ml-rust.github.io/topics/alpha/llms.txt",
+            "Do not load it into a model: https://ml-rust.github.io/data/catalogue.json",
             "https://ml-rust.github.io/rules/",
-            "- Zeta b: https://ml-rust.github.io/topics/zeta/\n- Alpha: https://ml-rust.github.io/topics/alpha/",
-            "- Tools: https://ml-rust.github.io/categories/tools/",
         ] {
             assert!(text.contains(part), "missing {part} in {text}");
         }
         assert!(!text.contains("<b>"), "{text}");
+        assert!(!text.contains("/categories/"), "{text}");
+        let report = text.find("state/llms.txt").expect("report");
+        let large = text.find("catalogue.json").expect("data file");
+        assert!(report < large, "{text}");
+    }
+
+    #[test]
+    fn llms_names_no_report_when_there_is_none() {
+        let text = String::from_utf8(llms_file(&data(), false).bytes).expect("UTF-8");
+        assert!(!text.contains("state/llms.txt"), "{text}");
     }
 
     #[test]

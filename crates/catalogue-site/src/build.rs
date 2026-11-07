@@ -6,8 +6,8 @@ use crate::asset::HashedAsset;
 use crate::error::SiteError;
 use crate::inputs::SiteInputs;
 use crate::machine::{
-    catalogue_file, compare_files, data_readme_file, feed_file, llms_file, robots_file,
-    sitemap_file,
+    agent_files, catalogue_file, compare_files, data_readme_file, feed_file, llms_file,
+    robots_file, sitemap_file,
 };
 use crate::pages::{
     CategoryPage, ChangesPage, ComparePage, FeaturedPage, HomePage, Layout, MlRustPage, NavItem,
@@ -85,7 +85,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
         catalogue_file(inputs)?,
         data_readme_file(),
         feed_file(inputs)?,
-        llms_file(catalogue),
+        llms_file(catalogue, state.is_some()),
         robots_file(),
         stylesheet.file(),
         favicon.file(),
@@ -188,6 +188,7 @@ pub fn build_site(inputs: &SiteInputs<'_>) -> Result<Vec<OutputFile>, SiteError>
     let sitemap = sitemap_file(&files)?;
     files.push(sitemap);
     files.extend(split_topic_files(catalogue));
+    files.extend(agent_files(catalogue, report, inputs.state));
     files.extend(search_files(&search_records(catalogue, report))?);
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
