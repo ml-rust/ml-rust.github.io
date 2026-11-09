@@ -1,133 +1,135 @@
 {
   "schema": 1,
-  "written": "2026-11-06",
+  "written": "2026-11-09",
   "summary": {
-    "headline": "Yes for serving, search, agents and data; not yet for RL, multi-node training or framework parity.",
-    "summary": "Rust is the right choice when deployment simplicity, memory safety or removing Python from the runtime matters: local model serving, agents, search, data pipelines, classical ML, audio, documents and numerical work. It is not yet a replacement for PyTorch research, reinforcement learning, cross-machine training or the broadest model coverage. Use Python there, for model conversion and for some ONNX-heavy paths. The cost that remains is early APIs and wrapper-heavy inference.",
+    "headline": "Rust now carries real ML products; the gaps are tracking, tabular parity and mobile.",
+    "summary": "Rust is a sound choice for inference, retrieval, speech, documents, video and numerical work shipped on one machine: pure-Rust engines exist for LLM and ONNX inference, tokenizing, full-text and vector search, FFT and linear algebra. It is weaker where teams need XGBoost parity, maintained multi-object tracking, a reinforcement-learning trainer, or Rust-native phone inference. Python stays useful for checkpoint conversion and quantization, ONNX export, tokenizer extraction and plotting, but none of that has to sit in your serving path. Treat ONNX Runtime, libtorch, llama.cpp and MKL as accelerators you call, not as Rust work.",
     "jobs": [
       {
         "topic": "run-models",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Local quantized models: [[mistralrs]], [[aha]], [[llama-gguf]]. OpenAI-compatible servers: [[candle-vllm]], [[blazr]], [[shimmy]]. Pure-Rust ONNX: [[tract]], [[oxionnx]], [[rten]], [[lele]]. Limits: early APIs, narrow certified sets, optional Python conversion.",
+        "verdict": "Quantized LLM inference and OpenAI-compatible serving work: [[mistralrs]] builds pure Rust by default, [[blazr]], [[candle-vllm]] and [[furnace]] serve OpenAI routes, [[tract]] and [[oxionnx]] cover ONNX. All are early releases with thin model coverage.",
         "tools": [
           "mistralrs",
-          "aha",
-          "llama-gguf",
-          "candle-vllm",
           "blazr",
-          "shimmy",
+          "candle-vllm",
+          "furnace",
+          "llama-gguf",
+          "candle",
+          "burn",
           "tract",
           "oxionnx",
-          "rten",
           "lele",
-          "furnace",
-          "burn"
+          "oxibonsai",
+          "shimmy"
         ]
       },
       {
         "topic": "llm-apps",
-        "readiness": "usable",
+        "readiness": "ready",
         "python": "partly",
-        "verdict": "Build agents, MCP tools, provider clients and RAG in Rust. [[adk-rust]] and [[rig]] cover loops, tools and tracing; [[rmcp]] is MCP plumbing; [[async-openai]] covers hosted APIs; [[swiftide]] covers RAG. Limits: early APIs, uneven evaluation depth, and optional Python tooling for some MCP servers.",
+        "verdict": "Hosted-API clients, MCP and schema-constrained output are shipping grade: [[rmcp]] is the official MCP SDK, [[async-openai]] and [[liter-llm]] cover providers, [[rstructor]] enforces schemas. Agent frameworks are early releases that churn.",
         "tools": [
-          "adk-rust",
+          "mistralrs",
+          "aichat",
           "rig",
+          "swiftide",
           "rmcp",
           "async-openai",
-          "swiftide",
-          "rstructor",
-          "yoagent",
-          "boostr",
-          "rust-genai",
           "liter-llm",
-          "outlines-core",
-          "llguidance"
+          "rust-genai",
+          "yoagent",
+          "rstructor",
+          "langchain-rust",
+          "graphrag-rs"
         ]
       },
       {
         "topic": "train-models",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Train and fine-tune on one GPU with [[burn]], [[candle]] and [[rumus]]; [[oxidizr]] handles checkpoints and one-machine multi-GPU. Limits: cross-machine training is not shown, reinforcement-learning trainers are missing, and [[pmetal]] and [[flodl]] wrap native runtimes.",
+        "verdict": "Single-GPU training and LoRA fine-tuning work with [[burn]], [[candle]] and [[oxidizr]]. [[rumus]] adds FSDP plus tensor and pipeline parallel paths on WebGPU; [[oxidizr]] stops at NCCL data parallelism. No maintained RL trainer exists.",
         "tools": [
           "burn",
           "candle",
-          "rumus",
           "oxidizr",
-          "aprender",
-          "boostr",
+          "rumus",
           "rust-autograd",
+          "nexar",
+          "aprender",
           "llms-from-scratch-rs",
           "rust-lstm",
-          "rustyml",
           "pmetal",
-          "flodl"
+          "flodl",
+          "tch-rs"
         ]
       },
       {
         "topic": "speech-audio",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Local ASR, TTS, VAD, diarization and audio decode work in Rust: [[earshot]], [[speakrs]], [[any-tts]], [[voxr]]. Limits: narrow model sets, fixed mono audio, and wrappers such as [[sherpa-onnx]] and [[whisper-rs]] leave the engine in native code.",
+        "verdict": "ASR, TTS, VAD, diarization and audio decode all have working crates: [[earshot]] and [[sonora]] are pure Rust, [[parakeet-rs]] and [[transcribe-rs]] route through ONNX Runtime, [[sherpa-onnx]] wraps C. Model and format coverage are the limits.",
         "tools": [
-          "earshot",
-          "speakrs",
-          "any-tts",
           "voxr",
+          "earshot",
           "sonora",
-          "transcribe-rs",
+          "any-tts",
+          "xn-ptts",
           "parakeet-rs",
+          "transcribe-rs",
           "silero",
           "sherpa-onnx",
-          "whisper-rs",
+          "scribble",
           "pyannote-rs",
-          "piper-rs"
+          "minutes"
         ]
       },
       {
         "topic": "text-search",
         "readiness": "ready",
-        "python": "none",
-        "verdict": "Vector and hybrid search are production-grade in Rust with [[qdrant]], [[meilisearch]] and [[tantivy]]; tokenizers are broad with [[tokenizers]] and [[kitoken]]. Limits: local embedding and reranking often still run through ONNX Runtime in [[fastembed-rs]].",
+        "python": "partly",
+        "verdict": "Tokenizers, embeddings, vector stores and full-text search are covered: [[tantivy]] for BM25, [[qdrant]] for scale, [[tokenizers]] for exact model tokenization. Most embedding and reranking paths still call ONNX Runtime.",
         "tools": [
           "qdrant",
           "meilisearch",
           "tantivy",
-          "lindera",
-          "kitoken",
-          "shimmytok",
-          "splintr",
-          "bm25",
-          "model2vec-rs",
           "tokenizers",
+          "model2vec-rs",
+          "kitoken",
+          "lindera",
+          "seekstorm",
+          "hnswlib-rs",
+          "jieba-rs",
           "fastembed-rs",
-          "gline-rs"
+          "splintr"
         ]
       },
       {
         "topic": "images-vision",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Decode and transform images with [[imageproc]]; [[kornia-rs]] adds formats and operators but uses native codecs. [[usls]] covers detection and segmentation through ONNX Runtime. Image generation has a Rust path in [[candle]], while [[diffusion-rs]] wraps a native engine. Limits: maintained object tracking is thin.",
+        "verdict": "Decode and transform are pure Rust in [[kornia-rs]] and [[imageproc]]; [[candle]] runs Stable Diffusion and [[aha]] runs vision and OCR on Candle. Detection and segmentation mostly call ONNX Runtime. No maintained multi-object tracker exists.",
         "tools": [
-          "imageproc",
           "kornia-rs",
+          "imageproc",
           "candle",
           "kornia-slam",
-          "cv",
+          "aha",
+          "visioncortex",
           "rust-cv-convert",
           "usls",
-          "koharu",
           "inference",
-          "diffusion-rs"
+          "opencv-rust",
+          "diffusion-rs",
+          "koharu"
         ]
       },
       {
         "topic": "video",
         "readiness": "early",
-        "python": "none",
-        "verdict": "[[vidr]] covers decode, model inference on frames, encode and mux, with [[containr]] for MP4 and MKV and [[rav1r]] for AV1. Limits: no VA-API, no AMD or Intel Vulkan Video, no CPU HEVC or VP9 encode, and some CPU codecs wrap native libraries.",
+        "python": "partly",
+        "verdict": "[[vidr]] covers decode, encode, container IO and model-on-frame upscaling, with [[containr]] and [[rav1r]] for muxing and AV1. An early release from a lone maintainer, NVIDIA-tested, without VA-API and without H.264 above Baseline.",
         "tools": [
           "vidr",
           "containr",
@@ -138,14 +140,14 @@
         "topic": "documents",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "OCR and PDF extraction are practical in Rust with [[ocrs]], [[edgeparse]] and [[pdf-oxide]]; layout and office conversion come from [[docling]] and [[oar-ocr]]. Limits: many layout and VLM paths wrap ONNX or native runtimes, and several engines omit OCR or rasterization.",
+        "verdict": "OCR, PDF extraction and layout are covered: [[ocrs]] and [[franken-ocr]] run in Rust, [[pdf-inspector]] and [[oxidizepdf]] are pure Rust, [[edgeparse]] handles reading order. Broadest format coverage wraps Tesseract, PDFium and ONNX Runtime.",
         "tools": [
           "ocrs",
-          "edgeparse",
-          "pdf-oxide",
+          "franken-ocr",
           "pdf-inspector",
           "oxidizepdf",
-          "franken-ocr",
+          "edgeparse",
+          "pdf-oxide",
           "rusto-rs",
           "oar-ocr",
           "docling",
@@ -158,327 +160,333 @@
         "topic": "tabular-ml",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Classical ML, trees, forecasting and explanations work in Rust with [[smartcore]], [[linfa]], [[augurs]], [[perpetual]] and [[treeboost]]. Limits: early APIs, no XGBoost export in [[treeboost]], and [[egobox]] requires Python.",
+        "verdict": "Boosted trees, forests, SVMs, clustering, forecasting and AutoML exist in pure Rust through [[treeboost]], [[linfa]], [[smartcore]] and [[augurs]]. XGBoost and LightGBM parity is unavailable and model-agnostic explanation is thin.",
         "tools": [
-          "smartcore",
+          "treeboost",
           "linfa",
+          "smartcore",
           "augurs",
           "perpetual",
-          "treeboost",
-          "rust-automl",
           "anofox-regression",
-          "clustering",
+          "rust-automl",
           "hdbscan",
           "petal-clustering",
-          "aprender",
-          "egobox"
+          "leiden-rs",
+          "aprender"
         ]
       },
       {
         "topic": "math-science",
         "readiness": "usable",
         "python": "partly",
-        "verdict": "Arrays, linear algebra, FFT, sparse, statistics, optimization and ODE/PDE solvers exist in Rust with [[ndarray]], [[faer]], [[rustfft]], [[statrs]] and [[differential-equations]]. Limits: SciPy parity is uneven, sparse Cholesky is license-gated, and plotting often stays in Python.",
+        "verdict": "Arrays, dense linear algebra, FFT, sparse matrices, statistics, optimization and ODE solvers are covered in pure Rust by [[ndarray]], [[faer]], [[rustfft]], [[statrs]] and [[differential-equations]]. SciPy breadth is thinner in places; plotting still calls matplotlib.",
         "tools": [
           "ndarray",
           "faer",
-          "nalgebra",
           "rustfft",
-          "sprs",
+          "nalgebra",
           "statrs",
+          "ndarray-stats",
           "argmin",
           "differential-equations",
-          "scirs",
-          "solvr",
-          "ndrustfft",
-          "ndarray-linalg"
+          "sprs",
+          "numr",
+          "basin",
+          "solvr"
         ]
       },
       {
         "topic": "tensors-gpu",
         "readiness": "usable",
         "python": "none",
-        "verdict": "Multi-vendor tensor work is real in Rust: [[burn]] and [[cubecl]] compile across CUDA, ROCm, Metal and WebGPU; [[candle]] and [[numr]] cover GPU tensors. Limits: alpha APIs, uneven backend features, and fewer ready ML operations than PyTorch.",
+        "verdict": "Tensor math runs on GPU from Rust: [[burn]] ships CUDA, Metal, WebGPU, ROCm and Vulkan, [[candle]] adds CUDA and Metal, [[cubecl]] compiles kernels across vendors, [[numr]] adds NumPy-role tensors. Autodiff works; custom kernels and vendor coverage are uneven.",
         "tools": [
           "burn",
           "candle",
           "cubecl",
           "numr",
-          "oxicuda",
-          "wgmath",
-          "boostr",
+          "rten",
           "rust-autograd",
-          "rusttensor",
-          "ug"
+          "dlpark",
+          "ug",
+          "oxicuda"
         ]
       },
       {
         "topic": "data-formats",
         "readiness": "ready",
-        "python": "none",
-        "verdict": "Model files, Arrow and Parquet, dataframes, HDF5 and Zarr, and hub access work with [[safetensors]], [[arrow-rs]], [[polars]], [[hdf5-pure]] and [[hf-hub]]. [[oxidizr]] shows a streaming token loader in a Rust trainer. Limits: some HDF5 writers are partial.",
+        "python": "partly",
+        "verdict": "Model and dataset IO is strong: [[safetensors]], [[gguf]], [[arrow-rs]], [[polars]], [[datafusion]] and [[hf-hub]] are Rust. HDF5 has pure-Rust and wrapped options; legacy PyTorch checkpoint conversion still needs Python.",
         "tools": [
           "safetensors",
-          "gguf",
           "arrow-rs",
-          "datafusion",
           "polars",
-          "zarrs",
-          "npyz",
-          "ndarray-npy",
-          "hdf5-pure",
-          "netcdf-rust",
+          "datafusion",
+          "gguf",
           "hf-hub",
-          "xet-core"
+          "lance",
+          "vortex",
+          "ndarray-npy",
+          "zarrs",
+          "hdf5-pure",
+          "delta-rs"
         ]
       }
     ],
     "use_now": [
       {
+        "project": "mistralrs",
+        "use_for": "Local LLM inference behind a Rust SDK",
+        "why": "Default features build in pure Rust, loads GGUF and multimodal models, and exposes tools, structured output and an MCP client behind a single SDK."
+      },
+      {
+        "project": "tantivy",
+        "use_for": "Full-text search library with BM25",
+        "why": "BM25, facets, fast fields and mmap in a library other Rust search engines build on; you write the server layer."
+      },
+      {
         "project": "qdrant",
-        "use_for": "Production vector and hybrid search server",
-        "why": "Rust server with dense, sparse and multi-vector search, filtering, sharding and replication. A team can run it without Python."
-      },
-      {
-        "project": "meilisearch",
-        "use_for": "Full-text and hybrid search behind an API",
-        "why": "Single Rust binary with typo tolerance, facets and hybrid search. Sharding and replication need the commercial edition, so plan scale."
-      },
-      {
-        "project": "arrow-rs",
-        "use_for": "Arrow and Parquet interchange in Rust services",
-        "why": "Official Arrow implementation with IPC, Flight and Parquet work. Many teams build on it."
-      },
-      {
-        "project": "polars",
-        "use_for": "Dataframes and larger-than-RAM pipelines",
-        "why": "Rust dataframe engine with lazy queries, streaming and Arrow zero-copy. Python bindings are optional, not required for Rust use."
-      },
-      {
-        "project": "async-openai",
-        "use_for": "OpenAI and compatible API clients",
-        "why": "Broad OpenAI API coverage, streaming, retries and custom compatible endpoints. Teams build on it; some newer API families lack schemas."
+        "use_for": "Vector search server at production scale",
+        "why": "Rust server with sharding, replication, quantization and sparse plus multi-vector search, reached over REST and gRPC."
       },
       {
         "project": "rmcp",
-        "use_for": "MCP clients and servers in Rust",
-        "why": "Rust MCP SDK with tools, resources, prompts and transports. It is protocol plumbing, not an agent runtime."
+        "use_for": "Build MCP servers and clients",
+        "why": "Official MCP SDK with tools, resources, transports and OAuth; other Rust MCP crates sit on top of it."
       },
       {
-        "project": "burn",
-        "use_for": "Tensor math, training and inference in Rust",
-        "why": "One codebase across CPU, CUDA, Metal, Vulkan and WebGPU, with autodiff and NN modules. APIs are early and ONNX import is partial."
+        "project": "liter-llm",
+        "use_for": "Call hosted model APIs from Rust",
+        "why": "A single async client over many providers with tools, streaming and structured output, so provider churn stays out of your app."
       },
       {
-        "project": "tokenizers",
-        "use_for": "HuggingFace-compatible tokenization",
-        "why": "Broad tokenizer pipeline with Hub loading, training and tokenizer.json. Python bindings are separate."
+        "project": "earshot",
+        "use_for": "Streaming voice activity detection",
+        "why": "Pure-Rust streaming VAD over short frames, returns a voice score, builds without ONNX Runtime and can run no_std."
+      },
+      {
+        "project": "rustfft",
+        "use_for": "FFT of any size in pure Rust",
+        "why": "SIMD-accelerated transforms of any size including primes; the FFT underneath ndarray and other crates."
+      },
+      {
+        "project": "faer",
+        "use_for": "Dense linear algebra and decompositions",
+        "why": "Dense linear algebra with decompositions and a high-level API, written in pure Rust so no LAPACK link is needed."
+      },
+      {
+        "project": "ndarray",
+        "use_for": "N-dimensional arrays for numeric code",
+        "why": "The array container most Rust ML crates share; slicing, views, Zip and optional BLAS keep numeric code portable."
       },
       {
         "project": "safetensors",
-        "use_for": "SafeTensors model file read and write",
-        "why": "SafeTensors tensor file read and write with zero-copy tensor reads. It is a safe default for model weights."
+        "use_for": "Read and write model weights",
+        "why": "Zero-copy reads and safe writes for model weights; the interchange format Rust trainers and loaders already speak."
+      },
+      {
+        "project": "hf-hub",
+        "use_for": "Fetch models and datasets from the Hub",
+        "why": "Async and blocking client for Hub models, datasets and files, native and wasm; keeps download and cache logic out of your code."
+      },
+      {
+        "project": "tokenizers",
+        "use_for": "Exact tokenization for model families",
+        "why": "Reference BPE, WordPiece and Unigram pipeline with tokenizer.json load and save; matches the main model families."
       }
     ],
     "watch": [
       {
         "project": "oxionnx",
         "use_for": "Pure-Rust ONNX inference engine",
-        "why": "Runs ONNX with no C or C++ dependency and broad operator coverage. Still early: limited sampling, partial GPU providers and no tokenizer."
+        "why": "No C or C++ in the build, and real detection models run. Still needs a tokenizer and sampler bolted on, and browser WebGPU is unwired."
       },
       {
-        "project": "needle-rs",
-        "use_for": "Tiny WASM tool-calling model runtime",
-        "why": "Runs small Needle tool models in browser, edge and no_std. Narrow to tool selection, not open chat."
+        "project": "treeboost",
+        "use_for": "Gradient-boosted trees for tabular data",
+        "why": "Boosted trees and forests with an AutoML mode and SIMD plus GPU backends. No changelog, unstable API and a small team behind it."
       },
       {
-        "project": "cubecl",
-        "use_for": "Rust GPU kernels across vendors",
-        "why": "One Rust kernel language compiles to CUDA, ROCm, Metal, Vulkan and WebGPU. Alpha, with uneven features and no WebGPU tensor cores."
-      },
-      {
-        "project": "solvr",
-        "use_for": "SciPy-style solvers on Rust tensors",
-        "why": "Covers optimization, ODE/PDE, signal, spatial and statistics on numr. Young and one maintainer; WebGPU is single precision only."
+        "project": "oxidizr",
+        "use_for": "Config-driven language-model training",
+        "why": "Runs the training loop with checkpoints, metrics and resume on a local machine. No FSDP, ZeRO, tensor or pipeline parallelism."
       },
       {
         "project": "vidr",
-        "use_for": "Video decode, model inference and encode",
-        "why": "Handles GPU decode, frame tensors, restoration and muxing in Rust. Early: no VA-API, limited codecs and some native CPU decoders."
+        "use_for": "GPU video decode, encode and upscaling",
+        "why": "Decode, encode, muxing and upscaling in one workspace with frames kept on the GPU. Early release, NVIDIA-tested, no VA-API, H.264 Baseline only."
+      },
+      {
+        "project": "franken-ocr",
+        "use_for": "Pure-Rust CPU OCR for documents",
+        "why": "Runs document and formula OCR models with Markdown and box output and no FFI. Lone maintainer, CPU only, not a general model runtime."
+      },
+      {
+        "project": "model2vec-rs",
+        "use_for": "Static text embeddings, WASM included",
+        "why": "Static embeddings with int8 quantization and a WASM build, no ONNX Runtime. No training or distillation, and no GPU path."
       }
     ],
     "build_today": [
       {
-        "goal": "Private document Q&A service with local embeddings",
+        "goal": "Private document Q&A over your own files",
         "stack": [
-          "candle-vllm",
-          "qdrant",
+          "mistralrs",
           "fastembed-rs",
-          "rig"
+          "qdrant",
+          "swiftide"
         ],
-        "why": "Serve an open model locally with [[candle-vllm]], embed documents, store vectors with [[qdrant]] and run retrieval with [[rig]]. All core pieces are maintained.",
-        "watch_out": "Fastembed uses ONNX Runtime; model conversion and good chunking still need care."
+        "why": "[[mistralrs]] generates, [[fastembed-rs]] embeds locally, [[qdrant]] stores and searches, [[swiftide]] wires loaders, chunkers and retrieval into one pipeline.",
+        "watch_out": "Both the agent and RAG layers are early releases, and the embedding path pulls in ONNX Runtime."
       },
       {
-        "goal": "Local meeting transcription and speaker review app",
+        "goal": "Local meeting transcription with speaker labels",
         "stack": [
-          "transcribe-rs",
-          "speakrs",
+          "parakeet-rs",
           "earshot",
           "voxr"
         ],
-        "why": "Transcribe, detect speech, diarize and decode audio in Rust. A practical local product without Python at runtime.",
-        "watch_out": "Inputs are often fixed-rate mono, model sets are narrow, and diarization quality varies."
+        "why": "[[voxr]] decodes and resamples input, [[earshot]] gates speech, [[parakeet-rs]] transcribes and diarizes on your own hardware.",
+        "watch_out": "[[parakeet-rs]] caps speaker count and pass length, and ONNX Runtime limits it to a process-wide environment."
       },
       {
-        "goal": "Rust tabular forecasting and anomaly service",
+        "goal": "Search API over your own document corpus",
         "stack": [
-          "smartcore",
-          "augurs",
-          "treeboost",
-          "perpetual"
+          "tantivy",
+          "tokenizers",
+          "fastembed-rs",
+          "qdrant-client"
         ],
-        "why": "Classic models, time-series forecasts, boosted trees and explanations can ship as one Rust service. No Python runtime required.",
-        "watch_out": "No XGBoost export in treeboost; model formats and APIs are still early."
+        "why": "[[tantivy]] scores BM25, [[tokenizers]] matches model tokenization, [[fastembed-rs]] embeds, [[qdrant-client]] queries the store over gRPC.",
+        "watch_out": "Hybrid ranking and rerank logic are yours to write; the embedding step needs ONNX Runtime."
       },
       {
-        "goal": "On-device PDF and scan intake pipeline",
+        "goal": "Fine-tune and serve a small model on local hardware",
+        "stack": [
+          "burn",
+          "oxidizr",
+          "safetensors"
+        ],
+        "why": "[[oxidizr]] runs the YAML training loop with checkpoints and resume, [[burn]] supplies kernels and autodiff, [[safetensors]] carries weights.",
+        "watch_out": "This stack stays on a single machine with NCCL data parallelism; [[oxidizr]] has no FSDP, tensor or pipeline parallelism."
+      },
+      {
+        "goal": "OCR and PDF extraction for scanned documents",
         "stack": [
           "ocrs",
-          "pdf-oxide",
+          "pdf-inspector",
           "edgeparse",
-          "oar-ocr"
+          "oxidizepdf"
         ],
-        "why": "Extract PDF text, tables and reading order, then OCR scans. Rust paths cover most intake without a Python service.",
-        "watch_out": "OCR and layout model coverage is uneven; some paths wrap ONNX Runtime or omit rasterization."
+        "why": "[[pdf-inspector]] separates text from scans, [[ocrs]] reads images, [[edgeparse]] orders columns and tables, [[oxidizepdf]] chunks for retrieval.",
+        "watch_out": "OCR models need fetching and release-mode builds; no learned layout unless you add extra models."
       }
     ],
     "holes_filled": [
       {
-        "hole": "Local OpenAI-compatible LLM serving without Python",
+        "hole": "Quantized LLM inference plus an OpenAI-compatible server",
         "filled_by": [
-          "candle-vllm",
           "blazr",
-          "shimmy"
+          "llama-gguf",
+          "candle-vllm",
+          "furnace"
         ],
-        "note": "Teams can ship a local API server in Rust. Early APIs and certified model lists are the limits; conversion scripts may still use Python."
+        "note": "Teams can serve a GGUF model without PyTorch; checkpoint conversion and quantization still use Python first."
       },
       {
-        "hole": "Agent apps with provider clients and MCP tools",
+        "hole": "ONNX inference with no C or C++ runtime",
         "filled_by": [
-          "rig",
-          "adk-rust",
-          "rmcp",
-          "async-openai"
+          "tract",
+          "oxionnx",
+          "lele"
         ],
-        "note": "Loops, tools, MCP and hosted APIs are available in Rust. Python can go for core runtime; some MCP servers still launch via Python tools."
+        "note": "Exported models run in Rust on CPU, Metal, CUDA or WASM; operator coverage and tokenizer or sampler wiring are the cost."
       },
       {
-        "hole": "Vector, hybrid and full-text search",
+        "hole": "Tokenization that matches the main model families",
         "filled_by": [
-          "qdrant",
-          "meilisearch",
+          "tokenizers",
+          "tiktoken-rs",
+          "kitoken"
+        ],
+        "note": "Exact ids without a Python round trip; validate against reference output for the families you depend on."
+      },
+      {
+        "hole": "Full-text and vector search over your own data",
+        "filled_by": [
           "tantivy",
-          "tokenizers"
+          "qdrant",
+          "seekstorm"
         ],
-        "note": "Search infrastructure and tokenization can run in Rust. Python is not needed for search serving; embedding wrappers may still use ONNX Runtime."
+        "note": "Both halves of hybrid search exist in Rust; reranking still runs through wrapped ONNX Runtime."
       },
       {
-        "hole": "Model file and columnar data I/O",
+        "hole": "Streaming voice activity detection without a native runtime",
+        "filled_by": [
+          "earshot",
+          "sonora"
+        ],
+        "note": "Gate microphones in pure Rust; learned VAD through ONNX Runtime remains an option when accuracy demands it."
+      },
+      {
+        "hole": "Numerical core: arrays, FFT and dense linear algebra",
+        "filled_by": [
+          "ndarray",
+          "rustfft",
+          "faer"
+        ],
+        "note": "Most SciPy work on a single machine translates; plotting and reference validation stay in Python."
+      },
+      {
+        "hole": "Model and dataset IO for weights and columnar data",
         "filled_by": [
           "safetensors",
-          "arrow-rs",
-          "polars",
-          "gguf"
+          "gguf",
+          "arrow-rs"
         ],
-        "note": "Weights, GGUF, Arrow and Parquet are covered. Python can go for storage and dataframe work; training-loop loaders are app-specific."
-      },
-      {
-        "hole": "Speech recognition, synthesis and VAD on own hardware",
-        "filled_by": [
-          "transcribe-rs",
-          "any-tts",
-          "earshot",
-          "speakrs"
-        ],
-        "note": "ASR, TTS, VAD and diarization run in Rust. Runtime Python can go; one-time model export and vocabulary extraction may not."
-      },
-      {
-        "hole": "Classical tabular ML and forecasting",
-        "filled_by": [
-          "smartcore",
-          "linfa",
-          "augurs",
-          "perpetual"
-        ],
-        "note": "Regression, trees, clustering, forecasts and explanations are covered. Python can go for many classic models, not for the full XGBoost ecosystem."
-      },
-      {
-        "hole": "GPU tensor math and custom kernels in Rust",
-        "filled_by": [
-          "burn",
-          "cubecl",
-          "candle",
-          "numr"
-        ],
-        "note": "Teams can prototype and ship tensor work across vendors without Python. Expect alpha APIs and fewer ready operations than PyTorch."
-      },
-      {
-        "hole": "PDF text and scan extraction",
-        "filled_by": [
-          "pdf-oxide",
-          "pdf-inspector",
-          "edgeparse",
-          "ocrs"
-        ],
-        "note": "Text PDFs, tables, reading order and OCR have Rust paths. Some layout and VLM paths still wrap native runtimes."
+        "note": "Read and write the formats trainers and loaders use; legacy PyTorch checkpoints still need conversion tooling."
       }
     ],
     "holes_open": [
       {
-        "hole": "Production reinforcement-learning training",
-        "impact": "Teams training RL agents cannot stay in Rust for the trainer and must use Python frameworks or build the loop themselves.",
-        "workaround": "Use Python RL libraries, or implement the environment in Rust and train in Python."
+        "hole": "XGBoost and LightGBM parity for tabular models",
+        "impact": "Teams with existing boosted-tree pipelines cannot port them and compare like for like in Rust.",
+        "workaround": "Train with [[treeboost]] or [[perpetual]] and export to XGBoost or ONNX, or keep training in Python."
       },
       {
-        "hole": "Cross-machine distributed training",
-        "impact": "Teams scaling training beyond one machine have no shown Rust path; only one-machine multi-GPU is covered.",
-        "workaround": "Use Python distributed training, or one-machine multi-GPU with [[oxidizr]] or [[rumus]]."
+        "hole": "Rust-native inference on phones",
+        "impact": "Mobile teams fall back to llama.cpp, whisper.cpp or ONNX Runtime bindings, so the build is not Rust end to end.",
+        "workaround": "[[xybrid]] ships Android and iOS presets but wraps native engines; [[needle-rs]] covers tool-calling models only and leaves NPU work to Cactus."
       },
       {
-        "hole": "Maintained object tracking and motion analysis",
-        "impact": "Video analytics teams needing multi-object tracking must build it or leave Rust; the tracker row is unmaintained.",
-        "workaround": "Use Python trackers, or build SORT-style logic on [[kornia-slam]] motion primitives."
+        "hole": "Maintained multi-object tracking across video frames",
+        "impact": "Video analytics teams cannot keep detection-to-track state on a maintained Rust crate; the only tracker row is unmaintained.",
+        "workaround": "[[similari]] has Kalman, SORT, Batch SORT and VisualSORT but is unmaintained; teams write IoU and Hungarian assignment on ndarray or use Python ByteTrack."
       },
       {
-        "hole": "Full ONNX operator and GPU parity in pure Rust",
-        "impact": "Arbitrary exported models may fail on [[tract]] or [[oxionnx]], forcing a wrapper or Python.",
-        "workaround": "Use [[ort]] when coverage matters, or convert models to Burn with [[burn-onnx]]."
+        "hole": "A maintained reinforcement-learning trainer",
+        "impact": "RL teams get environments but no maintained learner; the older Rust RL crates are unmaintained.",
+        "workaround": "Use [[bevy-rl]] for environments and write the learner on [[burn]] or [[candle]], or keep training in Python."
       },
       {
-        "hole": "VA-API and AMD or Intel Vulkan Video decode",
-        "impact": "Linux video teams on AMD or Intel GPUs cannot rely on the Rust video path for hardware decode.",
-        "workaround": "Use [[vidr]] on NVIDIA or CPU paths, or keep a native pipeline."
-      },
-      {
-        "hole": "General experiment tracking and comparison",
-        "impact": "Teams need custom logs or Python tools to compare runs across projects.",
-        "workaround": "Use [[oxidizr]] checkpoints for its own loop, or export metrics to an external tracker."
+        "hole": "VA-API and H.264 High profile in Rust video",
+        "impact": "Linux teams without NVIDIA cannot decode or encode common camera and screen streams through a Rust path.",
+        "workaround": "[[vidr]] covers NVDEC, NVENC and Vulkan Video plus Baseline H.264 and AV1 on CPU; otherwise transcode with FFmpeg or a Python pipeline."
       }
     ]
   },
   "charts": [
     {
       "chart": "engine",
-      "takeaway": "Much of the work still happens in wrapped native code rather than pure Rust, so interop and portability remain core design concerns."
+      "takeaway": "Many projects either contain some native code or wrap a native engine, so pure-Rust implementations are not the norm."
     },
     {
       "chart": "gpu",
-      "takeaway": "GPU acceleration is uneven and frequently undocumented, so teams must validate backend support before committing."
+      "takeaway": "GPU support is frequently unspecified and fragmented across backends, with CUDA the most commonly declared option."
     },
     {
       "chart": "releases",
-      "takeaway": "Recent releases are common, indicating active maintenance, but stale projects remain enough to require due diligence."
+      "takeaway": "Many projects have shipped recently, but a substantial tail has gone without a release for a long time."
     }
   ]
 }
