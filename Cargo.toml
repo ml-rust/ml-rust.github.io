@@ -27,7 +27,7 @@ toml = "1"
 # Typed error enums in the core and the CLI library.
 thiserror = "2"
 # Calendar dates (`added`, `date`, `since`) and the UTC timestamps in the dump.
-jiff = "0.2"
+jiff = "1.0"
 # Parsed and normalised repository, homepage, issue and evidence links.
 url = { version = "2", features = ["serde"] }
 # Argument parsing for the `catalogue` command.
@@ -46,7 +46,7 @@ rustc-hash = "2"
 # Blocking HTTPS client with rustls for the crates.io database dump download and the GitHub search.
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 # RS256 signing of the GitHub App JWT, over the aws-lc-rs that rustls already links.
-jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs", "use_pem"] }
+jsonwebtoken = { version = "12", default-features = false, features = ["aws_lc_rs", "use_pem"] }
 # SHA-256 of issue bodies and check reports in the bot comment marker, over the
 # aws-lc-rs that rustls already links.
 aws-lc-rs = { version = "1", default-features = false, features = ["aws-lc-sys"] }
@@ -63,7 +63,7 @@ ego-tree = "0.11"
 oxidoc-search = { version = "0.1", default-features = false, features = ["builder"] }
 # The file that keeps the AI summaries, one row per project and release. Bundled, so the static
 # release binary needs no system library.
-rusqlite = { version = "0.41", features = ["bundled"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
 # Zeroes the App key bytes and the access tokens when they drop.
 zeroize = "1"
 # Temporary directories for the download tests, created under the build directory.
